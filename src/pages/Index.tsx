@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -14,9 +15,9 @@ const Index = () => {
         <div className="flex h-16 items-center px-4 md:px-6">
           <Link to="/" className="flex items-center gap-2 font-bold text-xl">
             <div className="w-8 h-8 rounded-full eco-gradient flex items-center justify-center">
-              <span className="text-white">E</span>
+              <span className="text-white">F</span>
             </div>
-            <span>EcoNexus</span>
+            <span>Fandoro</span>
           </Link>
           
           <div className="ml-auto flex items-center gap-4">
@@ -61,7 +62,7 @@ const Index = () => {
             <div className="bg-background border rounded-xl shadow-lg overflow-hidden">
               <img 
                 src="/placeholder.svg" 
-                alt="EcoNexus Dashboard" 
+                alt="Fandoro Dashboard" 
                 className="w-full h-auto"
                 style={{ height: '400px', objectFit: 'cover' }}
               />
@@ -151,9 +152,9 @@ const Index = () => {
             <div className="space-y-4 max-w-xs">
               <div className="flex items-center gap-2 font-bold text-xl">
                 <div className="w-8 h-8 rounded-full eco-gradient flex items-center justify-center">
-                  <span className="text-white">E</span>
+                  <span className="text-white">F</span>
                 </div>
-                <span>EcoNexus</span>
+                <span>Fandoro</span>
               </div>
               <p className="text-muted-foreground">
                 Empowering enterprises to monitor, manage and improve their sustainability metrics
@@ -193,7 +194,7 @@ const Index = () => {
           </div>
           
           <div className="border-t mt-12 pt-8 flex flex-col md:flex-row justify-between text-sm text-muted-foreground">
-            <div>© {new Date().getFullYear()} EcoNexus. All rights reserved.</div>
+            <div>© {new Date().getFullYear()} Fandoro. All rights reserved.</div>
             <div className="flex gap-4 mt-4 md:mt-0">
               <a href="#" className="hover:text-foreground">Terms</a>
               <a href="#" className="hover:text-foreground">Privacy</a>

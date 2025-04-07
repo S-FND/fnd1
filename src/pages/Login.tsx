@@ -8,9 +8,9 @@ const Login = () => {
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
           <div className="mx-auto w-12 h-12 rounded-full eco-gradient flex items-center justify-center">
-            <span className="text-white text-xl font-bold">E</span>
+            <span className="text-white text-xl font-bold">F</span>
           </div>
-          <h1 className="text-2xl font-bold">EcoNexus Enterprise</h1>
+          <h1 className="text-2xl font-bold">Fandoro Enterprise</h1>
           <p className="text-muted-foreground">Sustainability Management Platform</p>
         </div>
         <div className="bg-background p-8 rounded-lg border shadow-sm">
@@ -23,7 +23,7 @@ const Login = () => {
           </div>
         </div>
         <p className="text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} EcoNexus. All rights reserved.
+          © {new Date().getFullYear()} Fandoro. All rights reserved.
         </p>
       </div>
     </div>

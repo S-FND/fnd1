@@ -56,9 +56,9 @@ const AppSidebar: React.FC = () => {
         <div className="mb-10 px-4 py-2">
           <Link to="/" className="flex items-center gap-2 font-bold text-xl">
             <div className="w-8 h-8 rounded-full eco-gradient flex items-center justify-center">
-              <span className="text-white">E</span>
+              <span className="text-white">F</span>
             </div>
-            <span>EcoNexus</span>
+            <span>Fandoro</span>
           </Link>
         </div>
         

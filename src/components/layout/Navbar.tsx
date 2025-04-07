@@ -21,9 +21,9 @@ export const Navbar: React.FC = () => {
       <div className="flex h-16 items-center px-4 md:px-6">
         <Link to="/" className="flex items-center gap-2 font-bold text-xl">
           <div className="w-8 h-8 rounded-full eco-gradient flex items-center justify-center">
-            <span className="text-white">E</span>
+            <span className="text-white">F</span>
           </div>
-          <span>EcoNexus</span>
+          <span>Fandoro</span>
         </Link>
         
         {/* Search */}
