@@ -136,9 +136,11 @@ const AuditDashboard: React.FC = () => {
           />
         </div>
         <div className="flex gap-3 w-full sm:w-auto">
-          <Button as={Link} to="/audit/checklist">
-            <ClipboardList className="mr-2 h-4 w-4" />
-            Audit Checklists
+          <Button asChild>
+            <Link to="/audit/checklist">
+              <ClipboardList className="mr-2 h-4 w-4" />
+              Audit Checklists
+            </Link>
           </Button>
           <Button>
             <FileText className="mr-2 h-4 w-4" />
