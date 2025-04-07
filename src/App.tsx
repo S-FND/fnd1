@@ -20,6 +20,7 @@ import NotFound from "./pages/NotFound";
 import AuditDashboardPage from "./pages/audit/AuditDashboardPage";
 import AuditChecklistPage from "./pages/audit/AuditChecklistPage";
 import SupplierDashboardPage from "./pages/supplier/SupplierDashboardPage";
+import SupplierAuditResponsePage from "./pages/supplier/SupplierAuditResponsePage";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => (
             
             {/* Supplier routes */}
             <Route path="/supplier/dashboard" element={<SupplierDashboardPage />} />
+            <Route path="/supplier/audit/:auditId" element={<SupplierAuditResponsePage />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>

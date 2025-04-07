@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,8 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Building, CheckCircle, Circle, ClipboardList, FileCheck, AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
-// Mock audit questions for supplier to answer
 const mockAuditQuestions = [
   {
     id: 'q1',
@@ -62,6 +61,32 @@ const mockAuditQuestions = [
   }
 ];
 
+const mockSharedAudits = [
+  {
+    id: 'audit-123',
+    title: 'Sustainability Audit 2025',
+    companyName: 'Green Manufacturing Corp',
+    dueDate: '2025-05-15',
+    status: 'not_started',
+  },
+  {
+    id: 'audit-124',
+    title: 'Carbon Footprint Assessment',
+    companyName: 'EcoTech Industries',
+    dueDate: '2025-04-30',
+    status: 'in_progress',
+    progress: 45,
+  },
+  {
+    id: 'audit-125',
+    title: 'Social Responsibility Audit',
+    companyName: 'Sustainable Solutions Inc',
+    dueDate: '2025-03-20',
+    status: 'completed',
+    score: 82,
+  }
+];
+
 const SupplierDashboard: React.FC = () => {
   const { user } = useAuth();
   const [auditProgress, setAuditProgress] = useState<number>(
@@ -69,15 +94,14 @@ const SupplierDashboard: React.FC = () => {
     user?.supplierInfo?.auditStatus === 'in_progress' ? 45 : 0
   );
   const [auditQuestions, setAuditQuestions] = useState(mockAuditQuestions);
+  const [sharedAudits, setSharedAudits] = useState(mockSharedAudits);
   
-  // Calculate audit completion
   const calculateAuditProgress = () => {
     if (auditQuestions.length === 0) return 0;
     const answeredQuestions = auditQuestions.filter(q => q.answered).length;
     const requiredAttachments = auditQuestions.filter(q => q.attachmentRequired).length;
     const uploadedAttachments = auditQuestions.filter(q => q.attachmentUploaded).length;
     
-    // Weight answers as 70% and attachments as 30% of total progress
     const answerProgress = (answeredQuestions / auditQuestions.length) * 70;
     const attachmentProgress = requiredAttachments > 0 
       ? (uploadedAttachments / requiredAttachments) * 30
@@ -91,7 +115,6 @@ const SupplierDashboard: React.FC = () => {
     toast.success("Audit process started. Please complete all sections.");
   };
 
-  // Display the appropriate icon based on question status
   const getQuestionStatusIcon = (question: any) => {
     if (!question.answered) {
       return <Circle className="h-5 w-5 text-muted-foreground mt-0.5" />;
@@ -150,6 +173,73 @@ const SupplierDashboard: React.FC = () => {
         </CardContent>
         <CardFooter>
           <Button variant="outline">Edit Profile</Button>
+        </CardFooter>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Client Audits</CardTitle>
+          <CardDescription>Sustainability audits shared by your client companies</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {sharedAudits.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No audits have been shared with you yet.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {sharedAudits.map(audit => (
+                <div key={audit.id} className="border rounded-md p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium">{audit.title}</h3>
+                      <p className="text-sm text-muted-foreground">From {audit.companyName}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs">Due: {audit.dueDate}</span>
+                        {audit.status === 'not_started' && (
+                          <span className="text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded">Not Started</span>
+                        )}
+                        {audit.status === 'in_progress' && (
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">In Progress</span>
+                        )}
+                        {audit.status === 'completed' && (
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">Completed</span>
+                        )}
+                      </div>
+                    </div>
+                    <Button asChild>
+                      <Link to={`/supplier/audit/${audit.id}`}>
+                        {audit.status === 'not_started' ? 'Start Audit' : 
+                         audit.status === 'in_progress' ? 'Continue' : 'View Results'}
+                      </Link>
+                    </Button>
+                  </div>
+                  
+                  {audit.status === 'in_progress' && audit.progress && (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span>Progress</span>
+                        <span>{audit.progress}%</span>
+                      </div>
+                      <Progress value={audit.progress} className="h-1.5" />
+                    </div>
+                  )}
+                  
+                  {audit.status === 'completed' && audit.score && (
+                    <div className="mt-2 flex items-center gap-1.5 text-sm">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span>Score: <span className="font-medium">{audit.score}/100</span></span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+        <CardFooter>
+          <p className="text-xs text-muted-foreground">
+            Completing these audits helps your clients assess your sustainability practices.
+          </p>
         </CardFooter>
       </Card>
 
