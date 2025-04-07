@@ -91,7 +91,7 @@ const EmployeeDashboard: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-2">
             <Button asChild className="w-full justify-start">
-              <Link to="/ghg" className="flex items-center gap-2">
+              <Link to="/personal-ghg" className="flex items-center gap-2">
                 <LineChart className="h-4 w-4" />
                 Calculate Personal Carbon Footprint
               </Link>
