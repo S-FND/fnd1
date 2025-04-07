@@ -8,13 +8,11 @@ import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 
 const Dashboard = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isCompanyUser, isEmployeeUser } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
   }
-
-  const isAdmin = user?.role === 'admin';
 
   return (
     <div className="min-h-screen">
@@ -24,11 +22,14 @@ const Dashboard = () => {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
             <p className="text-muted-foreground">
-              Welcome back, {user?.name}! Here's your sustainability snapshot.
+              Welcome back, {user?.name}! 
+              {isCompanyUser() ? 
+                " Here's your company sustainability snapshot." : 
+                " Here's your personal sustainability snapshot."}
             </p>
           </div>
           
-          {isAdmin ? <AdminDashboard /> : <EmployeeDashboard />}
+          {isCompanyUser() ? <AdminDashboard /> : <EmployeeDashboard />}
         </div>
       </SidebarLayout>
     </div>

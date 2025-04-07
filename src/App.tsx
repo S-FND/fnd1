@@ -12,8 +12,10 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import ESGPage from "./pages/ESG";
 import GHGPage from "./pages/GHG";
+import PersonalGHGPage from "./pages/PersonalGHG";
 import CompliancePage from "./pages/Compliance";
 import LMSPage from "./pages/LMS";
+import UnitsPage from "./pages/Units";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,8 +33,10 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/esg" element={<ESGPage />} />
             <Route path="/ghg" element={<GHGPage />} />
+            <Route path="/personal-ghg" element={<PersonalGHGPage />} />
             <Route path="/compliance" element={<CompliancePage />} />
             <Route path="/lms" element={<LMSPage />} />
+            <Route path="/units" element={<UnitsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>

@@ -3,24 +3,27 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import { BarChart3, ClipboardCheck, GraduationCap, LayoutDashboard, LineChart, Settings, Users } from 'lucide-react';
+import { BarChart3, Building2, Buildings, ClipboardCheck, GraduationCap, LayoutDashboard, LineChart, Settings, Users } from 'lucide-react';
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent } from '@/components/ui/sidebar';
 
 interface NavigationItem {
   name: string;
   href: string;
   icon: React.ElementType;
-  adminOnly?: boolean;
+  roles: string[];
 }
 
 const navigationItems: NavigationItem[] = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'ESG Management', href: '/esg', icon: BarChart3 },
-  { name: 'GHG Accounting', href: '/ghg', icon: LineChart },
-  { name: 'Compliance', href: '/compliance', icon: ClipboardCheck },
-  { name: 'LMS', href: '/lms', icon: GraduationCap },
-  { name: 'Team Management', href: '/team', icon: Users, adminOnly: true },
-  { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'manager', 'employee', 'unit_admin'] },
+  { name: 'ESG Management', href: '/esg', icon: BarChart3, roles: ['admin', 'manager', 'unit_admin'] },
+  { name: 'GHG Accounting', href: '/ghg', icon: LineChart, roles: ['admin', 'manager', 'unit_admin'] },
+  { name: 'Personal Carbon', href: '/personal-ghg', icon: LineChart, roles: ['employee'] },
+  { name: 'Compliance', href: '/compliance', icon: ClipboardCheck, roles: ['admin', 'manager', 'unit_admin'] },
+  { name: 'LMS', href: '/lms', icon: GraduationCap, roles: ['admin', 'manager', 'employee', 'unit_admin'] },
+  { name: 'Units Management', href: '/units', icon: Building2, roles: ['admin'] },
+  { name: 'Team Management', href: '/team', icon: Users, roles: ['admin', 'manager', 'unit_admin'] },
+  { name: 'Company Profile', href: '/company', icon: Buildings, roles: ['admin', 'manager'] },
+  { name: 'Settings', href: '/settings', icon: Settings, roles: ['admin', 'manager', 'employee', 'unit_admin'] },
 ];
 
 interface SidebarLayoutProps {
@@ -60,11 +63,16 @@ const AppSidebar: React.FC = () => {
             </div>
             <span>Fandoro</span>
           </Link>
+          {user?.role === 'unit_admin' && user?.unitId && (
+            <div className="mt-2 text-xs text-muted-foreground">
+              {user.units ? user.units.find(unit => unit.id === user.unitId)?.name : 'Unit Admin'}
+            </div>
+          )}
         </div>
         
         <nav className="space-y-1.5">
           {navigationItems
-            .filter(item => !item.adminOnly || role === 'admin')
+            .filter(item => item.roles.includes(role))
             .map((item) => (
               <Link
                 key={item.name}

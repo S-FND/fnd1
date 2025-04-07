@@ -3,7 +3,14 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-export type UserRole = "admin" | "manager" | "employee";
+export type UserRole = "admin" | "manager" | "employee" | "unit_admin";
+
+interface CompanyUnit {
+  id: string;
+  name: string;
+  location: string;
+  city: string;
+}
 
 interface User {
   id: string;
@@ -12,6 +19,8 @@ interface User {
   role: UserRole;
   companyId: string;
   locationId: string;
+  unitId?: string;
+  units?: CompanyUnit[]; // For company admins who can access multiple units
 }
 
 interface AuthContextType {
@@ -20,6 +29,9 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  isCompanyUser: () => boolean;
+  isEmployeeUser: () => boolean;
+  isUnitAdmin: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,7 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check for existing session on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem("eco-nexus-user");
+    const storedUser = localStorage.getItem("fandoro-user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
@@ -48,10 +60,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Mock authentication logic (replace with actual auth in production)
       if (email && password) {
         let role: UserRole = "employee";
+        let units: CompanyUnit[] = [];
+        let unitId: string | undefined = undefined;
+        
         if (email.includes("admin")) {
           role = "admin";
+          // Mock company units for admin users
+          units = [
+            { id: "unit-1", name: "Manufacturing Plant", location: "Mumbai", city: "Mumbai" },
+            { id: "unit-2", name: "R&D Center", location: "Bangalore", city: "Bangalore" },
+            { id: "unit-3", name: "Sales Office", location: "Delhi", city: "New Delhi" }
+          ];
         } else if (email.includes("manager")) {
           role = "manager";
+        } else if (email.includes("unit")) {
+          role = "unit_admin";
+          unitId = "unit-1";
         }
         
         const user = {
@@ -60,11 +84,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           email,
           role,
           companyId: "comp-1",
-          locationId: "loc-1"
+          locationId: "loc-1",
+          unitId,
+          units: role === "admin" || role === "manager" ? units : undefined
         };
         
         setUser(user);
-        localStorage.setItem("eco-nexus-user", JSON.stringify(user));
+        localStorage.setItem("fandoro-user", JSON.stringify(user));
         toast.success("Login successful!");
         navigate("/dashboard");
       } else {
@@ -80,9 +106,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("eco-nexus-user");
+    localStorage.removeItem("fandoro-user");
     toast.info("You have been logged out");
     navigate("/login");
+  };
+
+  // Helper functions to check user roles
+  const isCompanyUser = () => {
+    return user?.role === "admin" || user?.role === "manager" || user?.role === "unit_admin";
+  };
+
+  const isEmployeeUser = () => {
+    return user?.role === "employee";
+  };
+
+  const isUnitAdmin = () => {
+    return user?.role === "unit_admin";
   };
 
   return (
@@ -91,7 +130,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isLoading, 
       login, 
       logout,
-      isAuthenticated: !!user
+      isAuthenticated: !!user,
+      isCompanyUser,
+      isEmployeeUser,
+      isUnitAdmin
     }}>
       {children}
     </AuthContext.Provider>
