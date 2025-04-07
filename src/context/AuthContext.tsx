@@ -3,13 +3,21 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-export type UserRole = "admin" | "manager" | "employee" | "unit_admin";
+export type UserRole = "admin" | "manager" | "employee" | "unit_admin" | "supplier";
 
 interface CompanyUnit {
   id: string;
   name: string;
   location: string;
   city: string;
+}
+
+interface SupplierInfo {
+  id: string;
+  name: string;
+  category: string;
+  contactPerson: string;
+  auditStatus?: "pending" | "in_progress" | "completed";
 }
 
 interface User {
@@ -21,6 +29,7 @@ interface User {
   locationId: string;
   unitId?: string;
   units?: CompanyUnit[]; // For company admins who can access multiple units
+  supplierInfo?: SupplierInfo; // For supplier users
 }
 
 interface AuthContextType {
@@ -32,6 +41,7 @@ interface AuthContextType {
   isCompanyUser: () => boolean;
   isEmployeeUser: () => boolean;
   isUnitAdmin: () => boolean;
+  isSupplier: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -62,6 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let role: UserRole = "employee";
         let units: CompanyUnit[] = [];
         let unitId: string | undefined = undefined;
+        let supplierInfo: SupplierInfo | undefined = undefined;
         
         if (email.includes("admin")) {
           role = "admin";
@@ -76,6 +87,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else if (email.includes("unit")) {
           role = "unit_admin";
           unitId = "unit-1";
+        } else if (email.includes("supplier")) {
+          role = "supplier";
+          supplierInfo = {
+            id: `supplier-${Date.now()}`,
+            name: email.includes("eco") ? "EcoPackaging Solutions" : 
+                  email.includes("green") ? "GreenTech Materials" : "Sustainable Logistics Inc",
+            category: email.includes("eco") ? "Packaging" : 
+                     email.includes("green") ? "Raw Materials" : "Logistics",
+            contactPerson: email.split("@")[0],
+            auditStatus: "pending"
+          };
         }
         
         const user = {
@@ -86,13 +108,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           companyId: "comp-1",
           locationId: "loc-1",
           unitId,
-          units: role === "admin" || role === "manager" ? units : undefined
+          units: role === "admin" || role === "manager" ? units : undefined,
+          supplierInfo: role === "supplier" ? supplierInfo : undefined
         };
         
         setUser(user);
         localStorage.setItem("fandoro-user", JSON.stringify(user));
         toast.success("Login successful!");
-        navigate("/dashboard");
+        
+        // Redirect based on role
+        if (role === "supplier") {
+          navigate("/supplier/dashboard");
+        } else {
+          navigate("/dashboard");
+        }
       } else {
         toast.error("Invalid credentials");
       }
@@ -123,6 +152,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isUnitAdmin = () => {
     return user?.role === "unit_admin";
   };
+  
+  const isSupplier = () => {
+    return user?.role === "supplier";
+  };
 
   return (
     <AuthContext.Provider value={{ 
@@ -133,7 +166,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isAuthenticated: !!user,
       isCompanyUser,
       isEmployeeUser,
-      isUnitAdmin
+      isUnitAdmin,
+      isSupplier
     }}>
       {children}
     </AuthContext.Provider>

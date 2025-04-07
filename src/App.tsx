@@ -17,6 +17,8 @@ import CompliancePage from "./pages/Compliance";
 import LMSPage from "./pages/LMS";
 import UnitsPage from "./pages/Units";
 import NotFound from "./pages/NotFound";
+import AuditDashboardPage from "./pages/audit/AuditDashboardPage";
+import SupplierDashboardPage from "./pages/supplier/SupplierDashboardPage";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +39,11 @@ const App = () => (
             <Route path="/compliance" element={<CompliancePage />} />
             <Route path="/lms" element={<LMSPage />} />
             <Route path="/units" element={<UnitsPage />} />
+            <Route path="/audit" element={<AuditDashboardPage />} />
+            
+            {/* Supplier routes */}
+            <Route path="/supplier/dashboard" element={<SupplierDashboardPage />} />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>
