@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Clock, FileText, Mail, MoreHorizontal, Search, UserCheck, X } from 'lucide-react';
+import { CheckCircle, Clock, FileText, Mail, MoreHorizontal, Search, UserCheck, X, ClipboardList } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
 interface Supplier {
   id: string;
@@ -135,10 +135,16 @@ const AuditDashboard: React.FC = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button>
-          <FileText className="mr-2 h-4 w-4" />
-          New Audit
-        </Button>
+        <div className="flex gap-3 w-full sm:w-auto">
+          <Button as={Link} to="/audit/checklist">
+            <ClipboardList className="mr-2 h-4 w-4" />
+            Audit Checklists
+          </Button>
+          <Button>
+            <FileText className="mr-2 h-4 w-4" />
+            New Audit
+          </Button>
+        </div>
       </div>
 
       <Card>
@@ -318,7 +324,6 @@ const AuditDashboard: React.FC = () => {
               </div>
             </TabsContent>
             <TabsContent value="in_progress" className="mt-4">
-              {/* Similar table structure for in_progress suppliers */}
               <div className="rounded-md border">
                 <div className="relative w-full overflow-auto">
                   <table className="w-full caption-bottom text-sm">
@@ -352,7 +357,6 @@ const AuditDashboard: React.FC = () => {
               </div>
             </TabsContent>
             <TabsContent value="pending" className="mt-4">
-              {/* Similar table structure for pending suppliers */}
               <div className="rounded-md border">
                 <div className="relative w-full overflow-auto">
                   <table className="w-full caption-bottom text-sm">
@@ -383,7 +387,6 @@ const AuditDashboard: React.FC = () => {
               </div>
             </TabsContent>
             <TabsContent value="not_started" className="mt-4">
-              {/* Similar table structure for not_started suppliers */}
               <div className="rounded-md border">
                 <div className="relative w-full overflow-auto">
                   <table className="w-full caption-bottom text-sm">

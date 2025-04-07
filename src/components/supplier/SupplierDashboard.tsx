@@ -5,8 +5,62 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { Building, CheckCircle, Circle, ClipboardList, FileCheck } from 'lucide-react';
+import { Building, CheckCircle, Circle, ClipboardList, FileCheck, AlertCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+
+// Mock audit questions for supplier to answer
+const mockAuditQuestions = [
+  {
+    id: 'q1',
+    question: 'Does your company have an environmental policy?',
+    category: 'Environmental',
+    required: true,
+    answered: true,
+    answer: 'yes',
+    attachmentRequired: true,
+    attachmentUploaded: true,
+  },
+  {
+    id: 'q2',
+    question: 'Do you measure and report greenhouse gas emissions?',
+    category: 'Environmental',
+    required: true,
+    answered: true,
+    answer: 'yes',
+    attachmentRequired: true,
+    attachmentUploaded: false,
+  },
+  {
+    id: 'q3',
+    question: 'Do you have waste reduction targets?',
+    category: 'Environmental',
+    required: false,
+    answered: true,
+    answer: 'partial',
+    attachmentRequired: false,
+    attachmentUploaded: false,
+  },
+  {
+    id: 'q4',
+    question: 'Do you have a supplier code of conduct?',
+    category: 'Governance',
+    required: true,
+    answered: false,
+    answer: null,
+    attachmentRequired: true,
+    attachmentUploaded: false,
+  },
+  {
+    id: 'q5',
+    question: 'Do you have fair labor practices?',
+    category: 'Social',
+    required: true,
+    answered: false,
+    answer: null,
+    attachmentRequired: false,
+    attachmentUploaded: false,
+  }
+];
 
 const SupplierDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -14,10 +68,48 @@ const SupplierDashboard: React.FC = () => {
     user?.supplierInfo?.auditStatus === 'completed' ? 100 :
     user?.supplierInfo?.auditStatus === 'in_progress' ? 45 : 0
   );
+  const [auditQuestions, setAuditQuestions] = useState(mockAuditQuestions);
+  
+  // Calculate audit completion
+  const calculateAuditProgress = () => {
+    if (auditQuestions.length === 0) return 0;
+    const answeredQuestions = auditQuestions.filter(q => q.answered).length;
+    const requiredAttachments = auditQuestions.filter(q => q.attachmentRequired).length;
+    const uploadedAttachments = auditQuestions.filter(q => q.attachmentUploaded).length;
+    
+    // Weight answers as 70% and attachments as 30% of total progress
+    const answerProgress = (answeredQuestions / auditQuestions.length) * 70;
+    const attachmentProgress = requiredAttachments > 0 
+      ? (uploadedAttachments / requiredAttachments) * 30
+      : 30;
+      
+    return Math.round(answerProgress + attachmentProgress);
+  };
 
   const handleStartAudit = () => {
     setAuditProgress(15);
     toast.success("Audit process started. Please complete all sections.");
+  };
+
+  // Display the appropriate icon based on question status
+  const getQuestionStatusIcon = (question: any) => {
+    if (!question.answered) {
+      return <Circle className="h-5 w-5 text-muted-foreground mt-0.5" />;
+    }
+    
+    if (question.attachmentRequired && !question.attachmentUploaded) {
+      return <AlertCircle className="h-5 w-5 text-yellow-500 mt-0.5" />;
+    }
+    
+    if (question.answer === 'yes') {
+      return <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />;
+    }
+    
+    if (question.answer === 'partial') {
+      return <AlertCircle className="h-5 w-5 text-yellow-500 mt-0.5" />;
+    }
+    
+    return <Circle className="h-5 w-5 text-muted-foreground mt-0.5" />;
   };
 
   return (
@@ -70,9 +162,9 @@ const SupplierDashboard: React.FC = () => {
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
               <div className="text-sm font-medium">Completion Progress</div>
-              <div className="text-sm text-muted-foreground">{auditProgress}%</div>
+              <div className="text-sm text-muted-foreground">{calculateAuditProgress()}%</div>
             </div>
-            <Progress value={auditProgress} className="h-2" />
+            <Progress value={calculateAuditProgress()} className="h-2" />
           </div>
 
           {auditProgress === 0 ? (
@@ -85,99 +177,140 @@ const SupplierDashboard: React.FC = () => {
               <Button onClick={handleStartAudit}>Start Audit Process</Button>
             </div>
           ) : (
-            <Tabs defaultValue="general">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="general">General</TabsTrigger>
-                <TabsTrigger value="environmental">Environmental</TabsTrigger>
-                <TabsTrigger value="social">Social</TabsTrigger>
-                <TabsTrigger value="governance">Governance</TabsTrigger>
+            <Tabs defaultValue="all">
+              <TabsList className="mb-4">
+                <TabsTrigger value="all">All Questions</TabsTrigger>
+                <TabsTrigger value="pending">Pending</TabsTrigger>
+                <TabsTrigger value="completed">Completed</TabsTrigger>
               </TabsList>
               
-              <TabsContent value="general" className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                    <div>
-                      <h4 className="font-medium">Company Information</h4>
-                      <p className="text-sm text-muted-foreground">Basic company details completed</p>
+              <TabsContent value="all" className="space-y-4">
+                {auditQuestions.map(question => (
+                  <div key={question.id} className="border rounded-md p-4">
+                    <div className="flex items-start gap-3">
+                      {getQuestionStatusIcon(question)}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">{question.question}</h4>
+                          {question.required && (
+                            <span className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded">Required</span>
+                          )}
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">{question.category}</span>
+                        </div>
+                        
+                        {question.answered ? (
+                          <div className="mt-2 space-y-3">
+                            <div className="flex gap-2">
+                              <Button 
+                                size="sm" 
+                                variant={question.answer === 'yes' ? 'default' : 'outline'}
+                                className="rounded-full"
+                              >
+                                Yes
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant={question.answer === 'partial' ? 'default' : 'outline'}
+                                className="rounded-full"
+                              >
+                                Partial
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant={question.answer === 'no' ? 'default' : 'outline'}
+                                className="rounded-full"
+                              >
+                                No
+                              </Button>
+                            </div>
+                            
+                            {question.attachmentRequired && (
+                              <div>
+                                {question.attachmentUploaded ? (
+                                  <div className="flex items-center gap-2 text-sm text-green-600">
+                                    <FileCheck className="h-4 w-4" /> Documentation uploaded
+                                  </div>
+                                ) : (
+                                  <Button size="sm" variant="outline">
+                                    Upload Supporting Document
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="mt-2">
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline" className="rounded-full">Yes</Button>
+                              <Button size="sm" variant="outline" className="rounded-full">Partial</Button>
+                              <Button size="sm" variant="outline" className="rounded-full">No</Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <Circle className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <h4 className="font-medium">Sustainability Policy</h4>
-                      <p className="text-sm text-muted-foreground">Upload your sustainability policy document</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Circle className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <h4 className="font-medium">Management Systems</h4>
-                      <p className="text-sm text-muted-foreground">Provide details on your management systems</p>
-                    </div>
-                  </div>
+                ))}
+                
+                <div className="flex justify-end mt-6">
+                  <Button variant="outline" className="mr-2">Save Progress</Button>
+                  <Button disabled={calculateAuditProgress() < 100}>Submit Audit</Button>
                 </div>
-                <Button>Continue General Section</Button>
               </TabsContent>
               
-              <TabsContent value="environmental" className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <Circle className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <h4 className="font-medium">Carbon Footprint</h4>
-                      <p className="text-sm text-muted-foreground">Report your annual carbon emissions</p>
+              <TabsContent value="pending" className="space-y-4">
+                {auditQuestions.filter(q => !q.answered || (q.attachmentRequired && !q.attachmentUploaded)).map(question => (
+                  <div key={question.id} className="border rounded-md p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-yellow-500 mt-0.5" />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">{question.question}</h4>
+                          {question.required && (
+                            <span className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded">Required</span>
+                          )}
+                        </div>
+                        
+                        {!question.answered ? (
+                          <div className="mt-2">
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline" className="rounded-full">Yes</Button>
+                              <Button size="sm" variant="outline" className="rounded-full">Partial</Button>
+                              <Button size="sm" variant="outline" className="rounded-full">No</Button>
+                            </div>
+                          </div>
+                        ) : question.attachmentRequired && !question.attachmentUploaded && (
+                          <div className="mt-2">
+                            <Button size="sm" variant="outline">
+                              Upload Supporting Document
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <Circle className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <h4 className="font-medium">Waste Management</h4>
-                      <p className="text-sm text-muted-foreground">Describe your waste management practices</p>
-                    </div>
-                  </div>
-                </div>
-                <Button>Start Environmental Section</Button>
+                ))}
               </TabsContent>
-
-              <TabsContent value="social" className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <Circle className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <h4 className="font-medium">Labor Practices</h4>
-                      <p className="text-sm text-muted-foreground">Details on workforce and labor practices</p>
+              
+              <TabsContent value="completed" className="space-y-4">
+                {auditQuestions.filter(q => q.answered && (!q.attachmentRequired || q.attachmentUploaded)).map(question => (
+                  <div key={question.id} className="border rounded-md p-4">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                      <div>
+                        <h4 className="font-medium">{question.question}</h4>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Answer: <span className="font-medium capitalize">{question.answer}</span>
+                        </p>
+                        {question.attachmentUploaded && (
+                          <div className="flex items-center gap-2 text-sm text-green-600 mt-1">
+                            <FileCheck className="h-4 w-4" /> Documentation uploaded
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <Circle className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <h4 className="font-medium">Community Engagement</h4>
-                      <p className="text-sm text-muted-foreground">Report on community involvement</p>
-                    </div>
-                  </div>
-                </div>
-                <Button>Start Social Section</Button>
-              </TabsContent>
-
-              <TabsContent value="governance" className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <div className="flex items-start gap-2">
-                    <Circle className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <h4 className="font-medium">Business Ethics</h4>
-                      <p className="text-sm text-muted-foreground">Describe your ethical business practices</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Circle className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <h4 className="font-medium">Anti-Corruption Policies</h4>
-                      <p className="text-sm text-muted-foreground">Provide details on anti-corruption measures</p>
-                    </div>
-                  </div>
-                </div>
-                <Button>Start Governance Section</Button>
+                ))}
               </TabsContent>
             </Tabs>
           )}

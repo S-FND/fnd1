@@ -18,6 +18,7 @@ import LMSPage from "./pages/LMS";
 import UnitsPage from "./pages/Units";
 import NotFound from "./pages/NotFound";
 import AuditDashboardPage from "./pages/audit/AuditDashboardPage";
+import AuditChecklistPage from "./pages/audit/AuditChecklistPage";
 import SupplierDashboardPage from "./pages/supplier/SupplierDashboardPage";
 
 const queryClient = new QueryClient();
@@ -39,7 +40,10 @@ const App = () => (
             <Route path="/compliance" element={<CompliancePage />} />
             <Route path="/lms" element={<LMSPage />} />
             <Route path="/units" element={<UnitsPage />} />
+            
+            {/* Audit routes */}
             <Route path="/audit" element={<AuditDashboardPage />} />
+            <Route path="/audit/checklist" element={<AuditChecklistPage />} />
             
             {/* Supplier routes */}
             <Route path="/supplier/dashboard" element={<SupplierDashboardPage />} />
