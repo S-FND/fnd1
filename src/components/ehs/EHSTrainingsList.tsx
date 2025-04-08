@@ -1,12 +1,13 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Calendar, Users, Building } from 'lucide-react';
+import { Calendar, Users, Building, Clock, MapPin, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { fetchEHSTrainings } from '@/data/mockData';
+import { Link } from 'react-router-dom';
 
 const EHSTrainingsList = () => {
   const { data: trainings, isLoading } = useQuery({
@@ -36,6 +37,28 @@ const EHSTrainingsList = () => {
     );
   }
 
+  const getStatusVariant = (status) => {
+    switch (status) {
+      case 'completed':
+        return 'default';
+      case 'in-progress':
+        return 'secondary';
+      default:
+        return 'outline';
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'completed':
+        return 'Completed';
+      case 'in-progress':
+        return 'In Progress';
+      default:
+        return 'Scheduled';
+    }
+  };
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {trainings?.map((training) => (
@@ -43,19 +66,24 @@ const EHSTrainingsList = () => {
           <CardHeader className="p-4">
             <div className="flex justify-between items-start">
               <CardTitle className="text-lg">{training.name}</CardTitle>
-              <Badge variant={training.status === 'scheduled' ? 'outline' : 'default'}>
-                {training.status === 'scheduled' ? 'Scheduled' : 'Completed'}
+              <Badge variant={getStatusVariant(training.status)}>
+                {getStatusLabel(training.status)}
               </Badge>
             </div>
             <CardDescription className="flex items-center gap-1 mt-2">
               <Calendar className="h-3.5 w-3.5" />
-              {new Date(training.date).toLocaleDateString('en-US', { 
+              {new Date(training.startDate || training.date).toLocaleDateString('en-US', { 
                 year: 'numeric', 
                 month: 'long', 
                 day: 'numeric' 
               })}
-              {' at '}
-              {training.time}
+              {training.endDate && (' to ' + 
+                new Date(training.endDate).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent className="p-4 pt-0">
@@ -63,14 +91,24 @@ const EHSTrainingsList = () => {
               <Building className="h-3.5 w-3.5" />
               <span>{training.clientCompany}</span>
             </div>
-            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
               <Users className="h-3.5 w-3.5" />
               <span>{training.attendees.length} attendees</span>
             </div>
+            <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
+              <BookOpen className="h-3.5 w-3.5" />
+              <span>{training.trainingType === 'online' ? 'Online (LMS)' : 'Offline (In-Person)'}</span>
+            </div>
+            {training.location && (
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <MapPin className="h-3.5 w-3.5" />
+                <span>{training.location}</span>
+              </div>
+            )}
           </CardContent>
           <CardFooter className="p-4">
             <Button variant="outline" className="w-full" asChild>
-              <a href={`/ehs-trainings/${training.id}`}>View Training Details</a>
+              <Link to={`/ehs-trainings/${training.id}`}>View Training Details</Link>
             </Button>
           </CardFooter>
         </Card>

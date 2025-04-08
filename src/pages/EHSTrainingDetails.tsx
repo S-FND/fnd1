@@ -2,7 +2,7 @@
 import React from 'react';
 import { useParams, Navigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, Calendar, Clock, MapPin, Users, Building } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, MapPin, Users, Building, BookOpen, User } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Navbar } from '@/components/layout/Navbar';
 import { SidebarLayout } from '@/components/layout/Sidebar';
@@ -33,6 +33,30 @@ const EHSTrainingDetails = () => {
     return <Navigate to="/login" />;
   }
 
+  // Function to get status variant for badge
+  const getStatusVariant = (status) => {
+    switch (status) {
+      case 'completed':
+        return 'default';
+      case 'in-progress':
+        return 'secondary';
+      default:
+        return 'outline';
+    }
+  };
+
+  // Function to get status label
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'completed':
+        return 'Completed';
+      case 'in-progress':
+        return 'In Progress';
+      default:
+        return 'Scheduled';
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -55,8 +79,8 @@ const EHSTrainingDetails = () => {
               </h1>
             </div>
             {!isLoading && training && (
-              <Badge variant={training.status === 'scheduled' ? 'outline' : 'default'} className="text-sm">
-                {training.status === 'scheduled' ? 'Scheduled' : 'Completed'}
+              <Badge variant={getStatusVariant(training.status)} className="text-sm">
+                {getStatusLabel(training.status)}
               </Badge>
             )}
           </div>
@@ -88,24 +112,52 @@ const EHSTrainingDetails = () => {
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
                         <span>
-                          {new Date(training.date).toLocaleDateString('en-US', { 
-                            weekday: 'long',
-                            year: 'numeric', 
-                            month: 'long', 
-                            day: 'numeric' 
-                          })}
+                          {training.startDate ? (
+                            <>
+                              From {new Date(training.startDate).toLocaleDateString('en-US', { 
+                                weekday: 'long',
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                              })}
+                              {' to '}
+                              {new Date(training.endDate || training.startDate).toLocaleDateString('en-US', { 
+                                weekday: 'long',
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric' 
+                              })}
+                            </>
+                          ) : (
+                            new Date(training.date).toLocaleDateString('en-US', { 
+                              weekday: 'long',
+                              year: 'numeric', 
+                              month: 'long', 
+                              day: 'numeric' 
+                            })
+                          )}
                         </span>
                       </div>
                       
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span>{training.time} ({training.duration})</span>
+                        <span>
+                          {training.startTime ? `${training.startTime} to ${training.endTime}` : training.time} 
+                          {' '}({training.duration})
+                        </span>
                       </div>
                       
                       <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span>{training.location}</span>
+                        <BookOpen className="h-4 w-4 text-muted-foreground" />
+                        <span>{training.trainingType === 'online' ? 'Online (LMS based)' : 'Offline (In-Person)'}</span>
                       </div>
+                      
+                      {training.location && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-muted-foreground" />
+                          <span>{training.location}</span>
+                        </div>
+                      )}
                       
                       <div className="flex items-center gap-2">
                         <Building className="h-4 w-4 text-muted-foreground" />
@@ -116,6 +168,13 @@ const EHSTrainingDetails = () => {
                         <Users className="h-4 w-4 text-muted-foreground" />
                         <span>{training.attendees.length} attendees</span>
                       </div>
+
+                      {training.trainerName && (
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span>Trainer: {training.trainerName}</span>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

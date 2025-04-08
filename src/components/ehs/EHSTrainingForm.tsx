@@ -11,6 +11,13 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Calendar } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { 
   Popover, 
   PopoverContent, 
@@ -28,16 +35,36 @@ const formSchema = z.object({
   name: z.string().min(3, { message: "Training name must be at least 3 characters" }),
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
   clientCompany: z.string().min(2, { message: "Client company name is required" }),
-  date: z.date({ required_error: "Date is required" }),
-  time: z.string().min(1, { message: "Time is required" }),
+  startDate: z.date({ required_error: "Start date is required" }),
+  endDate: z.date({ required_error: "End date is required" }),
+  startTime: z.string().min(1, { message: "Start time is required" }),
+  endTime: z.string().min(1, { message: "End time is required" }),
   duration: z.string().min(1, { message: "Duration is required" }),
-  location: z.string().min(1, { message: "Location is required" }),
+  trainingType: z.enum(["online", "offline"]),
+  status: z.enum(["scheduled", "in-progress", "completed"]),
+  trainerName: z.string().min(2, { message: "Trainer name is required" }),
+  location: z.string().optional().or(z.literal('')),
   attendees: z.array(
     z.object({
       name: z.string().min(1, { message: "Name is required" }),
       email: z.string().email({ message: "Invalid email address" }),
     })
   ).min(1, { message: "At least one attendee is required" }),
+}).refine(data => {
+  // Make sure location is provided for offline trainings
+  if (data.trainingType === "offline" && (!data.location || data.location.trim().length === 0)) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Location is required for offline trainings",
+  path: ["location"],
+}).refine(data => {
+  // Make sure end date is after or equal to start date
+  return data.endDate >= data.startDate;
+}, {
+  message: "End date must be after or equal to start date",
+  path: ["endDate"],
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -53,15 +80,21 @@ const EHSTrainingForm: React.FC<EHSTrainingFormProps> = ({ onComplete }) => {
       name: '',
       description: '',
       clientCompany: '',
-      date: undefined,
-      time: '',
+      startDate: undefined,
+      endDate: undefined,
+      startTime: '',
+      endTime: '',
       duration: '',
+      trainingType: "offline",
+      status: "scheduled",
+      trainerName: '',
       location: '',
       attendees: [defaultAttendee],
     },
   });
 
   const attendees = form.watch('attendees') || [defaultAttendee];
+  const trainingType = form.watch('trainingType');
 
   const addAttendee = () => {
     form.setValue('attendees', [...attendees, defaultAttendee]);
@@ -81,7 +114,7 @@ const EHSTrainingForm: React.FC<EHSTrainingFormProps> = ({ onComplete }) => {
     
     toast({
       title: "Training created",
-      description: `${data.name} for ${data.clientCompany} has been scheduled on ${format(data.date, 'MMMM d, yyyy')}`,
+      description: `${data.name} for ${data.clientCompany} has been scheduled from ${format(data.startDate, 'MMMM d, yyyy')} to ${format(data.endDate, 'MMMM d, yyyy')}`,
     });
     
     onComplete();
@@ -141,38 +174,24 @@ const EHSTrainingForm: React.FC<EHSTrainingFormProps> = ({ onComplete }) => {
         <div className="grid gap-4 md:grid-cols-3">
           <FormField
             control={form.control}
-            name="date"
+            name="trainingType"
             render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>Date</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "w-full pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground"
-                        )}
-                      >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick a date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+              <FormItem>
+                <FormLabel>Training Type</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select training type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="online">Online (LMS based)</SelectItem>
+                    <SelectItem value="offline">Offline (In-Person)</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -180,13 +199,25 @@ const EHSTrainingForm: React.FC<EHSTrainingFormProps> = ({ onComplete }) => {
 
           <FormField
             control={form.control}
-            name="time"
+            name="status"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Time</FormLabel>
-                <FormControl>
-                  <Input type="time" {...field} />
-                </FormControl>
+                <FormLabel>Status</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="scheduled">Scheduled</SelectItem>
+                    <SelectItem value="in-progress">In Progress</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -194,12 +225,12 @@ const EHSTrainingForm: React.FC<EHSTrainingFormProps> = ({ onComplete }) => {
 
           <FormField
             control={form.control}
-            name="duration"
+            name="trainerName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Duration</FormLabel>
+                <FormLabel>Trainer Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. 2 hours" {...field} />
+                  <Input placeholder="Enter trainer name" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -207,19 +238,151 @@ const EHSTrainingForm: React.FC<EHSTrainingFormProps> = ({ onComplete }) => {
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="location"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Location</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter training location" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-4">
+            <FormField
+              control={form.control}
+              name="startDate"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Start Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a start date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="startTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Start Time</FormLabel>
+                  <FormControl>
+                    <Input type="time" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <FormField
+              control={form.control}
+              name="endDate"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>End Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick an end date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="endTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>End Time</FormLabel>
+                  <FormControl>
+                    <Input type="time" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="duration"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Duration</FormLabel>
+                <FormControl>
+                  <Input placeholder="e.g. 2 days, 4 hours" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {trainingType === "offline" && (
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Location</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter training location" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           )}
-        />
+        </div>
 
         <div>
           <div className="flex justify-between items-center mb-2">
