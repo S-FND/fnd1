@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Building, User } from 'lucide-react';
+import { Building, User, FileCheck } from 'lucide-react';
 
 const Login = () => {
   const [loginType, setLoginType] = useState<string>('company');
@@ -20,7 +20,7 @@ const Login = () => {
         <div className="bg-background p-8 rounded-lg border shadow-sm">
           <div className="space-y-4">
             <Tabs defaultValue="company" onValueChange={setLoginType}>
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="company" className="flex items-center gap-2">
                   <Building className="h-4 w-4" />
                   <span>Company</span>
@@ -28,6 +28,10 @@ const Login = () => {
                 <TabsTrigger value="supplier" className="flex items-center gap-2">
                   <User className="h-4 w-4" />
                   <span>Supplier</span>
+                </TabsTrigger>
+                <TabsTrigger value="vendor" className="flex items-center gap-2">
+                  <FileCheck className="h-4 w-4" />
+                  <span>Vendor</span>
                 </TabsTrigger>
               </TabsList>
               
@@ -57,6 +61,21 @@ const Login = () => {
                     <ul className="mt-2 list-disc pl-5 space-y-1">
                       <li>EcoPackaging: supplier.eco@example.com / password</li>
                       <li>GreenTech: supplier.green@example.com / password</li>
+                    </ul>
+                  </div>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="vendor" className="pt-4">
+                <div>
+                  <h2 className="text-xl font-semibold">Vendor Sign In</h2>
+                  <p className="text-sm text-muted-foreground mb-4">For training vendors providing EHS training services</p>
+                  <LoginForm />
+                  <div className="mt-4 pt-4 border-t text-sm text-muted-foreground">
+                    <p>Demo vendor accounts:</p>
+                    <ul className="mt-2 list-disc pl-5 space-y-1">
+                      <li>SafetyFirst: vendor1@example.com / password</li>
+                      <li>EHS Excellence: vendor2@example.com / password</li>
                     </ul>
                   </div>
                 </div>

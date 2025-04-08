@@ -24,6 +24,13 @@ import AuditChecklistPage from "./pages/audit/AuditChecklistPage";
 import SupplierDashboardPage from "./pages/supplier/SupplierDashboardPage";
 import SupplierAuditResponsePage from "./pages/supplier/SupplierAuditResponsePage";
 
+// Vendor pages
+import VendorDashboard from "./pages/vendor/VendorDashboard";
+import VendorTrainings from "./pages/vendor/VendorTrainings";
+import VendorBids from "./pages/vendor/VendorBids";
+import VendorBidForm from "./pages/vendor/VendorBidForm";
+import VendorProfile from "./pages/vendor/VendorProfile";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -55,6 +62,13 @@ const App = () => (
             {/* Supplier routes */}
             <Route path="/supplier/dashboard" element={<SupplierDashboardPage />} />
             <Route path="/supplier/audit/:auditId" element={<SupplierAuditResponsePage />} />
+            
+            {/* Vendor routes */}
+            <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+            <Route path="/vendor/trainings" element={<VendorTrainings />} />
+            <Route path="/vendor/bids" element={<VendorBids />} />
+            <Route path="/vendor/bid/:trainingId" element={<VendorBidForm />} />
+            <Route path="/vendor/profile" element={<VendorProfile />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>

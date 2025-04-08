@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-export type UserRole = "admin" | "manager" | "employee" | "unit_admin" | "supplier";
+export type UserRole = "admin" | "manager" | "employee" | "unit_admin" | "supplier" | "vendor";
 
 interface CompanyUnit {
   id: string;
@@ -20,6 +20,12 @@ interface SupplierInfo {
   auditStatus?: "pending" | "in_progress" | "completed";
 }
 
+interface VendorInfo {
+  id: string;
+  companyName: string;
+  specialties: string[];
+}
+
 interface User {
   id: string;
   name: string;
@@ -30,6 +36,7 @@ interface User {
   unitId?: string;
   units?: CompanyUnit[]; // For company admins who can access multiple units
   supplierInfo?: SupplierInfo; // For supplier users
+  vendorInfo?: VendorInfo; // For vendor users
 }
 
 interface AuthContextType {
@@ -42,6 +49,7 @@ interface AuthContextType {
   isEmployeeUser: () => boolean;
   isUnitAdmin: () => boolean;
   isSupplier: () => boolean;
+  isVendor: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -73,6 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let units: CompanyUnit[] = [];
         let unitId: string | undefined = undefined;
         let supplierInfo: SupplierInfo | undefined = undefined;
+        let vendorInfo: VendorInfo | undefined = undefined;
         
         if (email.includes("admin")) {
           role = "admin";
@@ -98,6 +107,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             contactPerson: email.split("@")[0],
             auditStatus: "pending"
           };
+        } else if (email.includes("vendor")) {
+          role = "vendor";
+          vendorInfo = {
+            id: email.includes("vendor1") ? "vendor-1" : "vendor-2",
+            companyName: email.includes("vendor1") ? "SafetyFirst Training Ltd." : "EHS Excellence Corp",
+            specialties: email.includes("vendor1") 
+              ? ["Chemical Handling", "Fire Safety", "Emergency Response"]
+              : ["Workplace Safety", "Environmental Compliance", "Risk Assessment"]
+          };
         }
         
         const user = {
@@ -109,7 +127,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           locationId: "loc-1",
           unitId,
           units: role === "admin" || role === "manager" ? units : undefined,
-          supplierInfo: role === "supplier" ? supplierInfo : undefined
+          supplierInfo: role === "supplier" ? supplierInfo : undefined,
+          vendorInfo: role === "vendor" ? vendorInfo : undefined
         };
         
         setUser(user);
@@ -119,6 +138,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Redirect based on role
         if (role === "supplier") {
           navigate("/supplier/dashboard");
+        } else if (role === "vendor") {
+          navigate("/vendor/dashboard");
         } else {
           navigate("/dashboard");
         }
@@ -157,6 +178,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return user?.role === "supplier";
   };
 
+  const isVendor = () => {
+    return user?.role === "vendor";
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -167,7 +192,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isCompanyUser,
       isEmployeeUser,
       isUnitAdmin,
-      isSupplier
+      isSupplier,
+      isVendor
     }}>
       {children}
     </AuthContext.Provider>
