@@ -16,6 +16,8 @@ import PersonalGHGPage from "./pages/PersonalGHG";
 import CompliancePage from "./pages/Compliance";
 import LMSPage from "./pages/LMS";
 import UnitsPage from "./pages/Units";
+import EHSTrainingsPage from "./pages/EHSTrainings";
+import EHSTrainingDetails from "./pages/EHSTrainingDetails";
 import NotFound from "./pages/NotFound";
 import AuditDashboardPage from "./pages/audit/AuditDashboardPage";
 import AuditChecklistPage from "./pages/audit/AuditChecklistPage";
@@ -41,6 +43,10 @@ const App = () => (
             <Route path="/compliance" element={<CompliancePage />} />
             <Route path="/lms" element={<LMSPage />} />
             <Route path="/units" element={<UnitsPage />} />
+            
+            {/* EHS Trainings routes */}
+            <Route path="/ehs-trainings" element={<EHSTrainingsPage />} />
+            <Route path="/ehs-trainings/:trainingId" element={<EHSTrainingDetails />} />
             
             {/* Audit routes */}
             <Route path="/audit" element={<AuditDashboardPage />} />

@@ -1,4 +1,3 @@
-
 import { BarChart, LineChart, PieChart } from "lucide-react";
 
 // ESG KPIs
@@ -62,7 +61,7 @@ export const complianceItems = [
 export const mainNavItems = [
   { name: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
   { name: "ESG Management", href: "/esg", icon: "BarChart3" },
-  { name: "GHG Accounting", href: "/ghg", icon: "LineChart" },
+  { id: "GHG Accounting", href: "/ghg", icon: "LineChart" },
   { name: "Compliance", href: "/compliance", icon: "ClipboardCheck" },
   { name: "LMS", href: "/lms", icon: "GraduationCap" },
 ];
@@ -122,3 +121,100 @@ export const personalGHGParams = [
     { value: "vegan", label: "Vegan", co2Factor: 1.5 },
   ]},
 ];
+
+interface Attendee {
+  name: string;
+  email: string;
+}
+
+interface EHSTraining {
+  id: string;
+  name: string;
+  description: string;
+  clientCompany: string;
+  date: string;
+  time: string;
+  duration: string;
+  location: string;
+  status: 'scheduled' | 'completed';
+  attendees: Attendee[];
+}
+
+const ehsTrainings: EHSTraining[] = [
+  {
+    id: '1',
+    name: 'Workplace Safety Training',
+    description: 'Comprehensive training on workplace safety protocols, including emergency procedures and hazard identification.',
+    clientCompany: 'ABC Corp',
+    date: '2025-04-15',
+    time: '10:00 AM',
+    duration: '3 hours',
+    location: 'Client HQ, New York',
+    status: 'scheduled',
+    attendees: [
+      { name: 'John Smith', email: 'john.smith@abccorp.com' },
+      { name: 'Jane Doe', email: 'jane.doe@abccorp.com' },
+      { name: 'Robert Johnson', email: 'robert.j@abccorp.com' },
+    ]
+  },
+  {
+    id: '2',
+    name: 'Chemical Handling',
+    description: 'Training on proper handling, storage, and disposal of hazardous chemicals in industrial settings.',
+    clientCompany: 'XYZ Industries',
+    date: '2025-04-22',
+    time: '9:30 AM',
+    duration: '4 hours',
+    location: 'XYZ Manufacturing Plant',
+    status: 'scheduled',
+    attendees: [
+      { name: 'Michael Brown', email: 'm.brown@xyzind.com' },
+      { name: 'Sarah Wilson', email: 's.wilson@xyzind.com' },
+      { name: 'David Lee', email: 'd.lee@xyzind.com' },
+      { name: 'Emily Chen', email: 'e.chen@xyzind.com' },
+    ]
+  },
+  {
+    id: '3',
+    name: 'Environmental Compliance',
+    description: 'Overview of environmental regulations and compliance requirements for manufacturing operations.',
+    clientCompany: 'GreenTech Solutions',
+    date: '2025-05-05',
+    time: '1:00 PM',
+    duration: '2 hours',
+    location: 'Virtual Session',
+    status: 'scheduled',
+    attendees: [
+      { name: 'Thomas Green', email: 't.green@greentech.com' },
+      { name: 'Lisa Park', email: 'l.park@greentech.com' },
+    ]
+  },
+  {
+    id: '4',
+    name: 'Fire Safety Training',
+    description: 'Training on fire prevention, detection, and emergency response procedures.',
+    clientCompany: 'Urban Development Corp',
+    date: '2025-04-10',
+    time: '11:00 AM',
+    duration: '2.5 hours',
+    location: 'Urban Development HQ',
+    status: 'completed',
+    attendees: [
+      { name: 'Mark Taylor', email: 'm.taylor@udc.com' },
+      { name: 'Anna Martin', email: 'a.martin@udc.com' },
+      { name: 'Kevin White', email: 'k.white@udc.com' },
+    ]
+  },
+];
+
+export const fetchEHSTrainings = async (): Promise<EHSTraining[]> => {
+  // Simulating API request delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  return ehsTrainings;
+};
+
+export const fetchEHSTrainingById = async (id: string): Promise<EHSTraining | undefined> => {
+  // Simulating API request delay
+  await new Promise(resolve => setTimeout(resolve, 800));
+  return ehsTrainings.find(training => training.id === id);
+};

@@ -3,7 +3,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import { BarChart3, Building2, Building, ClipboardCheck, GraduationCap, LayoutDashboard, LineChart, Settings, Users, FileCheck } from 'lucide-react';
+import { BarChart3, Building2, Building, ClipboardCheck, GraduationCap, LayoutDashboard, LineChart, Settings, Users, FileCheck, BookOpen } from 'lucide-react';
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent } from '@/components/ui/sidebar';
 
 interface NavigationItem {
@@ -20,6 +20,7 @@ const navigationItems: NavigationItem[] = [
   { name: 'Personal Carbon', href: '/personal-ghg', icon: LineChart, roles: ['employee'] },
   { name: 'Compliance', href: '/compliance', icon: ClipboardCheck, roles: ['admin', 'manager', 'unit_admin'] },
   { name: 'Supplier Audits', href: '/audit', icon: FileCheck, roles: ['admin', 'manager'] },
+  { name: 'EHS Trainings', href: '/ehs-trainings', icon: BookOpen, roles: ['admin', 'manager', 'unit_admin'] },
   { name: 'LMS', href: '/lms', icon: GraduationCap, roles: ['admin', 'manager', 'employee', 'unit_admin'] },
   { name: 'Units Management', href: '/units', icon: Building2, roles: ['admin'] },
   { name: 'Team Management', href: '/team', icon: Users, roles: ['admin', 'manager', 'unit_admin'] },
