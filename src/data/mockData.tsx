@@ -136,8 +136,14 @@ interface EHSTraining {
   time: string;
   duration: string;
   location: string;
-  status: 'scheduled' | 'completed';
+  status: 'scheduled' | 'in-progress' | 'completed';
   attendees: Attendee[];
+  startDate?: string;
+  endDate?: string;
+  startTime?: string;
+  endTime?: string;
+  trainingType: 'online' | 'offline';
+  trainerName?: string;
 }
 
 const ehsTrainings: EHSTraining[] = [
@@ -151,6 +157,7 @@ const ehsTrainings: EHSTraining[] = [
     duration: '3 hours',
     location: 'Client HQ, New York',
     status: 'scheduled',
+    trainingType: 'offline',
     attendees: [
       { name: 'John Smith', email: 'john.smith@abccorp.com' },
       { name: 'Jane Doe', email: 'jane.doe@abccorp.com' },
@@ -167,6 +174,7 @@ const ehsTrainings: EHSTraining[] = [
     duration: '4 hours',
     location: 'XYZ Manufacturing Plant',
     status: 'scheduled',
+    trainingType: 'offline',
     attendees: [
       { name: 'Michael Brown', email: 'm.brown@xyzind.com' },
       { name: 'Sarah Wilson', email: 's.wilson@xyzind.com' },
@@ -184,6 +192,7 @@ const ehsTrainings: EHSTraining[] = [
     duration: '2 hours',
     location: 'Virtual Session',
     status: 'scheduled',
+    trainingType: 'online',
     attendees: [
       { name: 'Thomas Green', email: 't.green@greentech.com' },
       { name: 'Lisa Park', email: 'l.park@greentech.com' },
@@ -199,6 +208,7 @@ const ehsTrainings: EHSTraining[] = [
     duration: '2.5 hours',
     location: 'Urban Development HQ',
     status: 'completed',
+    trainingType: 'offline',
     attendees: [
       { name: 'Mark Taylor', email: 'm.taylor@udc.com' },
       { name: 'Anna Martin', email: 'a.martin@udc.com' },
