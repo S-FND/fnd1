@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, HelpCircle, Search, User } from 'lucide-react';
@@ -13,6 +12,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+// Get environment name from Vite env variables
+const envName =
+  import.meta.env.VITE_ENV_NAME ||
+  (import.meta.env.MODE === 'production'
+    ? 'Production'
+    : import.meta.env.MODE === 'development'
+    ? 'Development'
+    : import.meta.env.MODE);
+
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
 
@@ -25,9 +33,26 @@ export const Navbar: React.FC = () => {
           </div>
           <span>Fandoro</span>
         </Link>
-        
-        {/* Search */}
+
+        {/* ENVIRONMENT NAME INDICATOR */}
+        <div className="ml-6">
+          <span
+            className={`text-xs px-2 py-1 rounded font-semibold ${
+              envName === 'Production'
+                ? 'bg-green-500 text-white'
+                : envName === 'Staging'
+                ? 'bg-yellow-400 text-black'
+                : 'bg-gray-400 text-white'
+            }`}
+            title="Current environment"
+          >
+            {envName}
+          </span>
+        </div>
+
+        {/* Search and Right Actions */}
         <div className="ml-auto flex items-center gap-4">
+          {/* Search */}
           <div className="relative hidden md:block">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <input

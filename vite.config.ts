@@ -20,3 +20,9 @@ export default defineConfig(({ mode }) => ({
     },
   },
 }));
+
+// HINT: To use environment variables, add them in files like .env, .env.staging, .env.production
+// For example:
+// VITE_ENV_NAME=development
+// VITE_ENV_NAME=staging
+// VITE_ENV_NAME=production
