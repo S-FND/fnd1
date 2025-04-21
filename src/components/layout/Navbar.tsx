@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, HelpCircle, Search, User } from 'lucide-react';
@@ -12,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-// Get environment name from Vite env variables
+// Get environment name & API URL from Vite env variables
 const envName =
   import.meta.env.VITE_ENV_NAME ||
   (import.meta.env.MODE === 'production'
@@ -20,6 +21,7 @@ const envName =
     : import.meta.env.MODE === 'development'
     ? 'Development'
     : import.meta.env.MODE);
+const apiUrl = import.meta.env.VITE_API_URL;
 
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -34,8 +36,8 @@ export const Navbar: React.FC = () => {
           <span>Fandoro</span>
         </Link>
 
-        {/* ENVIRONMENT NAME INDICATOR */}
-        <div className="ml-6">
+        {/* ENVIRONMENT NAME & API URL INDICATOR */}
+        <div className="ml-6 flex items-center space-x-3">
           <span
             className={`text-xs px-2 py-1 rounded font-semibold ${
               envName === 'Production'
@@ -48,6 +50,21 @@ export const Navbar: React.FC = () => {
           >
             {envName}
           </span>
+          {apiUrl && (
+            <span
+              className="text-xs px-2 py-1 rounded bg-muted text-muted-foreground"
+              title="API URL in use"
+              style={{
+                maxWidth: 220,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                display: 'inline-block',
+              }}
+            >
+              {apiUrl}
+            </span>
+          )}
         </div>
 
         {/* Search and Right Actions */}
