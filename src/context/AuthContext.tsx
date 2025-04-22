@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
@@ -61,6 +60,61 @@ interface Permissions {
   }
 }
 
+const defaultPermissions: Record<UserRole, Permissions> = {
+  admin: {
+    dashboard: { read: true, write: true },
+    esg: { read: true, write: true },
+    ghg: { read: true, write: true },
+    compliance: { read: true, write: true },
+    lms: { read: true, write: true },
+    units: { read: true, write: true },
+    'ehs-trainings': { read: true, write: true },
+    audit: { read: true, write: true },
+    team: { read: true, write: true },
+    settings: { read: true, write: true }
+  },
+  manager: {
+    dashboard: { read: true, write: true },
+    esg: { read: true, write: true },
+    ghg: { read: true, write: true },
+    compliance: { read: true, write: true },
+    lms: { read: true, write: true },
+    'ehs-trainings': { read: true, write: false },
+    audit: { read: true, write: true },
+    team: { read: true, write: true },
+    settings: { read: true, write: false }
+  },
+  unit_admin: {
+    dashboard: { read: true, write: false },
+    esg: { read: true, write: false },
+    ghg: { read: true, write: true },
+    compliance: { read: true, write: false },
+    lms: { read: true, write: false },
+    'ehs-trainings': { read: true, write: false },
+    team: { read: true, write: true },
+    settings: { read: true, write: false }
+  },
+  employee: {
+    dashboard: { read: true, write: false },
+    'personal-ghg': { read: true, write: true },
+    lms: { read: true, write: false },
+    'ehs-trainings': { read: true, write: false },
+    settings: { read: true, write: false }
+  },
+  supplier: {
+    dashboard: { read: true, write: false },
+    'supplier-audit': { read: true, write: true },
+    settings: { read: true, write: false }
+  },
+  vendor: {
+    dashboard: { read: true, write: false },
+    trainings: { read: true, write: false },
+    bids: { read: true, write: true },
+    profile: { read: true, write: true },
+    settings: { read: true, write: false }
+  }
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -97,15 +151,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       const data = await res.json();
+      const { user, token } = data;
 
-      const { user, token, permissions } = data;
-
+      const rolePermissions = defaultPermissions[user.role as UserRole] || {};
+      
       setUser(user);
       setToken(token);
-      setPermissions(permissions || {});
+      setPermissions(rolePermissions);
       localStorage.setItem("fandoro-user", JSON.stringify(user));
       localStorage.setItem("fandoro-token", token);
-      localStorage.setItem("fandoro-permissions", JSON.stringify(permissions || {}));
+      localStorage.setItem("fandoro-permissions", JSON.stringify(rolePermissions));
       toast.success("Login successful!");
 
       if (user.role === "supplier") {
