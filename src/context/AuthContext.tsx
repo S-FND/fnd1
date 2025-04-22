@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { isUndefined } from "util";
 
 export type UserRole = "admin" | "manager" | "employee" | "unit_admin" | "supplier" | "vendor";
 
@@ -26,12 +27,14 @@ interface VendorInfo {
 }
 
 interface User {
-  id: string;
+  _id: string;
+  entityId:string
   name: string;
   email: string;
   role: UserRole;
-  companyId: string;
-  locationId: string;
+  isParent:boolean;
+  companyId?: string;
+  locationId?: string;
   unitId?: string;
   units?: CompanyUnit[];
   supplierInfo?: SupplierInfo;
@@ -94,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       const data = await res.json();
 
-      const { user, token, permissions } = data;
+      const { user,token, permissions } = data;
 
       setUser(user);
       setToken(token);
@@ -135,6 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isUnitAdmin = () => user?.role === "unit_admin";
   const isSupplier = () => user?.role === "supplier";
   const isVendor = () => user?.role === "vendor";
+  const isAuthenticatedStatus=()=>Object.keys(JSON.parse(localStorage.getItem("fandoro-user"))).length>0
 
   const hasReadAccess = (feature: string) => {
     if (!permissions || !permissions[feature]) return false;
@@ -151,7 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isLoading,
       login,
       logout,
-      isAuthenticated: !!user,
+      isAuthenticated: isAuthenticatedStatus(),
       isCompanyUser,
       isEmployeeUser,
       isUnitAdmin,
