@@ -1,5 +1,6 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 
 export type UserRole = "admin" | "manager" | "employee" | "unit_admin" | "supplier" | "vendor";
@@ -68,14 +69,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [permissions, setPermissions] = useState<Permissions>({});
   const [token, setToken] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const storedUser = localStorage.getItem("fandoro-user");
     const storedPermissions = localStorage.getItem("fandoro-permissions");
     const storedToken = localStorage.getItem("fandoro-token");
+    
     if (storedUser) setUser(JSON.parse(storedUser));
     if (storedPermissions) setPermissions(JSON.parse(storedPermissions));
     if (storedToken) setToken(storedToken);
+    
     setIsLoading(false);
   }, []);
 
