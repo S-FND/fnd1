@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Control, useFieldArray } from 'react-hook-form';
 import { Mail, Plus, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,10 +23,18 @@ export const AttendeesList: React.FC<AttendeesListProps> = ({ control, onInviteN
     name: "attendees"
   });
 
+  // State to track which attendees have non-existing emails
+  const [nonExistingEmails, setNonExistingEmails] = useState<{ [key: number]: boolean }>({});
+
   const handleEmailBlur = (email: string, index: number) => {
-    if (email && !isExistingEmployee(email)) {
-      console.log('Email not found in employee list:', email);
-      onInviteNew(index);
+    if (email) {
+      const isExisting = isExistingEmployee(email);
+      
+      // Update the state for this specific attendee
+      setNonExistingEmails(prev => ({
+        ...prev,
+        [index]: !isExisting
+      }));
     }
   };
 
@@ -96,7 +104,8 @@ export const AttendeesList: React.FC<AttendeesListProps> = ({ control, onInviteN
                   </Button>
                 </div>
 
-                {field.email && !isExistingEmployee(field.email) && (
+                {/* Show non-existing email alert and invite button conditionally */}
+                {nonExistingEmails[index] && field.email && (
                   <div className="flex items-center justify-between pl-2">
                     <Alert variant="default" className="bg-muted">
                       <AlertDescription className="text-sm">
