@@ -2,7 +2,7 @@
 import React from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { SidebarLayout } from '@/components/layout/Sidebar';
-import FandoroAdminDashboard from '@/components/fandoro-admin/FandoroAdminDashboard';
+import FandoroAdminDashboard from '@/features/fandoro-admin/components/Dashboard';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
