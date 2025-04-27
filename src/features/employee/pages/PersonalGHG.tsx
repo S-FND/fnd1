@@ -4,13 +4,15 @@ import { Navbar } from '@/components/layout/Navbar';
 import { SidebarLayout } from '@/components/layout/Sidebar';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
-import PersonalGHGCalculator from '@/components/ghg/PersonalGHGCalculator';
+import { useRouteProtection } from '@/hooks/useRouteProtection';
+import PersonalGHGCalculator from '@/features/employee/components/PersonalGHGCalculator';
 
 const PersonalGHGPage = () => {
-  const { isAuthenticated, isEmployeeUser } = useAuth();
+  const { isLoading } = useRouteProtection('employee');
+  const { isEmployeeUser } = useAuth();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
   if (!isEmployeeUser()) {

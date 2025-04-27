@@ -2,14 +2,20 @@
 import React from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { SidebarLayout } from '@/components/layout/Sidebar';
-import ESGDashboard from '@/components/esg/ESGDashboard';
+import ESGDashboard from '@/features/enterprise-admin/components/ESGDashboard';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { useRouteProtection } from '@/hooks/useRouteProtection';
 
 const ESGPage = () => {
-  const { isAuthenticated } = useAuth();
+  const { isLoading } = useRouteProtection('enterprise_admin');
+  const { user, isEnterpriseAdmin } = useAuth();
 
-  if (!isAuthenticated) {
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!isEnterpriseAdmin()) {
     return <Navigate to="/login" />;
   }
 

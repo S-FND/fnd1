@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,10 +13,10 @@ import Login from "./pages/Login";
 
 // Enterprise Admin Pages
 import EnterpriseAdminDashboardPage from "./features/enterprise-admin/pages/Dashboard";
-import ESGPage from "./pages/ESG";
-import GHGPage from "./pages/GHG";
+import ESGPage from "@/features/enterprise-admin/pages/ESG";
+import GHGPage from "@/features/enterprise-admin/pages/GHG";
 import CompliancePage from "./pages/Compliance";
-import LMSPage from "./pages/LMS";
+import LMSPage from "@/features/enterprise-admin/pages/LMS";
 import UnitsPage from "./pages/Units";
 import EHSTrainingsPage from "./pages/EHSTrainings";
 import EHSTrainingDetails from "./pages/EHSTrainingDetails";
@@ -27,7 +26,7 @@ import AuditChecklistPage from "./pages/audit/AuditChecklistPage";
 
 // Employee Pages
 import EmployeeDashboardPage from "./features/employee/pages/Dashboard";
-import PersonalGHGPage from "./pages/PersonalGHG";
+import PersonalGHGPage from "@/features/employee/pages/PersonalGHG";
 
 // Unit Admin Pages
 import UnitAdminDashboardPage from "./features/unit-admin/pages/Dashboard";

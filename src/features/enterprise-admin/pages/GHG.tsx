@@ -2,14 +2,20 @@
 import React from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { SidebarLayout } from '@/components/layout/Sidebar';
-import GHGCalculator from '@/components/ghg/GHGCalculator';
+import GHGCalculator from '@/features/enterprise-admin/components/GHGCalculator';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { useRouteProtection } from '@/hooks/useRouteProtection';
 
 const GHGPage = () => {
-  const { isAuthenticated } = useAuth();
+  const { isLoading } = useRouteProtection('enterprise_admin');
+  const { user, isEnterpriseAdmin } = useAuth();
 
-  if (!isAuthenticated) {
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!isEnterpriseAdmin()) {
     return <Navigate to="/login" />;
   }
 
@@ -21,7 +27,7 @@ const GHGPage = () => {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">GHG Accounting</h1>
             <p className="text-muted-foreground">
-              Calculate and track carbon emissions across your organization and personal activities
+              Calculate and track carbon emissions across your organization
             </p>
           </div>
           <GHGCalculator />
