@@ -51,20 +51,38 @@ export const useAuthProvider = () => {
       localStorage.setItem("fandoro-permissions", JSON.stringify(rolePermissions));
       toast.success("Login successful!");
 
-      if (user.role === "supplier") {
-        navigate("/supplier/dashboard");
-      } else if (user.role === "vendor") {
-        navigate("/vendor/dashboard");
-      } else if (user.role === "fandoro_admin") {
-        navigate("/fandoro-admin/dashboard");
-      } else {
-        navigate("/dashboard");
-      }
+      // Redirect based on user role
+      redirectBasedOnRole(user.role);
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Login failed. Please try again.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const redirectBasedOnRole = (role: string) => {
+    switch(role) {
+      case "fandoro_admin":
+        navigate("/fandoro-admin/dashboard");
+        break;
+      case "admin":
+        navigate("/dashboard");
+        break;
+      case "unit_admin":
+        navigate("/unit-admin/dashboard");
+        break;
+      case "employee":
+        navigate("/employee/dashboard");
+        break;
+      case "supplier":
+        navigate("/supplier/dashboard");
+        break;
+      case "vendor":
+        navigate("/vendor/dashboard");
+        break;
+      default:
+        navigate("/dashboard");
     }
   };
 
