@@ -33,14 +33,16 @@ export const useAuthProvider = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      if (!res.ok) {
-        toast.error("Invalid credentials");
+      
+      const data = await res.json();
+      
+      if (!res.ok || !data.status || !data.user) {
+        toast.error(data.message || "Invalid credentials");
         setIsLoading(false);
         return;
       }
-      const data = await res.json();
-      const { user, token } = data;
 
+      const { user, token } = data;
       const rolePermissions = defaultPermissions[user.role] || {};
       
       setUser(user);
@@ -51,7 +53,6 @@ export const useAuthProvider = () => {
       localStorage.setItem("fandoro-permissions", JSON.stringify(rolePermissions));
       toast.success("Login successful!");
 
-      // Redirect based on user role
       redirectBasedOnRole(user.role);
     } catch (error) {
       console.error("Login error:", error);
