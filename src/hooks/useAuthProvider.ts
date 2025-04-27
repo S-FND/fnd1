@@ -1,70 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { User, Permissions } from '@/types/auth';
 import { defaultPermissions } from '@/config/permissions';
-
-// Mock user credentials
-const MOCK_USERS = {
-  'fandoro@admin.com': {
-    password: 'admin123',
-    user: {
-      id: '1',
-      name: 'Fandoro Admin',
-      email: 'fandoro@admin.com',
-      role: 'fandoro_admin',
-      companyId: 'fandoro-1',
-      locationId: 'loc-1',
-    }
-  },
-  'admin@company.com': {
-    password: 'password',
-    user: {
-      id: '2',
-      name: 'Enterprise Admin',
-      email: 'admin@company.com',
-      role: 'admin',
-      companyId: 'company-1',
-      locationId: 'loc-1',
-    }
-  },
-  'unitadmin@company.com': {
-    password: 'password',
-    user: {
-      id: '3',
-      name: 'Unit Admin',
-      email: 'unitadmin@company.com',
-      role: 'unit_admin',
-      companyId: 'company-1',
-      locationId: 'loc-1',
-      unitId: 'unit-1',
-      units: [{ id: 'unit-1', name: 'Main Unit', location: 'New York', city: 'New York' }]
-    }
-  },
-  'manager@company.com': {
-    password: 'password',
-    user: {
-      id: '4',
-      name: 'Manager',
-      email: 'manager@company.com',
-      role: 'manager',
-      companyId: 'company-1',
-      locationId: 'loc-1',
-    }
-  },
-  'employee@company.com': {
-    password: 'password',
-    user: {
-      id: '5',
-      name: 'Employee',
-      email: 'employee@company.com',
-      role: 'employee',
-      companyId: 'company-1',
-      locationId: 'loc-1',
-    }
-  }
-};
 
 export const useAuthProvider = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -89,16 +27,21 @@ export const useAuthProvider = () => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const mockUser = MOCK_USERS[email.toLowerCase()];
+      const res = await fetch("http://127.0.0.1:3002/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
       
-      if (!mockUser || mockUser.password !== password) {
-        toast.error("Invalid credentials");
+      const data = await res.json();
+      
+      if (!res.ok || !data.status || !data.user) {
+        toast.error(data.message || "Invalid credentials");
         setIsLoading(false);
         return;
       }
 
-      const { user } = mockUser;
-      const token = 'mock-token-' + Date.now();
+      const { user, token } = data;
       const rolePermissions = defaultPermissions[user.role] || {};
       
       setUser(user);
@@ -160,7 +103,6 @@ export const useAuthProvider = () => {
   const isSupplier = () => user?.role === "supplier";
   const isVendor = () => user?.role === "vendor";
   const isFandoroAdmin = () => user?.role === "fandoro_admin";
-  // Add isEnterpriseAdmin function
   const isEnterpriseAdmin = () => user?.role === "admin";
 
   const hasReadAccess = (feature: string) => {
@@ -185,7 +127,7 @@ export const useAuthProvider = () => {
     isSupplier,
     isVendor,
     isFandoroAdmin,
-    isEnterpriseAdmin, // Add the new function to the returned object
+    isEnterpriseAdmin,
     hasReadAccess,
     hasWriteAccess
   };
