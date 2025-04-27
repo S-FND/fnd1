@@ -71,6 +71,7 @@ export const LoginForm: React.FC = () => {
       
       <div className="text-center text-sm text-muted-foreground">
         <p>Demo Accounts:</p>
+        <p className="font-semibold text-primary">fandoro@admin.com / admin123 (Fandoro Super Admin)</p>
         <p>admin@company.com / password (Company Admin)</p>
         <p>unitadmin@company.com / password (Unit Admin)</p>
         <p>manager@company.com / password (Manager)</p>

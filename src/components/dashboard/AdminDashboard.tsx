@@ -1,5 +1,7 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { esgKPIs } from '@/data/mockData';
 import SDGPerformance from './SDGPerformance';
 import SustainabilityInitiatives from './SustainabilityInitiatives';
@@ -10,6 +12,33 @@ import CompletionRates from './CompletionRates';
 import DeadlinesList from './DeadlinesList';
 import EmissionsByLocation from './EmissionsByLocation';
 import MaterialKPIs from './MaterialKPIs';
+
+const analyticsCards = [
+  {
+    title: "Carbon Emissions",
+    value: "-12%",
+    description: "Year-over-year reduction",
+    change: 8,
+    icon: () => <span className="h-4 w-4 text-green-500">📉</span>,
+    color: "text-green-500",
+  },
+  {
+    title: "Energy Efficiency",
+    value: "+8%",
+    description: "Improvement from baseline",
+    change: 12,
+    icon: () => <span className="h-4 w-4 text-blue-500">⚡</span>,
+    color: "text-blue-500",
+  },
+  {
+    title: "Compliance Score",
+    value: "92%",
+    description: "Regulatory compliance",
+    change: -2,
+    icon: () => <span className="h-4 w-4 text-amber-500">📋</span>,
+    color: "text-amber-500",
+  },
+];
 
 const AdminDashboard: React.FC = () => {
   const [selectedKPIs] = useState<string[]>([
@@ -27,7 +56,7 @@ const AdminDashboard: React.FC = () => {
               <CardTitle className="text-sm font-medium">
                 {card.title}
               </CardTitle>
-              <card.icon className={`h-4 w-4 ${card.color}`} />
+              <card.icon />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{card.value}</div>

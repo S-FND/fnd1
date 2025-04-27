@@ -1,5 +1,5 @@
 
-export type UserRole = "admin" | "manager" | "employee" | "unit_admin" | "supplier" | "vendor";
+export type UserRole = "fandoro_admin" | "admin" | "manager" | "employee" | "unit_admin" | "supplier" | "vendor";
 
 export interface CompanyUnit {
   id: string;
@@ -53,6 +53,7 @@ export interface AuthContextType {
   isUnitAdmin: () => boolean;
   isSupplier: () => boolean;
   isVendor: () => boolean;
+  isFandoroAdmin: () => boolean;
   hasReadAccess: (feature: string) => boolean;
   hasWriteAccess: (feature: string) => boolean;
 }

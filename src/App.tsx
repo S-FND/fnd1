@@ -33,6 +33,13 @@ import VendorBids from "./pages/vendor/VendorBids";
 import VendorBidForm from "./pages/vendor/VendorBidForm";
 import VendorProfile from "./pages/vendor/VendorProfile";
 
+// Fandoro Admin pages
+import FandoroAdminDashboardPage from "./pages/fandoro-admin/FandoroAdminDashboardPage";
+import EnterprisesPage from "./pages/fandoro-admin/EnterprisesPage";
+import ESGCapPage from "./pages/fandoro-admin/ESGCapPage";
+import NonCompliancesPage from "./pages/fandoro-admin/NonCompliancesPage";
+import ESGRisksPage from "./pages/fandoro-admin/ESGRisksPage";
+
 const queryClient = new QueryClient();
 
 // Protected route component
@@ -88,6 +95,13 @@ const App = () => (
             <Route path="/vendor/bids" element={<ProtectedRoute><VendorBids /></ProtectedRoute>} />
             <Route path="/vendor/bid/:trainingId" element={<ProtectedRoute><VendorBidForm /></ProtectedRoute>} />
             <Route path="/vendor/profile" element={<ProtectedRoute><VendorProfile /></ProtectedRoute>} />
+            
+            {/* Fandoro Admin routes */}
+            <Route path="/fandoro-admin/dashboard" element={<ProtectedRoute><FandoroAdminDashboardPage /></ProtectedRoute>} />
+            <Route path="/fandoro-admin/enterprises" element={<ProtectedRoute><EnterprisesPage /></ProtectedRoute>} />
+            <Route path="/fandoro-admin/esg-cap" element={<ProtectedRoute><ESGCapPage /></ProtectedRoute>} />
+            <Route path="/fandoro-admin/non-compliances" element={<ProtectedRoute><NonCompliancesPage /></ProtectedRoute>} />
+            <Route path="/fandoro-admin/esg-risks" element={<ProtectedRoute><ESGRisksPage /></ProtectedRoute>} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>

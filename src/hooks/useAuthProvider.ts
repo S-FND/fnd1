@@ -55,6 +55,8 @@ export const useAuthProvider = () => {
         navigate("/supplier/dashboard");
       } else if (user.role === "vendor") {
         navigate("/vendor/dashboard");
+      } else if (user.role === "fandoro_admin") {
+        navigate("/fandoro-admin/dashboard");
       } else {
         navigate("/dashboard");
       }
@@ -82,6 +84,7 @@ export const useAuthProvider = () => {
   const isUnitAdmin = () => user?.role === "unit_admin";
   const isSupplier = () => user?.role === "supplier";
   const isVendor = () => user?.role === "vendor";
+  const isFandoroAdmin = () => user?.role === "fandoro_admin";
 
   const hasReadAccess = (feature: string) => {
     if (!permissions || !permissions[feature]) return false;
@@ -104,6 +107,7 @@ export const useAuthProvider = () => {
     isUnitAdmin,
     isSupplier,
     isVendor,
+    isFandoroAdmin,
     hasReadAccess,
     hasWriteAccess
   };

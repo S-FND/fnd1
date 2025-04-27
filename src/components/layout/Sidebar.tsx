@@ -3,7 +3,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import { BarChart3, Building2, Building, ClipboardCheck, GraduationCap, LayoutDashboard, LineChart, Settings, Users, FileCheck, BookOpen } from 'lucide-react';
+import { BarChart3, Building2, Building, ClipboardCheck, GraduationCap, LayoutDashboard, LineChart, Settings, Users, FileCheck, BookOpen, Shield, AlertTriangle } from 'lucide-react';
 import { SidebarProvider, Sidebar, SidebarTrigger, SidebarContent } from '@/components/ui/sidebar';
 
 interface NavigationItem {
@@ -15,6 +15,11 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'manager', 'employee', 'unit_admin'] },
+  { name: 'Admin Dashboard', href: '/fandoro-admin/dashboard', icon: LayoutDashboard, roles: ['fandoro_admin'] },
+  { name: 'Enterprise Management', href: '/fandoro-admin/enterprises', icon: Building, roles: ['fandoro_admin'] },
+  { name: 'ESG CAP Management', href: '/fandoro-admin/esg-cap', icon: BarChart3, roles: ['fandoro_admin'] },
+  { name: 'Non-Compliances', href: '/fandoro-admin/non-compliances', icon: AlertTriangle, roles: ['fandoro_admin'] },
+  { name: 'ESG Risks', href: '/fandoro-admin/esg-risks', icon: Shield, roles: ['fandoro_admin'] },
   { name: 'ESG Management', href: '/esg', icon: BarChart3, roles: ['admin', 'manager', 'unit_admin'] },
   { name: 'GHG Accounting', href: '/ghg', icon: LineChart, roles: ['admin', 'manager', 'unit_admin'] },
   { name: 'Personal Carbon', href: '/personal-ghg', icon: LineChart, roles: ['employee'] },
@@ -25,7 +30,7 @@ const navigationItems: NavigationItem[] = [
   { name: 'Units Management', href: '/units', icon: Building2, roles: ['admin'] },
   { name: 'Team Management', href: '/team', icon: Users, roles: ['admin', 'manager', 'unit_admin'] },
   { name: 'Company Profile', href: '/company', icon: Building, roles: ['admin', 'manager'] },
-  { name: 'Settings', href: '/settings', icon: Settings, roles: ['admin', 'manager', 'employee', 'unit_admin'] },
+  { name: 'Settings', href: '/settings', icon: Settings, roles: ['admin', 'manager', 'employee', 'unit_admin', 'fandoro_admin'] },
 ];
 
 interface SidebarLayoutProps {
@@ -68,6 +73,11 @@ const AppSidebar: React.FC = () => {
           {user?.role === 'unit_admin' && user?.unitId && (
             <div className="mt-2 text-xs text-muted-foreground">
               {user.units ? user.units.find(unit => unit.id === user.unitId)?.name : 'Unit Admin'}
+            </div>
+          )}
+          {user?.role === 'fandoro_admin' && (
+            <div className="mt-2 text-xs font-semibold text-primary">
+              Fandoro Super Admin
             </div>
           )}
         </div>
