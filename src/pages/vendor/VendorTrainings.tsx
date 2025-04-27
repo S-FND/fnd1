@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { format, isSameDay, isWithinInterval } from 'date-fns';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { fetchVendorTrainings } from '@/data/mockData';
+import { fetchVendorTrainings } from '@/data';
 import { Clock, MapPin, Users, Calendar as CalendarIcon } from 'lucide-react';
 
 const VendorTrainings = () => {

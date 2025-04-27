@@ -1,9 +1,8 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { esgKPIs, sdgGoals } from '@/data/mockData';
+import { esgKPIs, sdgGoals } from '@/data';
 import { 
   ResponsiveContainer, 
   PieChart, 
@@ -22,7 +21,7 @@ const COLORS = ['#22c55e', '#60a5fa', '#f59e0b', '#ec4899', '#8b5cf6'];
 const SDG_COLORS = ['#e11d3f', '#dda63a', '#4c9f38', '#c5192d', '#ff3a21', '#26bde2', '#fcc30b', '#a21942', '#fd6925', '#dd1367', '#fd9d24', '#bf8b2e', '#3f7e44', '#0a97d9', '#56c02b', '#00689d', '#19486a'];
 
 const ESGDashboard: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [selectedCategory, setSelectedCategory] = React.useState<string>("All");
   
   const filteredKPIs = selectedCategory === "All" 
     ? esgKPIs 

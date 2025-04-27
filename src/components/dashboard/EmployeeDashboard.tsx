@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { CalendarIcon, GraduationCap, LineChart, Users } from 'lucide-react';
-import { personalGHGParams, trainingModules } from '@/data/mockData';
+import { personalGHGParams, trainingModules } from '@/data';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, Legend } from 'recharts';
-import { emissionsByLocation } from '@/data/mockData';
+import { emissionsByLocation } from '@/data';
 
 const EmissionsByLocation = () => {
   return (

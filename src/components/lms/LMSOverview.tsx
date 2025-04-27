@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Book, Calendar, CheckCircle2, Clock, GraduationCap, LineChart, Play, Search, Shield, User } from 'lucide-react';
-import { trainingModules } from '@/data/mockData';
+import { trainingModules } from '@/data';
 
 const LMSOverview: React.FC = () => {
   // Group modules by category

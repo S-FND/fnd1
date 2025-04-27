@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -10,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { fetchVendorProfile } from '@/data/mockData';
+import { fetchVendorProfile } from '@/data';
 
 const VendorProfile = () => {
   const { isAuthenticated, user, isVendor } = useAuth();

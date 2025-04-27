@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { VendorLayout } from '@/components/layout/VendorLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
-import { fetchVendorTrainings, fetchTrainingBids } from '@/data/mockData';
+import { fetchVendorTrainings, fetchTrainingBids } from '@/data';
 import { CalendarRange, FileText, Calendar, Users } from 'lucide-react';
 
 const VendorDashboard = () => {

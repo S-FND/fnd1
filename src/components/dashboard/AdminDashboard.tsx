@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { esgKPIs } from '@/data/mockData';
+import { esgKPIs } from '@/data';
 import SDGPerformance from './SDGPerformance';
 import SustainabilityInitiatives from './SustainabilityInitiatives';
 import NonCompliances from './NonCompliances';

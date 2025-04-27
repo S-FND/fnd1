@@ -1,21 +1,17 @@
-
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { personalGHGParams } from '@/data/mockData';
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { personalGHGParams } from '@/data';
+import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
 
 const PersonalGHGCalculator: React.FC = () => {
   const [activeTab, setActiveTab] = useState("transport");
   const [calculatedEmissions, setCalculatedEmissions] = useState(0);
   const [showResults, setShowResults] = useState(false);
   
-  // Mock data for personal emissions over time
   const personalEmissionsData = [
     { month: 'Jan', value: 1.2 },
     { month: 'Feb', value: 1.5 },
@@ -32,8 +28,7 @@ const PersonalGHGCalculator: React.FC = () => {
   ];
 
   const handleCalculate = () => {
-    // Simulate calculation
-    const result = Math.random() * 5 + 3; // Between 3 and 8 tonnes
+    const result = Math.random() * 5 + 3;
     setCalculatedEmissions(parseFloat(result.toFixed(2)));
     setShowResults(true);
   };
@@ -49,7 +44,6 @@ const PersonalGHGCalculator: React.FC = () => {
           <TabsTrigger value="results" disabled={!showResults}>Results</TabsTrigger>
         </TabsList>
         
-        {/* Transport Tab */}
         <TabsContent value="transport" className="space-y-4">
           <Card>
             <CardHeader>
@@ -99,7 +93,6 @@ const PersonalGHGCalculator: React.FC = () => {
           </Card>
         </TabsContent>
         
-        {/* Home Tab */}
         <TabsContent value="home" className="space-y-4">
           <Card>
             <CardHeader>
@@ -148,7 +141,6 @@ const PersonalGHGCalculator: React.FC = () => {
           </Card>
         </TabsContent>
         
-        {/* Food Tab */}
         <TabsContent value="food" className="space-y-4">
           <Card>
             <CardHeader>
@@ -198,7 +190,6 @@ const PersonalGHGCalculator: React.FC = () => {
           </Card>
         </TabsContent>
         
-        {/* Shopping Tab */}
         <TabsContent value="shopping" className="space-y-4">
           <Card>
             <CardHeader>
@@ -236,7 +227,6 @@ const PersonalGHGCalculator: React.FC = () => {
           </Card>
         </TabsContent>
         
-        {/* Results Tab */}
         <TabsContent value="results" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <Card>

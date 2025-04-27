@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Trophy, Star } from "lucide-react";
-import { sdgGoals } from "@/data/mockData";
+import { sdgGoals } from "@/data";
 
 const SDGPerformance = () => {
   // Get top 3 SDGs by progress
