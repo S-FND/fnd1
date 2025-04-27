@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
+import { toast as toastS } from 'sonner';
 
 interface EHSTrainingFormProps {
   onComplete: () => void;
@@ -73,7 +74,7 @@ const defaultAttendee = { name: '', email: '' };
 
 const EHSTrainingForm: React.FC<EHSTrainingFormProps> = ({ onComplete }) => {
   const { toast } = useToast();
-  
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -108,14 +109,34 @@ const EHSTrainingForm: React.FC<EHSTrainingFormProps> = ({ onComplete }) => {
     }
   };
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
     // Here you would typically save the data to your backend
     console.log('Training data:', data);
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}`+"/admin/trainings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json",Authorization : `Bearer ${localStorage.getItem("fandoro-token")}` },
+        body: JSON.stringify({ ...data }),
+      });
+      if (!res.ok) {
+        toastS.error("Invalid credentials");
+        setIsLoading(false);
+        return;
+      }
+      else{
+        toast({
+          title: "Training created",
+          description: `${data.name} for ${data.clientCompany} has been scheduled from ${format(data.startDate, 'MMMM d, yyyy')} to ${format(data.endDate, 'MMMM d, yyyy')}`,
+        });
+      }
+    } catch (error) {
+      console.error("Api call:", error);
+      toastS.error("API Call failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
     
-    toast({
-      title: "Training created",
-      description: `${data.name} for ${data.clientCompany} has been scheduled from ${format(data.startDate, 'MMMM d, yyyy')} to ${format(data.endDate, 'MMMM d, yyyy')}`,
-    });
     
     onComplete();
   };

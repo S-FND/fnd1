@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Book, Calendar, CheckCircle2, Clock, GraduationCap, LineChart, Play, Search, Shield, User } from 'lucide-react';
 import { trainingModules } from '@/data/mockData';
-
-const LMSOverview: React.FC = () => {
+interface MyComponentProps {
+  ehsTraining: any[];  // or a more specific type
+}
+const LMSOverview: React.FC<MyComponentProps> = ({ehsTraining}) => {
   // Group modules by category
   const categorizedModules = trainingModules.reduce((acc, module) => {
     if (!acc[module.category]) {

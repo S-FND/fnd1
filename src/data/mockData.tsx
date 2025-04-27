@@ -136,7 +136,7 @@ interface Attendee {
   email: string;
 }
 
-interface EHSTraining {
+export interface EHSTraining {
   id: string;
   name: string;
   description: string;
@@ -327,6 +327,7 @@ const ehsTrainings: EHSTraining[] = [
     ]
   },
 ];
+
 
 export const fetchEHSTrainings = async (): Promise<EHSTraining[]> => {
   // Simulating API request delay

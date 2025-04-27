@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
-import { isUndefined } from "util";
 
 export type UserRole = "admin" | "manager" | "employee" | "unit_admin" | "supplier" | "vendor";
 
@@ -28,11 +27,11 @@ interface VendorInfo {
 
 interface User {
   _id: string;
-  entityId:string
+  entityId: string
   name: string;
   email: string;
   role: UserRole;
-  isParent:boolean;
+  isParent: boolean;
   companyId?: string;
   locationId?: string;
   unitId?: string;
@@ -132,13 +131,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const storedUser = localStorage.getItem("fandoro-user");
     const storedPermissions = localStorage.getItem("fandoro-permissions");
     const storedToken = localStorage.getItem("fandoro-token");
-    
+
     if (storedUser) setUser(JSON.parse(storedUser));
     if (storedPermissions) setPermissions(JSON.parse(storedPermissions));
     if (storedToken) setToken(storedToken);
-    
+
     setIsLoading(false);
   }, []);
+
+ 
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -157,7 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { user, token } = data;
 
       const rolePermissions = defaultPermissions[user.role as UserRole] || {};
-      
+
       setUser(user);
       setToken(token);
       setPermissions(rolePermissions);
@@ -197,7 +198,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isUnitAdmin = () => user?.role === "unit_admin";
   const isSupplier = () => user?.role === "supplier";
   const isVendor = () => user?.role === "vendor";
-  const isAuthenticatedStatus=()=>Object.keys(JSON.parse(localStorage.getItem("fandoro-user"))).length>0
+  const isAuthenticatedStatus = () => {
+    if (localStorage.getItem("fandoro-user")) {
+      return Object.keys(JSON.parse(localStorage.getItem("fandoro-user"))).length > 0
+
+    }
+  }
 
   const hasReadAccess = (feature: string) => {
     if (!permissions || !permissions[feature]) return false;
