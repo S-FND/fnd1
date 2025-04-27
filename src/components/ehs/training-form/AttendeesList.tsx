@@ -72,9 +72,9 @@ export const AttendeesList: React.FC<AttendeesListProps> = ({ control, onInviteN
                             <Input 
                               placeholder="Email address" 
                               {...field} 
-                              onBlur={(e) => {
-                                field.onBlur(e);
-                                handleEmailBlur(e.target.value, index);
+                              onBlur={() => {
+                                field.onBlur();
+                                handleEmailBlur(field.value, index);
                               }}
                             />
                           </FormControl>
