@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -18,13 +17,14 @@ import {
   Legend,
 } from 'recharts';
 import { Badge } from '@/components/ui/badge';
+import SDGPerformance from './SDGPerformance';
+import SustainabilityInitiatives from './SustainabilityInitiatives';
 
 const AdminDashboard: React.FC = () => {
   const [selectedKPIs, setSelectedKPIs] = useState<string[]>([
     'renewable-energy', 'water-consumption', 'carbon-emissions', 'diversity-score'
   ]);
   
-  // Filter KPIs for materiality assessment (the ones that will be shared with investors)
   const materialKPIs = esgKPIs.filter(kpi => selectedKPIs.includes(kpi.id));
   
   return (
@@ -52,6 +52,11 @@ const AdminDashboard: React.FC = () => {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <SDGPerformance />
+        <SustainabilityInitiatives />
       </div>
 
       <Card>
