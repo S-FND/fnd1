@@ -19,6 +19,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import SDGPerformance from './SDGPerformance';
 import SustainabilityInitiatives from './SustainabilityInitiatives';
+import NonCompliances from './NonCompliances';
+import ESGRisks from './ESGRisks';
 
 const AdminDashboard: React.FC = () => {
   const [selectedKPIs, setSelectedKPIs] = useState<string[]>([
@@ -57,6 +59,11 @@ const AdminDashboard: React.FC = () => {
       <div className="grid gap-6 md:grid-cols-2">
         <SDGPerformance />
         <SustainabilityInitiatives />
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <NonCompliances />
+        <ESGRisks />
       </div>
 
       <Card>
