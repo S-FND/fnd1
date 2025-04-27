@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { fetchEHSTrainings } from '@/data/mockData';
+import { fetchEHSTrainings } from '@/data';
 import { Link } from 'react-router-dom';
 
 const EHSTrainingsList = ({trainingList}) => {

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -8,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { fetchTrainingBids, fetchEHSTrainings } from '@/data/mockData';
+import { fetchTrainingBids, fetchEHSTrainings } from '@/data';
 
 const VendorBids = () => {
   const { isAuthenticated, user, isVendor } = useAuth();
