@@ -1,17 +1,16 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { esgKPIs } from '@/data';
 import SDGPerformance from '@/components/dashboard/SDGPerformance';
 import SustainabilityInitiatives from '@/components/dashboard/SustainabilityInitiatives';
-import NonCompliances from '@/components/dashboard/NonCompliances';
-import ESGRisks from '@/components/dashboard/ESGRisks';
 import EmissionsTrends from '@/components/dashboard/EmissionsTrends';
 import CompletionRates from '@/components/dashboard/CompletionRates';
 import DeadlinesList from '@/components/dashboard/DeadlinesList';
 import EmissionsByLocation from '@/components/dashboard/EmissionsByLocation';
 import MaterialKPIs from '@/components/dashboard/MaterialKPIs';
+import EnterpriseNonCompliances from './compliance/EnterpriseNonCompliances';
+import EnterpriseESGRisks from './risks/EnterpriseESGRisks';
 
 const analyticsCards = [
   {
@@ -80,8 +79,8 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <NonCompliances />
-        <ESGRisks />
+        <EnterpriseNonCompliances />
+        <EnterpriseESGRisks />
       </div>
 
       <Card>

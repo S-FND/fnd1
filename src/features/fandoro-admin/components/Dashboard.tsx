@@ -1,14 +1,15 @@
 
 import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertTriangle, Shield } from 'lucide-react';
-import NonCompliances from '@/components/dashboard/NonCompliances';
-import ESGRisks from '@/components/dashboard/ESGRisks';
-import AnalyticsCards from './analytics/AnalyticsCards';
+import { Building, Users, FileCheck } from 'lucide-react';
+import FandoroNonCompliances from './compliance/FandoroNonCompliances';
+import FandoroESGRisks from './risks/FandoroESGRisks';
 import EnterprisesList from './lists/EnterprisesList';
 import NonCompliancesList from './lists/NonCompliancesList';
 import ESGRisksList from './lists/ESGRisksList';
 import ESGCapList from './lists/ESGCapList';
+import AnalyticsCards from './analytics/AnalyticsCards';
 
 const FandoroAdminDashboard = () => {
   return (
@@ -16,8 +17,8 @@ const FandoroAdminDashboard = () => {
       <AnalyticsCards />
 
       <div className="grid gap-6 md:grid-cols-2">
-        <NonCompliances />
-        <ESGRisks />
+        <FandoroNonCompliances />
+        <FandoroESGRisks />
       </div>
 
       <Tabs defaultValue="enterprises" className="space-y-4">
