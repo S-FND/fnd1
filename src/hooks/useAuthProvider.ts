@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -51,8 +50,8 @@ export const useAuthProvider = () => {
       localStorage.setItem("fandoro-user", JSON.stringify(user));
       localStorage.setItem("fandoro-token", token);
       localStorage.setItem("fandoro-permissions", JSON.stringify(rolePermissions));
+      
       toast.success("Login successful!");
-
       redirectBasedOnRole(user.role);
     } catch (error) {
       console.error("Login error:", error);
@@ -104,7 +103,6 @@ export const useAuthProvider = () => {
   const isSupplier = () => user?.role === "supplier";
   const isVendor = () => user?.role === "vendor";
   const isFandoroAdmin = () => user?.role === "fandoro_admin";
-  // Add isEnterpriseAdmin function
   const isEnterpriseAdmin = () => user?.role === "admin";
 
   const hasReadAccess = (feature: string) => {
@@ -129,7 +127,7 @@ export const useAuthProvider = () => {
     isSupplier,
     isVendor,
     isFandoroAdmin,
-    isEnterpriseAdmin, // Add the new function to the returned object
+    isEnterpriseAdmin,
     hasReadAccess,
     hasWriteAccess
   };
