@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AreaChart, BarChart, LineChart } from 'lucide-react';
+import { AreaChart, BarChart, LineChart, PieChart } from 'lucide-react';
 import { analyticsCards, emissionsByLocation, esgKPIs } from '@/data/mockData';
 import {
   CartesianGrid,
@@ -17,8 +17,16 @@ import {
   BarChart as RechartBarChart,
   Legend,
 } from 'recharts';
+import { Badge } from '@/components/ui/badge';
 
 const AdminDashboard: React.FC = () => {
+  const [selectedKPIs, setSelectedKPIs] = useState<string[]>([
+    'renewable-energy', 'water-consumption', 'carbon-emissions', 'diversity-score'
+  ]);
+  
+  // Filter KPIs for materiality assessment (the ones that will be shared with investors)
+  const materialKPIs = esgKPIs.filter(kpi => selectedKPIs.includes(kpi.id));
+  
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3">
@@ -45,6 +53,60 @@ const AdminDashboard: React.FC = () => {
           </Card>
         ))}
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Material ESG KPIs</CardTitle>
+          <CardDescription>Key ESG metrics shared with investors</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6 md:grid-cols-2">
+            {materialKPIs.map((kpi) => (
+              <div key={kpi.id} className="border rounded-lg p-4 space-y-3">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${
+                      kpi.category === 'Environment' ? 'bg-green-500' : 
+                      kpi.category === 'Social' ? 'bg-blue-500' : 
+                      'bg-amber-500'
+                    }`} />
+                    <h3 className="font-medium">{kpi.name}</h3>
+                  </div>
+                  <Badge variant="outline">{kpi.category}</Badge>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl font-bold">
+                    {kpi.current} {kpi.unit}
+                  </span>
+                  <span className={`text-sm ${
+                    kpi.trend === 'up' ? 'text-green-500' : 
+                    kpi.trend === 'down' ? 'text-red-500' : 
+                    'text-muted-foreground'
+                  }`}>
+                    {kpi.trend === 'up' ? '↑' : kpi.trend === 'down' ? '↓' : '−'} YTD
+                  </span>
+                </div>
+                
+                <div>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-muted-foreground">Progress to Target</span>
+                    <span>{kpi.progress}%</span>
+                  </div>
+                  <Progress value={kpi.progress} className="h-2" />
+                </div>
+                
+                <div className="pt-2">
+                  <div className="text-xs text-muted-foreground flex justify-between">
+                    <span>Baseline: {kpi.baseline} {kpi.unit}</span>
+                    <span>Target: {kpi.target} {kpi.unit}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
