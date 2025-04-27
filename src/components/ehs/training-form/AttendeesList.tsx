@@ -26,6 +26,7 @@ export const AttendeesList: React.FC<AttendeesListProps> = ({ control, onInviteN
   const handleEmailBlur = (email: string, index: number) => {
     if (email && !isExistingEmployee(email)) {
       console.log('Email not found in employee list:', email);
+      onInviteNew(index);
     }
   };
 
