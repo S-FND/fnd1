@@ -19,7 +19,11 @@ export const fetchEHSTrainings = () => {
       clientCompany: 'ABC Corp',
       location: 'Mumbai Office',
       trainingType: 'offline',
-      attendees: [{ id: '1', name: 'John Doe' }, { id: '2', name: 'Jane Smith' }]
+      description: 'Basic safety protocols training for all staff',
+      attendees: [{ id: '1', name: 'John Doe' }, { id: '2', name: 'Jane Smith' }],
+      startDate: '2024-05-15',
+      endDate: '2024-05-15',
+      bidOpen: true
     },
     { 
       id: '2', 
@@ -32,7 +36,9 @@ export const fetchEHSTrainings = () => {
       clientCompany: 'XYZ Industries',
       location: 'Delhi Branch',
       trainingType: 'offline',
-      attendees: [{ id: '3', name: 'Mike Johnson' }, { id: '4', name: 'Sarah Williams' }]
+      description: 'Advanced training for handling hazardous materials',
+      attendees: [{ id: '3', name: 'Mike Johnson' }, { id: '4', name: 'Sarah Williams' }],
+      bidOpen: false
     },
     { 
       id: '3', 
@@ -41,10 +47,15 @@ export const fetchEHSTrainings = () => {
       time: '9:00 AM',
       startTime: '9:00 AM',
       endTime: '12:00 PM',
+      startDate: '2024-06-10',
+      endDate: '2024-06-10',
       status: 'completed',
       clientCompany: 'LMN Solutions',
       trainingType: 'online',
-      attendees: [{ id: '5', name: 'David Brown' }, { id: '6', name: 'Emily Davis' }]
+      location: 'Online',
+      description: 'Fire safety and emergency evacuation procedures',
+      attendees: [{ id: '5', name: 'David Brown' }, { id: '6', name: 'Emily Davis' }],
+      bidOpen: false
     }
   ];
 };
@@ -100,11 +111,14 @@ export const fetchVendorTrainings = (vendorId?: string) => {
       name: 'Safety Procedures Training',
       description: 'Basic safety protocols for industrial settings',
       date: '2024-05-15',
+      startDate: '2024-05-15',
+      endDate: '2024-05-15',
       time: '10:00 AM',
       duration: '2 hours',
       location: 'Mumbai Office',
       bidOpen: true,
       assignedVendorId: null,
+      trainingType: 'offline',
       attendees: [{ id: '1', name: 'John Doe' }, { id: '2', name: 'Jane Smith' }]
     },
     {
@@ -112,11 +126,14 @@ export const fetchVendorTrainings = (vendorId?: string) => {
       name: 'Hazardous Materials Handling',
       description: 'Advanced training for chemical safety',
       date: '2024-05-20',
+      startDate: '2024-05-20',
+      endDate: '2024-05-22',
       time: '2:00 PM',
       duration: '4 hours',
       location: 'Delhi Branch',
       bidOpen: false,
       assignedVendorId: 'v1',
+      trainingType: 'offline',
       attendees: [{ id: '3', name: 'Mike Johnson' }, { id: '4', name: 'Sarah Williams' }]
     },
     {
@@ -124,11 +141,14 @@ export const fetchVendorTrainings = (vendorId?: string) => {
       name: 'Fire Safety',
       description: 'Emergency protocols and fire prevention',
       date: '2024-06-10',
+      startDate: '2024-06-10',
+      endDate: '2024-06-10',
       time: '9:00 AM',
       duration: '3 hours',
       location: 'Online',
       bidOpen: false,
       assignedVendorId: 'v2',
+      trainingType: 'online',
       attendees: [{ id: '5', name: 'David Brown' }, { id: '6', name: 'Emily Davis' }]
     }
   ];
