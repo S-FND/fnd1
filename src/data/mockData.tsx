@@ -11,7 +11,7 @@ export const esgKPIs = [
     target: 75,
     unit: '%',
     progress: 56,
-    trend: 'up'
+    trend: 'up' as const
   },
   {
     id: 'water-consumption',
@@ -22,7 +22,7 @@ export const esgKPIs = [
     target: 2.5,
     unit: 'million liters',
     progress: 65,
-    trend: 'up'
+    trend: 'up' as const
   },
   {
     id: 'carbon-emissions',
@@ -33,7 +33,7 @@ export const esgKPIs = [
     target: 9000,
     unit: 'tons CO₂e',
     progress: 61,
-    trend: 'up'
+    trend: 'up' as const
   },
   {
     id: 'waste-diverted',
@@ -44,7 +44,7 @@ export const esgKPIs = [
     target: 90,
     unit: '%',
     progress: 45,
-    trend: 'up'
+    trend: 'up' as const
   },
   {
     id: 'diversity-score',
@@ -55,7 +55,7 @@ export const esgKPIs = [
     target: 50,
     unit: '%',
     progress: 40,
-    trend: 'up'
+    trend: 'up' as const
   },
   {
     id: 'training-hours',
@@ -66,7 +66,7 @@ export const esgKPIs = [
     target: 24,
     unit: 'hours/employee',
     progress: 44,
-    trend: 'up'
+    trend: 'up' as const
   },
   {
     id: 'board-diversity',
@@ -77,7 +77,7 @@ export const esgKPIs = [
     target: 45,
     unit: '%',
     progress: 40,
-    trend: 'up'
+    trend: 'up' as const
   },
   {
     id: 'ethics-policies',
@@ -88,7 +88,7 @@ export const esgKPIs = [
     target: 100,
     unit: '%',
     progress: 50,
-    trend: 'up'
+    trend: 'up' as const
   }
 ];
 
