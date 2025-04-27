@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { CalendarIcon, Plus, X } from 'lucide-react';
+import { CalendarIcon, Plus, X, Mail } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -11,26 +10,17 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Calendar } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
-} from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { isExistingEmployee } from '@/data/ehs/employees';
 
 interface EHSTrainingFormProps {
   onComplete: () => void;
 }
 
-// Form schema for validation
 const formSchema = z.object({
   name: z.string().min(3, { message: "Training name must be at least 3 characters" }),
   description: z.string().min(10, { message: "Description must be at least 10 characters" }),
@@ -51,7 +41,6 @@ const formSchema = z.object({
     })
   ).min(1, { message: "At least one attendee is required" }),
 }).refine(data => {
-  // Make sure location is provided for offline trainings
   if (data.trainingType === "offline" && (!data.location || data.location.trim().length === 0)) {
     return false;
   }
@@ -60,7 +49,6 @@ const formSchema = z.object({
   message: "Location is required for offline trainings",
   path: ["location"],
 }).refine(data => {
-  // Make sure end date is after or equal to start date
   return data.endDate >= data.startDate;
 }, {
   message: "End date must be after or equal to start date",
@@ -109,7 +97,6 @@ const EHSTrainingForm: React.FC<EHSTrainingFormProps> = ({ onComplete }) => {
   };
 
   const onSubmit = (data: FormValues) => {
-    // Here you would typically save the data to your backend
     console.log('Training data:', data);
     
     toast({
@@ -118,6 +105,18 @@ const EHSTrainingForm: React.FC<EHSTrainingFormProps> = ({ onComplete }) => {
     });
     
     onComplete();
+  };
+
+  const handleInviteNew = (index: number) => {
+    const attendees = form.getValues('attendees');
+    const attendee = attendees[index];
+    
+    if (attendee && attendee.email) {
+      toast({
+        title: "Invitation sent",
+        description: `An invitation has been sent to ${attendee.email}`,
+      });
+    }
   };
 
   return (
@@ -400,47 +399,74 @@ const EHSTrainingForm: React.FC<EHSTrainingFormProps> = ({ onComplete }) => {
           <Card>
             <CardContent className="p-4">
               <div className="space-y-4">
-                {attendees.map((_, index) => (
-                  <div key={index} className="flex gap-2 items-start">
-                    <div className="grid gap-4 flex-1 md:grid-cols-2">
-                      <FormField
-                        control={form.control}
-                        name={`attendees.${index}.name`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input placeholder="Attendee name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name={`attendees.${index}.email`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormControl>
-                              <Input placeholder="Email address" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                {attendees.map((_, index) => {
+                  const email = form.watch(`attendees.${index}.email`);
+                  const isExisting = email ? isExistingEmployee(email) : true;
+                  
+                  return (
+                    <div key={index} className="space-y-2">
+                      <div className="flex gap-2 items-start">
+                        <div className="grid gap-4 flex-1 md:grid-cols-2">
+                          <FormField
+                            control={form.control}
+                            name={`attendees.${index}.name`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <Input placeholder="Attendee name" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          
+                          <FormField
+                            control={form.control}
+                            name={`attendees.${index}.email`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormControl>
+                                  <Input placeholder="Email address" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                        
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeAttendee(index)}
+                          disabled={attendees.length <= 1}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      {email && !isExisting && (
+                        <div className="flex items-center justify-between pl-2">
+                          <Alert variant="default" className="bg-muted">
+                            <AlertDescription className="text-sm">
+                              This email is not in the employee list.
+                            </AlertDescription>
+                          </Alert>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="ml-2"
+                            onClick={() => handleInviteNew(index)}
+                          >
+                            <Mail className="h-4 w-4 mr-1" />
+                            Send Invitation
+                          </Button>
+                        </div>
+                      )}
                     </div>
-                    
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeAttendee(index)}
-                      disabled={attendees.length <= 1}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
