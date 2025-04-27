@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Control, useFieldArray } from 'react-hook-form';
-import { Mail, Plus, X, User } from 'lucide-react';
+import { Mail, Plus, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +22,12 @@ export const AttendeesList: React.FC<AttendeesListProps> = ({ control, onInviteN
     control,
     name: "attendees"
   });
+
+  const handleEmailBlur = (email: string, index: number) => {
+    if (email && !isExistingEmployee(email)) {
+      console.log('Email not found in employee list:', email);
+    }
+  };
 
   return (
     <div>
@@ -63,7 +69,14 @@ export const AttendeesList: React.FC<AttendeesListProps> = ({ control, onInviteN
                       render={({ field }) => (
                         <FormItem>
                           <FormControl>
-                            <Input placeholder="Email address" {...field} />
+                            <Input 
+                              placeholder="Email address" 
+                              {...field} 
+                              onBlur={(e) => {
+                                field.onBlur(e);
+                                handleEmailBlur(e.target.value, index);
+                              }}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
