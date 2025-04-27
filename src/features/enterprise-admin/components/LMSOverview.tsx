@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Book, Calendar, CheckCircle2, Clock, GraduationCap, LineChart, Play, Search, Shield, User } from 'lucide-react';
 import { trainingModules } from '@/data';
 
-const LMSOverview: React.FC<{ehsTraining:[]}> = ({ehsTraining}) => {
+const LMSOverview: React.FC = () => {
   // Group modules by category
   const categorizedModules = trainingModules.reduce((acc, module) => {
     if (!acc[module.category]) {

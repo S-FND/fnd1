@@ -6,6 +6,7 @@ import LMSOverview from '@/features/enterprise-admin/components/LMSOverview';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
+import { toast } from 'sonner';
 
 const LMSPage = () => {
   const { isLoading } = useRouteProtection('enterprise_admin');
@@ -55,7 +56,8 @@ const LMSPage = () => {
     <div className="min-h-screen">
       <Navbar />
       <SidebarLayout>
-        <LMSOverview ehsTraining={trainings} />
+        {/* <LMSOverview ehsTraining={trainings} /> */}
+        <LMSOverview  />
       </SidebarLayout>
     </div>
   );
