@@ -103,6 +103,8 @@ export const useAuthProvider = () => {
   const isSupplier = () => user?.role === "supplier";
   const isVendor = () => user?.role === "vendor";
   const isFandoroAdmin = () => user?.role === "fandoro_admin";
+  // Add isEnterpriseAdmin function
+  const isEnterpriseAdmin = () => user?.role === "admin";
 
   const hasReadAccess = (feature: string) => {
     if (!permissions || !permissions[feature]) return false;
@@ -126,6 +128,7 @@ export const useAuthProvider = () => {
     isSupplier,
     isVendor,
     isFandoroAdmin,
+    isEnterpriseAdmin, // Add the new function to the returned object
     hasReadAccess,
     hasWriteAccess
   };
