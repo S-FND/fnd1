@@ -20,6 +20,7 @@ const navigationItems: NavigationItem[] = [
   { name: 'ESG CAP Management', href: '/fandoro-admin/esg-cap', icon: BarChart3, roles: ['fandoro_admin'] },
   { name: 'Non-Compliances', href: '/fandoro-admin/non-compliances', icon: AlertTriangle, roles: ['fandoro_admin'] },
   { name: 'ESG Risks', href: '/fandoro-admin/esg-risks', icon: Shield, roles: ['fandoro_admin'] },
+  { name: 'Materiality', href: '/materiality', icon: BarChart3, roles: ['admin', 'manager', 'unit_admin'] },
   { name: 'ESG Management', href: '/esg', icon: BarChart3, roles: ['admin', 'manager', 'unit_admin'] },
   { name: 'GHG Accounting', href: '/ghg', icon: LineChart, roles: ['admin', 'manager', 'unit_admin'] },
   { name: 'Personal Carbon', href: '/personal-ghg', icon: LineChart, roles: ['employee'] },
