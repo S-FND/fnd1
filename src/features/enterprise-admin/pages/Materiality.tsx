@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { SidebarLayout } from '@/components/layout/Sidebar';
@@ -347,9 +346,6 @@ const MaterialityPage = () => {
                             fill="#8884d8"
                             shape="circle"
                           >
-                            {materialityData.map((entry, index) => (
-                              <cell key={`cell-${index}`} fill={entry.color} />
-                            ))}
                           </Scatter>
                         </ScatterChart>
                       </ResponsiveContainer>
