@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import './App.css';
 import Index from './pages/Index';
 import Login from './pages/Login';
@@ -33,49 +33,47 @@ import MaterialityPage from './features/enterprise-admin/pages/Materiality';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Index />} />
-        <Route path="/login" element={<Login />} />
-        
-        {/* Company / Enterprise Admin Routes */}
-        <Route path="/dashboard" element={<EnhancedDashboard />} />
-        <Route path="/materiality" element={<MaterialityPage />} />
-        <Route path="/esg" element={<ESGPage />} />
-        <Route path="/ghg" element={<GHGPage />} />
-        <Route path="/compliance" element={<Compliance />} />
-        <Route path="/units" element={<Units />} />
-        <Route path="/ehs-trainings" element={<EHSTrainings />} />
-        <Route path="/ehs-trainings/:id" element={<EHSTrainingDetails />} />
-        <Route path="/audit" element={<AuditDashboardPage />} />
-        <Route path="/audit/:id" element={<AuditChecklistPage />} />
-        
-        {/* Employee Routes */}
-        <Route path="/employee/dashboard" element={<EmployeeDashboardPage />} />
-        <Route path="/personal-dashboard" element={<EnhancedEmployeeDashboard />} />
-        
-        {/* Supplier Routes */}
-        <Route path="/supplier/dashboard" element={<SupplierDashboardPage />} />
-        <Route path="/supplier/audit-response/:id" element={<SupplierAuditResponsePage />} />
-        
-        {/* Vendor Routes */}
-        <Route path="/vendor/dashboard" element={<VendorDashboard />} />
-        <Route path="/vendor/profile" element={<VendorProfile />} />
-        <Route path="/vendor/bids" element={<VendorBids />} />
-        <Route path="/vendor/bids/new" element={<VendorBidForm />} />
-        <Route path="/vendor/trainings" element={<VendorTrainings />} />
-        
-        {/* Fandoro Admin Routes */}
-        <Route path="/fandoro-admin/dashboard" element={<FandoroAdminDashboardPage />} />
-        <Route path="/fandoro-admin/enterprises" element={<EnterprisesPage />} />
-        <Route path="/fandoro-admin/esg-cap" element={<ESGCapPage />} />
-        <Route path="/fandoro-admin/non-compliances" element={<NonCompliancesPage />} />
-        <Route path="/fandoro-admin/esg-risks" element={<ESGRisksPage />} />
-        
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Router>
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/" element={<Index />} />
+      <Route path="/login" element={<Login />} />
+      
+      {/* Company / Enterprise Admin Routes */}
+      <Route path="/dashboard" element={<EnhancedDashboard />} />
+      <Route path="/materiality" element={<MaterialityPage />} />
+      <Route path="/esg" element={<ESGPage />} />
+      <Route path="/ghg" element={<GHGPage />} />
+      <Route path="/compliance" element={<Compliance />} />
+      <Route path="/units" element={<Units />} />
+      <Route path="/ehs-trainings" element={<EHSTrainings />} />
+      <Route path="/ehs-trainings/:id" element={<EHSTrainingDetails />} />
+      <Route path="/audit" element={<AuditDashboardPage />} />
+      <Route path="/audit/:id" element={<AuditChecklistPage />} />
+      
+      {/* Employee Routes */}
+      <Route path="/employee/dashboard" element={<EmployeeDashboardPage />} />
+      <Route path="/personal-dashboard" element={<EnhancedEmployeeDashboard />} />
+      
+      {/* Supplier Routes */}
+      <Route path="/supplier/dashboard" element={<SupplierDashboardPage />} />
+      <Route path="/supplier/audit-response/:id" element={<SupplierAuditResponsePage />} />
+      
+      {/* Vendor Routes */}
+      <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+      <Route path="/vendor/profile" element={<VendorProfile />} />
+      <Route path="/vendor/bids" element={<VendorBids />} />
+      <Route path="/vendor/bids/new" element={<VendorBidForm />} />
+      <Route path="/vendor/trainings" element={<VendorTrainings />} />
+      
+      {/* Fandoro Admin Routes */}
+      <Route path="/fandoro-admin/dashboard" element={<FandoroAdminDashboardPage />} />
+      <Route path="/fandoro-admin/enterprises" element={<EnterprisesPage />} />
+      <Route path="/fandoro-admin/esg-cap" element={<ESGCapPage />} />
+      <Route path="/fandoro-admin/non-compliances" element={<NonCompliancesPage />} />
+      <Route path="/fandoro-admin/esg-risks" element={<ESGRisksPage />} />
+      
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }
 
