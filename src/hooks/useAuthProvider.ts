@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -27,32 +28,38 @@ export const useAuthProvider = () => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const res = await fetch("http://127.0.0.1:3002/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      // Bypass actual authentication call and create a mock user based on email
+      // This is temporary and will be replaced with real authentication later
+      const mockRole = email.includes('admin') ? 'admin' : 
+                      email.includes('fandoro') ? 'fandoro_admin' :
+                      email.includes('supplier') ? 'supplier' :
+                      email.includes('vendor') ? 'vendor' :
+                      email.includes('unit') ? 'unit_admin' :
+                      email.includes('manager') ? 'manager' : 'employee';
       
-      const data = await res.json();
+      const mockUser: User = {
+        id: '1',
+        name: email.split('@')[0],
+        email: email,
+        role: mockRole as any,
+        companyId: '1',
+        locationId: '1',
+        unitId: mockRole === 'unit_admin' ? '1' : undefined,
+        units: mockRole === 'unit_admin' ? [{ id: '1', name: 'Unit 1', location: 'Location 1', city: 'City 1' }] : undefined
+      };
       
-      if (!res.ok || !data.status || !data.user) {
-        toast.error(data.message || "Invalid credentials");
-        setIsLoading(false);
-        return;
-      }
-
-      const { user, token } = data;
-      const rolePermissions = defaultPermissions[user.role] || {};
+      const mockToken = 'mock-token-' + Date.now();
+      const rolePermissions = defaultPermissions[mockRole] || {};
       
-      setUser(user);
-      setToken(token);
+      setUser(mockUser);
+      setToken(mockToken);
       setPermissions(rolePermissions);
-      localStorage.setItem("fandoro-user", JSON.stringify(user));
-      localStorage.setItem("fandoro-token", token);
+      localStorage.setItem("fandoro-user", JSON.stringify(mockUser));
+      localStorage.setItem("fandoro-token", mockToken);
       localStorage.setItem("fandoro-permissions", JSON.stringify(rolePermissions));
       
       toast.success("Login successful!");
-      redirectBasedOnRole(user.role);
+      redirectBasedOnRole(mockRole);
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Login failed. Please try again.");
