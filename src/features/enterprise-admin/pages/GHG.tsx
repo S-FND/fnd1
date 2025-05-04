@@ -4,6 +4,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { SidebarLayout } from '@/components/layout/Sidebar';
 import GHGCalculator from '@/features/enterprise-admin/components/GHGCalculator';
 import EmissionsDataEntry from '@/features/enterprise-admin/components/EmissionsDataEntry';
+import CarbonGoalTracker from '@/features/employee/components/ghg/CarbonGoalTracker';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
@@ -30,20 +31,24 @@ const GHGPage = () => {
           <div>
             <h1 className="text-2xl font-bold tracking-tight">GHG Accounting</h1>
             <p className="text-muted-foreground">
-              Calculate and track carbon emissions across your organization
+              Calculate, track and reduce carbon emissions across your organization
             </p>
           </div>
           
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-2 w-[400px]">
+            <TabsList className="grid grid-cols-3 w-[600px]">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="data-entry">Data Entry</TabsTrigger>
+              <TabsTrigger value="goals">Carbon Goals</TabsTrigger>
             </TabsList>
             <TabsContent value="dashboard">
               <GHGCalculator />
             </TabsContent>
             <TabsContent value="data-entry">
               <EmissionsDataEntry />
+            </TabsContent>
+            <TabsContent value="goals">
+              <CarbonGoalTracker />
             </TabsContent>
           </Tabs>
         </div>
