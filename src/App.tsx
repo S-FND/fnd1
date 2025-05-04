@@ -25,6 +25,7 @@ import ESGPage from './features/enterprise-admin/pages/ESG';
 import GHGPage from './features/enterprise-admin/pages/GHG';
 import EmployeeDashboardPage from './features/employee/pages/Dashboard';
 import MaterialityPage from './features/enterprise-admin/pages/Materiality';
+import PersonalGHGPage from './features/employee/pages/PersonalGHG';
 
 function App() {
   return (
@@ -48,6 +49,7 @@ function App() {
       {/* Employee Routes */}
       <Route path="/employee/dashboard" element={<EmployeeDashboardPage />} />
       <Route path="/personal-dashboard" element={<EnhancedEmployeeDashboard />} />
+      <Route path="/personal-ghg" element={<PersonalGHGPage />} />
       
       {/* Supplier Routes */}
       <Route path="/supplier/dashboard" element={<SupplierDashboardPage />} />
