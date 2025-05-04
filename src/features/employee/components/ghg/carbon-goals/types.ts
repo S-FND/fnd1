@@ -9,6 +9,7 @@ export interface CarbonGoal {
   deadline: string; // date string
   currentProgress: number; // percentage
   category: 'transport' | 'home' | 'food' | 'shopping' | 'overall';
+  emissionScope?: 'scope1' | 'scope2' | 'scope3' | 'scope4'; // Added this property
 }
 
 export const goalFormSchema = z.object({
@@ -25,6 +26,7 @@ export const goalFormSchema = z.object({
     message: "Please select a deadline.",
   }),
   category: z.enum(['transport', 'home', 'food', 'shopping', 'overall']),
+  emissionScope: z.enum(['scope1', 'scope2', 'scope3', 'scope4']).optional(), // Added this field to the schema
 });
 
 export type GoalFormValues = z.infer<typeof goalFormSchema>;

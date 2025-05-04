@@ -9,7 +9,8 @@ export const sampleGoals: CarbonGoal[] = [
     targetReduction: 15,
     deadline: '2025-12-31',
     currentProgress: 5,
-    category: 'overall'
+    category: 'overall',
+    emissionScope: 'scope1'
   },
   {
     id: '2',
@@ -18,7 +19,8 @@ export const sampleGoals: CarbonGoal[] = [
     targetReduction: 20,
     deadline: '2025-06-30',
     currentProgress: 10,
-    category: 'transport'
+    category: 'transport',
+    emissionScope: 'scope2'
   },
   {
     id: '3',
@@ -27,6 +29,7 @@ export const sampleGoals: CarbonGoal[] = [
     targetReduction: 10,
     deadline: '2025-09-30',
     currentProgress: 8,
-    category: 'food'
+    category: 'food',
+    emissionScope: 'scope3'
   }
 ];
