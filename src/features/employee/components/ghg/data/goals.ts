@@ -31,5 +31,35 @@ export const sampleGoals: CarbonGoal[] = [
     currentProgress: 8,
     category: 'food',
     emissionScope: 'scope3'
+  },
+  {
+    id: '4',
+    name: 'Renewable Energy Initiative',
+    description: 'Partner with renewable energy providers',
+    targetReduction: 25,
+    deadline: '2026-03-31',
+    currentProgress: 5,
+    category: 'home',
+    emissionScope: 'scope2'
+  },
+  {
+    id: '5',
+    name: 'Supply Chain Emissions',
+    description: 'Optimize logistics for lower emissions',
+    targetReduction: 15,
+    deadline: '2025-12-31',
+    currentProgress: 3,
+    category: 'overall',
+    emissionScope: 'scope3'
+  },
+  {
+    id: '6',
+    name: 'Carbon Offset Investments',
+    description: 'Invest in verified carbon offset projects',
+    targetReduction: 30,
+    deadline: '2025-10-31',
+    currentProgress: 12,
+    category: 'overall',
+    emissionScope: 'scope4'
   }
 ];

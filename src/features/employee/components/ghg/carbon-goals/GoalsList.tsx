@@ -26,12 +26,22 @@ const GoalsList: React.FC<GoalsListProps> = ({
     other: goals.filter(goal => !goal.emissionScope || !['scope1', 'scope2', 'scope3', 'scope4'].includes(goal.emissionScope))
   };
 
-  const renderScopeSection = (title: string, scopeGoals: CarbonGoal[]) => {
+  // Add scope descriptions for better understanding
+  const scopeDescriptions = {
+    scope1: "Direct emissions from owned or controlled sources",
+    scope2: "Indirect emissions from purchased electricity, heat, or steam",
+    scope3: "All other indirect emissions in a company's value chain",
+    scope4: "Avoided emissions through products, services, or initiatives",
+    other: "Goals without a specific emission scope"
+  };
+
+  const renderScopeSection = (title: string, description: string, scopeGoals: CarbonGoal[]) => {
     if (scopeGoals.length === 0) return null;
     
     return (
       <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-3">{title}</h3>
+        <h3 className="text-lg font-semibold mb-1">{title}</h3>
+        <p className="text-sm text-muted-foreground mb-3">{description}</p>
         <div className="space-y-4">
           {scopeGoals.map((goal) => (
             <GoalCard 
@@ -48,11 +58,31 @@ const GoalsList: React.FC<GoalsListProps> = ({
 
   return (
     <div>
-      {renderScopeSection("Scope 1 - Direct Emissions", scopeGoals.scope1)}
-      {renderScopeSection("Scope 2 - Indirect Emissions from Energy", scopeGoals.scope2)}
-      {renderScopeSection("Scope 3 - Other Indirect Emissions", scopeGoals.scope3)}
-      {renderScopeSection("Scope 4 - Avoided Emissions", scopeGoals.scope4)}
-      {renderScopeSection("Other Goals", scopeGoals.other)}
+      {renderScopeSection(
+        "Scope 1 - Direct Emissions", 
+        scopeDescriptions.scope1,
+        scopeGoals.scope1
+      )}
+      {renderScopeSection(
+        "Scope 2 - Indirect Emissions from Energy", 
+        scopeDescriptions.scope2,
+        scopeGoals.scope2
+      )}
+      {renderScopeSection(
+        "Scope 3 - Other Indirect Emissions", 
+        scopeDescriptions.scope3,
+        scopeGoals.scope3
+      )}
+      {renderScopeSection(
+        "Scope 4 - Avoided Emissions", 
+        scopeDescriptions.scope4,
+        scopeGoals.scope4
+      )}
+      {renderScopeSection(
+        "Other Goals", 
+        scopeDescriptions.other,
+        scopeGoals.other
+      )}
       
       {goals.length === 0 && (
         <EmptyGoalsState onCreateGoal={onCreateGoal} />
