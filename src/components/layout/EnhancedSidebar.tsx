@@ -83,6 +83,7 @@ const EnhancedSidebar: React.FC = () => {
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Materiality', href: '/materiality', icon: BarChart3 },
     { name: 'ESG Management', href: '/esg', icon: BarChart3 },
+    { name: 'ESG Due Diligence', href: '/esg-due-diligence', icon: ClipboardCheck },
     { name: 'GHG Accounting', href: '/ghg-accounting', icon: LineChart },
     { name: 'Compliance', href: '/compliance', icon: ClipboardCheck },
     { name: 'Audit', href: '/audit', icon: FileCheck },

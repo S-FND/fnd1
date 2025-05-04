@@ -27,6 +27,7 @@ import MaterialityPage from './features/enterprise-admin/pages/Materiality';
 import PersonalGHGPage from './features/employee/pages/PersonalGHG';
 import GHGAccountingPage from './features/enterprise-admin/pages/GHGAccounting';
 import UnitGHGAccountingPage from './features/unit-admin/components/ghg/UnitGHGAccountingPage';
+import ESGDueDiligencePage from './features/enterprise-admin/pages/ESGDueDiligence';
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
       <Route path="/dashboard" element={<EnhancedDashboard />} />
       <Route path="/materiality" element={<MaterialityPage />} />
       <Route path="/esg" element={<ESGPage />} />
+      <Route path="/esg-due-diligence" element={<ESGDueDiligencePage />} />
       <Route path="/ghg-accounting" element={<GHGAccountingPage />} />
       <Route path="/compliance" element={<Compliance />} />
       <Route path="/units" element={<Units />} />

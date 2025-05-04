@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -17,6 +16,7 @@ const navigationItems: NavigationItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin', 'manager', 'employee', 'unit_admin'] },
   { name: 'Materiality', href: '/materiality', icon: BarChart3, roles: ['admin', 'manager', 'unit_admin'] },
   { name: 'ESG Management', href: '/esg', icon: BarChart3, roles: ['admin', 'manager', 'unit_admin'] },
+  { name: 'ESG Due Diligence', href: '/esg-due-diligence', icon: ClipboardCheck, roles: ['admin', 'manager', 'unit_admin'] },
   { name: 'GHG Accounting', href: '/ghg-accounting', icon: LineChart, roles: ['admin', 'manager'] },
   { name: 'Unit GHG Data', href: '/unit/ghg-accounting', icon: LineChart, roles: ['unit_admin'] },
   { name: 'Personal Carbon', href: '/personal-ghg', icon: LineChart, roles: ['employee'] },
