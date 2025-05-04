@@ -1,13 +1,5 @@
 
-export interface CarbonGoal {
-  id: string;
-  name: string;
-  description?: string;
-  targetReduction: number; // percentage
-  deadline: string; // date string
-  currentProgress: number; // percentage
-  category: 'transport' | 'home' | 'food' | 'shopping' | 'overall';
-}
+import { CarbonGoal } from '../carbon-goals/types';
 
 export const sampleGoals: CarbonGoal[] = [
   {
