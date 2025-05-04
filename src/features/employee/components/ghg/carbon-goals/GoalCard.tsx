@@ -2,11 +2,13 @@
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Target, TrendingUp, Calendar } from 'lucide-react';
+import { Target, TrendingUp, Calendar, PenLine } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 import { CarbonGoal } from './types';
 
 interface GoalCardProps {
   goal: CarbonGoal;
+  onEdit: (goal: CarbonGoal) => void;
 }
 
 export const getCategoryColor = (category: CarbonGoal['category']) => {
@@ -31,7 +33,7 @@ export const getDaysRemaining = (deadline: string) => {
   return diffDays > 0 ? diffDays : 0;
 };
 
-const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
+const GoalCard: React.FC<GoalCardProps> = ({ goal, onEdit }) => {
   return (
     <div 
       key={goal.id} 
@@ -44,9 +46,21 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal }) => {
             <p className="text-sm text-muted-foreground">{goal.description}</p>
           )}
         </div>
-        <Badge className={`${getCategoryColor(goal.category)} hover:${getCategoryColor(goal.category)}`}>
-          {getCategoryLabel(goal.category)}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge className={`${getCategoryColor(goal.category)} hover:${getCategoryColor(goal.category)}`}>
+            {getCategoryLabel(goal.category)}
+          </Badge>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => onEdit(goal)}
+            className="h-8 w-8"
+            title="Edit goal"
+          >
+            <PenLine className="h-4 w-4" />
+            <span className="sr-only">Edit goal</span>
+          </Button>
+        </div>
       </div>
       
       <div className="mb-2">

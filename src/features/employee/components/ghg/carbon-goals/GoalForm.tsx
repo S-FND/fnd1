@@ -26,9 +26,14 @@ import { GoalFormValues, goalFormSchema } from './types';
 interface GoalFormProps {
   onSubmit: (values: GoalFormValues) => void;
   defaultValues?: Partial<GoalFormValues>;
+  submitButtonText?: string;
 }
 
-const GoalForm: React.FC<GoalFormProps> = ({ onSubmit, defaultValues = {} }) => {
+const GoalForm: React.FC<GoalFormProps> = ({ 
+  onSubmit, 
+  defaultValues = {}, 
+  submitButtonText = "Create Goal" 
+}) => {
   const form = useForm<GoalFormValues>({
     resolver: zodResolver(goalFormSchema),
     defaultValues: {
@@ -126,7 +131,7 @@ const GoalForm: React.FC<GoalFormProps> = ({ onSubmit, defaultValues = {} }) => 
           )}
         />
         <DialogFooter>
-          <Button type="submit">Create Goal</Button>
+          <Button type="submit">{submitButtonText}</Button>
         </DialogFooter>
       </form>
     </Form>

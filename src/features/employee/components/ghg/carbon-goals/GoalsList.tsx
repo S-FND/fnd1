@@ -7,13 +7,14 @@ import EmptyGoalsState from './EmptyGoalsState';
 interface GoalsListProps {
   goals: CarbonGoal[];
   onCreateGoal: () => void;
+  onEditGoal: (goal: CarbonGoal) => void;
 }
 
-const GoalsList: React.FC<GoalsListProps> = ({ goals, onCreateGoal }) => {
+const GoalsList: React.FC<GoalsListProps> = ({ goals, onCreateGoal, onEditGoal }) => {
   return (
     <div className="space-y-4">
       {goals.map((goal) => (
-        <GoalCard key={goal.id} goal={goal} />
+        <GoalCard key={goal.id} goal={goal} onEdit={onEditGoal} />
       ))}
       
       {goals.length === 0 && (
