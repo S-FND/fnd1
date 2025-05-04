@@ -9,6 +9,7 @@ export const mainNavItems: NavItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
   { name: "ESG Management", href: "/esg", icon: "BarChart3" },
   { name: "ESG Due Diligence", href: "/esg-due-diligence", icon: "ClipboardCheck" },
+  { name: "ESG CAP", href: "/esg-cap", icon: "FileCheck" },
   { name: "GHG Accounting", href: "/ghg-accounting", icon: "LineChart" },
   { name: "Compliance", href: "/compliance", icon: "ClipboardCheck" },
   { name: "LMS", href: "/lms", icon: "GraduationCap" },

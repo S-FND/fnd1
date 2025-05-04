@@ -2,18 +2,19 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download, FileText, Check, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Download, FileText, Check, AlertCircle, Bot, ClipboardList } from 'lucide-react';
 import { FundingStage } from '../../types/esgDD';
 import { fundingStagesDisplay } from '../../data/esgDD';
 import ESGCapTable from './ESGCapTable';
 
 interface ReportGeneratorProps {
   stage: FundingStage;
+  mode: 'automated' | 'manual';
   onBack: () => void;
   onFinish: () => void;
 }
 
-const ReportGenerator: React.FC<ReportGeneratorProps> = ({ stage, onBack, onFinish }) => {
+const ReportGenerator: React.FC<ReportGeneratorProps> = ({ stage, mode, onBack, onFinish }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGenerated, setIsGenerated] = useState(false);
   
@@ -27,12 +28,28 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ stage, onBack, onFini
   
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Generate ESG Due Diligence Report</CardTitle>
-          <CardDescription>
-            Review findings and generate a comprehensive ESG Due Diligence report
-          </CardDescription>
+      <Card className={mode === 'automated' ? 'border-primary/20' : ''}>
+        <CardHeader className={mode === 'automated' ? 'bg-primary/5' : ''}>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Generate ESG Due Diligence Report</CardTitle>
+              <CardDescription>
+                Review findings and generate a comprehensive ESG Due Diligence report
+              </CardDescription>
+            </div>
+            {mode === 'automated' && (
+              <div className="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-medium flex items-center">
+                <Bot className="h-3 w-3 mr-1" />
+                Automated Process
+              </div>
+            )}
+            {mode === 'manual' && (
+              <div className="px-3 py-1 rounded-full bg-muted text-muted-foreground text-xs font-medium flex items-center">
+                <ClipboardList className="h-3 w-3 mr-1" />
+                Manual Process
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
@@ -62,7 +79,14 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ stage, onBack, onFini
           </div>
           
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Report Sections</h3>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-semibold">Report Sections</h3>
+              {mode === 'automated' && (
+                <div className="text-sm text-primary bg-primary/10 px-3 py-1 rounded-full">
+                  Auto-generated content
+                </div>
+              )}
+            </div>
             
             <div className="space-y-3">
               <div className="flex items-center justify-between p-3 border rounded-lg">
@@ -113,34 +137,43 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ stage, onBack, onFini
                 size="lg" 
                 onClick={handleGenerate}
                 disabled={isGenerating}
+                variant={mode === 'automated' ? 'default' : 'secondary'}
               >
                 {isGenerating ? (
                   <>
                     <div className="animate-spin mr-2 h-4 w-4 border-2 border-t-transparent rounded-full" />
-                    Generating Report...
+                    {mode === 'automated' ? 'Auto-Generating Report...' : 'Generating Report...'}
                   </>
                 ) : (
                   <>
-                    Generate Report
+                    {mode === 'automated' ? 'Auto-Generate Report' : 'Generate Report'}
                   </>
                 )}
               </Button>
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-4 p-6 border-2 border-dashed border-green-200 bg-green-50 rounded-lg">
-              <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                <Check className="h-6 w-6 text-green-600" />
+            <div className={`flex flex-col items-center gap-4 p-6 border-2 border-dashed rounded-lg ${
+              mode === 'automated' 
+                ? 'border-primary/20 bg-primary/5' 
+                : 'border-green-200 bg-green-50'
+            }`}>
+              <div className={`h-12 w-12 rounded-full flex items-center justify-center ${
+                mode === 'automated' ? 'bg-primary/20' : 'bg-green-100'
+              }`}>
+                <Check className={`h-6 w-6 ${mode === 'automated' ? 'text-primary' : 'text-green-600'}`} />
               </div>
               <h3 className="text-lg font-medium">ESG Due Diligence Report Generated</h3>
               <p className="text-center text-muted-foreground">
-                The report has been generated successfully and the ESG CAP items have been created.
+                {mode === 'automated' 
+                  ? 'The report and CAP items have been auto-generated based on AI analysis.' 
+                  : 'The report has been generated successfully and the ESG CAP items have been created.'}
               </p>
               <div className="flex gap-3">
                 <Button variant="outline">
                   <FileText className="mr-2 h-4 w-4" />
                   Preview Report
                 </Button>
-                <Button>
+                <Button variant={mode === 'automated' ? 'default' : 'secondary'}>
                   <Download className="mr-2 h-4 w-4" />
                   Download PDF
                 </Button>
@@ -154,7 +187,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ stage, onBack, onFini
             Back
           </Button>
           {isGenerated && (
-            <Button onClick={onFinish}>
+            <Button onClick={onFinish} variant={mode === 'automated' ? 'default' : 'secondary'}>
               Finish
             </Button>
           )}
@@ -162,7 +195,10 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({ stage, onBack, onFini
       </Card>
       
       {isGenerated && (
-        <ESGCapTable />
+        <div className="pt-6">
+          <h2 className="text-xl font-bold mb-4">ESG Corrective Action Plan</h2>
+          <ESGCapTable />
+        </div>
       )}
     </div>
   );

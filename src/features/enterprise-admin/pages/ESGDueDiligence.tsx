@@ -21,6 +21,7 @@ const ESGDueDiligencePage = () => {
   // New DD Workflow state
   const [workflowStep, setWorkflowStep] = useState<'select-stage' | 'form' | 'report'>('select-stage');
   const [selectedStage, setSelectedStage] = useState<FundingStage | null>(null);
+  const [workflowMode, setWorkflowMode] = useState<'automated' | 'manual'>('automated');
   
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -55,13 +56,55 @@ const ESGDueDiligencePage = () => {
   const renderWorkflowContent = () => {
     switch (workflowStep) {
       case 'select-stage':
-        return <StageSelector onStageSelect={handleStageSelect} />;
+        return (
+          <div className="space-y-6">
+            <div className="flex justify-center space-x-4 mb-6">
+              <button
+                onClick={() => setWorkflowMode('automated')}
+                className={`px-6 py-3 rounded-lg border-2 ${
+                  workflowMode === 'automated' 
+                    ? 'border-primary bg-primary/5 text-primary font-medium'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="text-lg font-medium">Automated ESG DD</div>
+                <div className="text-sm text-muted-foreground">AI-powered analysis using regulatory frameworks</div>
+              </button>
+              <button
+                onClick={() => setWorkflowMode('manual')}
+                className={`px-6 py-3 rounded-lg border-2 ${
+                  workflowMode === 'manual' 
+                    ? 'border-primary bg-primary/5 text-primary font-medium'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="text-lg font-medium">Manual ESG DD</div>
+                <div className="text-sm text-muted-foreground">Custom due diligence with full control</div>
+              </button>
+            </div>
+            <StageSelector onStageSelect={handleStageSelect} mode={workflowMode} />
+          </div>
+        );
       case 'form':
-        return selectedStage ? <EarlyStageForm stage={selectedStage} onBack={handleBackToStages} onNext={handleFormNext} /> : null;
+        return selectedStage ? (
+          <EarlyStageForm 
+            stage={selectedStage} 
+            mode={workflowMode}
+            onBack={handleBackToStages} 
+            onNext={handleFormNext} 
+          />
+        ) : null;
       case 'report':
-        return selectedStage ? <ReportGenerator stage={selectedStage} onBack={() => setWorkflowStep('form')} onFinish={handleFinish} /> : null;
+        return selectedStage ? (
+          <ReportGenerator 
+            stage={selectedStage} 
+            mode={workflowMode}
+            onBack={() => setWorkflowStep('form')} 
+            onFinish={handleFinish} 
+          />
+        ) : null;
       default:
-        return <StageSelector onStageSelect={handleStageSelect} />;
+        return <StageSelector onStageSelect={handleStageSelect} mode={workflowMode} />;
     }
   };
 

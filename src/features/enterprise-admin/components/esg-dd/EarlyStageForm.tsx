@@ -8,15 +8,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { FundingStage } from '../../types/esgDD';
 import { fundingStagesDisplay, mockRegulatoryRequirements } from '../../data/esgDD';
-import { ArrowLeft, ArrowRight, Plus, Info } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Plus, Info, RefreshCw } from 'lucide-react';
 
 interface EarlyStageFormProps {
   stage: FundingStage;
+  mode: 'automated' | 'manual';
   onBack: () => void;
   onNext: () => void;
 }
 
-const EarlyStageForm: React.FC<EarlyStageFormProps> = ({ stage, onBack, onNext }) => {
+const EarlyStageForm: React.FC<EarlyStageFormProps> = ({ stage, mode, onBack, onNext }) => {
   const [companyInfo, setCompanyInfo] = useState({
     name: '',
     registrationNumber: '',
@@ -29,6 +30,7 @@ const EarlyStageForm: React.FC<EarlyStageFormProps> = ({ stage, onBack, onNext }
     hasPrivacyPolicy: false,
     legalDisclosures: '',
   });
+  const [isDetecting, setIsDetecting] = useState(false);
 
   const addDirector = () => {
     setCompanyInfo({
@@ -50,16 +52,38 @@ const EarlyStageForm: React.FC<EarlyStageFormProps> = ({ stage, onBack, onNext }
   const stageName = fundingStagesDisplay[stage];
 
   const relevantRegulations = mockRegulatoryRequirements.slice(0, 3);
+  
+  const handleDetectRegulations = () => {
+    setIsDetecting(true);
+    // Simulate API call to detect regulations
+    setTimeout(() => {
+      setIsDetecting(false);
+    }, 2000);
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>ESG Due Diligence - {stageName}</CardTitle>
-        <CardDescription>
-          {isEarlyStage 
-            ? 'Basic ESG compliance assessment for early stage companies' 
-            : 'Comprehensive ESG due diligence for growth stage companies'}
-        </CardDescription>
+    <Card className={mode === 'automated' ? 'border-primary/20' : ''}>
+      <CardHeader className={mode === 'automated' ? 'bg-primary/5' : ''}>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>ESG Due Diligence - {stageName}</CardTitle>
+            <CardDescription>
+              {isEarlyStage 
+                ? 'Basic ESG compliance assessment for early stage companies' 
+                : 'Comprehensive ESG due diligence for growth stage companies'}
+            </CardDescription>
+          </div>
+          {mode === 'automated' && (
+            <div className="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-medium">
+              Automated Process
+            </div>
+          )}
+          {mode === 'manual' && (
+            <div className="px-3 py-1 rounded-full bg-muted text-muted-foreground text-xs font-medium">
+              Manual Process
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
@@ -181,22 +205,47 @@ const EarlyStageForm: React.FC<EarlyStageFormProps> = ({ stage, onBack, onNext }
         </div>
         
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <h3 className="text-lg font-semibold">Applicable Regulations</h3>
-            <div className="text-sm text-muted-foreground rounded-full bg-muted px-2 py-1 flex items-center">
-              <Info className="h-3 w-3 mr-1" />
-              Auto-detected
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold">Applicable Regulations</h3>
+              {mode === 'automated' && (
+                <div className="text-sm text-muted-foreground rounded-full bg-muted px-2 py-1 flex items-center">
+                  <Info className="h-3 w-3 mr-1" />
+                  Auto-detected
+                </div>
+              )}
             </div>
+            
+            {mode === 'manual' && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleDetectRegulations}
+                disabled={isDetecting}
+              >
+                {isDetecting ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
+                    Detecting...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-1" />
+                    Detect Regulations
+                  </>
+                )}
+              </Button>
+            )}
           </div>
           
           <div className="space-y-3">
             {relevantRegulations.map((reg) => (
-              <Card key={reg.id} className="bg-muted/30">
+              <Card key={reg.id} className={mode === 'automated' ? "bg-primary/5 border-primary/20" : "bg-muted/30"}>
                 <CardContent className="p-4">
                   <h4 className="font-medium">{reg.title}</h4>
                   <p className="text-sm text-muted-foreground mt-1">{reg.description}</p>
                   <div className="mt-2 flex items-center justify-between">
-                    <span className="text-xs bg-primary/10 text-primary rounded-full px-2 py-1">
+                    <span className={`text-xs ${mode === 'automated' ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"} rounded-full px-2 py-1`}>
                       {reg.category.charAt(0).toUpperCase() + reg.category.slice(1)}
                     </span>
                     <span className="text-xs text-muted-foreground">
@@ -214,7 +263,7 @@ const EarlyStageForm: React.FC<EarlyStageFormProps> = ({ stage, onBack, onNext }
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        <Button onClick={onNext}>
+        <Button onClick={onNext} variant={mode === 'automated' ? 'default' : 'secondary'}>
           Continue
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
