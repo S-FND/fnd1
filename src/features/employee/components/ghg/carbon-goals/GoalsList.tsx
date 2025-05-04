@@ -3,6 +3,7 @@ import React from 'react';
 import { CarbonGoal } from './types';
 import GoalCard from './GoalCard';
 import EmptyGoalsState from './EmptyGoalsState';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface GoalsListProps {
   goals: CarbonGoal[];

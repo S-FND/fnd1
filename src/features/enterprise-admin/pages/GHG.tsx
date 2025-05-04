@@ -10,7 +10,6 @@ import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { emissionsByLocation, emissionsYearly } from '@/data/emissions/data';
 import { 
   BarChart, 
   Bar, 
@@ -23,6 +22,7 @@ import {
   LineChart,
   Line
 } from 'recharts';
+import { emissionsByLocation, emissionsYearly } from '@/data/emissions/data';
 
 const GHGPage = () => {
   const { isLoading } = useRouteProtection('enterprise_admin');
@@ -65,56 +65,6 @@ const GHGPage = () => {
             </TabsList>
             <TabsContent value="dashboard">
               <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Carbon Emissions by Scope</CardTitle>
-                    <CardDescription>Breakdown of emissions across all scopes</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-80">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={emissionsByLocation}
-                          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <Tooltip />
-                          <Legend />
-                          <Bar dataKey="scope1" name="Scope 1" fill={scopeColors.scope1} />
-                          <Bar dataKey="scope2" name="Scope 2" fill={scopeColors.scope2} />
-                          <Bar dataKey="scope3" name="Scope 3" fill={scopeColors.scope3} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Emissions Trend</CardTitle>
-                    <CardDescription>Year-over-year emissions data</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-80">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
-                          data={emissionsYearly}
-                          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="year" />
-                          <YAxis />
-                          <Tooltip />
-                          <Legend />
-                          <Line type="monotone" dataKey="emissions" stroke="#3b82f6" strokeWidth={2} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-                
                 <GHGCalculator />
               </div>
             </TabsContent>
