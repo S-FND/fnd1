@@ -8,13 +8,24 @@ interface GoalsListProps {
   goals: CarbonGoal[];
   onCreateGoal: () => void;
   onEditGoal: (goal: CarbonGoal) => void;
+  onDeleteGoal: (goal: CarbonGoal) => void;
 }
 
-const GoalsList: React.FC<GoalsListProps> = ({ goals, onCreateGoal, onEditGoal }) => {
+const GoalsList: React.FC<GoalsListProps> = ({ 
+  goals, 
+  onCreateGoal, 
+  onEditGoal, 
+  onDeleteGoal 
+}) => {
   return (
     <div className="space-y-4">
       {goals.map((goal) => (
-        <GoalCard key={goal.id} goal={goal} onEdit={onEditGoal} />
+        <GoalCard 
+          key={goal.id} 
+          goal={goal} 
+          onEdit={onEditGoal} 
+          onDelete={onDeleteGoal}
+        />
       ))}
       
       {goals.length === 0 && (

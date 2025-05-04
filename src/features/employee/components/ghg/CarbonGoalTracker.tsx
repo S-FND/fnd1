@@ -5,13 +5,16 @@ import { CarbonGoal } from './carbon-goals/types';
 import { sampleGoals } from './data/goals';
 import AddGoalDialog from './carbon-goals/AddGoalDialog';
 import EditGoalDialog from './carbon-goals/EditGoalDialog';
+import DeleteGoalDialog from './carbon-goals/DeleteGoalDialog';
 import GoalsList from './carbon-goals/GoalsList';
 
 const CarbonGoalTracker: React.FC = () => {
   const [goals, setGoals] = useState<CarbonGoal[]>(sampleGoals);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [goalToEdit, setGoalToEdit] = useState<CarbonGoal | null>(null);
+  const [goalToDelete, setGoalToDelete] = useState<CarbonGoal | null>(null);
   
   const handleGoalCreated = (newGoal: CarbonGoal) => {
     setGoals([...goals, newGoal]);
@@ -22,10 +25,19 @@ const CarbonGoalTracker: React.FC = () => {
     setEditDialogOpen(true);
   };
 
+  const handleDeleteGoal = (goal: CarbonGoal) => {
+    setGoalToDelete(goal);
+    setDeleteDialogOpen(true);
+  };
+
   const handleGoalUpdated = (updatedGoal: CarbonGoal) => {
     setGoals(goals.map(goal => 
       goal.id === updatedGoal.id ? updatedGoal : goal
     ));
+  };
+
+  const handleGoalDeleted = (goalId: string) => {
+    setGoals(goals.filter(goal => goal.id !== goalId));
   };
 
   return (
@@ -49,6 +61,7 @@ const CarbonGoalTracker: React.FC = () => {
             goals={goals} 
             onCreateGoal={() => setAddDialogOpen(true)} 
             onEditGoal={handleEditGoal}
+            onDeleteGoal={handleDeleteGoal}
           />
         </CardContent>
       </Card>
@@ -58,6 +71,13 @@ const CarbonGoalTracker: React.FC = () => {
         open={editDialogOpen} 
         setOpen={setEditDialogOpen} 
         onGoalUpdated={handleGoalUpdated}
+      />
+
+      <DeleteGoalDialog
+        goal={goalToDelete}
+        open={deleteDialogOpen}
+        setOpen={setDeleteDialogOpen}
+        onGoalDeleted={handleGoalDeleted}
       />
     </div>
   );
