@@ -21,7 +21,11 @@ const formSchema = z.object({
     message: "Goal name must be at least 3 characters.",
   }),
   description: z.string().optional(),
-  targetReduction: z.string().transform((val) => parseInt(val, 10)),
+  targetReduction: z.coerce.number().min(1, {
+    message: "Target reduction must be at least 1%.",
+  }).max(100, {
+    message: "Target reduction cannot exceed 100%.",
+  }),
   deadline: z.string().min(1, {
     message: "Please select a deadline.",
   }),
@@ -37,7 +41,7 @@ const CarbonGoalTracker: React.FC = () => {
     defaultValues: {
       name: "",
       description: "",
-      targetReduction: "10",
+      targetReduction: 10,
       deadline: "",
       category: "overall",
     },
