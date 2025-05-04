@@ -8,7 +8,6 @@ export interface NavItem {
 export const mainNavItems: NavItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
   { name: "ESG Management", href: "/esg", icon: "BarChart3" },
-  { name: "GHG Accounting", href: "/ghg", icon: "LineChart" },
   { name: "Compliance", href: "/compliance", icon: "ClipboardCheck" },
   { name: "LMS", href: "/lms", icon: "GraduationCap" },
   { name: "EHS Trainings", href: "/ehs-trainings", icon: "Calendar" },

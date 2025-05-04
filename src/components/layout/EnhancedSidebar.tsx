@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -83,7 +82,6 @@ const EnhancedSidebar: React.FC = () => {
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Materiality', href: '/materiality', icon: BarChart3 },
     { name: 'ESG Management', href: '/esg', icon: BarChart3 },
-    { name: 'GHG Accounting', href: '/ghg', icon: LineChart },
     { name: 'Compliance', href: '/compliance', icon: ClipboardCheck },
     { name: 'Audit', href: '/audit', icon: FileCheck },
     { name: 'LMS', href: '/lms', icon: GraduationCap },

@@ -22,7 +22,6 @@ import VendorBids from './pages/vendor/VendorBids';
 import VendorBidForm from './pages/vendor/VendorBidForm';
 import VendorTrainings from './pages/vendor/VendorTrainings';
 import ESGPage from './features/enterprise-admin/pages/ESG';
-import GHGPage from './features/enterprise-admin/pages/GHG';
 import EmployeeDashboardPage from './features/employee/pages/Dashboard';
 import MaterialityPage from './features/enterprise-admin/pages/Materiality';
 import PersonalGHGPage from './features/employee/pages/PersonalGHG';
@@ -38,7 +37,6 @@ function App() {
       <Route path="/dashboard" element={<EnhancedDashboard />} />
       <Route path="/materiality" element={<MaterialityPage />} />
       <Route path="/esg" element={<ESGPage />} />
-      <Route path="/ghg" element={<GHGPage />} />
       <Route path="/compliance" element={<Compliance />} />
       <Route path="/units" element={<Units />} />
       <Route path="/ehs-trainings" element={<EHSTrainings />} />
