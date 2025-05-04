@@ -21,11 +21,6 @@ import VendorProfile from './pages/vendor/VendorProfile';
 import VendorBids from './pages/vendor/VendorBids';
 import VendorBidForm from './pages/vendor/VendorBidForm';
 import VendorTrainings from './pages/vendor/VendorTrainings';
-import FandoroAdminDashboardPage from './pages/fandoro-admin/FandoroAdminDashboardPage';
-import EnterprisesPage from './pages/fandoro-admin/EnterprisesPage';
-import ESGCapPage from './pages/fandoro-admin/ESGCapPage';
-import NonCompliancesPage from './pages/fandoro-admin/NonCompliancesPage';
-import ESGRisksPage from './pages/fandoro-admin/ESGRisksPage';
 import ESGPage from './features/enterprise-admin/pages/ESG';
 import GHGPage from './features/enterprise-admin/pages/GHG';
 import EmployeeDashboardPage from './features/employee/pages/Dashboard';
@@ -64,13 +59,6 @@ function App() {
       <Route path="/vendor/bids" element={<VendorBids />} />
       <Route path="/vendor/bids/new" element={<VendorBidForm />} />
       <Route path="/vendor/trainings" element={<VendorTrainings />} />
-      
-      {/* Fandoro Admin Routes */}
-      <Route path="/fandoro-admin/dashboard" element={<FandoroAdminDashboardPage />} />
-      <Route path="/fandoro-admin/enterprises" element={<EnterprisesPage />} />
-      <Route path="/fandoro-admin/esg-cap" element={<ESGCapPage />} />
-      <Route path="/fandoro-admin/non-compliances" element={<NonCompliancesPage />} />
-      <Route path="/fandoro-admin/esg-risks" element={<ESGRisksPage />} />
       
       <Route path="*" element={<NotFound />} />
     </Routes>

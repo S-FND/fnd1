@@ -54,7 +54,7 @@ export interface AuthContextType {
   isSupplier: () => boolean;
   isVendor: () => boolean;
   isFandoroAdmin: () => boolean;
-  isEnterpriseAdmin: () => boolean; // Added isEnterpriseAdmin function
+  isEnterpriseAdmin: () => boolean;
   hasReadAccess: (feature: string) => boolean;
   hasWriteAccess: (feature: string) => boolean;
 }

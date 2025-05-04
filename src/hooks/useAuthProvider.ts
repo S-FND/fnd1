@@ -31,7 +31,6 @@ export const useAuthProvider = () => {
       // Bypass actual authentication call and create a mock user based on email
       // This is temporary and will be replaced with real authentication later
       const mockRole = email.includes('admin') ? 'admin' : 
-                      email.includes('fandoro') ? 'fandoro_admin' :
                       email.includes('supplier') ? 'supplier' :
                       email.includes('vendor') ? 'vendor' :
                       email.includes('unit') ? 'unit_admin' :
@@ -70,9 +69,6 @@ export const useAuthProvider = () => {
 
   const redirectBasedOnRole = (role: string) => {
     switch(role) {
-      case "fandoro_admin":
-        navigate("/fandoro-admin/dashboard");
-        break;
       case "admin":
         navigate("/dashboard");
         break;
@@ -109,7 +105,7 @@ export const useAuthProvider = () => {
   const isUnitAdmin = () => user?.role === "unit_admin";
   const isSupplier = () => user?.role === "supplier";
   const isVendor = () => user?.role === "vendor";
-  const isFandoroAdmin = () => user?.role === "fandoro_admin";
+  const isFandoroAdmin = () => false; // Always return false since this role is removed
   const isEnterpriseAdmin = () => user?.role === "admin";
 
   const hasReadAccess = (feature: string) => {
