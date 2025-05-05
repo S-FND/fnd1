@@ -7,7 +7,7 @@ import {
   BarChart3, FileCheck, Building2, Calendar, 
   GraduationCap, LayoutDashboard, LineChart, 
   Settings, Users, BookOpen, Shield, AlertTriangle, 
-  ClipboardCheck, ChevronRight
+  ClipboardCheck, ChevronRight, FileSearch
 } from 'lucide-react';
 import {
   Sidebar,
@@ -78,11 +78,22 @@ const EnhancedSidebar: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const role = user?.role || 'employee';
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
+    esgdd: location.pathname.startsWith('/esg-dd')
+  });
+
+  const toggleMenu = (menuKey: string) => {
+    setExpandedMenus((prev) => ({
+      ...prev,
+      [menuKey]: !prev[menuKey]
+    }));
+  };
 
   const adminNavigationItems = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Materiality', href: '/materiality', icon: BarChart3 },
     { name: 'ESG Management', href: '/esg', icon: BarChart3 },
+    { name: 'ESG DD', href: '/esg-dd', icon: FileSearch },
     { name: 'GHG Accounting', href: '/ghg-accounting', icon: LineChart },
     { name: 'Compliance', href: '/compliance', icon: ClipboardCheck },
     { name: 'Audit', href: '/audit', icon: FileCheck },
@@ -114,6 +125,7 @@ const EnhancedSidebar: React.FC = () => {
   };
 
   const navigationItems = getNavigationItems();
+  const isESGDDPath = location.pathname.startsWith('/esg-dd');
 
   return (
     <Sidebar>
@@ -151,15 +163,70 @@ const EnhancedSidebar: React.FC = () => {
           <SidebarGroupLabel>Main Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationItems.map((item) => (
-                <SidebarNavItem
-                  key={item.name}
-                  icon={item.icon}
-                  label={item.name}
-                  href={item.href}
-                  isActive={location.pathname === item.href}
-                />
-              ))}
+              {navigationItems.map((item) => {
+                if (item.name === 'ESG DD') {
+                  return (
+                    <React.Fragment key={item.name}>
+                      <SidebarMenuItem>
+                        <div 
+                          className={cn(
+                            "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all cursor-pointer",
+                            isESGDDPath ? "text-accent-foreground" : "text-muted-foreground"
+                          )}
+                          onClick={() => toggleMenu('esgdd')}
+                        >
+                          <item.icon className="h-5 w-5" />
+                          <span className="flex-1">ESG DD</span>
+                          <ChevronRight className={`h-4 w-4 transition-transform ${expandedMenus.esgdd ? 'rotate-90' : ''}`} />
+                        </div>
+                      </SidebarMenuItem>
+                      
+                      {expandedMenus.esgdd && (
+                        <div className="ml-4 pl-4 border-l border-muted">
+                          <SidebarMenuItem>
+                            <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd'} tooltip="ESG DD Hub">
+                              <Link to="/esg-dd" className="w-full">
+                                <span>Overview</span>
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                          <SidebarMenuItem>
+                            <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/manual'} tooltip="Manual ESG DD">
+                              <Link to="/esg-dd/manual" className="w-full">
+                                <span>Manual ESG DD</span>
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                          <SidebarMenuItem>
+                            <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/automated'} tooltip="Automated ESG DD">
+                              <Link to="/esg-dd/automated" className="w-full">
+                                <span>Automated ESG DD</span>
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                          <SidebarMenuItem>
+                            <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/cap'} tooltip="ESG CAP">
+                              <Link to="/esg-dd/cap" className="w-full">
+                                <span>ESG CAP</span>
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        </div>
+                      )}
+                    </React.Fragment>
+                  );
+                }
+                
+                return (
+                  <SidebarNavItem
+                    key={item.name}
+                    icon={item.icon}
+                    label={item.name}
+                    href={item.href}
+                    isActive={location.pathname === item.href}
+                  />
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
