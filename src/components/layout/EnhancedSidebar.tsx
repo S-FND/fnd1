@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -83,21 +82,11 @@ const EnhancedSidebar: React.FC = () => {
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Materiality', href: '/materiality', icon: BarChart3 },
     { name: 'ESG Management', href: '/esg', icon: BarChart3 },
-    { name: 'ESG Due Diligence', href: '/esg-due-diligence', icon: ClipboardCheck },
-    { name: 'GHG Accounting', href: '/ghg-accounting', icon: LineChart },
     { name: 'Compliance', href: '/compliance', icon: ClipboardCheck },
     { name: 'Audit', href: '/audit', icon: FileCheck },
     { name: 'LMS', href: '/lms', icon: GraduationCap },
     { name: 'EHS Trainings', href: '/ehs-trainings', icon: BookOpen },
     { name: 'Unit Management', href: '/units', icon: Building2 },
-    { name: 'Team', href: '/team', icon: Users },
-  ];
-
-  const unitAdminNavigationItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Unit GHG Data', href: '/unit/ghg-accounting', icon: LineChart },
-    { name: 'Compliance', href: '/compliance', icon: ClipboardCheck },
-    { name: 'LMS', href: '/lms', icon: GraduationCap },
     { name: 'Team', href: '/team', icon: Users },
   ];
 
@@ -108,13 +97,7 @@ const EnhancedSidebar: React.FC = () => {
     { name: 'Profile', href: '/profile', icon: Users },
   ];
 
-  const getNavigationItems = () => {
-    if (role === 'admin' || role === 'manager') return adminNavigationItems;
-    if (role === 'unit_admin') return unitAdminNavigationItems;
-    return employeeNavigationItems;
-  };
-
-  const navigationItems = getNavigationItems();
+  const navigationItems = role === 'admin' || role === 'manager' ? adminNavigationItems : employeeNavigationItems;
 
   return (
     <Sidebar>

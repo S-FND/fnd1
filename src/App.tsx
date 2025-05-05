@@ -25,10 +25,6 @@ import ESGPage from './features/enterprise-admin/pages/ESG';
 import EmployeeDashboardPage from './features/employee/pages/Dashboard';
 import MaterialityPage from './features/enterprise-admin/pages/Materiality';
 import PersonalGHGPage from './features/employee/pages/PersonalGHG';
-import GHGAccountingPage from './features/enterprise-admin/pages/GHGAccounting';
-import UnitGHGAccountingPage from './features/unit-admin/components/ghg/UnitGHGAccountingPage';
-import ESGDueDiligencePage from './features/enterprise-admin/pages/ESGDueDiligence';
-import ESGCapPage from './features/enterprise-admin/pages/ESGCap';
 
 function App() {
   return (
@@ -41,9 +37,6 @@ function App() {
       <Route path="/dashboard" element={<EnhancedDashboard />} />
       <Route path="/materiality" element={<MaterialityPage />} />
       <Route path="/esg" element={<ESGPage />} />
-      <Route path="/esg-due-diligence" element={<ESGDueDiligencePage />} />
-      <Route path="/esg-cap" element={<ESGCapPage />} />
-      <Route path="/ghg-accounting" element={<GHGAccountingPage />} />
       <Route path="/compliance" element={<Compliance />} />
       <Route path="/units" element={<Units />} />
       <Route path="/ehs-trainings" element={<EHSTrainings />} />
@@ -55,9 +48,6 @@ function App() {
       <Route path="/employee/dashboard" element={<EmployeeDashboardPage />} />
       <Route path="/personal-dashboard" element={<EnhancedEmployeeDashboard />} />
       <Route path="/personal-ghg" element={<PersonalGHGPage />} />
-      
-      {/* Unit Admin Routes */}
-      <Route path="/unit/ghg-accounting" element={<UnitGHGAccountingPage />} />
       
       {/* Supplier Routes */}
       <Route path="/supplier/dashboard" element={<SupplierDashboardPage />} />
