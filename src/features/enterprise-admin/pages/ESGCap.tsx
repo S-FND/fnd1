@@ -6,20 +6,11 @@ import { useAuth } from '@/context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ArrowLeft } from 'lucide-react';
 import { mockESGCapItems, mockESGDDReports } from '../data/esgDD';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { ESGCapItem, ESGCategory } from '../types/esgDD';
-import { ArrowLeft, ArrowDown, ArrowUp, Check, Loader, X, MoreHorizontal } from 'lucide-react';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+import { ESGCapItem } from '../types/esgDD';
+import { ESGCapFilters } from '../components/esg-cap/ESGCapFilters';
+import { ESGCapTable } from '../components/esg-cap/ESGCapTable';
 
 const ESGCapPage = () => {
   const { isLoading } = useRouteProtection(['admin', 'unit_admin']);
@@ -74,52 +65,6 @@ const ESGCapPage = () => {
     setSortConfig({ key, direction });
   };
 
-  // Find report title by ID
-  const getReportTitle = (reportId: string) => {
-    const report = mockESGDDReports.find(r => r.id === reportId);
-    return report ? report.title : 'Unknown Report';
-  };
-
-  // Status badge component
-  const StatusBadge = ({ status }: { status: ESGCapItem['status'] }) => {
-    switch (status) {
-      case 'completed':
-        return (
-          <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
-            <Check className="h-3 w-3 mr-1" /> Completed
-          </Badge>
-        );
-      case 'in_progress':
-        return (
-          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">
-            <Loader className="h-3 w-3 mr-1 animate-spin" /> In Progress
-          </Badge>
-        );
-      case 'pending':
-        return (
-          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">
-            <X className="h-3 w-3 mr-1" /> Pending
-          </Badge>
-        );
-      default:
-        return null;
-    }
-  };
-
-  // Category badge component
-  const CategoryBadge = ({ category }: { category: ESGCategory }) => {
-    switch (category) {
-      case 'environmental':
-        return <Badge className="bg-green-500">Environmental</Badge>;
-      case 'social':
-        return <Badge className="bg-blue-500">Social</Badge>;
-      case 'governance':
-        return <Badge className="bg-purple-500">Governance</Badge>;
-      default:
-        return null;
-    }
-  };
-
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -143,139 +88,20 @@ const ESGCapPage = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col md:flex-row gap-4 mb-6">
-                <div className="flex-1">
-                  <Input 
-                    placeholder="Search issues..." 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-[150px]">
-                      <SelectValue placeholder="Filter by status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="in_progress">In Progress</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                    <SelectTrigger className="w-[170px]">
-                      <SelectValue placeholder="Filter by category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      <SelectItem value="environmental">Environmental</SelectItem>
-                      <SelectItem value="social">Social</SelectItem>
-                      <SelectItem value="governance">Governance</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              <ESGCapFilters 
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+                categoryFilter={categoryFilter}
+                setCategoryFilter={setCategoryFilter}
+              />
               
-              <div className="rounded-md border overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[60px] text-center">S. No</TableHead>
-                      <TableHead 
-                        className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => requestSort('issue')}
-                      >
-                        Item
-                        {sortConfig?.key === 'issue' && (
-                          sortConfig.direction === 'asc' ? 
-                            <ArrowUp className="h-4 w-4 inline ml-1" /> : 
-                            <ArrowDown className="h-4 w-4 inline ml-1" />
-                        )}
-                      </TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Measures and/or Corrective Actions</TableHead>
-                      <TableHead>Resource & Responsibility</TableHead>
-                      <TableHead>Expected Deliverable</TableHead>
-                      <TableHead 
-                        className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => requestSort('deadline')}
-                      >
-                        Target Date
-                        {sortConfig?.key === 'deadline' && (
-                          sortConfig.direction === 'asc' ? 
-                            <ArrowUp className="h-4 w-4 inline ml-1" /> : 
-                            <ArrowDown className="h-4 w-4 inline ml-1" />
-                        )}
-                      </TableHead>
-                      <TableHead>CP/CS</TableHead>
-                      <TableHead>Actual Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                      <TableHead>Remarks</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {sortedItems.map((item, index) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="text-center font-medium">{index + 1}</TableCell>
-                        <TableCell className="font-medium">
-                          {item.issue}
-                        </TableCell>
-                        <TableCell>
-                          <CategoryBadge category={item.category} />
-                        </TableCell>
-                        <TableCell>{item.description}</TableCell>
-                        <TableCell>{item.assignedTo || 'Not assigned'}</TableCell>
-                        <TableCell>{item.recommendation}</TableCell>
-                        <TableCell>{new Date(item.deadline).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          {item.dealCondition !== 'none' && (
-                            <Badge variant="outline" className="font-bold">
-                              {item.dealCondition}
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {item.status === 'completed' ? new Date(item.deadline).toLocaleDateString() : '-'}
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge status={item.status} />
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                                <span className="sr-only">Actions</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>View details</DropdownMenuItem>
-                              <DropdownMenuItem>Edit</DropdownMenuItem>
-                              <DropdownMenuItem>Update status</DropdownMenuItem>
-                              <DropdownMenuItem>Assign responsibility</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
-                          {item.status === 'completed' ? 'Completed on time' : 
-                           item.status === 'in_progress' ? 'Implementation ongoing' : 'Awaiting action'}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    
-                    {sortedItems.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={11} className="text-center py-6">
-                          No CAP items found matching the current filters.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+              <ESGCapTable 
+                sortedItems={sortedItems} 
+                sortConfig={sortConfig} 
+                requestSort={requestSort} 
+              />
             </CardContent>
           </Card>
         </div>
