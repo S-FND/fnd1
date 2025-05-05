@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
 import { FundingStage } from '../../types/esgDD';
 import { StageSelection } from './StageSelection';
-import { EarlyStageForm } from './EarlyStageForm';
-import { LateStageForm } from './LateStageForm';
+import EarlyStageForm from './EarlyStageForm';
+import LateStageForm from './LateStageForm';
 import { ReportGenerator } from './ReportGenerator';
 
 interface ESGDDWizardProps {
