@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
@@ -8,7 +7,14 @@ import {
 } from 'lucide-react';
 import { SidebarNavItem } from './SidebarNavItem';
 import { SidebarSubmenu } from './SidebarSubmenu';
-import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton } from '@/components/ui/sidebar';
+import { 
+  SidebarGroup, 
+  SidebarGroupContent, 
+  SidebarGroupLabel, 
+  SidebarMenu, 
+  SidebarMenuButton,
+  SidebarMenuItem
+} from '@/components/ui/sidebar';
 import { Link } from 'react-router-dom';
 
 interface SidebarNavigationProps {
