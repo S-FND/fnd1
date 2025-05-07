@@ -1,7 +1,7 @@
 
 import React from 'react';
 import ReportViewer from '../components/reports/ReportViewer';
-import GeneralDisclosures from '../components/reports/brsr/GeneralDisclosures';
+import GeneralDisclosures from '../components/reports/brsr/general-disclosures';
 import ManagementDisclosures from '../components/reports/brsr/ManagementDisclosures';
 import PrincipleWisePerformance from '../components/reports/brsr/PrincipleWisePerformance';
 import ESGAssurance from '../components/reports/brsr/ESGAssurance';
