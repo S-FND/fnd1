@@ -5,6 +5,7 @@ import { FileText, Download } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
 
 const ReportsPage: React.FC = () => {
   const [downloadingReport, setDownloadingReport] = useState<string | null>(null);
@@ -40,55 +41,67 @@ const ReportsPage: React.FC = () => {
     setDownloadingReport(reportId);
     toast.info(`Preparing ${reportTitle} for download...`);
     
-    // In a real implementation, this would call an API to generate the PDF
-    setTimeout(() => {
-      // Create a file name for the download
+    try {
+      // Create a PDF document with basic report template
+      const doc = new jsPDF();
+      
+      // Add report title and date
+      doc.setFontSize(22);
+      doc.text(reportTitle, 105, 20, { align: 'center' });
+      doc.setFontSize(14);
+      doc.text(`Generated on ${new Date().toLocaleDateString()}`, 105, 30, { align: 'center' });
+      
+      // Add company information section
+      doc.setFontSize(16);
+      doc.text('Company Information', 20, 50);
+      doc.setFontSize(12);
+      doc.text('Company: Fandoro Enterprises Ltd.', 20, 60);
+      doc.text('Industry: Sustainable Manufacturing', 20, 68);
+      doc.text('Reporting Period: Jan 2023 - Dec 2023', 20, 76);
+      
+      // Add report-specific content
+      doc.setFontSize(16);
+      doc.text('Report Summary', 20, 96);
+      doc.setFontSize(12);
+      
+      if (reportId === 'brsr') {
+        doc.text('BRSR (Business Responsibility and Sustainability Report)', 20, 106);
+        doc.text('Section A: General Disclosures - Completed', 20, 116);
+        doc.text('Section B: Management and Process Disclosures - Completed', 20, 124);
+        doc.text('Section C: Principle-wise Performance - Completed', 20, 132);
+      } else if (reportId === 'gri') {
+        doc.text('GRI (Global Reporting Initiative) Standards', 20, 106);
+        doc.text('GRI 102: General Disclosures - Completed', 20, 116);
+        doc.text('GRI 300: Environmental Standards - Completed', 20, 124);
+        doc.text('GRI 400: Social Standards - In Progress', 20, 132);
+      } else if (reportId === 'tcfd') {
+        doc.text('TCFD (Task Force on Climate-related Financial Disclosures)', 20, 106);
+        doc.text('Governance - Completed', 20, 116);
+        doc.text('Strategy - Completed', 20, 124);
+        doc.text('Risk Management - Completed', 20, 132);
+        doc.text('Metrics and Targets - Completed', 20, 140);
+      } else {
+        doc.text('Impact Assessment Report', 20, 106);
+        doc.text('Environmental Impact Assessment - Completed', 20, 116);
+        doc.text('Social Impact Assessment - Completed', 20, 124);
+        doc.text('Recommendations - Completed', 20, 132);
+      }
+      
+      // Add note to view full report
+      doc.setFontSize(10);
+      doc.text('Note: This is a summary. View the full report on the platform.', 105, 200, { align: 'center' });
+      
+      // Save the PDF
       const fileName = `${reportId}-report-${new Date().toISOString().split('T')[0]}.pdf`;
-      
-      // Create a dummy PDF blob
-      const pdfContent = `%PDF-1.7
-1 0 obj
-<</Type/Catalog/Pages 2 0 R>>
-endobj
-2 0 obj
-<</Type/Pages/Count 1/Kids[3 0 R]>>
-endobj
-3 0 obj
-<</Type/Page/Parent 2 0 R/Resources<<>>/MediaBox[0 0 595 842]>>
-endobj
-xref
-0 4
-0000000000 65535 f
-0000000010 00000 n
-0000000053 00000 n
-0000000102 00000 n
-trailer
-<</Size 4/Root 1 0 R>>
-startxref
-178
-%%EOF
-      `;
-      
-      // Create a Blob object representing the PDF file
-      const blob = new Blob([pdfContent], { type: 'application/pdf' });
-      
-      // Create an object URL for the Blob
-      const url = URL.createObjectURL(blob);
-      
-      // Create a temporary anchor element and trigger the download
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      
-      // Clean up
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      doc.save(fileName);
       
       setDownloadingReport(null);
       toast.success(`${reportTitle} downloaded successfully`);
-    }, 1500);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      setDownloadingReport(null);
+      toast.error(`Failed to download report: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   return (

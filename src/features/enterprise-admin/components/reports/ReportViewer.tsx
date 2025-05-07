@@ -1,10 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Download, FileText, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface ReportViewerProps {
   title: string;
@@ -15,62 +17,61 @@ interface ReportViewerProps {
 const ReportViewer: React.FC<ReportViewerProps> = ({ title, reportType, children }) => {
   const [currentView, setCurrentView] = useState<'preview' | 'pdf'>('preview');
   const [isDownloading, setIsDownloading] = useState(false);
+  const reportContentRef = useRef<HTMLDivElement>(null);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     setIsDownloading(true);
     toast.info(`Preparing ${reportType} report for download...`);
     
-    // In a real implementation, this would call an API to generate the PDF
-    // For this demo, we'll simulate a PDF download after a short delay
-    setTimeout(() => {
-      // Create a file name for the download
+    try {
+      if (!reportContentRef.current) {
+        throw new Error('Report content not found');
+      }
+      
+      // Create a PDF document
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+      
+      // Calculate the width of the PDF
+      const pdfWidth = doc.internal.pageSize.getWidth();
+      
+      // Create a canvas from the report content
+      const canvas = await html2canvas(reportContentRef.current, {
+        scale: 2, // Higher scale for better quality
+        useCORS: true,
+        logging: false,
+        allowTaint: true,
+      });
+      
+      // Get the canvas as an image
+      const imgData = canvas.toDataURL('image/png');
+      
+      // Calculate the height of the image in the PDF based on its aspect ratio
+      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      // Add the title to the PDF
+      doc.setFontSize(16);
+      doc.text(`${reportType} Report`, 14, 15);
+      doc.setFontSize(12);
+      doc.text(`Generated on ${new Date().toLocaleDateString()}`, 14, 22);
+      
+      // Add the image to the PDF
+      doc.addImage(imgData, 'PNG', 10, 30, pdfWidth - 20, imgHeight * 0.9);
+      
+      // Save the PDF
       const fileName = `${reportType.toLowerCase()}-report-${new Date().toISOString().split('T')[0]}.pdf`;
-      
-      // In a real app, we would get a blob from the API
-      // For now, we'll create a dummy PDF blob with minimal content
-      const pdfContent = `%PDF-1.7
-1 0 obj
-<</Type/Catalog/Pages 2 0 R>>
-endobj
-2 0 obj
-<</Type/Pages/Count 1/Kids[3 0 R]>>
-endobj
-3 0 obj
-<</Type/Page/Parent 2 0 R/Resources<<>>/MediaBox[0 0 595 842]>>
-endobj
-xref
-0 4
-0000000000 65535 f
-0000000010 00000 n
-0000000053 00000 n
-0000000102 00000 n
-trailer
-<</Size 4/Root 1 0 R>>
-startxref
-178
-%%EOF
-      `;
-      
-      // Create a Blob object representing the PDF file
-      const blob = new Blob([pdfContent], { type: 'application/pdf' });
-      
-      // Create an object URL for the Blob
-      const url = URL.createObjectURL(blob);
-      
-      // Create a temporary anchor element and trigger the download
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      
-      // Clean up
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      doc.save(fileName);
       
       setIsDownloading(false);
       toast.success(`${reportType} report downloaded successfully`);
-    }, 1500);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      setIsDownloading(false);
+      toast.error(`Failed to download report: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   const handlePrint = () => {
@@ -108,7 +109,9 @@ startxref
         </TabsList>
         <TabsContent value="preview" className="mt-4">
           <Card className="p-6 border print:border-none">
-            {children}
+            <div ref={reportContentRef}>
+              {children}
+            </div>
           </Card>
         </TabsContent>
         <TabsContent value="pdf" className="mt-4">
@@ -118,7 +121,9 @@ startxref
                 <h2 className="text-2xl font-bold text-center">{reportType} Report</h2>
                 <p className="text-center text-muted-foreground">Generated on {new Date().toLocaleDateString()}</p>
               </div>
-              {children}
+              <div ref={currentView === 'pdf' ? reportContentRef : null}>
+                {children}
+              </div>
             </div>
           </div>
         </TabsContent>
