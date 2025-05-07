@@ -147,6 +147,16 @@ const ManagementDisclosures: React.FC = () => {
                   <TableCell>Working hours, rest periods, health benefits, skill development</TableCell>
                   <TableCell>All drivers (employed and contracted)</TableCell>
                 </TableRow>
+                <TableRow>
+                  <TableCell>Port Operations Safety Protocol</TableCell>
+                  <TableCell>Container handling safety, equipment standards, inspection procedures</TableCell>
+                  <TableCell>All port-based operations</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Green Supply Chain Partnership</TableCell>
+                  <TableCell>Supplier code of conduct, emissions disclosure requirements, joint innovation</TableCell>
+                  <TableCell>All major suppliers and partners</TableCell>
+                </TableRow>
               </TableBody>
             </Table>
           </CardContent>
@@ -187,6 +197,11 @@ const ManagementDisclosures: React.FC = () => {
                   <TableCell>Company Secretary, CFO, General Counsel</TableCell>
                   <TableCell>Compliance, business conduct, anti-corruption measures</TableCell>
                 </TableRow>
+                <TableRow>
+                  <TableCell>Logistics Innovation Council</TableCell>
+                  <TableCell>CTO, Head of Business Development, Head of Sustainability</TableCell>
+                  <TableCell>Green logistics solutions, digital transformation, sustainable technologies</TableCell>
+                </TableRow>
               </TableBody>
             </Table>
 
@@ -204,7 +219,10 @@ const ManagementDisclosures: React.FC = () => {
                   "As India's leading integrated logistics solutions provider, we understand our responsibility to operate sustainably while delivering value to all stakeholders. This Business Responsibility and Sustainability Report (BRSR) has been prepared in accordance with the SEBI guidelines and represents our commitment to transparent disclosure of our sustainability journey."
                 </p>
                 <p className="text-sm mt-3">
-                  "We are particularly proud of our initiatives to reduce GHG emissions through fleet modernization, modal shift to rail, and energy efficiency improvements across our operations. Our driver welfare programs and community skill development initiatives represent our commitment to inclusive growth."
+                  "We are particularly proud of our initiatives to reduce GHG emissions through fleet modernization, modal shift to rail, and energy efficiency improvements across our operations. Our driver welfare programs and community skill development initiatives represent our commitment to inclusive growth within the logistics ecosystem."
+                </p>
+                <p className="text-sm mt-3">
+                  "Moving forward, we are committed to playing a leadership role in the sustainable transformation of India's logistics sector through innovation, collaboration, and responsible business practices."
                 </p>
                 <p className="text-sm font-medium mt-4">Sunita Sharma</p>
                 <p className="text-sm">Chairperson, Sustainability & CSR Committee</p>

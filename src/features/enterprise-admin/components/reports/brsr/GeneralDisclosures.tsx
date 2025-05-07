@@ -50,6 +50,10 @@ const GeneralDisclosures: React.FC = () => {
                   <TableCell className="font-medium">Financial Year Reported</TableCell>
                   <TableCell>2023-24</TableCell>
                 </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Listed On</TableCell>
+                  <TableCell>National Stock Exchange of India (NSE) and Bombay Stock Exchange (BSE)</TableCell>
+                </TableRow>
               </TableBody>
             </Table>
           </CardContent>
@@ -86,6 +90,59 @@ const GeneralDisclosures: React.FC = () => {
                   <TableCell>Project Logistics</TableCell>
                   <TableCell>52242</TableCell>
                   <TableCell>10%</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+
+            <h4 className="text-md font-medium mt-6 mb-2">Business Model Overview:</h4>
+            <p className="mb-4">
+              Translog India Ltd. operates as an integrated logistics solutions provider with a nationwide network of facilities and a comprehensive service portfolio. Our business model focuses on providing end-to-end logistics solutions that combine transportation, warehousing, and value-added services through a technology-enabled platform.
+            </p>
+            
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Business Segment</TableHead>
+                  <TableHead>Key Services</TableHead>
+                  <TableHead>Infrastructure</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>Multimodal Transport</TableCell>
+                  <TableCell>
+                    <ul className="list-disc pl-4">
+                      <li>Rail-Road Transportation</li>
+                      <li>Container Movement</li>
+                      <li>Coastal Shipping Integration</li>
+                      <li>International Freight Forwarding</li>
+                    </ul>
+                  </TableCell>
+                  <TableCell>14 rail operations routes, 4,050 vehicles, 8 transshipment hubs</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Container Freight Stations & ICDs</TableCell>
+                  <TableCell>
+                    <ul className="list-disc pl-4">
+                      <li>Container Handling</li>
+                      <li>Customs Clearance</li>
+                      <li>Cargo Consolidation</li>
+                      <li>Bonded Warehousing</li>
+                    </ul>
+                  </TableCell>
+                  <TableCell>12 CFS/ICDs at major ports and inland locations with 1.8M TEU capacity</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>3PL Services</TableCell>
+                  <TableCell>
+                    <ul className="list-disc pl-4">
+                      <li>Warehousing & Distribution</li>
+                      <li>Inventory Management</li>
+                      <li>Order Fulfillment</li>
+                      <li>Value-Added Services</li>
+                    </ul>
+                  </TableCell>
+                  <TableCell>4.5M sq. ft. warehouse space across 16 strategic locations</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -145,6 +202,56 @@ const GeneralDisclosures: React.FC = () => {
                 <TableRow>
                   <TableCell>Annual Cargo Volume</TableCell>
                   <TableCell>22 million tons</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Digital Tracking Coverage</TableCell>
+                  <TableCell>100% of fleet with real-time visibility</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Customs Processing</TableCell>
+                  <TableCell>650,000 documents annually</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Annual Container Movements</TableCell>
+                  <TableCell>1.2 million TEUs</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+
+            <h4 className="text-md font-medium mt-6 mb-2">Major Operational Locations:</h4>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>City/Region</TableHead>
+                  <TableHead>Facility Type</TableHead>
+                  <TableHead>Key Capabilities</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>JNPT (Mumbai)</TableCell>
+                  <TableCell>CFS + Warehouse</TableCell>
+                  <TableCell>400,000 TEU capacity, 120,000 sq.ft. warehouse</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Chennai</TableCell>
+                  <TableCell>CFS + ICD</TableCell>
+                  <TableCell>250,000 TEU capacity, rail siding</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Delhi NCR</TableCell>
+                  <TableCell>ICD + Distribution Center</TableCell>
+                  <TableCell>300,000 TEU capacity, 500,000 sq.ft. fulfillment center</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Mundra</TableCell>
+                  <TableCell>CFS</TableCell>
+                  <TableCell>200,000 TEU capacity, cold chain facilities</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Bangalore</TableCell>
+                  <TableCell>Logistics Park</TableCell>
+                  <TableCell>350,000 sq.ft. warehouse, cross-dock facilities</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -233,6 +340,44 @@ const GeneralDisclosures: React.FC = () => {
                 </TableRow>
               </TableBody>
             </Table>
+
+            <h4 className="text-md font-medium mt-6 mb-2">Logistics-Specific Workforce:</h4>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Number</TableHead>
+                  <TableHead>% Change YoY</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>Professional Drivers</TableCell>
+                  <TableCell>1,280</TableCell>
+                  <TableCell>+8.5%</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Warehouse Operators</TableCell>
+                  <TableCell>1,540</TableCell>
+                  <TableCell>+12.2%</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Container Yard Operations</TableCell>
+                  <TableCell>620</TableCell>
+                  <TableCell>+5.1%</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Equipment Operators</TableCell>
+                  <TableCell>385</TableCell>
+                  <TableCell>+3.8%</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Rail Operations Team</TableCell>
+                  <TableCell>210</TableCell>
+                  <TableCell>+15.4%</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
 
@@ -290,6 +435,112 @@ const GeneralDisclosures: React.FC = () => {
                   <TableCell>Healthcare Outreach</TableCell>
                   <TableCell>1.9</TableCell>
                   <TableCell>22 health camps, 18,500 beneficiaries</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <h3 className="text-lg font-semibold">VI. Transparency and Disclosures</h3>
+            
+            <h4 className="text-md font-medium mt-4 mb-2">Complaints/Grievances on any of the principles:</h4>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead rowSpan={2}>Stakeholder Group</TableHead>
+                  <TableHead colSpan={3}>Grievances Received FY 2023-24</TableHead>
+                </TableRow>
+                <TableRow>
+                  <TableHead>Filed during the year</TableHead>
+                  <TableHead>Pending resolution</TableHead>
+                  <TableHead>Remarks</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>Communities</TableCell>
+                  <TableCell>18</TableCell>
+                  <TableCell>1</TableCell>
+                  <TableCell>Primarily related to noise from operations</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Investors</TableCell>
+                  <TableCell>12</TableCell>
+                  <TableCell>0</TableCell>
+                  <TableCell>All resolved within SLA timelines</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Shareholders</TableCell>
+                  <TableCell>24</TableCell>
+                  <TableCell>0</TableCell>
+                  <TableCell>Majority related to dividend policy</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Employees & Workers</TableCell>
+                  <TableCell>42</TableCell>
+                  <TableCell>3</TableCell>
+                  <TableCell>Mostly regarding working conditions</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Customers</TableCell>
+                  <TableCell>156</TableCell>
+                  <TableCell>8</TableCell>
+                  <TableCell>Service quality and delivery timelines</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Value Chain Partners</TableCell>
+                  <TableCell>38</TableCell>
+                  <TableCell>5</TableCell>
+                  <TableCell>Payment cycles and digital integration</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+
+            <h4 className="text-md font-medium mt-6 mb-2">Overview of Entity's Material Responsible Business Conduct Issues:</h4>
+            <p className="mb-3">
+              The company has conducted a comprehensive materiality assessment to identify ESG topics that are most relevant to its business and stakeholders in the logistics sector.
+            </p>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Material Issue Identified</TableHead>
+                  <TableHead>Indicate whether risk or opportunity</TableHead>
+                  <TableHead>Rationale for identifying the risk/opportunity</TableHead>
+                  <TableHead>Approach to adapt or mitigate</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell>GHG Emissions from Transport</TableCell>
+                  <TableCell>Risk & Opportunity</TableCell>
+                  <TableCell>Regulatory compliance, carbon pricing, customer demand for green logistics</TableCell>
+                  <TableCell>Fleet modernization, modal shift to rail, alternative fuels, eco-driving</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Road Safety</TableCell>
+                  <TableCell>Risk</TableCell>
+                  <TableCell>Operational incidents, human safety, business continuity</TableCell>
+                  <TableCell>Driver training, vehicle maintenance, fatigue management, safety technology</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Digital Transformation</TableCell>
+                  <TableCell>Opportunity</TableCell>
+                  <TableCell>Operational efficiency, customer experience, data-driven decisions</TableCell>
+                  <TableCell>IoT integration, analytics platform, blockchain for transparency</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Talent Acquisition & Retention</TableCell>
+                  <TableCell>Risk</TableCell>
+                  <TableCell>Logistics skill shortages, high turnover in key positions</TableCell>
+                  <TableCell>Training programs, career development, improved working conditions</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Energy Transition</TableCell>
+                  <TableCell>Opportunity</TableCell>
+                  <TableCell>Cost savings, emissions reduction, stakeholder expectations</TableCell>
+                  <TableCell>Renewable energy for facilities, EV adoption for last-mile delivery</TableCell>
                 </TableRow>
               </TableBody>
             </Table>

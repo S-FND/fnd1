@@ -1,3 +1,4 @@
+
 export interface Attendee {
   name: string;
   email: string;
@@ -56,22 +57,32 @@ export interface TrainingBid {
 const vendors: Vendor[] = [
   {
     id: 'vendor-1',
-    name: 'John Clark',
-    email: 'vendor1@example.com',
+    name: 'Rajesh Kumar',
+    email: 'rajesh@safetyfirst.in',
     companyName: 'SafetyFirst Training Ltd.',
-    phone: '+1-555-111-2233',
-    address: '123 Training Ave, Safety City',
-    specialties: ['Chemical Handling', 'Fire Safety', 'Emergency Response'],
+    phone: '+91-98765-43210',
+    address: '123 Training Avenue, Mumbai 400001',
+    specialties: ['Hazardous Materials Handling', 'Fire Safety', 'Emergency Response'],
     verified: true
   },
   {
     id: 'vendor-2',
-    name: 'Sarah Johnson',
-    email: 'vendor2@example.com',
-    companyName: 'EHS Excellence Corp',
-    phone: '+1-555-444-5566',
-    address: '456 Compliance Road, Quality Town',
+    name: 'Priya Sharma',
+    email: 'priya@ehsexcellence.in',
+    companyName: 'EHS Excellence India Pvt. Ltd.',
+    phone: '+91-87654-32109',
+    address: '456 Compliance Road, Bangalore 560001',
     specialties: ['Workplace Safety', 'Environmental Compliance', 'Risk Assessment'],
+    verified: true
+  },
+  {
+    id: 'vendor-3',
+    name: 'Amit Patel',
+    email: 'amit@logisticssafety.in',
+    companyName: 'Logistics Safety Solutions',
+    phone: '+91-76543-21098',
+    address: '789 Transport Nagar, Delhi 110001',
+    specialties: ['Cargo Handling Safety', 'Driver Safety', 'Warehouse Safety'],
     verified: true
   }
 ];
@@ -82,17 +93,55 @@ const trainingBids: TrainingBid[] = [
     trainingId: '2',
     vendorId: 'vendor-1',
     vendorName: 'SafetyFirst Training Ltd.',
-    contentFee: 1500,
-    trainingFee: 2500,
-    travelFee: 800,
-    totalFee: 4800,
+    contentFee: 85000,
+    trainingFee: 120000,
+    travelFee: 25000,
+    totalFee: 230000,
     submittedDate: '2025-04-01',
     status: 'pending',
     trainerResumes: [
       {
         trainerId: 'trainer-1',
-        name: 'Robert Smith',
-        fileUrl: '/resumes/robert-smith.pdf'
+        name: 'Vikram Singh',
+        fileUrl: '/resumes/vikram-singh.pdf'
+      }
+    ]
+  },
+  {
+    id: 'bid-2',
+    trainingId: '2',
+    vendorId: 'vendor-3',
+    vendorName: 'Logistics Safety Solutions',
+    contentFee: 75000,
+    trainingFee: 130000,
+    travelFee: 20000,
+    totalFee: 225000,
+    submittedDate: '2025-04-02',
+    status: 'pending',
+    trainerResumes: [
+      {
+        trainerId: 'trainer-2',
+        name: 'Anita Desai',
+        fileUrl: '/resumes/anita-desai.pdf'
+      }
+    ]
+  },
+  {
+    id: 'bid-3',
+    trainingId: '3',
+    vendorId: 'vendor-2',
+    vendorName: 'EHS Excellence India Pvt. Ltd.',
+    contentFee: 60000,
+    trainingFee: 90000,
+    travelFee: 0,
+    totalFee: 150000,
+    submittedDate: '2025-04-03',
+    status: 'pending',
+    trainerResumes: [
+      {
+        trainerId: 'trainer-3',
+        name: 'Deepak Mehta',
+        fileUrl: '/resumes/deepak-mehta.pdf'
       }
     ]
   }
@@ -101,98 +150,173 @@ const trainingBids: TrainingBid[] = [
 const ehsTrainings: EHSTraining[] = [
   {
     id: '1',
-    name: 'Workplace Safety Training',
-    description: 'Comprehensive training on workplace safety protocols, including emergency procedures and hazard identification.',
-    clientCompany: 'ABC Corp',
+    name: 'Warehouse Safety Training',
+    description: 'Comprehensive training on warehouse safety protocols, including material handling, forklift operations, and hazard identification for our logistics facilities.',
+    clientCompany: 'Translog India Ltd.',
     date: '2025-04-15',
     time: '10:00 AM',
-    duration: '3 hours',
-    location: 'Client HQ, New York',
+    duration: '4 hours',
+    location: 'Mumbai CFS Facility, JNPT Area',
     status: 'scheduled',
     trainingType: 'offline',
     bidOpen: true,
     attendees: [
-      { name: 'John Smith', email: 'john.smith@abccorp.com' },
-      { name: 'Jane Doe', email: 'jane.doe@abccorp.com' },
-      { name: 'Robert Johnson', email: 'robert.j@abccorp.com' },
+      { name: 'Arvind Patil', email: 'a.patil@translogindia.com' },
+      { name: 'Suman Shah', email: 's.shah@translogindia.com' },
+      { name: 'Rakesh Kumar', email: 'r.kumar@translogindia.com' },
+      { name: 'Neha Gupta', email: 'n.gupta@translogindia.com' },
+      { name: 'Mohammed Khan', email: 'm.khan@translogindia.com' },
     ]
   },
   {
     id: '2',
-    name: 'Chemical Handling',
-    description: 'Training on proper handling, storage, and disposal of hazardous chemicals in industrial settings.',
-    clientCompany: 'XYZ Industries',
+    name: 'Hazardous Cargo Handling',
+    description: 'Training on proper handling, storage, and transportation of hazardous cargo in line with IMDG Code and ADR regulations for cross-border logistics operations.',
+    clientCompany: 'Translog India Ltd.',
     date: '2025-04-22',
     time: '9:30 AM',
-    duration: '4 hours',
-    location: 'XYZ Manufacturing Plant',
+    duration: '6 hours',
+    location: 'Chennai ICD Facility',
     status: 'scheduled',
     trainingType: 'offline',
     bidOpen: true,
     attendees: [
-      { name: 'Michael Brown', email: 'm.brown@xyzind.com' },
-      { name: 'Sarah Wilson', email: 's.wilson@xyzind.com' },
-      { name: 'David Lee', email: 'd.lee@xyzind.com' },
-      { name: 'Emily Chen', email: 'e.chen@xyzind.com' },
+      { name: 'Venkat Rao', email: 'v.rao@translogindia.com' },
+      { name: 'Lakshmi Narayanan', email: 'l.narayanan@translogindia.com' },
+      { name: 'Abdul Rahman', email: 'a.rahman@translogindia.com' },
+      { name: 'Kavita Krishnan', email: 'k.krishnan@translogindia.com' },
+      { name: 'Deepak Sharma', email: 'd.sharma@translogindia.com' },
+      { name: 'Priya Patel', email: 'p.patel@translogindia.com' },
     ]
   },
   {
     id: '3',
-    name: 'Environmental Compliance',
-    description: 'Overview of environmental regulations and compliance requirements for manufacturing operations.',
-    clientCompany: 'GreenTech Solutions',
+    name: 'Environmental Compliance for Logistics Operations',
+    description: 'Overview of environmental regulations and compliance requirements for multimodal transport operations, container freight stations, and warehouse facilities.',
+    clientCompany: 'Translog India Ltd.',
     date: '2025-05-05',
     time: '1:00 PM',
-    duration: '2 hours',
+    duration: '3 hours',
     location: 'Virtual Session',
     status: 'scheduled',
     trainingType: 'online',
     bidOpen: true,
     attendees: [
-      { name: 'Thomas Green', email: 't.green@greentech.com' },
-      { name: 'Lisa Park', email: 'l.park@greentech.com' },
+      { name: 'Sanjay Mehta', email: 's.mehta@translogindia.com' },
+      { name: 'Priya Singh', email: 'p.singh@translogindia.com' },
+      { name: 'Rahul Verma', email: 'r.verma@translogindia.com' },
+      { name: 'Anita Gupta', email: 'a.gupta@translogindia.com' },
+      { name: 'Vikram Reddy', email: 'v.reddy@translogindia.com' },
     ]
   },
   {
     id: '4',
-    name: 'Fire Safety Training',
-    description: 'Training on fire prevention, detection, and emergency response procedures.',
-    clientCompany: 'Urban Development Corp',
+    name: 'Fire Safety for Logistics Facilities',
+    description: 'Comprehensive fire prevention, detection, and emergency response procedures specific to warehouse and container freight station environments.',
+    clientCompany: 'Translog India Ltd.',
     date: '2025-04-10',
     time: '11:00 AM',
-    duration: '2.5 hours',
-    location: 'Urban Development HQ',
+    duration: '4 hours',
+    location: 'Delhi NCR Logistics Park',
     status: 'completed',
     trainingType: 'offline',
     assignedVendorId: 'vendor-1',
     bidOpen: false,
     attendees: [
-      { name: 'Mark Taylor', email: 'm.taylor@udc.com' },
-      { name: 'Anna Martin', email: 'a.martin@udc.com' },
-      { name: 'Kevin White', email: 'k.white@udc.com' },
+      { name: 'Amit Kapoor', email: 'a.kapoor@translogindia.com' },
+      { name: 'Sunita Agarwal', email: 's.agarwal@translogindia.com' },
+      { name: 'Rajiv Kumar', email: 'r.kumar@translogindia.com' },
+      { name: 'Pooja Sharma', email: 'p.sharma@translogindia.com' },
+      { name: 'Vishal Singh', email: 'v.singh@translogindia.com' },
     ]
   },
   {
     id: '5',
-    name: 'Machine Operator Safety',
-    description: 'Training on safe operation procedures for industrial machinery and equipment.',
-    clientCompany: 'Precision Manufacturing Inc',
+    name: 'Heavy Equipment Operator Safety',
+    description: 'Training on safe operation procedures for container handling equipment, reach stackers, forklifts, and other machinery used in CFS/ICD operations.',
+    clientCompany: 'Translog India Ltd.',
     date: '2025-05-12',
     time: '9:00 AM',
     duration: '5 hours',
-    location: 'Precision Factory, Chicago',
+    location: 'Mundra Port Logistics Facility, Gujarat',
     status: 'scheduled',
     trainingType: 'offline',
     assignedVendorId: 'vendor-2',
     bidOpen: false,
     attendees: [
-      { name: 'Confidential', email: 'employee1@precision.com' },
-      { name: 'Confidential', email: 'employee2@precision.com' },
-      { name: 'Confidential', email: 'employee3@precision.com' },
-      { name: 'Confidential', email: 'employee4@precision.com' },
-      { name: 'Confidential', email: 'employee5@precision.com' },
+      { name: 'Bharat Patel', email: 'b.patel@translogindia.com' },
+      { name: 'Suresh Rajput', email: 's.rajput@translogindia.com' },
+      { name: 'Ganesh Yadav', email: 'g.yadav@translogindia.com' },
+      { name: 'Ramesh Kumar', email: 'r.kumar2@translogindia.com' },
+      { name: 'Sunil Mehra', email: 's.mehra@translogindia.com' },
     ]
   },
+  {
+    id: '6',
+    name: 'Driver Safety & Eco-Driving Techniques',
+    description: 'Training on safe driving practices, fatigue management, and eco-driving techniques to reduce fuel consumption and emissions.',
+    clientCompany: 'Translog India Ltd.',
+    date: '2025-05-20',
+    time: '10:00 AM',
+    duration: '6 hours',
+    location: 'Bangalore Transportation Hub',
+    status: 'scheduled',
+    trainingType: 'offline',
+    bidOpen: true,
+    attendees: [
+      { name: 'Raju Naidu', email: 'r.naidu@translogindia.com' },
+      { name: 'Mohammed Ali', email: 'm.ali@translogindia.com' },
+      { name: 'Surinder Singh', email: 's.singh@translogindia.com' },
+      { name: 'Prakash Raj', email: 'p.raj@translogindia.com' },
+      { name: 'Venkatesh K', email: 'v.k@translogindia.com' },
+      { name: 'Ramesh Sharma', email: 'r.sharma@translogindia.com' },
+      { name: 'Gurpreet Singh', email: 'g.singh@translogindia.com' },
+      { name: 'Syed Ahmed', email: 's.ahmed@translogindia.com' },
+    ]
+  },
+  {
+    id: '7',
+    name: 'Emergency Response for Chemical Spills',
+    description: 'Specialized training on handling chemical spill emergencies in transportation and storage facilities, including containment and cleanup procedures.',
+    clientCompany: 'Translog India Ltd.',
+    startDate: '2025-06-02',
+    endDate: '2025-06-03',
+    startTime: '9:00 AM',
+    endTime: '4:00 PM',
+    time: '9:00 AM',
+    duration: '2 days',
+    location: 'Hyderabad Chemical Logistics Center',
+    status: 'scheduled',
+    trainingType: 'offline',
+    bidOpen: true,
+    attendees: [
+      { name: 'Rajesh Kumar', email: 'raj.kumar@translogindia.com' },
+      { name: 'Srinivas Reddy', email: 's.reddy@translogindia.com' },
+      { name: 'Padma Lakshmi', email: 'p.lakshmi@translogindia.com' },
+      { name: 'Karthik Rao', email: 'k.rao@translogindia.com' },
+      { name: 'Deepika Patel', email: 'd.patel@translogindia.com' },
+    ]
+  },
+  {
+    id: '8',
+    name: 'ISO 14001 & 45001 Implementation for Logistics Operations',
+    description: 'Training on implementing and maintaining environmental management and occupational health & safety management systems in logistics facilities.',
+    clientCompany: 'Translog India Ltd.',
+    date: '2025-06-10',
+    time: '10:00 AM',
+    duration: '8 hours',
+    location: 'Corporate Training Center, Mumbai',
+    status: 'scheduled',
+    trainingType: 'offline',
+    bidOpen: true,
+    attendees: [
+      { name: 'Ashok Sharma', email: 'a.sharma@translogindia.com' },
+      { name: 'Neelam Gupta', email: 'n.gupta@translogindia.com' },
+      { name: 'Vivek Khanna', email: 'v.khanna@translogindia.com' },
+      { name: 'Ritu Agarwal', email: 'r.agarwal@translogindia.com' },
+      { name: 'Manoj Verma', email: 'm.verma@translogindia.com' },
+    ]
+  }
 ];
 
 export const fetchEHSTrainings = async (): Promise<EHSTraining[]> => {
