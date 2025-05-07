@@ -42,7 +42,7 @@ const ReportsPage: React.FC = () => {
     toast.info(`Preparing ${reportTitle} for download...`);
     
     try {
-      // Create a PDF document with basic report template
+      // Create a PDF document with detailed report template
       const doc = new jsPDF();
       
       // Add report title and date
@@ -59,7 +59,7 @@ const ReportsPage: React.FC = () => {
       doc.text('Industry: Sustainable Manufacturing', 20, 68);
       doc.text('Reporting Period: Jan 2023 - Dec 2023', 20, 76);
       
-      // Add report-specific content
+      // Add report-specific content based on the report type
       doc.setFontSize(16);
       doc.text('Report Summary', 20, 96);
       doc.setFontSize(12);
@@ -67,29 +67,55 @@ const ReportsPage: React.FC = () => {
       if (reportId === 'brsr') {
         doc.text('BRSR (Business Responsibility and Sustainability Report)', 20, 106);
         doc.text('Section A: General Disclosures - Completed', 20, 116);
-        doc.text('Section B: Management and Process Disclosures - Completed', 20, 124);
-        doc.text('Section C: Principle-wise Performance - Completed', 20, 132);
+        doc.text('- Corporate Identity: L12345MH2000PLC123456', 25, 124);
+        doc.text('- Employees: 2,985 total (2,255 permanent, 730 contractual)', 25, 132);
+        doc.text('Section B: Management and Process Disclosures - Completed', 20, 140);
+        doc.text('- Ethics Policy: Board approved and implemented', 25, 148);
+        doc.text('- ESG Governance: Sustainability Committee established', 25, 156);
+        doc.text('Section C: Principle-wise Performance - Completed', 20, 164);
+        doc.text('- Principle 1: Zero incidents of corruption', 25, 172);
+        doc.text('- Principle 2: 15% reduction in energy usage', 25, 180);
       } else if (reportId === 'gri') {
         doc.text('GRI (Global Reporting Initiative) Standards', 20, 106);
         doc.text('GRI 102: General Disclosures - Completed', 20, 116);
-        doc.text('GRI 300: Environmental Standards - Completed', 20, 124);
-        doc.text('GRI 400: Social Standards - In Progress', 20, 132);
+        doc.text('- Organizational profile: Fandoro Enterprises Ltd.', 25, 124);
+        doc.text('- Strategy and Ethics: Code of Conduct implemented', 25, 132);
+        doc.text('GRI 300: Environmental Standards - Completed', 20, 140);
+        doc.text('- GRI 302 Energy: 12,450 MWh total consumption', 25, 148);
+        doc.text('- GRI 305 Emissions: 14,170 tCO2e (Scope 1 & 2)', 25, 156);
+        doc.text('GRI 400: Social Standards - Completed', 20, 164);
+        doc.text('- GRI 401 Employment: 2,985 total employees', 25, 172);
+        doc.text('- GRI 403 Health & Safety: LTIFR 0.3, zero fatalities', 25, 180);
       } else if (reportId === 'tcfd') {
         doc.text('TCFD (Task Force on Climate-related Financial Disclosures)', 20, 106);
         doc.text('Governance - Completed', 20, 116);
-        doc.text('Strategy - Completed', 20, 124);
-        doc.text('Risk Management - Completed', 20, 132);
-        doc.text('Metrics and Targets - Completed', 20, 140);
+        doc.text('- Board Oversight: Quarterly sustainability committee meetings', 25, 124);
+        doc.text('- Management Role: CSO reports directly to CEO', 25, 132);
+        doc.text('Strategy - Completed', 20, 140);
+        doc.text('- Climate Risks: Physical and transition risks identified', 25, 148);
+        doc.text('- Scenario Analysis: 2°C and 4°C scenarios assessed', 25, 156);
+        doc.text('Risk Management - Completed', 20, 164);
+        doc.text('- Risk Identification: Climate risks in ERM framework', 25, 172);
+        doc.text('Metrics and Targets - Completed', 20, 180);
+        doc.text('- Emissions: 14,170 tCO2e (Scope 1 & 2)', 25, 188);
+        doc.text('- Targets: Net-zero by 2050, 50% reduction by 2030', 25, 196);
       } else {
         doc.text('Impact Assessment Report', 20, 106);
         doc.text('Environmental Impact Assessment - Completed', 20, 116);
-        doc.text('Social Impact Assessment - Completed', 20, 124);
-        doc.text('Recommendations - Completed', 20, 132);
+        doc.text('- Climate Impact: 15.1% reduction in GHG emissions', 25, 124);
+        doc.text('- Resource Usage: 8.2% reduction in water consumption', 25, 132);
+        doc.text('- Biodiversity: 45 hectares of habitat restoration', 25, 140);
+        doc.text('Social Impact Assessment - Completed', 20, 148);
+        doc.text('- Workforce: 120 new jobs in underserved communities', 25, 156);
+        doc.text('- Community: 10,000+ beneficiaries of community programs', 25, 164);
+        doc.text('Recommendations - Completed', 20, 172);
+        doc.text('- Environmental: Accelerate renewable energy transition', 25, 180);
+        doc.text('- Social: Scale up apprenticeship program', 25, 188);
       }
       
       // Add note to view full report
       doc.setFontSize(10);
-      doc.text('Note: This is a summary. View the full report on the platform.', 105, 200, { align: 'center' });
+      doc.text('This is a summary report. View the full interactive report on the platform.', 105, 270, { align: 'center' });
       
       // Save the PDF
       const fileName = `${reportId}-report-${new Date().toISOString().split('T')[0]}.pdf`;

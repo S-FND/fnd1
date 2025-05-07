@@ -28,7 +28,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ title, reportType, children
         throw new Error('Report content not found');
       }
       
-      // Create a PDF document
+      // Create a PDF document with the appropriate orientation
       const doc = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -44,22 +44,47 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ title, reportType, children
         useCORS: true,
         logging: false,
         allowTaint: true,
+        width: reportContentRef.current.scrollWidth,
+        height: reportContentRef.current.scrollHeight,
+        windowWidth: reportContentRef.current.scrollWidth,
+        windowHeight: reportContentRef.current.scrollHeight,
       });
       
       // Get the canvas as an image
       const imgData = canvas.toDataURL('image/png');
       
-      // Calculate the height of the image in the PDF based on its aspect ratio
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+      // Calculate height based on aspect ratio
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const imgWidth = pdfWidth - 20;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
-      // Add the title to the PDF
+      let heightLeft = imgHeight;
+      let position = 30; // Start position after the header
+      
+      // Add the title to the first page
       doc.setFontSize(16);
       doc.text(`${reportType} Report`, 14, 15);
       doc.setFontSize(12);
       doc.text(`Generated on ${new Date().toLocaleDateString()}`, 14, 22);
       
-      // Add the image to the PDF
-      doc.addImage(imgData, 'PNG', 10, 30, pdfWidth - 20, imgHeight * 0.9);
+      // Add the image to the PDF, creating new pages as needed for long content
+      doc.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+      heightLeft -= (pageHeight - position);
+      
+      // Create additional pages if the content doesn't fit on one page
+      while (heightLeft > 0) {
+        position = 10; // Reset position for the new page
+        doc.addPage();
+        doc.addImage(
+          imgData, 
+          'PNG', 
+          10, 
+          position - (imgHeight - heightLeft), // Adjust the position to show the next portion of the image
+          imgWidth, 
+          imgHeight
+        );
+        heightLeft -= (pageHeight - position);
+      }
       
       // Save the PDF
       const fileName = `${reportType.toLowerCase()}-report-${new Date().toISOString().split('T')[0]}.pdf`;
@@ -109,19 +134,19 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ title, reportType, children
         </TabsList>
         <TabsContent value="preview" className="mt-4">
           <Card className="p-6 border print:border-none">
-            <div ref={reportContentRef}>
+            <div ref={currentView === 'preview' ? reportContentRef : null} className="report-content">
               {children}
             </div>
           </Card>
         </TabsContent>
         <TabsContent value="pdf" className="mt-4">
           <div className="bg-gray-100 p-4 rounded-lg flex items-center justify-center min-h-[600px]">
-            <div className="bg-white shadow-lg w-full max-w-4xl aspect-[1/1.414] p-8 mx-auto">
+            <div className="bg-white shadow-lg w-full max-w-4xl p-8 mx-auto">
               <div className="border-b pb-4 mb-6">
                 <h2 className="text-2xl font-bold text-center">{reportType} Report</h2>
                 <p className="text-center text-muted-foreground">Generated on {new Date().toLocaleDateString()}</p>
               </div>
-              <div ref={currentView === 'pdf' ? reportContentRef : null}>
+              <div ref={currentView === 'pdf' ? reportContentRef : null} className="report-content">
                 {children}
               </div>
             </div>
