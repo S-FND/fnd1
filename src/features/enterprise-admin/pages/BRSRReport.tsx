@@ -8,7 +8,7 @@ import ESGAssurance from '../components/reports/brsr/ESGAssurance';
 
 const BRSRReport: React.FC = () => {
   return (
-    <ReportViewer title="BRSR Report" reportType="BRSR">
+    <ReportViewer title="BRSR Report: Translog India Ltd." reportType="BRSR">
       <div className="space-y-8">
         <GeneralDisclosures />
         <ManagementDisclosures />
