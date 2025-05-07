@@ -31,6 +31,11 @@ import ESGDDPage from './features/enterprise-admin/pages/ESGDD';
 import ManualESGDDPage from './features/enterprise-admin/pages/ManualESGDD';
 import AutomatedESGDDPage from './features/enterprise-admin/pages/AutomatedESGDD';
 import ESGCapPage from './features/enterprise-admin/pages/ESGCap';
+import ReportsPage from './features/enterprise-admin/pages/Reports';
+import BRSRReport from './features/enterprise-admin/pages/BRSRReport';
+import GRIReport from './features/enterprise-admin/pages/GRIReport';
+import TCFDReport from './features/enterprise-admin/pages/TCFDReport';
+import ImpactReport from './features/enterprise-admin/pages/ImpactReport';
 
 function App() {
   return (
@@ -49,6 +54,11 @@ function App() {
       <Route path="/esg-dd/cap" element={<ESGCapPage />} />
       <Route path="/ghg-accounting" element={<GHGAccountingPage />} />
       <Route path="/compliance" element={<Compliance />} />
+      <Route path="/reports" element={<ReportsPage />} />
+      <Route path="/reports/brsr" element={<BRSRReport />} />
+      <Route path="/reports/gri" element={<GRIReport />} />
+      <Route path="/reports/tcfd" element={<TCFDReport />} />
+      <Route path="/reports/impact" element={<ImpactReport />} />
       <Route path="/units" element={<Units />} />
       <Route path="/ehs-trainings" element={<EHSTrainings />} />
       <Route path="/ehs-trainings/:id" element={<EHSTrainingDetails />} />

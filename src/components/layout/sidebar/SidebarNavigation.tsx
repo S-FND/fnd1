@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
   BarChart3, FileCheck, Building2, Calendar, 
   GraduationCap, LayoutDashboard, LineChart, 
-  Settings, Users, BookOpen, ClipboardCheck, FileSearch
+  Settings, Users, BookOpen, ClipboardCheck, FileSearch,
+  FileText
 } from 'lucide-react';
 import { SidebarNavItem } from './SidebarNavItem';
 import { SidebarSubmenu } from './SidebarSubmenu';
@@ -37,6 +39,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     { name: 'ESG DD', href: '/esg-dd', icon: FileSearch },
     { name: 'GHG Accounting', href: '/ghg-accounting', icon: LineChart },
     { name: 'Compliance', href: '/compliance', icon: ClipboardCheck },
+    { name: 'Reports', href: '/reports', icon: FileText },
     { name: 'Audit', href: '/audit', icon: FileCheck },
     { name: 'LMS', href: '/lms', icon: GraduationCap },
     { name: 'EHS Trainings', href: '/ehs-trainings', icon: BookOpen },
@@ -48,6 +51,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Unit GHG Data', href: '/unit/ghg-accounting', icon: LineChart },
     { name: 'Compliance', href: '/compliance', icon: ClipboardCheck },
+    { name: 'Reports', href: '/reports', icon: FileText },
     { name: 'LMS', href: '/lms', icon: GraduationCap },
     { name: 'Team', href: '/team', icon: Users },
   ];
@@ -67,6 +71,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
   const navigationItems = getNavigationItems();
   const isESGDDPath = location.pathname.startsWith('/esg-dd');
+  const isReportsPath = location.pathname.startsWith('/reports');
   
   return (
     <SidebarGroup>
@@ -109,6 +114,55 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                     <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/cap'} tooltip="ESG CAP">
                       <Link to="/esg-dd/cap" className="w-full">
                         <span>ESG CAP</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarSubmenu>
+              );
+            }
+            
+            if (item.name === 'Reports') {
+              return (
+                <SidebarSubmenu
+                  key={item.name}
+                  name={item.name}
+                  icon={item.icon}
+                  isExpanded={expandedMenus.reports}
+                  isActive={isReportsPath}
+                  onToggle={() => toggleMenu('reports')}
+                >
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location.pathname === '/reports'} tooltip="Reports Hub">
+                      <Link to="/reports" className="w-full">
+                        <span>Overview</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location.pathname === '/reports/brsr'} tooltip="BRSR Report">
+                      <Link to="/reports/brsr" className="w-full">
+                        <span>BRSR Report</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location.pathname === '/reports/gri'} tooltip="GRI Report">
+                      <Link to="/reports/gri" className="w-full">
+                        <span>GRI Report</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location.pathname === '/reports/tcfd'} tooltip="TCFD Report">
+                      <Link to="/reports/tcfd" className="w-full">
+                        <span>TCFD Report</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location.pathname === '/reports/impact'} tooltip="Impact Assessment">
+                      <Link to="/reports/impact" className="w-full">
+                        <span>Impact Assessment</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
