@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { SidebarLayout } from '@/components/layout/Sidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
 import { 
   ResponsiveContainer, 
   ScatterChart, 
@@ -19,6 +22,8 @@ import {
   Legend,
   ZAxis
 } from 'recharts';
+import { defaultMaterialTopics, industries, materialTopicsByIndustry } from '../data/materiality';
+import { toast } from 'sonner';
 
 // Mock material topics data for the matrix
 const materialTopics = [
@@ -169,6 +174,41 @@ const MaterialityPage = () => {
   const { user, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState('matrix');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+  const [materialTopics, setMaterialTopics] = useState(defaultMaterialTopics);
+  
+  const form = useForm();
+
+  useEffect(() => {
+    if (selectedIndustries.length === 0) {
+      setMaterialTopics(defaultMaterialTopics);
+      return;
+    }
+    
+    // Combine material topics from all selected industries
+    const combinedTopics = new Map();
+    
+    selectedIndustries.forEach(industryId => {
+      const industryTopics = materialTopicsByIndustry[industryId as keyof typeof materialTopicsByIndustry];
+      if (!industryTopics) return;
+      
+      industryTopics.forEach(topic => {
+        if (combinedTopics.has(topic.id)) {
+          // Average the values if topic exists
+          const existingTopic = combinedTopics.get(topic.id);
+          existingTopic.businessImpact = (existingTopic.businessImpact + topic.businessImpact) / 2;
+          existingTopic.sustainabilityImpact = (existingTopic.sustainabilityImpact + topic.sustainabilityImpact) / 2;
+        } else {
+          // Otherwise just add it
+          combinedTopics.set(topic.id, { ...topic });
+        }
+      });
+    });
+    
+    setMaterialTopics(Array.from(combinedTopics.values()));
+    
+    toast.info(`Updated materiality assessment for ${selectedIndustries.length} selected industries`);
+  }, [selectedIndustries]);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -177,6 +217,14 @@ const MaterialityPage = () => {
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
   }
+
+  const handleIndustryChange = (industryId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIndustries(prev => [...prev, industryId]);
+    } else {
+      setSelectedIndustries(prev => prev.filter(id => id !== industryId));
+    }
+  };
 
   const filteredTopics = selectedCategory === 'All' 
     ? materialTopics 
@@ -218,6 +266,49 @@ const MaterialityPage = () => {
               Analyze and prioritize ESG material topics based on business impact and sustainability impact
             </p>
           </div>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Industry Selection</CardTitle>
+              <CardDescription>Select industries relevant to your organization to customize materiality assessment</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                {industries.map((industry) => (
+                  <div key={industry.id} className="flex items-start space-x-2">
+                    <Checkbox 
+                      id={`industry-${industry.id}`}
+                      checked={selectedIndustries.includes(industry.id)}
+                      onCheckedChange={(checked) => handleIndustryChange(industry.id, checked === true)}
+                    />
+                    <label 
+                      htmlFor={`industry-${industry.id}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {industry.name}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-4 flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setSelectedIndustries([])}
+                >
+                  Clear Selection
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={selectedIndustries.length <= 0}
+                >
+                  {selectedIndustries.length} {selectedIndustries.length === 1 ? 'Industry' : 'Industries'} Selected
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
           
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
@@ -369,6 +460,7 @@ const MaterialityPage = () => {
                         {highPriorityTopics.map(topic => (
                           <div key={topic.id} className="border rounded-md p-3">
                             <div className="font-medium">{topic.name}</div>
+                            <div className="text-sm text-muted-foreground mt-1">{topic.description}</div>
                             <div className="flex items-center gap-2 text-sm mt-2">
                               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: topic.color }}></div>
                               <span>{topic.category}</span>
@@ -387,6 +479,7 @@ const MaterialityPage = () => {
                         {mediumPriorityTopics.map(topic => (
                           <div key={topic.id} className="border rounded-md p-3">
                             <div className="font-medium">{topic.name}</div>
+                            <div className="text-sm text-muted-foreground mt-1">{topic.description}</div>
                             <div className="flex items-center gap-2 text-sm mt-2">
                               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: topic.color }}></div>
                               <span>{topic.category}</span>
@@ -405,6 +498,7 @@ const MaterialityPage = () => {
                         {lowPriorityTopics.map(topic => (
                           <div key={topic.id} className="border rounded-md p-3">
                             <div className="font-medium">{topic.name}</div>
+                            <div className="text-sm text-muted-foreground mt-1">{topic.description}</div>
                             <div className="flex items-center gap-2 text-sm mt-2">
                               <div className="w-2 h-2 rounded-full" style={{ backgroundColor: topic.color }}></div>
                               <span>{topic.category}</span>
@@ -436,21 +530,16 @@ const MaterialityPage = () => {
                               <div key={topic.id} className="border rounded-lg p-4">
                                 <div className="font-medium text-base">{topic.name}</div>
                                 <div className="text-sm text-muted-foreground mt-1">
-                                  {category === 'Environment' ? 
-                                    `Impact on natural resources, ecosystems, and climate.` :
-                                    category === 'Social' ?
-                                    `Impact on employees, communities, and society at large.` :
-                                    `Impact on corporate ethics, transparency, and accountability.`
-                                  }
+                                  {topic.description}
                                 </div>
                                 <div className="grid grid-cols-2 mt-4 gap-2">
                                   <div>
                                     <div className="text-xs text-muted-foreground">Business Impact</div>
-                                    <div className="font-medium">{topic.businessImpact}/10</div>
+                                    <div className="font-medium">{topic.businessImpact.toFixed(1)}/10</div>
                                   </div>
                                   <div>
                                     <div className="text-xs text-muted-foreground">Sustainability Impact</div>
-                                    <div className="font-medium">{topic.sustainabilityImpact}/10</div>
+                                    <div className="font-medium">{topic.sustainabilityImpact.toFixed(1)}/10</div>
                                   </div>
                                 </div>
                               </div>
@@ -483,6 +572,27 @@ const MaterialityPage = () => {
                         <span className="font-medium">Financial Materiality:</span> How ESG factors impact our company's financial performance and value creation
                       </li>
                     </ul>
+                  </div>
+                  
+                  <div>
+                    <h3 className="text-lg font-medium mb-2">Industry-Specific Considerations</h3>
+                    <p className="text-sm">
+                      Our materiality assessment is tailored to the specific industries in which we operate. We have selected {selectedIndustries.length} {selectedIndustries.length === 1 ? 'industry' : 'industries'} for this assessment:
+                    </p>
+                    <div className="mt-2">
+                      {selectedIndustries.length > 0 ? (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {selectedIndustries.map(id => {
+                            const industry = industries.find(i => i.id === id);
+                            return industry ? (
+                              <Badge key={id} variant="outline">{industry.name}</Badge>
+                            ) : null;
+                          })}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic">No industries selected. Using default materiality assessment.</p>
+                      )}
+                    </div>
                   </div>
                   
                   <div>
