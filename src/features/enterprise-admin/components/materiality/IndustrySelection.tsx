@@ -9,12 +9,14 @@ interface IndustrySelectionProps {
   selectedIndustries: string[];
   onIndustryChange: (industryId: string, checked: boolean) => void;
   onClearSelection: () => void;
+  onUpdateMatrix: () => void;
 }
 
 const IndustrySelection: React.FC<IndustrySelectionProps> = ({
   selectedIndustries,
   onIndustryChange,
-  onClearSelection
+  onClearSelection,
+  onUpdateMatrix
 }) => {
   return (
     <Card>
@@ -55,6 +57,14 @@ const IndustrySelection: React.FC<IndustrySelectionProps> = ({
             disabled={selectedIndustries.length <= 0}
           >
             {selectedIndustries.length} {selectedIndustries.length === 1 ? 'Industry' : 'Industries'} Selected
+          </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={onUpdateMatrix}
+            disabled={selectedIndustries.length === 0}
+          >
+            Update Matrix
           </Button>
         </div>
       </CardContent>

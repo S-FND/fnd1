@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { SidebarLayout } from '@/components/layout/Sidebar';
@@ -17,18 +18,28 @@ const MaterialityPage = () => {
   const [activeTab, setActiveTab] = useState('matrix');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+  const [tempSelectedIndustries, setTempSelectedIndustries] = useState<string[]>([]);
   const [materialTopics, setMaterialTopics] = useState(defaultMaterialTopics);
   
+  // Update tempSelectedIndustries when selectedIndustries changes
   useEffect(() => {
-    if (selectedIndustries.length === 0) {
+    setTempSelectedIndustries(selectedIndustries);
+  }, []);
+  
+  const updateMatrixData = () => {
+    // Update the actual selected industries from the temp selection
+    setSelectedIndustries([...tempSelectedIndustries]);
+    
+    if (tempSelectedIndustries.length === 0) {
       setMaterialTopics(defaultMaterialTopics);
+      toast.info('Reset to default materiality assessment');
       return;
     }
     
     // Combine material topics from all selected industries
     const combinedTopics = new Map();
     
-    selectedIndustries.forEach(industryId => {
+    tempSelectedIndustries.forEach(industryId => {
       const industryTopics = materialTopicsByIndustry[industryId as keyof typeof materialTopicsByIndustry];
       if (!industryTopics) return;
       
@@ -47,8 +58,8 @@ const MaterialityPage = () => {
     
     setMaterialTopics(Array.from(combinedTopics.values()));
     
-    toast.info(`Updated materiality assessment for ${selectedIndustries.length} selected industries`);
-  }, [selectedIndustries]);
+    toast.info(`Updated materiality assessment for ${tempSelectedIndustries.length} selected industries`);
+  };
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -60,9 +71,9 @@ const MaterialityPage = () => {
 
   const handleIndustryChange = (industryId: string, checked: boolean) => {
     if (checked) {
-      setSelectedIndustries(prev => [...prev, industryId]);
+      setTempSelectedIndustries(prev => [...prev, industryId]);
     } else {
-      setSelectedIndustries(prev => prev.filter(id => id !== industryId));
+      setTempSelectedIndustries(prev => prev.filter(id => id !== industryId));
     }
   };
 
@@ -108,9 +119,10 @@ const MaterialityPage = () => {
           </div>
           
           <IndustrySelection 
-            selectedIndustries={selectedIndustries} 
+            selectedIndustries={tempSelectedIndustries} 
             onIndustryChange={handleIndustryChange}
-            onClearSelection={() => setSelectedIndustries([])}
+            onClearSelection={() => setTempSelectedIndustries([])}
+            onUpdateMatrix={updateMatrixData}
           />
           
           <MaterialityTabs 
