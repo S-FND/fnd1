@@ -38,6 +38,7 @@ interface OverviewTabContentProps {
     unit: string;
     percentage: number;
   }>;
+  tabId?: string;
 }
 
 const OverviewTabContent: React.FC<OverviewTabContentProps> = ({
@@ -47,9 +48,10 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({
   scope2Data,
   scope3Data,
   energyData,
+  tabId = "overview",
 }) => {
   return (
-    <div className="space-y-6">
+    <TabsContent value={tabId} className="space-y-6">
       <ScopeOverviewCharts 
         scopePercentages={scopePercentages} 
         monthlyEmissionsData={monthlyEmissionsData} 
@@ -62,7 +64,7 @@ const OverviewTabContent: React.FC<OverviewTabContentProps> = ({
       />
       
       <EnergyConsumption energyData={energyData} />
-    </div>
+    </TabsContent>
   );
 };
 

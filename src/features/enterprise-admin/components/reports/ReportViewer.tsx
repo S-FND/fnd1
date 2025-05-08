@@ -18,13 +18,18 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ title, reportType, children
   const [currentView, setCurrentView] = useState<'preview' | 'pdf'>('preview');
   const [isDownloading, setIsDownloading] = useState(false);
   const reportContentRef = useRef<HTMLDivElement>(null);
+  const allTabsContentRef = useRef<HTMLDivElement>(null);
 
   const handleDownload = async () => {
     setIsDownloading(true);
     toast.info(`Preparing ${reportType} report for download...`);
     
     try {
-      if (!reportContentRef.current) {
+      // For GRI reports, we need to capture all tabs
+      const isGRIReport = reportType === 'GRI';
+      const contentRef = isGRIReport ? allTabsContentRef : reportContentRef;
+      
+      if (!contentRef.current) {
         throw new Error('Report content not found');
       }
       
@@ -39,15 +44,15 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ title, reportType, children
       const pdfWidth = doc.internal.pageSize.getWidth();
       
       // Create a canvas from the report content
-      const canvas = await html2canvas(reportContentRef.current, {
+      const canvas = await html2canvas(contentRef.current, {
         scale: 2, // Higher scale for better quality
         useCORS: true,
         logging: false,
         allowTaint: true,
-        width: reportContentRef.current.scrollWidth,
-        height: reportContentRef.current.scrollHeight,
-        windowWidth: reportContentRef.current.scrollWidth,
-        windowHeight: reportContentRef.current.scrollHeight,
+        width: contentRef.current.scrollWidth,
+        height: contentRef.current.scrollHeight,
+        windowWidth: contentRef.current.scrollWidth,
+        windowHeight: contentRef.current.scrollHeight,
       });
       
       // Get the canvas as an image
@@ -153,6 +158,17 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ title, reportType, children
           </div>
         </TabsContent>
       </Tabs>
+      
+      {/* Hidden div to store all content for GRI reports */}
+      {reportType === 'GRI' && (
+        <div className="hidden">
+          <div ref={allTabsContentRef} className="p-8 bg-white">
+            <h1 className="text-3xl font-bold text-center mb-6">{title}</h1>
+            <p className="text-center text-muted-foreground mb-8">Generated on {new Date().toLocaleDateString()}</p>
+            {children}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
