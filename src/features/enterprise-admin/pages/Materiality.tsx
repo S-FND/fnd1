@@ -21,10 +21,10 @@ const MaterialityPage = () => {
   const [tempSelectedIndustries, setTempSelectedIndustries] = useState<string[]>([]);
   const [materialTopics, setMaterialTopics] = useState(defaultMaterialTopics);
   
-  // Update tempSelectedIndustries when selectedIndustries changes
+  // Update tempSelectedIndustries when selectedIndustries changes - fixed the dependency array
   useEffect(() => {
-    setTempSelectedIndustries(selectedIndustries);
-  }, []);
+    setTempSelectedIndustries([...selectedIndustries]);
+  }, [selectedIndustries]);
   
   const updateMatrixData = () => {
     // Update the actual selected industries from the temp selection
