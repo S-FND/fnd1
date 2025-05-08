@@ -1,18 +1,49 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Search, Check } from "lucide-react";
-import { mockAssignments, mockEmployees } from '../mockData';
 
-interface AssignmentTableProps {
-  searchTerm: string;
-  onSearchChange: (term: string) => void;
+interface Assignment {
+  id: string;
+  employeeId: string;
+  scope: string;
+  category: string;
+  dueDate: string;
+  status: string;
 }
 
-const AssignmentTable: React.FC<AssignmentTableProps> = ({ searchTerm, onSearchChange }) => {
+interface Employee {
+  id: string;
+  name: string;
+  email: string;
+  department: string;
+  location: string;
+}
+
+interface AssignmentTableProps {
+  assignments?: Assignment[];
+  employees?: Employee[];
+  onViewDetails?: (id: string) => void;
+  searchTerm?: string;
+  onSearchChange?: (term: string) => void;
+}
+
+const AssignmentTable: React.FC<AssignmentTableProps> = ({ 
+  assignments = [], 
+  employees = [], 
+  onViewDetails,
+  searchTerm: externalSearchTerm, 
+  onSearchChange: externalOnSearchChange 
+}) => {
+  const [internalSearchTerm, setInternalSearchTerm] = useState("");
+  
+  // Use either external or internal search state
+  const searchTerm = externalSearchTerm !== undefined ? externalSearchTerm : internalSearchTerm;
+  const onSearchChange = externalOnSearchChange || setInternalSearchTerm;
+
   // Get badge color based on status
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -29,16 +60,16 @@ const AssignmentTable: React.FC<AssignmentTableProps> = ({ searchTerm, onSearchC
 
   // Get employee by ID
   const getEmployee = (id: string) => {
-    return mockEmployees.find(emp => emp.id === id);
+    return employees.find(emp => emp.id === id);
   };
 
-  const filteredEmployees = mockEmployees.filter(emp => 
+  const filteredEmployees = employees.filter(emp => 
     emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredAssignments = mockAssignments.filter(assignment => {
+  const filteredAssignments = assignments.filter(assignment => {
     const employee = getEmployee(assignment.employeeId);
     if (!employee) return false;
     
@@ -80,7 +111,11 @@ const AssignmentTable: React.FC<AssignmentTableProps> = ({ searchTerm, onSearchC
             if (!employee) return null;
             
             return (
-              <TableRow key={assignment.id}>
+              <TableRow 
+                key={assignment.id}
+                className="cursor-pointer"
+                onClick={() => onViewDetails && onViewDetails(assignment.id)}
+              >
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <Avatar className="h-7 w-7">

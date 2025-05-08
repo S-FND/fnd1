@@ -9,18 +9,44 @@ import { cn } from "@/lib/utils";
 import { Calendar as CalendarIcon, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
-import { mockEmployees } from '../mockData';
 import { scope1Categories, scope2Categories, scope3Categories, scope4Categories } from '../mockData';
 
-interface AssignmentFormProps {
-  onAssignSuccess: () => void;
+interface Employee {
+  id: string;
+  name: string;
+  email: string;
+  department: string;
+  location: string;
 }
 
-const AssignmentForm: React.FC<AssignmentFormProps> = ({ onAssignSuccess }) => {
-  const [selectedEmployee, setSelectedEmployee] = useState<string>("");
-  const [selectedScope, setSelectedScope] = useState<string>("");
+interface Assignment {
+  id: string;
+  employeeId: string;
+  scope: string;
+  category: string;
+  dueDate: string;
+  status: string;
+}
+
+interface AssignmentFormProps {
+  employees?: Employee[];
+  existingAssignment?: Assignment | null;
+  onAssignSuccess?: () => void;
+  onCancel?: () => void;
+  onSubmit?: () => void;
+}
+
+const AssignmentForm: React.FC<AssignmentFormProps> = ({ 
+  employees = [], 
+  existingAssignment = null, 
+  onAssignSuccess,
+  onCancel,
+  onSubmit 
+}) => {
+  const [selectedEmployee, setSelectedEmployee] = useState<string>(existingAssignment?.employeeId || "");
+  const [selectedScope, setSelectedScope] = useState<string>(existingAssignment?.scope?.replace("Scope ", "") || "");
   const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [date, setDate] = useState<Date>();
+  const [date, setDate] = useState<Date | undefined>(existingAssignment?.dueDate ? new Date(existingAssignment.dueDate) : undefined);
   const { toast } = useToast();
 
   const allCategories = [
@@ -33,7 +59,7 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({ onAssignSuccess }) => {
   // Filter categories based on the selected scope
   const filteredCategories = allCategories.filter(cat => {
     if (!selectedScope) return true;
-    return cat.scope === selectedScope;
+    return cat.scope === `Scope ${selectedScope}`;
   });
 
   const handleAssign = () => {
@@ -50,7 +76,7 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({ onAssignSuccess }) => {
     
     toast({
       title: "Task assigned successfully",
-      description: `Assigned ${categoryName} data collection to ${mockEmployees.find(e => e.id === selectedEmployee)?.name} due on ${format(date, "PPP")}`
+      description: `Assigned ${categoryName} data collection to ${employees.find(e => e.id === selectedEmployee)?.name} due on ${format(date, "PPP")}`
     });
     
     // Reset form
@@ -60,7 +86,8 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({ onAssignSuccess }) => {
     setDate(undefined);
     
     // Notify parent component
-    onAssignSuccess();
+    if (onAssignSuccess) onAssignSuccess();
+    if (onSubmit) onSubmit();
   };
 
   return (
@@ -73,7 +100,7 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({ onAssignSuccess }) => {
               <SelectValue placeholder="Select employee" />
             </SelectTrigger>
             <SelectContent>
-              {mockEmployees.map((employee) => (
+              {employees.map((employee) => (
                 <SelectItem key={employee.id} value={employee.id}>
                   {employee.name} - {employee.department}
                 </SelectItem>
@@ -89,10 +116,10 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({ onAssignSuccess }) => {
               <SelectValue placeholder="Select scope" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Scope 1">Scope 1 (Direct)</SelectItem>
-              <SelectItem value="Scope 2">Scope 2 (Indirect)</SelectItem>
-              <SelectItem value="Scope 3">Scope 3 (Value Chain)</SelectItem>
-              <SelectItem value="Scope 4">Scope 4 (Avoided)</SelectItem>
+              <SelectItem value="1">Scope 1 (Direct)</SelectItem>
+              <SelectItem value="2">Scope 2 (Indirect)</SelectItem>
+              <SelectItem value="3">Scope 3 (Value Chain)</SelectItem>
+              <SelectItem value="4">Scope 4 (Avoided)</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -145,9 +172,15 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({ onAssignSuccess }) => {
         </div>
       </div>
       
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        {onCancel && (
+          <Button variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
         <Button onClick={handleAssign} className="flex items-center gap-2">
-          <Plus className="h-4 w-4" /> Assign Data Collection
+          <Plus className="h-4 w-4" /> 
+          {existingAssignment ? 'Update Assignment' : 'Assign Data Collection'}
         </Button>
       </div>
     </div>

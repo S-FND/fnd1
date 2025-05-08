@@ -10,6 +10,7 @@ import { mockEmployees, mockAssignments, companyInfo } from '../summary/mockData
 const GHGDataAssignmentRefactored = () => {
   const [activeTab, setActiveTab] = useState('assignments');
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const getAssignmentById = (id: string) => {
     return mockAssignments.find(a => a.id === id) || null;
@@ -53,13 +54,18 @@ const GHGDataAssignmentRefactored = () => {
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline">Export</Button>
-                  <Button>Create New Assignment</Button>
+                  <Button onClick={() => {
+                    setSelectedAssignmentId(null);
+                    setActiveTab('create');
+                  }}>Create New Assignment</Button>
                 </div>
               </div>
               
               <AssignmentTable 
                 assignments={mockAssignments}
                 employees={mockEmployees}
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
                 onViewDetails={(id) => {
                   setSelectedAssignmentId(id);
                   setActiveTab('create');
