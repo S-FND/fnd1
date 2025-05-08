@@ -16,29 +16,60 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import { months, calculateMonthlyTotal, calculateYearlyTotal } from '@/data/ghg/calculator';
+import MonthYearSelector from './MonthYearSelector';
+import EmissionsTrendGraph from './EmissionsTrendGraph';
 
 export const GHGScope2Form = () => {
   const [selectedCategory, setSelectedCategory] = useState(scope2Categories[0].id);
-  const [formData, setFormData] = useState<Record<string, Record<string, number>>>({});
+  const [monthlyFormData, setMonthlyFormData] = useState<Record<string, Record<string, Record<string, number>>>>({});
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toLocaleString('en-US', { month: 'long' }));
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [activeTab, setActiveTab] = useState("location");
   const { toast } = useToast();
   
   const currentCategory = scope2Categories.find(cat => cat.id === selectedCategory);
   
+  // Generate trend data for the charts
+  const monthlyTrendData = months.map(month => ({
+    name: month,
+    value: calculateMonthlyTotal(monthlyFormData[selectedYear]?.[month] || {}, selectedCategory) / 1000, // Convert kg to tonnes
+  }));
+
+  const yearlyTrendData = Object.keys(monthlyFormData).map(year => ({
+    name: year,
+    value: calculateYearlyTotal(monthlyFormData[parseInt(year)] || {}) / 1000, // Convert kg to tonnes
+  }));
+  
   const handleValueChange = (categoryId: string, itemId: string, value: string) => {
     const numValue = value === '' ? 0 : parseFloat(value);
     
-    setFormData(prev => ({
-      ...prev,
-      [categoryId]: {
-        ...(prev[categoryId] || {}),
-        [itemId]: numValue
-      }
-    }));
+    setMonthlyFormData(prev => {
+      const yearData = prev[selectedYear] || {};
+      const monthData = yearData[selectedMonth] || {};
+      const categoryData = monthData[categoryId] || {};
+      
+      return {
+        ...prev,
+        [selectedYear]: {
+          ...yearData,
+          [selectedMonth]: {
+            ...monthData,
+            [categoryId]: {
+              ...categoryData,
+              [itemId]: numValue
+            }
+          }
+        }
+      };
+    });
   };
   
   const calculateEmissions = (categoryId: string, itemId: string) => {
-    if (!formData[categoryId] || formData[categoryId][itemId] === undefined) return 0;
+    if (!monthlyFormData[selectedYear]?.[selectedMonth]?.[categoryId] || 
+        monthlyFormData[selectedYear][selectedMonth][categoryId][itemId] === undefined) {
+      return 0;
+    }
     
     const item = scope2Categories
       .find(cat => cat.id === categoryId)
@@ -46,15 +77,19 @@ export const GHGScope2Form = () => {
     
     if (!item) return 0;
     
-    return formData[categoryId][itemId] * item.emissionFactor;
+    return monthlyFormData[selectedYear][selectedMonth][categoryId][itemId] * item.emissionFactor;
   };
   
   const handleSaveData = () => {
     toast({
       title: "Data Saved",
-      description: "Your Scope 2 emissions data has been saved successfully.",
+      description: `Your Scope 2 emissions data for ${selectedMonth} ${selectedYear} has been saved successfully.`,
     });
   };
+
+  // Calculate totals
+  const monthlyTotal = monthlyTrendData.find(m => m.name === selectedMonth)?.value || 0;
+  const yearlyTotal = calculateYearlyTotal(monthlyFormData[selectedYear] || {}) / 1000;
   
   return (
     <div className="space-y-6">
@@ -66,6 +101,26 @@ export const GHGScope2Form = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <MonthYearSelector 
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            onMonthChange={setSelectedMonth}
+            onYearChange={setSelectedYear}
+          />
+
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-muted p-4 rounded-lg">
+              <h3 className="text-sm font-medium text-muted-foreground mb-1">Monthly Emissions</h3>
+              <p className="text-2xl font-bold">{monthlyTotal.toFixed(2)} tCO₂e</p>
+              <p className="text-xs text-muted-foreground">For {selectedMonth} {selectedYear}</p>
+            </div>
+            <div className="bg-muted p-4 rounded-lg">
+              <h3 className="text-sm font-medium text-muted-foreground mb-1">Yearly Emissions</h3>
+              <p className="text-2xl font-bold">{yearlyTotal.toFixed(2)} tCO₂e</p>
+              <p className="text-xs text-muted-foreground">Total for {selectedYear}</p>
+            </div>
+          </div>
+          
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
             <TabsList>
               <TabsTrigger value="location">Location-Based Method</TabsTrigger>
@@ -121,7 +176,7 @@ export const GHGScope2Form = () => {
                             id={item.id}
                             type="number"
                             placeholder="0.00"
-                            value={formData[selectedCategory]?.[item.id] || ''}
+                            value={monthlyFormData[selectedYear]?.[selectedMonth]?.[selectedCategory]?.[item.id] || ''}
                             onChange={(e) => handleValueChange(selectedCategory, item.id, e.target.value)}
                           />
                           <span className="text-sm text-muted-foreground w-12">{item.unit}</span>
@@ -165,7 +220,7 @@ export const GHGScope2Form = () => {
                                 <div>
                                   <Label>Calculation Method</Label>
                                   <p className="text-sm mt-1">
-                                    Activity data ({formData[selectedCategory]?.[item.id] || 0} {item.unit}) × 
+                                    Activity data ({monthlyFormData[selectedYear]?.[selectedMonth]?.[selectedCategory]?.[item.id] || 0} {item.unit}) × 
                                     Emission factor ({item.emissionFactor} kgCO₂e/{item.unit}) ÷ 
                                     1000 = {calculateEmissions(selectedCategory, item.id).toFixed(2)} tCO₂e
                                   </p>
@@ -183,6 +238,13 @@ export const GHGScope2Form = () => {
           </div>
         </CardContent>
       </Card>
+
+      <EmissionsTrendGraph 
+        monthlyData={monthlyTrendData}
+        yearlyData={yearlyTrendData}
+        title="Scope 2 Emissions Trend"
+        description="Monthly and yearly indirect emissions from energy"
+      />
 
       <div className="flex justify-between">
         <Button variant="outline">Import Data</Button>

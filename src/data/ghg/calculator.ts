@@ -12,6 +12,17 @@ export interface GHGParameter {
   unit?: string;
 }
 
+export interface MonthlyEmissions {
+  month: string;
+  year: number;
+  value: number;
+}
+
+export interface YearlyEmissions {
+  year: number;
+  value: number;
+}
+
 export const personalGHGParams: GHGParameter[] = [
   { id: "commute", label: "Daily Commute", options: [
     { value: "public", label: "Public Transport", co2Factor: 0.05 },
@@ -75,3 +86,34 @@ export const logisticsEmissionFactors = {
   }
 };
 
+export const months = [
+  "January", "February", "March", "April", "May", "June", 
+  "July", "August", "September", "October", "November", "December"
+];
+
+export const yearsToShow = [2022, 2023, 2024, 2025];
+
+// Helper functions for emissions calculations
+export const calculateMonthlyTotal = (monthlyData: Record<string, Record<string, number>>, month: string): number => {
+  let total = 0;
+  
+  if (!monthlyData[month]) return 0;
+  
+  Object.values(monthlyData[month]).forEach(value => {
+    if (typeof value === 'number' && !isNaN(value)) {
+      total += value;
+    }
+  });
+  
+  return total;
+};
+
+export const calculateYearlyTotal = (monthlyData: Record<string, Record<string, number>>): number => {
+  let total = 0;
+  
+  months.forEach(month => {
+    total += calculateMonthlyTotal(monthlyData, month);
+  });
+  
+  return total;
+};

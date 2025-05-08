@@ -1,14 +1,36 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, LineChart } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { emissionsByScope, emissionsTrend } from './mockData';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { yearsToShow } from '@/data/ghg/calculator';
+import { ResponsiveContainer, LineChart as RechartsLineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 
 export const GHGSummary = () => {
   const { user } = useAuth();
   const isUnitAdmin = user?.role === 'unit_admin';
   const unitName = isUnitAdmin && user?.units?.find(unit => unit.id === user?.unitId)?.name;
+  
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  
+  // Sample monthly data for the current year
+  const monthlyData = [
+    { name: 'Jan', scope1: 45, scope2: 60, scope3: 120 },
+    { name: 'Feb', scope1: 42, scope2: 58, scope3: 115 },
+    { name: 'Mar', scope1: 48, scope2: 62, scope3: 125 },
+    { name: 'Apr', scope1: 50, scope2: 65, scope3: 130 },
+    { name: 'May', scope1: 55, scope2: 68, scope3: 135 },
+    { name: 'Jun', scope1: 60, scope2: 70, scope3: 140 },
+    { name: 'Jul', scope1: 58, scope2: 69, scope3: 138 },
+    { name: 'Aug', scope1: 56, scope2: 67, scope3: 132 },
+    { name: 'Sep', scope1: 52, scope2: 64, scope3: 128 },
+    { name: 'Oct', scope1: 50, scope2: 62, scope3: 125 },
+    { name: 'Nov', scope1: 48, scope2: 60, scope3: 122 },
+    { name: 'Dec', scope1: 46, scope2: 58, scope3: 118 }
+  ];
   
   return (
     <div className="space-y-6">
@@ -95,6 +117,65 @@ export const GHGSummary = () => {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Monthly Emissions Trend</CardTitle>
+            <CardDescription>Track emissions across all scopes month by month</CardDescription>
+          </div>
+          <div className="w-[150px]">
+            <Select
+              value={selectedYear.toString()}
+              onValueChange={(value) => setSelectedYear(Number(value))}
+            >
+              <SelectTrigger id="year-selector">
+                <SelectValue placeholder="Select year" />
+              </SelectTrigger>
+              <SelectContent>
+                {yearsToShow.map((year) => (
+                  <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsLineChart data={monthlyData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip formatter={(value) => [`${value} tCO₂e`, '']} />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="scope1" 
+                  name="Scope 1" 
+                  stroke="#22c55e" 
+                  strokeWidth={2}
+                  activeDot={{ r: 8 }} 
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="scope2" 
+                  name="Scope 2" 
+                  stroke="#3b82f6" 
+                  strokeWidth={2} 
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="scope3" 
+                  name="Scope 3" 
+                  stroke="#f97316" 
+                  strokeWidth={2} 
+                />
+              </RechartsLineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
