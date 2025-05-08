@@ -279,6 +279,7 @@ const ehsTrainings: EHSTraining[] = [
     name: 'Emergency Response for Chemical Spills',
     description: 'Specialized training on handling chemical spill emergencies in transportation and storage facilities, including containment and cleanup procedures.',
     clientCompany: 'Translog India Ltd.',
+    date: '2025-06-02', // Added the required 'date' property
     startDate: '2025-06-02',
     endDate: '2025-06-03',
     startTime: '9:00 AM',
