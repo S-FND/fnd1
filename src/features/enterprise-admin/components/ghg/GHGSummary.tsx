@@ -8,6 +8,8 @@ import { emissionsByScope, emissionsTrend, monthlyEmissionsData, companyInfo, em
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export const GHGSummary = () => {
+  const totalEmissions = emissionsByScope.reduce((sum, scope) => sum + scope.value, 0);
+  
   return (
     <div className="space-y-6">
       <Card className="mb-4">
@@ -21,18 +23,18 @@ export const GHGSummary = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-muted p-4 rounded-lg">
               <h3 className="text-sm font-medium mb-1">Total Carbon Footprint</h3>
-              <p className="text-2xl font-bold">{(emissionsByScope.reduce((sum, scope) => sum + scope.value, 0) / 1000).toFixed(1)}k tCO₂e</p>
+              <p className="text-2xl font-bold">{(totalEmissions / 1000).toFixed(1)}k tCO₂e</p>
               <p className="text-xs text-muted-foreground">{emissionsTrend[emissionsTrend.length - 1].year} emissions</p>
             </div>
             <div className="bg-muted p-4 rounded-lg">
               <h3 className="text-sm font-medium mb-1">YoY Change</h3>
               <p className="text-2xl font-bold text-green-600">-1.9%</p>
-              <p className="text-xs text-muted-foreground">From previous year</p>
+              <p className="text-xs text-muted-foreground">From {emissionsTrend[emissionsTrend.length - 2].year} to {emissionsTrend[emissionsTrend.length - 1].year}</p>
             </div>
             <div className="bg-muted p-4 rounded-lg">
               <h3 className="text-sm font-medium mb-1">Emission Intensity</h3>
-              <p className="text-2xl font-bold">{(emissionsByScope.reduce((sum, scope) => sum + scope.value, 0) / companyInfo.businessUnits.reduce((sum, unit) => sum + unit.employees, 0)).toFixed(1)} tCO₂e/employee</p>
-              <p className="text-xs text-muted-foreground">Per employee</p>
+              <p className="text-2xl font-bold">{(totalEmissions / companyInfo.businessUnits.reduce((sum, unit) => sum + unit.employees, 0)).toFixed(1)} tCO₂e/employee</p>
+              <p className="text-xs text-muted-foreground">Across {companyInfo.businessUnits.reduce((sum, unit) => sum + unit.employees, 0)} employees</p>
             </div>
           </div>
         </CardContent>
@@ -50,7 +52,7 @@ export const GHGSummary = () => {
         <Card>
           <CardHeader>
             <CardTitle>Emissions by Location</CardTitle>
-            <CardDescription>Carbon footprint by operational location</CardDescription>
+            <CardDescription>Carbon footprint by IMR Resources operational location</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -85,7 +87,7 @@ export const GHGSummary = () => {
         <Card>
           <CardHeader>
             <CardTitle>Emissions by Business Activity</CardTitle>
-            <CardDescription>Carbon footprint by business function</CardDescription>
+            <CardDescription>Carbon footprint by IMR Resources business function</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -106,6 +108,7 @@ export const GHGSummary = () => {
                     </div>
                     <div className="flex justify-between text-xs mt-1">
                       <span>{(activity.value / 1000).toFixed(1)}k tCO₂e</span>
+                      <span className="text-muted-foreground">{activity.percentage}%</span>
                     </div>
                   </div>
                 </div>

@@ -1,9 +1,7 @@
 
 import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { companyInfo } from './summary/mockData';
 
-interface ScopeEmissionTotal {
+interface ScopeEmission {
   scope: string;
   value: number;
   description: string;
@@ -12,41 +10,57 @@ interface ScopeEmissionTotal {
 
 interface EmissionsSummaryCardsProps {
   totalEmissions: number;
-  scopeEmissions: ScopeEmissionTotal[];
+  scopeEmissions: ScopeEmission[];
 }
 
-const EmissionsSummaryCards: React.FC<EmissionsSummaryCardsProps> = ({
-  totalEmissions,
-  scopeEmissions
-}) => {
+const EmissionsSummaryCards: React.FC<EmissionsSummaryCardsProps> = ({ totalEmissions, scopeEmissions }) => {
+  const colorMap: Record<string, string> = {
+    scope1: "bg-green-100 text-green-800 border-green-200",
+    scope2: "bg-blue-100 text-blue-800 border-blue-200",
+    scope3: "bg-amber-100 text-amber-800 border-amber-200",
+    scope4: "bg-purple-100 text-purple-800 border-purple-200"
+  };
+
   return (
-    <div className="grid gap-4 md:grid-cols-3 mb-6">
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Total Emissions</CardTitle>
-          <CardDescription>{companyInfo.name} carbon footprint</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{totalEmissions.toLocaleString()} tCO2e</div>
-          <p className="text-sm text-muted-foreground">-1.9% from previous year</p>
-        </CardContent>
-      </Card>
-      
-      {scopeEmissions.map((scope) => (
-        <Card key={scope.scope}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">{`Scope ${scope.scope.slice(-1)}`}</CardTitle>
-            <CardDescription>{scope.description}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {scope.value.toLocaleString()} tCO2e
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="bg-white border rounded-lg p-4 shadow-sm">
+        <h3 className="text-lg font-medium mb-2">Total Emissions</h3>
+        <div className="flex flex-col">
+          <span className="text-3xl font-bold mb-1">{totalEmissions.toLocaleString()} tCO₂e</span>
+          <span className="text-sm text-muted-foreground">IMR Resources (2025)</span>
+        </div>
+        <div className="mt-2 text-xs text-muted-foreground">
+          <span className="flex items-center">
+            <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1"></span> Scope 1: {scopeEmissions[0].percentage}
+          </span>
+          <span className="flex items-center">
+            <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1"></span> Scope 2: {scopeEmissions[1].percentage}
+          </span>
+          <span className="flex items-center">
+            <span className="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1"></span> Scope 3: {scopeEmissions[2].percentage}
+          </span>
+        </div>
+      </div>
+
+      {scopeEmissions.map((emission, index) => (
+        <div 
+          key={emission.scope} 
+          className={`border rounded-lg p-4 shadow-sm ${colorMap[emission.scope]}`}
+        >
+          <h3 className="text-lg font-medium mb-2">
+            {emission.scope === 'scope1' && 'Direct Emissions'}
+            {emission.scope === 'scope2' && 'Indirect Energy Emissions'}
+            {emission.scope === 'scope3' && 'Value Chain Emissions'}
+            {emission.scope === 'scope4' && 'Avoided Emissions'}
+          </h3>
+          <div className="flex flex-col">
+            <span className="text-2xl font-bold mb-1">{emission.value.toLocaleString()} tCO₂e</span>
+            <div className="flex justify-between">
+              <span className="text-sm">{emission.description}</span>
+              <span className="text-sm font-semibold">{emission.percentage}</span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              {scope.percentage}% of total emissions
-            </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       ))}
     </div>
   );

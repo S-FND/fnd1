@@ -20,9 +20,73 @@ import { months, calculateMonthlyTotal, calculateYearlyTotal } from '@/data/ghg/
 import MonthYearSelector from './MonthYearSelector';
 import EmissionsTrendGraph from './EmissionsTrendGraph';
 
+// Pre-populated data for IMR Resources
+const prePopulatedData = {
+  2025: {
+    "January": {
+      "owned_fleet": {
+        "trucks_diesel": 12500,
+        "trucks_cng": 5600,
+        "forklifts_diesel": 2800,
+        "forklifts_electric": 4200,
+        "company_cars": 3100
+      },
+      "stationary_combustion": {
+        "diesel_generators": 7800,
+        "natural_gas_heating": 15300,
+        "lpg_equipment": 4200
+      },
+      "cargo_handling": {
+        "reach_stackers": 8900,
+        "gantry_cranes": 12400,
+        "terminal_tractors": 6700
+      },
+      "refrigerants": {
+        "r410a": 48,
+        "r404a": 32,
+        "r134a": 65
+      }
+    },
+    "February": {
+      "owned_fleet": {
+        "trucks_diesel": 11800,
+        "trucks_cng": 5400,
+        "forklifts_diesel": 2600,
+        "forklifts_electric": 4000,
+        "company_cars": 2900
+      },
+      "stationary_combustion": {
+        "diesel_generators": 7500,
+        "natural_gas_heating": 14800,
+        "lpg_equipment": 4000
+      }
+    },
+    "March": {
+      "owned_fleet": {
+        "trucks_diesel": 12200,
+        "trucks_cng": 5500,
+        "forklifts_diesel": 2700,
+        "forklifts_electric": 4100,
+        "company_cars": 3000
+      }
+    }
+  },
+  2024: {
+    "January": {
+      "owned_fleet": {
+        "trucks_diesel": 13000,
+        "trucks_cng": 5800,
+        "forklifts_diesel": 2900,
+        "forklifts_electric": 4300,
+        "company_cars": 3200
+      }
+    }
+  }
+};
+
 export const GHGScope1Form = () => {
   const [selectedCategory, setSelectedCategory] = useState(scope1Categories[0].id);
-  const [monthlyFormData, setMonthlyFormData] = useState<Record<string, Record<string, Record<string, number>>>>({});
+  const [monthlyFormData, setMonthlyFormData] = useState<Record<string, Record<string, Record<string, number>>>>(prePopulatedData);
   const [selectedMonth, setSelectedMonth] = useState(new Date().toLocaleString('en-US', { month: 'long' }));
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const { toast } = useToast();
@@ -96,7 +160,7 @@ export const GHGScope1Form = () => {
         <CardHeader>
           <CardTitle>Scope 1: Direct Emissions</CardTitle>
           <CardDescription>
-            Record direct emissions from owned or controlled sources
+            Record direct emissions from IMR Resources owned or controlled sources
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -223,7 +287,7 @@ export const GHGScope1Form = () => {
         monthlyData={monthlyTrendData}
         yearlyData={yearlyTrendData}
         title="Scope 1 Emissions Trend"
-        description="Monthly and yearly direct emissions"
+        description="Monthly and yearly direct emissions for IMR Resources"
       />
 
       <div className="flex justify-between">

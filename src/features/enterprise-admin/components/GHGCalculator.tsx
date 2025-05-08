@@ -29,24 +29,24 @@ import {
 const GHGCalculator = () => {
   const [selectedScope, setSelectedScope] = useState('overview');
 
-  // Create scope emission summaries for the cards
+  // Create scope emission summaries for the cards with more meaningful descriptions
   const scopeEmissionSummaries = [
     {
       scope: 'scope1',
       value: totalEmissions.scope1,
-      description: 'Direct emissions',
+      description: 'From IMR Resources operations',
       percentage: scopePercentages[0].percentage
     },
     {
       scope: 'scope2',
       value: totalEmissions.scope2,
-      description: 'Indirect emissions from energy',
+      description: 'From purchased energy',
       percentage: scopePercentages[1].percentage
     },
     {
       scope: 'scope3',
       value: totalEmissions.scope3,
-      description: 'Other indirect emissions',
+      description: 'Throughout value chain',
       percentage: scopePercentages[2].percentage
     }
   ];
@@ -62,8 +62,8 @@ const GHGCalculator = () => {
       {/* Main Analysis Card */}
       <Card>
         <CardHeader>
-          <CardTitle>GHG Emissions Analysis</CardTitle>
-          <CardDescription>Detailed breakdown of emissions across all scopes</CardDescription>
+          <CardTitle>IMR Resources GHG Emissions Analysis</CardTitle>
+          <CardDescription>Detailed breakdown of emissions across all scopes for 2025</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={selectedScope} onValueChange={setSelectedScope}>

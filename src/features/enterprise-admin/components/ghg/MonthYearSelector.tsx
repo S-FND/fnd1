@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { months, yearsToShow } from '@/data/ghg/calculator';
 
 interface MonthYearSelectorProps {
@@ -29,10 +29,8 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
             <SelectValue placeholder="Select month" />
           </SelectTrigger>
           <SelectContent>
-            {months.map((month) => (
-              <SelectItem key={month} value={month}>
-                {month}
-              </SelectItem>
+            {months.map(month => (
+              <SelectItem key={month} value={month}>{month}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -41,16 +39,14 @@ const MonthYearSelector: React.FC<MonthYearSelectorProps> = ({
         <Label htmlFor="year-select">Year</Label>
         <Select
           value={selectedYear.toString()}
-          onValueChange={(value) => onYearChange(Number(value))}
+          onValueChange={(value) => onYearChange(parseInt(value))}
         >
           <SelectTrigger id="year-select">
             <SelectValue placeholder="Select year" />
           </SelectTrigger>
           <SelectContent>
-            {yearsToShow.map((year) => (
-              <SelectItem key={year} value={year.toString()}>
-                {year}
-              </SelectItem>
+            {yearsToShow.map(year => (
+              <SelectItem key={year.toString()} value={year.toString()}>{year}</SelectItem>
             ))}
           </SelectContent>
         </Select>
