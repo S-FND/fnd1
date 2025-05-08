@@ -49,7 +49,6 @@ const Scope3TabContent: React.FC<Scope3TabContentProps> = ({
       detailedLabels={['Business Travel']}
       chartData={monthlyEmissionsData}
       chartDataKey="scope3"
-      chartColor={scopeColor}
     />
   );
 };

@@ -93,32 +93,22 @@ export const months = [
 
 export const yearsToShow = [2022, 2023, 2024, 2025];
 
-// Helper functions for emissions calculations
-export const calculateMonthlyTotal = (monthlyData: Record<string, Record<string, number>> | undefined, categoryId: string): number => {
-  let total = 0;
+// Helper functions for emissions calculations with correct typing
+export const calculateMonthlyTotal = (monthlyData: Record<string, number> | undefined, categoryId: string): number => {
+  if (!monthlyData) return 0;
   
-  if (!monthlyData || !monthlyData[categoryId]) return 0;
-  
-  Object.values(monthlyData[categoryId]).forEach(value => {
-    if (typeof value === 'number' && !isNaN(value)) {
-      total += value;
-    }
-  });
-  
-  return total;
+  return monthlyData[categoryId] || 0;
 };
 
-export const calculateYearlyTotal = (yearlyData: Record<string, Record<string, Record<string, number>>> | undefined): number => {
+export const calculateYearlyTotal = (yearlyData: Record<string, Record<string, number>> | undefined): number => {
   let total = 0;
   
   if (!yearlyData) return 0;
   
-  months.forEach(month => {
-    if (yearlyData[month]) {
-      Object.keys(yearlyData[month]).forEach(categoryId => {
-        total += calculateMonthlyTotal(yearlyData, categoryId);
-      });
-    }
+  Object.keys(yearlyData).forEach(month => {
+    Object.keys(yearlyData[month]).forEach(categoryId => {
+      total += yearlyData[month][categoryId];
+    });
   });
   
   return total;
