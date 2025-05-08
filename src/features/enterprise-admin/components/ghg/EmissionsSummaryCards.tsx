@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { companyInfo } from './summary/mockData';
 
 interface ScopeEmissionTotal {
   scope: string;
@@ -23,11 +24,11 @@ const EmissionsSummaryCards: React.FC<EmissionsSummaryCardsProps> = ({
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Total Emissions</CardTitle>
-          <CardDescription>All scopes combined</CardDescription>
+          <CardDescription>{companyInfo.name} carbon footprint</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{totalEmissions.toLocaleString()} tCO2e</div>
-          <p className="text-sm text-muted-foreground">-12% from previous year</p>
+          <p className="text-sm text-muted-foreground">-1.9% from previous year</p>
         </CardContent>
       </Card>
       
