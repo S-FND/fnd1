@@ -2,28 +2,28 @@
 export const emissionsByScope = [
   {
     scope: "Scope 1 (Direct)",
-    value: 1250,
+    value: 28750,
     color: "bg-blue-500",
     completeness: 85,
     statusColor: "bg-green-500"
   },
   {
     scope: "Scope 2 (Indirect)",
-    value: 2780,
+    value: 15280,
     color: "bg-green-500",
     completeness: 92,
     statusColor: "bg-green-500"
   },
   {
     scope: "Scope 3 (Value Chain)",
-    value: 5450,
+    value: 89450,
     color: "bg-amber-500",
     completeness: 65,
     statusColor: "bg-amber-500"
   },
   {
     scope: "Scope 4 (Avoided)",
-    value: 870,
+    value: 8970,
     color: "bg-purple-500",
     completeness: 40,
     statusColor: "bg-red-500"
@@ -31,200 +31,226 @@ export const emissionsByScope = [
 ];
 
 export const emissionsTrend = [
-  { year: 2019, value: 8750 },
-  { year: 2020, value: 9120 },
-  { year: 2021, value: 9800 },
-  { year: 2022, value: 8950 },
-  { year: 2023, value: 8200 }
+  { year: 2019, value: 128750 },
+  { year: 2020, value: 112120 },
+  { year: 2021, value: 119800 },
+  { year: 2022, value: 125950 },
+  { year: 2023, value: 133480 }
 ];
 
+// SCOPE 1: Direct emissions specific to logistics operations
 export const scope1Categories = [
   {
-    id: "fuel_combustion",
-    name: "Fuel Combustion",
-    description: "Direct emissions from stationary combustion sources",
+    id: "owned_fleet",
+    name: "Owned Fleet",
+    description: "Direct emissions from company-owned transport vehicles",
     items: [
-      { id: "natural_gas", name: "Natural Gas", unit: "m³", emissionFactor: 2.02 },
-      { id: "diesel", name: "Diesel", unit: "liters", emissionFactor: 2.68 },
-      { id: "petrol", name: "Petrol", unit: "liters", emissionFactor: 2.31 },
-      { id: "lpg", name: "LPG", unit: "kg", emissionFactor: 2.94 }
+      { id: "trucks_diesel", name: "Trucks (Diesel)", unit: "liters", emissionFactor: 2.68 },
+      { id: "trucks_cng", name: "Trucks (CNG)", unit: "kg", emissionFactor: 2.54 },
+      { id: "forklifts_diesel", name: "Forklifts (Diesel)", unit: "liters", emissionFactor: 2.68 },
+      { id: "forklifts_electric", name: "Forklifts (Electric)", unit: "kWh", emissionFactor: 0.82 },
+      { id: "company_cars", name: "Company Cars", unit: "liters", emissionFactor: 2.31 }
     ]
   },
   {
-    id: "company_vehicles",
-    name: "Company-Owned Vehicles",
-    description: "Emissions from company fleet operations",
+    id: "stationary_combustion",
+    name: "Stationary Combustion",
+    description: "Emissions from stationary sources at logistics facilities",
     items: [
-      { id: "petrol_vehicles", name: "Petrol Vehicles", unit: "km", emissionFactor: 0.19 },
-      { id: "diesel_vehicles", name: "Diesel Vehicles", unit: "km", emissionFactor: 0.17 },
-      { id: "electric_vehicles", name: "Electric Vehicles", unit: "km", emissionFactor: 0.05 }
+      { id: "diesel_generators", name: "Diesel Generators", unit: "liters", emissionFactor: 2.68 },
+      { id: "natural_gas_heating", name: "Natural Gas Heating", unit: "m³", emissionFactor: 2.02 },
+      { id: "lpg_equipment", name: "LPG for Equipment", unit: "kg", emissionFactor: 2.94 }
     ]
   },
   {
-    id: "onsite_equipment",
-    name: "On-site Equipment",
-    description: "Emissions from machinery and equipment",
+    id: "cargo_handling",
+    name: "Cargo Handling Equipment",
+    description: "Emissions from equipment used in CFS/ICD operations",
     items: [
-      { id: "generators", name: "Generators", unit: "hours", emissionFactor: 10.2 },
-      { id: "forklifts", name: "Forklifts", unit: "hours", emissionFactor: 4.8 }
+      { id: "reach_stackers", name: "Reach Stackers", unit: "liters", emissionFactor: 2.68 },
+      { id: "gantry_cranes", name: "Gantry Cranes", unit: "kWh", emissionFactor: 0.82 },
+      { id: "terminal_tractors", name: "Terminal Tractors", unit: "liters", emissionFactor: 2.68 }
     ]
   },
   {
     id: "refrigerants",
     name: "Refrigerants",
-    description: "Emissions from refrigerant leakage",
+    description: "Emissions from refrigerant leakage in cold chain logistics",
     items: [
       { id: "r410a", name: "R-410A", unit: "kg", emissionFactor: 2088 },
-      { id: "r134a", name: "R-134A", unit: "kg", emissionFactor: 1430 },
-      { id: "r32", name: "R-32", unit: "kg", emissionFactor: 675 }
+      { id: "r404a", name: "R-404A", unit: "kg", emissionFactor: 3922 },
+      { id: "r134a", name: "R-134A", unit: "kg", emissionFactor: 1430 }
     ]
   }
 ];
 
+// SCOPE 2: Indirect emissions from purchased energy
 export const scope2Categories = [
   {
     id: "electricity",
     name: "Purchased Electricity",
-    description: "Indirect emissions from purchased electricity",
+    description: "Emissions from electricity used at logistics facilities",
     items: [
-      { id: "grid_electricity", name: "Grid Electricity", unit: "kWh", emissionFactor: 0.42 },
-      { id: "renewable_energy", name: "Renewable Energy", unit: "kWh", emissionFactor: 0 }
+      { id: "warehouse_electricity", name: "Warehouses", unit: "kWh", emissionFactor: 0.82 },
+      { id: "cfs_icd_electricity", name: "CFS/ICD Facilities", unit: "kWh", emissionFactor: 0.82 },
+      { id: "office_electricity", name: "Office Buildings", unit: "kWh", emissionFactor: 0.82 },
+      { id: "ev_charging", name: "EV Charging Stations", unit: "kWh", emissionFactor: 0.82 }
     ]
   },
   {
-    id: "heating",
-    name: "Purchased Heating",
-    description: "Indirect emissions from purchased heating",
+    id: "purchased_heat_cooling",
+    name: "Purchased Heat & Cooling",
+    description: "Emissions from purchased heating and cooling",
     items: [
-      { id: "district_heating", name: "District Heating", unit: "MWh", emissionFactor: 180 }
+      { id: "district_cooling", name: "District Cooling", unit: "MWh", emissionFactor: 100 },
+      { id: "purchased_steam", name: "Purchased Steam", unit: "MWh", emissionFactor: 180 }
     ]
   },
   {
-    id: "cooling",
-    name: "Purchased Cooling",
-    description: "Indirect emissions from purchased cooling",
+    id: "renewable_energy",
+    name: "Renewable Energy",
+    description: "Renewable energy purchased for operations",
     items: [
-      { id: "district_cooling", name: "District Cooling", unit: "MWh", emissionFactor: 100 }
+      { id: "solar_ppa", name: "Solar PPA", unit: "kWh", emissionFactor: 0 },
+      { id: "renewable_certificates", name: "RECs", unit: "kWh", emissionFactor: 0 }
     ]
   }
 ];
 
+// SCOPE 3: Value chain emissions for logistics operations
 export const scope3Categories = [
   {
-    id: "purchased_goods",
-    name: "Purchased Goods & Services",
-    description: "Emissions from production of purchased goods",
+    id: "purchased_services",
+    name: "Purchased Transport Services",
+    description: "Emissions from third-party transportation services",
     items: [
-      { id: "raw_materials", name: "Raw Materials", unit: "tonnes", emissionFactor: 2.5 },
-      { id: "packaging", name: "Packaging", unit: "tonnes", emissionFactor: 3.2 },
-      { id: "office_supplies", name: "Office Supplies", unit: "spend (USD)", emissionFactor: 0.45 }
+      { id: "road_freight", name: "Road Freight (3PL)", unit: "tonne-km", emissionFactor: 0.11 },
+      { id: "rail_freight", name: "Rail Freight", unit: "tonne-km", emissionFactor: 0.03 },
+      { id: "sea_freight", name: "Sea Freight", unit: "tonne-km", emissionFactor: 0.015 },
+      { id: "air_freight", name: "Air Freight", unit: "tonne-km", emissionFactor: 1.53 }
     ]
   },
   {
-    id: "capital_goods",
-    name: "Capital Goods",
-    description: "Emissions from production of capital goods",
+    id: "fuel_energy",
+    name: "Fuel & Energy Activities",
+    description: "Upstream emissions of purchased fuels and energy",
     items: [
-      { id: "machinery", name: "Machinery", unit: "spend (USD)", emissionFactor: 0.65 },
-      { id: "buildings", name: "Buildings", unit: "spend (USD)", emissionFactor: 0.38 },
-      { id: "it_equipment", name: "IT Equipment", unit: "spend (USD)", emissionFactor: 0.42 }
+      { id: "diesel_wtt", name: "Diesel (Well-to-Tank)", unit: "liters", emissionFactor: 0.62 },
+      { id: "petrol_wtt", name: "Petrol (Well-to-Tank)", unit: "liters", emissionFactor: 0.56 },
+      { id: "electricity_t&d", name: "Electricity T&D Losses", unit: "kWh", emissionFactor: 0.07 }
     ]
   },
   {
-    id: "transportation",
-    name: "Transportation & Distribution",
-    description: "Upstream and downstream transportation",
+    id: "capital_equipment",
+    name: "Capital Equipment",
+    description: "Emissions from manufacturing of purchased capital goods",
     items: [
-      { id: "upstream_road", name: "Upstream Road Freight", unit: "tonne-km", emissionFactor: 0.11 },
-      { id: "upstream_air", name: "Upstream Air Freight", unit: "tonne-km", emissionFactor: 1.53 },
-      { id: "downstream_transport", name: "Downstream Transportation", unit: "tonne-km", emissionFactor: 0.09 }
+      { id: "trucks", name: "Trucks & Trailers", unit: "units", emissionFactor: 50000 },
+      { id: "warehouse_equipment", name: "Warehouse Equipment", unit: "units", emissionFactor: 10000 },
+      { id: "it_infrastructure", name: "IT Infrastructure", unit: "spend (INR lakhs)", emissionFactor: 32.5 }
     ]
   },
   {
-    id: "waste",
-    name: "Waste Generated",
-    description: "Emissions from waste disposal and treatment",
+    id: "packaging",
+    name: "Packaging Materials",
+    description: "Emissions from production of packaging materials",
     items: [
-      { id: "landfill", name: "Landfill Waste", unit: "tonnes", emissionFactor: 458 },
-      { id: "recycling", name: "Recycling", unit: "tonnes", emissionFactor: 21 },
-      { id: "incineration", name: "Incineration", unit: "tonnes", emissionFactor: 102 }
+      { id: "cardboard", name: "Cardboard", unit: "tonnes", emissionFactor: 1040 },
+      { id: "plastic_wrap", name: "Plastic Wrap", unit: "tonnes", emissionFactor: 2060 },
+      { id: "pallets", name: "Wooden Pallets", unit: "units", emissionFactor: 5.26 }
+    ]
+  },
+  {
+    id: "waste_operations",
+    name: "Waste From Operations",
+    description: "Emissions from waste generated at logistics facilities",
+    items: [
+      { id: "landfill_waste", name: "Landfill Waste", unit: "tonnes", emissionFactor: 458 },
+      { id: "recycled_waste", name: "Recycled Waste", unit: "tonnes", emissionFactor: 21 },
+      { id: "hazardous_waste", name: "Hazardous Waste", unit: "tonnes", emissionFactor: 802 }
     ]
   },
   {
     id: "business_travel",
     name: "Business Travel",
-    description: "Emissions from employee business trips",
+    description: "Emissions from employee business travel",
     items: [
-      { id: "flights", name: "Flights", unit: "passenger-km", emissionFactor: 0.18 },
+      { id: "air_travel_domestic", name: "Air Travel (Domestic)", unit: "passenger-km", emissionFactor: 0.16 },
+      { id: "air_travel_international", name: "Air Travel (International)", unit: "passenger-km", emissionFactor: 0.22 },
       { id: "hotel_stays", name: "Hotel Stays", unit: "nights", emissionFactor: 15.4 },
-      { id: "rental_cars", name: "Rental Cars", unit: "km", emissionFactor: 0.17 }
+      { id: "taxi_services", name: "Taxi Services", unit: "km", emissionFactor: 0.17 }
     ]
   },
   {
     id: "employee_commuting",
     name: "Employee Commuting",
-    description: "Emissions from employee travel to work",
+    description: "Emissions from employees traveling to and from work",
     items: [
       { id: "car_commute", name: "Car Commute", unit: "passenger-km", emissionFactor: 0.17 },
+      { id: "two_wheeler", name: "Two Wheeler Commute", unit: "passenger-km", emissionFactor: 0.09 },
       { id: "public_transport", name: "Public Transport", unit: "passenger-km", emissionFactor: 0.04 },
-      { id: "remote_working", name: "Remote Working", unit: "days", emissionFactor: 2.1 }
+      { id: "company_shuttles", name: "Company Shuttles", unit: "passenger-km", emissionFactor: 0.03 }
     ]
   },
   {
-    id: "use_of_products",
-    name: "Use of Sold Products",
-    description: "Emissions from product use by customers",
+    id: "leased_assets",
+    name: "Leased Assets",
+    description: "Emissions from leased vehicles, warehouses, and equipment",
     items: [
-      { id: "energy_consuming", name: "Energy-Consuming Products", unit: "units", emissionFactor: 125 },
-      { id: "fuel_consuming", name: "Fuel-Consuming Products", unit: "units", emissionFactor: 750 }
-    ]
-  },
-  {
-    id: "end_of_life",
-    name: "End-of-Life Treatment",
-    description: "Emissions from product disposal",
-    items: [
-      { id: "product_disposal", name: "Product Disposal", unit: "tonnes", emissionFactor: 380 },
-      { id: "packaging_disposal", name: "Packaging Disposal", unit: "tonnes", emissionFactor: 40 }
+      { id: "leased_warehouses", name: "Leased Warehouses", unit: "sq.m", emissionFactor: 0.05 },
+      { id: "leased_vehicles", name: "Leased Vehicles", unit: "vehicle-km", emissionFactor: 0.17 },
+      { id: "leased_equipment", name: "Leased Equipment", unit: "operating hours", emissionFactor: 2.45 }
     ]
   }
 ];
 
+// SCOPE 4: Avoided emissions through innovations in logistics
 export const scope4Categories = [
   {
-    id: "renewable_energy_products",
-    name: "Renewable Energy Products",
-    description: "Emissions avoided through renewable energy products",
+    id: "route_optimization",
+    name: "Route Optimization",
+    description: "Emissions avoided through efficient routing and load consolidation",
     items: [
-      { id: "solar_panels", name: "Solar Panels", unit: "kWh generated", emissionFactor: 0.42 },
-      { id: "wind_turbines", name: "Wind Turbines", unit: "kWh generated", emissionFactor: 0.42 }
+      { id: "optimized_routes", name: "Optimized Routes", unit: "km avoided", emissionFactor: 0.11 },
+      { id: "load_consolidation", name: "Load Consolidation", unit: "trips avoided", emissionFactor: 85 },
+      { id: "backhaul_utilization", name: "Backhaul Utilization", unit: "km avoided", emissionFactor: 0.11 }
     ]
   },
   {
-    id: "circular_economy",
-    name: "Circular Economy Initiatives",
-    description: "Emissions avoided through circular economy",
+    id: "modal_shift",
+    name: "Modal Shift",
+    description: "Emissions avoided by shifting from road to rail/water transport",
     items: [
-      { id: "recycled_materials", name: "Recycled Materials", unit: "tonnes", emissionFactor: 2.1 },
-      { id: "refurbished_products", name: "Refurbished Products", unit: "units", emissionFactor: 78 }
+      { id: "road_to_rail", name: "Road to Rail Shift", unit: "tonne-km", emissionFactor: 0.08 },
+      { id: "road_to_water", name: "Road to Waterways Shift", unit: "tonne-km", emissionFactor: 0.095 }
     ]
   },
   {
-    id: "efficiency_innovations",
-    name: "Efficiency Innovations",
-    description: "Emissions avoided through efficiency improvements",
+    id: "warehouse_efficiency",
+    name: "Warehouse Efficiency",
+    description: "Emissions avoided through warehouse energy efficiency",
     items: [
-      { id: "energy_efficient", name: "Energy Efficient Products", unit: "units", emissionFactor: 85 },
-      { id: "process_optimization", name: "Process Optimization", unit: "instances", emissionFactor: 125 }
+      { id: "led_lighting", name: "LED Lighting Conversion", unit: "kWh saved", emissionFactor: 0.82 },
+      { id: "solar_installation", name: "Solar Installation", unit: "kWh generated", emissionFactor: 0.82 },
+      { id: "energy_management", name: "Energy Management System", unit: "kWh saved", emissionFactor: 0.82 }
     ]
   },
   {
-    id: "substitution",
-    name: "Product Substitution",
-    description: "Emissions avoided through alternative products",
+    id: "packaging_reduction",
+    name: "Packaging Reduction",
+    description: "Emissions avoided through sustainable packaging solutions",
     items: [
-      { id: "low_carbon_alt", name: "Low-Carbon Alternatives", unit: "units", emissionFactor: 120 },
-      { id: "digital_services", name: "Digital Services", unit: "instances", emissionFactor: 30 }
+      { id: "reusable_packaging", name: "Reusable Packaging", unit: "tonnes of single-use avoided", emissionFactor: 2060 },
+      { id: "packaging_redesign", name: "Packaging Redesign", unit: "volume reduced (%)", emissionFactor: 10.5 }
+    ]
+  },
+  {
+    id: "digital_solutions",
+    name: "Digital Solutions",
+    description: "Emissions avoided through paperless operations",
+    items: [
+      { id: "e_documentation", name: "E-Documentation", unit: "paper sheets avoided", emissionFactor: 0.006 },
+      { id: "blockchain_tracking", name: "Blockchain Tracking", unit: "manual processes avoided", emissionFactor: 5.2 }
     ]
   }
 ];
@@ -233,37 +259,51 @@ export const mockEmployees = [
   {
     id: "emp-001",
     name: "Rahul Sharma",
-    email: "rahul.sharma@company.com",
+    email: "rahul.sharma@translogindia.com",
     department: "Operations",
-    location: "Mumbai HQ"
+    location: "Mumbai CFS"
   },
   {
     id: "emp-002",
     name: "Priya Singh",
-    email: "priya.singh@company.com",
+    email: "priya.singh@translogindia.com",
     department: "Supply Chain",
-    location: "Delhi Branch"
+    location: "Delhi ICD"
   },
   {
     id: "emp-003",
     name: "Aditya Patel",
-    email: "aditya.patel@company.com",
+    email: "aditya.patel@translogindia.com",
     department: "Facilities",
-    location: "Mumbai HQ"
+    location: "Mumbai CFS"
   },
   {
     id: "emp-004",
     name: "Shreya Gupta",
-    email: "shreya.gupta@company.com",
+    email: "shreya.gupta@translogindia.com",
     department: "Procurement",
-    location: "Bangalore Tech"
+    location: "Bangalore Logistics Park"
   },
   {
     id: "emp-005",
     name: "Vikram Desai",
-    email: "vikram.desai@company.com",
+    email: "vikram.desai@translogindia.com",
     department: "Logistics",
-    location: "Chennai Ops"
+    location: "Chennai Port Facility"
+  },
+  {
+    id: "emp-006",
+    name: "Deepak Nair",
+    email: "deepak.nair@translogindia.com",
+    department: "3PL Services",
+    location: "Hyderabad Hub"
+  },
+  {
+    id: "emp-007",
+    name: "Anjali Mehta",
+    email: "anjali.mehta@translogindia.com",
+    department: "Project Logistics",
+    location: "Mumbai HQ"
   }
 ];
 
@@ -272,16 +312,16 @@ export const mockAssignments = [
     id: "assign-001",
     employeeId: "emp-001",
     scope: "Scope 1",
-    category: "Fuel Combustion",
-    dueDate: "2023-06-15",
+    category: "Owned Fleet",
+    dueDate: "2025-06-15",
     status: "completed"
   },
   {
     id: "assign-002",
     employeeId: "emp-002",
     scope: "Scope 3",
-    category: "Transportation & Distribution",
-    dueDate: "2023-06-20",
+    category: "Purchased Transport Services",
+    dueDate: "2025-06-20",
     status: "pending"
   },
   {
@@ -289,15 +329,39 @@ export const mockAssignments = [
     employeeId: "emp-003",
     scope: "Scope 2",
     category: "Purchased Electricity",
-    dueDate: "2023-06-10",
+    dueDate: "2025-06-10",
     status: "in-progress"
   },
   {
     id: "assign-004",
     employeeId: "emp-004",
     scope: "Scope 3",
-    category: "Purchased Goods & Services",
-    dueDate: "2023-06-25",
+    category: "Packaging Materials",
+    dueDate: "2025-06-25",
     status: "pending"
+  },
+  {
+    id: "assign-005",
+    employeeId: "emp-005",
+    scope: "Scope 1",
+    category: "Cargo Handling Equipment",
+    dueDate: "2025-06-18",
+    status: "in-progress"
+  },
+  {
+    id: "assign-006",
+    employeeId: "emp-006",
+    scope: "Scope 3",
+    category: "Leased Assets",
+    dueDate: "2025-06-22",
+    status: "pending"
+  },
+  {
+    id: "assign-007",
+    employeeId: "emp-007",
+    scope: "Scope 4",
+    category: "Route Optimization",
+    dueDate: "2025-06-30",
+    status: "in-progress"
   }
 ];

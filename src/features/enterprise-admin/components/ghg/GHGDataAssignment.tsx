@@ -1,266 +1,249 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogTrigger 
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { mockEmployees, mockAssignments, scope1Categories, scope2Categories, scope3Categories } from './mockData';
-import { useToast } from "@/components/ui/use-toast";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Calendar as CalendarIcon, Pencil, Plus, Trash } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { Calendar as CalendarIcon, Check, Plus, Search } from "lucide-react";
+import { format } from "date-fns";
+import { mockEmployees, mockAssignments, scope1Categories, scope2Categories, scope3Categories, scope4Categories } from './mockData';
+import { useToast } from "@/components/ui/use-toast";
 
 export const GHGDataAssignment = () => {
-  const [selectedScope, setSelectedScope] = useState<string>("Scope 1");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
-  const [dueDate, setDueDate] = useState<Date>();
-  const [showNewAssignmentDialog, setShowNewAssignmentDialog] = useState(false);
-  const [assignments, setAssignments] = useState(mockAssignments);
+  const [selectedScope, setSelectedScope] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [date, setDate] = useState<Date>();
   const { toast } = useToast();
-  
+
   const allCategories = [
-    ...scope1Categories.map(c => ({ scope: "Scope 1", ...c })),
-    ...scope2Categories.map(c => ({ scope: "Scope 2", ...c })),
-    ...scope3Categories.map(c => ({ scope: "Scope 3", ...c })),
+    ...scope1Categories.map(cat => ({ id: cat.id, name: cat.name, scope: "Scope 1" })),
+    ...scope2Categories.map(cat => ({ id: cat.id, name: cat.name, scope: "Scope 2" })),
+    ...scope3Categories.map(cat => ({ id: cat.id, name: cat.name, scope: "Scope 3" })),
+    ...scope4Categories.map(cat => ({ id: cat.id, name: cat.name, scope: "Scope 4" }))
   ];
   
-  const filteredCategories = allCategories.filter(c => c.scope === selectedScope);
-  
-  const handleCreateAssignment = () => {
-    if (!selectedEmployee || !selectedCategory || !dueDate) {
+  const filteredEmployees = mockEmployees.filter(emp => 
+    emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    emp.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    emp.location.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleAssign = () => {
+    if (!selectedEmployee || !selectedScope || !selectedCategory || !date) {
       toast({
-        title: "Missing Information",
-        description: "Please select an employee, category, and due date.",
         variant: "destructive",
+        title: "Missing information",
+        description: "Please fill all required fields before assigning tasks."
       });
       return;
     }
-    
-    const newAssignment = {
-      id: `assign-${assignments.length + 1}`.padStart(7, '0'),
-      employeeId: selectedEmployee,
-      scope: selectedScope,
-      category: selectedCategory,
-      dueDate: format(dueDate, 'yyyy-MM-dd'),
-      status: "pending"
-    };
-    
-    setAssignments(prev => [...prev, newAssignment]);
-    setShowNewAssignmentDialog(false);
+
+    const categoryName = allCategories.find(cat => cat.id === selectedCategory)?.name || "";
     
     toast({
-      title: "Assignment Created",
-      description: "Data collection assignment has been created successfully.",
+      title: "Task assigned successfully",
+      description: `Assigned ${categoryName} data collection to ${mockEmployees.find(e => e.id === selectedEmployee)?.name} due on ${format(date, "PPP")}`
     });
     
     // Reset form
     setSelectedEmployee("");
+    setSelectedScope("");
     setSelectedCategory("");
-    setDueDate(undefined);
+    setDate(undefined);
   };
-  
-  const handleDeleteAssignment = (id: string) => {
-    setAssignments(prev => prev.filter(a => a.id !== id));
-    
-    toast({
-      title: "Assignment Deleted",
-      description: "Data collection assignment has been deleted.",
-    });
-  };
-  
+
+  // Filter categories based on the selected scope
+  const filteredCategories = allCategories.filter(cat => {
+    if (!selectedScope) return true;
+    return cat.scope === selectedScope;
+  });
+
+  // Get badge color based on status
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'completed':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Completed</Badge>;
-      case 'in-progress':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">In Progress</Badge>;
-      case 'pending':
+      case "completed":
+        return "bg-green-500 text-white";
+      case "in-progress":
+        return "bg-blue-500 text-white";
+      case "pending":
+        return "bg-amber-500 text-white";
       default:
-        return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Pending</Badge>;
+        return "bg-slate-500 text-white";
     }
   };
-  
+
+  // Get employee by ID
+  const getEmployee = (id: string) => {
+    return mockEmployees.find(emp => emp.id === id);
+  };
+
   return (
     <div className="space-y-6">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <div>
-            <CardTitle>Data Collection Assignments</CardTitle>
-            <CardDescription>
-              Delegate emissions data collection tasks to team members
-            </CardDescription>
-          </div>
-          <Dialog open={showNewAssignmentDialog} onOpenChange={setShowNewAssignmentDialog}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="mr-2 h-4 w-4" />
-                New Assignment
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create Data Collection Assignment</DialogTitle>
-                <DialogDescription>
-                  Assign emissions data collection tasks to employees
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="employee">Employee</Label>
-                  <Select 
-                    value={selectedEmployee} 
-                    onValueChange={setSelectedEmployee}
-                  >
-                    <SelectTrigger id="employee">
-                      <SelectValue placeholder="Select employee" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {mockEmployees.map((employee) => (
-                        <SelectItem key={employee.id} value={employee.id}>{employee.name} ({employee.department})</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="scope">Emission Scope</Label>
-                  <Select 
-                    value={selectedScope} 
-                    onValueChange={(value) => {
-                      setSelectedScope(value);
-                      setSelectedCategory("");
-                    }}
-                  >
-                    <SelectTrigger id="scope">
-                      <SelectValue placeholder="Select scope" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Scope 1">Scope 1 (Direct)</SelectItem>
-                      <SelectItem value="Scope 2">Scope 2 (Indirect)</SelectItem>
-                      <SelectItem value="Scope 3">Scope 3 (Value Chain)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
-                  <Select 
-                    value={selectedCategory} 
-                    onValueChange={setSelectedCategory}
-                  >
-                    <SelectTrigger id="category">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {filteredCategories.map((category) => (
-                        <SelectItem key={category.id} value={category.name}>{category.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="dueDate">Due Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left font-normal"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {dueDate ? format(dueDate, 'PPP') : <span>Pick a date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={dueDate}
-                        onSelect={setDueDate}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+        <CardHeader>
+          <CardTitle>Assign GHG Data Collection Tasks</CardTitle>
+          <CardDescription>
+            Assign emission data collection tasks to personnel across your logistics facilities
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <Label htmlFor="employee">Employee</Label>
+                <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+                  <SelectTrigger id="employee">
+                    <SelectValue placeholder="Select employee" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mockEmployees.map((employee) => (
+                      <SelectItem key={employee.id} value={employee.id}>
+                        {employee.name} - {employee.department}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setShowNewAssignmentDialog(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleCreateAssignment}>Assign Task</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              
+              <div>
+                <Label htmlFor="scope">Emission Scope</Label>
+                <Select value={selectedScope} onValueChange={setSelectedScope}>
+                  <SelectTrigger id="scope">
+                    <SelectValue placeholder="Select scope" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Scope 1">Scope 1 (Direct)</SelectItem>
+                    <SelectItem value="Scope 2">Scope 2 (Indirect)</SelectItem>
+                    <SelectItem value="Scope 3">Scope 3 (Value Chain)</SelectItem>
+                    <SelectItem value="Scope 4">Scope 4 (Avoided)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="category">Emission Category</Label>
+                <Select 
+                  value={selectedCategory} 
+                  onValueChange={setSelectedCategory}
+                  disabled={!selectedScope}
+                >
+                  <SelectTrigger id="category">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredCategories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="date">Due Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !date && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {date ? format(date, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={date}
+                      onSelect={setDate}
+                      initialFocus
+                      disabled={(date) => date < new Date()}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            
+            <div className="flex justify-end">
+              <Button onClick={handleAssign} className="flex items-center gap-2">
+                <Plus className="h-4 w-4" /> Assign Data Collection
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Current Assignments</CardTitle>
+            <CardDescription>Track ongoing data collection tasks across your facilities</CardDescription>
+          </div>
+          <div className="relative max-w-xs">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search employees..."
+              className="pl-8 max-w-xs"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Employee</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Assignment</TableHead>
+                <TableHead>Scope</TableHead>
+                <TableHead>Category</TableHead>
                 <TableHead>Due Date</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Location</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {assignments.map((assignment) => {
-                const employee = mockEmployees.find(e => e.id === assignment.employeeId);
+              {mockAssignments.map((assignment) => {
+                const employee = getEmployee(assignment.employeeId);
+                if (!employee) return null;
                 
                 return (
                   <TableRow key={assignment.id}>
-                    <TableCell className="font-medium">{employee?.name}</TableCell>
-                    <TableCell>{employee?.department}</TableCell>
                     <TableCell>
-                      <div className="flex flex-col">
-                        <span>{assignment.scope}</span>
-                        <span className="text-xs text-muted-foreground">{assignment.category}</span>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-7 w-7">
+                          <AvatarFallback className="text-xs">
+                            {employee.name.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        {employee.name}
                       </div>
                     </TableCell>
-                    <TableCell>{format(new Date(assignment.dueDate), 'MMM dd, yyyy')}</TableCell>
-                    <TableCell>{getStatusBadge(assignment.status)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" disabled={assignment.status === "completed"}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => handleDeleteAssignment(assignment.id)}
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
+                    <TableCell>{assignment.scope}</TableCell>
+                    <TableCell>{assignment.category}</TableCell>
+                    <TableCell>{assignment.dueDate}</TableCell>
+                    <TableCell>
+                      <Badge className={getStatusBadge(assignment.status)}>
+                        {assignment.status === 'completed' && <Check className="mr-1 h-3.5 w-3.5" />}
+                        {assignment.status.charAt(0).toUpperCase() + assignment.status.slice(1)}
+                      </Badge>
                     </TableCell>
+                    <TableCell>{employee.location}</TableCell>
                   </TableRow>
                 );
               })}
-              {assignments.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
-                    No assignments found. Click 'New Assignment' to create one.
-                  </TableCell>
-                </TableRow>
-              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -268,3 +251,4 @@ export const GHGDataAssignment = () => {
     </div>
   );
 };
+
