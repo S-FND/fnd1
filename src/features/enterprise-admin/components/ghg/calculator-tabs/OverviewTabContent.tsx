@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { TabsContent } from "@/components/ui/tabs";
 import ScopeOverviewCharts from '../ScopeOverviewCharts';
 import TopEmissionSources from '../TopEmissionSources';
 import EnergyConsumption from '../EnergyConsumption';
