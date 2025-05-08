@@ -54,7 +54,6 @@ const IndustrySelection: React.FC<IndustrySelectionProps> = ({
           <Button
             variant="outline"
             size="sm"
-            disabled={selectedIndustries.length <= 0}
           >
             {selectedIndustries.length} {selectedIndustries.length === 1 ? 'Industry' : 'Industries'} Selected
           </Button>

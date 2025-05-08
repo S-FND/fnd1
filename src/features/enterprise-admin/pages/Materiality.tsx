@@ -39,24 +39,40 @@ const MaterialityPage = () => {
     // Combine material topics from all selected industries
     const combinedTopics = new Map();
     
+    // Count how many industries each topic appears in for proper averaging
+    const topicOccurrences = new Map();
+    
     tempSelectedIndustries.forEach(industryId => {
       const industryTopics = materialTopicsByIndustry[industryId as keyof typeof materialTopicsByIndustry];
       if (!industryTopics) return;
       
       industryTopics.forEach(topic => {
         if (combinedTopics.has(topic.id)) {
-          // Average the values if topic exists
+          // Count occurrences for proper averaging
+          topicOccurrences.set(topic.id, topicOccurrences.get(topic.id) + 1);
+          
+          // Sum values for later averaging
           const existingTopic = combinedTopics.get(topic.id);
-          existingTopic.businessImpact = (existingTopic.businessImpact + topic.businessImpact) / 2;
-          existingTopic.sustainabilityImpact = (existingTopic.sustainabilityImpact + topic.sustainabilityImpact) / 2;
+          existingTopic.businessImpact += topic.businessImpact;
+          existingTopic.sustainabilityImpact += topic.sustainabilityImpact;
         } else {
-          // Otherwise just add it
+          // First occurrence of this topic
           combinedTopics.set(topic.id, { ...topic });
+          topicOccurrences.set(topic.id, 1);
         }
       });
     });
     
-    // Update the material topics state directly
+    // Calculate proper averages based on occurrence count
+    combinedTopics.forEach((topic, id) => {
+      const count = topicOccurrences.get(id);
+      if (count > 1) {
+        topic.businessImpact = topic.businessImpact / count;
+        topic.sustainabilityImpact = topic.sustainabilityImpact / count;
+      }
+    });
+    
+    // Convert map to array for state update
     const updatedTopics = Array.from(combinedTopics.values());
     setMaterialTopics(updatedTopics);
     
