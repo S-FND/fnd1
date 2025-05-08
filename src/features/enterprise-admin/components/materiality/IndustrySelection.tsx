@@ -62,7 +62,6 @@ const IndustrySelection: React.FC<IndustrySelectionProps> = ({
             variant="default"
             size="sm"
             onClick={onUpdateMatrix}
-            disabled={selectedIndustries.length === 0}
           >
             Update Matrix
           </Button>

@@ -21,7 +21,7 @@ const MaterialityPage = () => {
   const [tempSelectedIndustries, setTempSelectedIndustries] = useState<string[]>([]);
   const [materialTopics, setMaterialTopics] = useState(defaultMaterialTopics);
   
-  // Update tempSelectedIndustries when selectedIndustries changes - fixed the dependency array
+  // Update tempSelectedIndustries when selectedIndustries changes
   useEffect(() => {
     setTempSelectedIndustries([...selectedIndustries]);
   }, [selectedIndustries]);
@@ -56,7 +56,9 @@ const MaterialityPage = () => {
       });
     });
     
-    setMaterialTopics(Array.from(combinedTopics.values()));
+    // Update the material topics state directly
+    const updatedTopics = Array.from(combinedTopics.values());
+    setMaterialTopics(updatedTopics);
     
     toast.info(`Updated materiality assessment for ${tempSelectedIndustries.length} selected industries`);
   };
