@@ -1,6 +1,10 @@
 
 // Define the type for the form data structure
-export type CategoryData = Record<string, number>;
+export interface CategoryItem {
+  [key: string]: number;
+}
+
+export type CategoryData = Record<string, CategoryItem>;
 export type MonthlyData = Record<string, CategoryData>;
 export type YearlyData = Record<string, MonthlyData>;
 

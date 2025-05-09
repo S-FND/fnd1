@@ -110,12 +110,14 @@ export const ensureMonthExists = (
   year: string,
   month: string
 ): YearlyData => {
-  if (!formData[year]) {
-    formData[year] = {};
+  const updatedData = { ...formData };
+  
+  if (!updatedData[year]) {
+    updatedData[year] = {};
   }
   
-  if (!formData[year][month]) {
-    formData[year][month] = {
+  if (!updatedData[year][month]) {
+    updatedData[year][month] = {
       electricity_grid: {
         office_buildings: 0,
         warehouses: 0,
@@ -135,7 +137,7 @@ export const ensureMonthExists = (
     };
   }
   
-  return { ...formData };
+  return updatedData;
 };
 
 /**
