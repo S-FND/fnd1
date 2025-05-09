@@ -2,6 +2,9 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
+// Define allowed framework types
+type Framework = 'SASB' | 'GRI' | 'Custom';
+
 interface MaterialTopic {
   id: string;
   name: string;
@@ -15,8 +18,8 @@ interface MaterialTopic {
 
 interface MaterialTopicsTabProps {
   materialTopics: MaterialTopic[];
-  activeFrameworks?: string[];
-  setActiveFrameworks?: (frameworks: string[]) => void;
+  activeFrameworks: Framework[];
+  setActiveFrameworks: (frameworks: Framework[]) => void;
 }
 
 const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({ 
@@ -35,7 +38,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
     
     // Filter by framework
     const matchesFramework = !topic.framework || 
-      activeFrameworks.includes(topic.framework);
+      activeFrameworks.includes(topic.framework as Framework);
     
     return matchesSearch && matchesFramework;
   });
@@ -66,7 +69,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
           {setActiveFrameworks && (
             <div className="flex gap-2 items-center">
               <span className="text-sm font-medium">Frameworks:</span>
-              {['SASB', 'GRI', 'Custom'].map(framework => (
+              {(['SASB', 'GRI', 'Custom'] as Framework[]).map(framework => (
                 <label key={framework} className="flex items-center space-x-2 cursor-pointer">
                   <input
                     type="checkbox"

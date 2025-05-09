@@ -6,6 +6,9 @@ import TopicsByPriority from './TopicsByPriority';
 import MaterialTopicsTab from './MaterialTopicsTab';
 import MethodologyTab from './MethodologyTab';
 
+// Define allowed framework types
+type Framework = 'SASB' | 'GRI' | 'Custom';
+
 interface MaterialTopic {
   id: string;
   name: string;
@@ -29,8 +32,8 @@ interface MaterialityTabsProps {
   mediumPriorityTopics: MaterialTopic[];
   lowPriorityTopics: MaterialTopic[];
   selectedIndustries: string[];
-  activeFrameworks?: string[];
-  setActiveFrameworks?: (frameworks: string[]) => void;
+  activeFrameworks: Framework[];
+  setActiveFrameworks: (frameworks: Framework[]) => void;
 }
 
 const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
@@ -82,7 +85,7 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
       <TabsContent value="methodology">
         <MethodologyTab 
           selectedIndustries={selectedIndustries}
-          frameworks={activeFrameworks || []}
+          frameworks={activeFrameworks}
         />
       </TabsContent>
     </Tabs>

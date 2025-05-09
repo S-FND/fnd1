@@ -14,12 +14,15 @@ import {
 import MatrixQuadrant from './MatrixQuadrant';
 import CustomTooltip from './CustomTooltip';
 
+// Define allowed framework types
+type Framework = 'SASB' | 'GRI' | 'Custom';
+
 interface MaterialityMatrixProps {
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
   materialityData: any[];
-  activeFrameworks?: string[];
-  setActiveFrameworks?: (frameworks: string[]) => void;
+  activeFrameworks?: Framework[];
+  setActiveFrameworks?: (frameworks: Framework[]) => void;
 }
 
 const MaterialityMatrix: React.FC<MaterialityMatrixProps> = ({ 
@@ -36,7 +39,7 @@ const MaterialityMatrix: React.FC<MaterialityMatrixProps> = ({
     }
     
     // Filter by framework
-    if (item.framework && !activeFrameworks.includes(item.framework)) {
+    if (item.framework && !activeFrameworks.includes(item.framework as Framework)) {
       return false;
     }
     
@@ -83,7 +86,7 @@ const MaterialityMatrix: React.FC<MaterialityMatrixProps> = ({
               <div className="mt-6">
                 <h3 className="text-base font-medium mb-2">Filter by Framework</h3>
                 <div className="space-y-2">
-                  {['SASB', 'GRI', 'Custom'].map((framework) => (
+                  {(['SASB', 'GRI', 'Custom'] as Framework[]).map((framework) => (
                     <div key={framework} className="flex items-center space-x-2">
                       <input 
                         type="checkbox" 
