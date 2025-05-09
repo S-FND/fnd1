@@ -20,73 +20,62 @@ import { months, calculateMonthlyTotal, calculateYearlyTotal } from '@/data/ghg/
 import MonthYearSelector from './MonthYearSelector';
 import EmissionsTrendGraph from './EmissionsTrendGraph';
 
-// Pre-populated data for IMR Resources
-const prePopulatedData = {
-  2025: {
+// Define the type for the form data structure
+type CategoryData = Record<string, number>;
+type MonthlyData = Record<string, CategoryData>;
+type YearlyData = Record<string, MonthlyData>;
+
+// Pre-populated data for IMR Resources - restructured to match expected type
+const prePopulatedData: YearlyData = {
+  '2025': {
     "January": {
-      "owned_fleet": {
-        "trucks_diesel": 12500,
-        "trucks_cng": 5600,
-        "forklifts_diesel": 2800,
-        "forklifts_electric": 4200,
-        "company_cars": 3100
-      },
-      "stationary_combustion": {
-        "diesel_generators": 7800,
-        "natural_gas_heating": 15300,
-        "lpg_equipment": 4200
-      },
-      "cargo_handling": {
-        "reach_stackers": 8900,
-        "gantry_cranes": 12400,
-        "terminal_tractors": 6700
-      },
-      "refrigerants": {
-        "r410a": 48,
-        "r404a": 32,
-        "r134a": 65
-      }
+      "trucks_diesel": 12500,
+      "trucks_cng": 5600,
+      "forklifts_diesel": 2800,
+      "forklifts_electric": 4200,
+      "company_cars": 3100,
+      "diesel_generators": 7800,
+      "natural_gas_heating": 15300,
+      "lpg_equipment": 4200,
+      "reach_stackers": 8900,
+      "gantry_cranes": 12400,
+      "terminal_tractors": 6700,
+      "r410a": 48,
+      "r404a": 32,
+      "r134a": 65
     },
     "February": {
-      "owned_fleet": {
-        "trucks_diesel": 11800,
-        "trucks_cng": 5400,
-        "forklifts_diesel": 2600,
-        "forklifts_electric": 4000,
-        "company_cars": 2900
-      },
-      "stationary_combustion": {
-        "diesel_generators": 7500,
-        "natural_gas_heating": 14800,
-        "lpg_equipment": 4000
-      }
+      "trucks_diesel": 11800,
+      "trucks_cng": 5400,
+      "forklifts_diesel": 2600,
+      "forklifts_electric": 4000,
+      "company_cars": 2900,
+      "diesel_generators": 7500,
+      "natural_gas_heating": 14800,
+      "lpg_equipment": 4000
     },
     "March": {
-      "owned_fleet": {
-        "trucks_diesel": 12200,
-        "trucks_cng": 5500,
-        "forklifts_diesel": 2700,
-        "forklifts_electric": 4100,
-        "company_cars": 3000
-      }
+      "trucks_diesel": 12200,
+      "trucks_cng": 5500,
+      "forklifts_diesel": 2700,
+      "forklifts_electric": 4100,
+      "company_cars": 3000
     }
   },
-  2024: {
+  '2024': {
     "January": {
-      "owned_fleet": {
-        "trucks_diesel": 13000,
-        "trucks_cng": 5800,
-        "forklifts_diesel": 2900,
-        "forklifts_electric": 4300,
-        "company_cars": 3200
-      }
+      "trucks_diesel": 13000,
+      "trucks_cng": 5800,
+      "forklifts_diesel": 2900,
+      "forklifts_electric": 4300,
+      "company_cars": 3200
     }
   }
 };
 
 export const GHGScope1Form = () => {
   const [selectedCategory, setSelectedCategory] = useState(scope1Categories[0].id);
-  const [monthlyFormData, setMonthlyFormData] = useState<Record<string, Record<string, Record<string, number>>>>(prePopulatedData);
+  const [monthlyFormData, setMonthlyFormData] = useState<YearlyData>(prePopulatedData);
   const [selectedMonth, setSelectedMonth] = useState(new Date().toLocaleString('en-US', { month: 'long' }));
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const { toast } = useToast();
@@ -96,32 +85,67 @@ export const GHGScope1Form = () => {
   // Generate trend data for the charts
   const monthlyTrendData = months.map(month => ({
     name: month,
-    value: calculateMonthlyTotal(monthlyFormData[selectedYear]?.[month] || {}, selectedCategory) / 1000, // Convert kg to tonnes
+    value: calculateCategoryTotal(selectedYear.toString(), month, selectedCategory) / 1000, // Convert kg to tonnes
   }));
 
   const yearlyTrendData = Object.keys(monthlyFormData).map(year => ({
     name: year,
-    value: calculateYearlyTotal(monthlyFormData[parseInt(year)] || {}) / 1000, // Convert kg to tonnes
+    value: calculateYearTotal(year) / 1000, // Convert kg to tonnes
   }));
+
+  // Calculate total for a specific category in a month
+  const calculateCategoryTotal = (year: string, month: string, categoryId: string): number => {
+    if (!monthlyFormData[year] || !monthlyFormData[year][month]) return 0;
+
+    let total = 0;
+    const categoryItems = scope1Categories.find(cat => cat.id === categoryId)?.items || [];
+    
+    categoryItems.forEach(item => {
+      if (monthlyFormData[year][month][item.id]) {
+        total += monthlyFormData[year][month][item.id] * item.emissionFactor;
+      }
+    });
+    
+    return total;
+  };
+
+  // Calculate total for all categories in a year
+  const calculateYearTotal = (year: string): number => {
+    if (!monthlyFormData[year]) return 0;
+    
+    let total = 0;
+    
+    Object.keys(monthlyFormData[year]).forEach(month => {
+      Object.keys(monthlyFormData[year][month]).forEach(itemId => {
+        // Find the emission factor for this item
+        for (const category of scope1Categories) {
+          const item = category.items.find(i => i.id === itemId);
+          if (item) {
+            total += monthlyFormData[year][month][itemId] * item.emissionFactor;
+            break;
+          }
+        }
+      });
+    });
+    
+    return total;
+  };
   
   const handleValueChange = (categoryId: string, itemId: string, value: string) => {
     const numValue = value === '' ? 0 : parseFloat(value);
     
     setMonthlyFormData(prev => {
-      const yearData = prev[selectedYear] || {};
+      const yearStr = selectedYear.toString();
+      const yearData = prev[yearStr] || {};
       const monthData = yearData[selectedMonth] || {};
-      const categoryData = monthData[categoryId] || {};
       
       return {
         ...prev,
-        [selectedYear]: {
+        [yearStr]: {
           ...yearData,
           [selectedMonth]: {
             ...monthData,
-            [categoryId]: {
-              ...categoryData,
-              [itemId]: numValue
-            }
+            [itemId]: numValue
           }
         }
       };
@@ -129,8 +153,8 @@ export const GHGScope1Form = () => {
   };
   
   const calculateEmissions = (categoryId: string, itemId: string) => {
-    if (!monthlyFormData[selectedYear]?.[selectedMonth]?.[categoryId] || 
-        monthlyFormData[selectedYear][selectedMonth][categoryId][itemId] === undefined) {
+    const yearStr = selectedYear.toString();
+    if (!monthlyFormData[yearStr]?.[selectedMonth]?.[itemId]) {
       return 0;
     }
     
@@ -140,7 +164,7 @@ export const GHGScope1Form = () => {
     
     if (!item) return 0;
     
-    return monthlyFormData[selectedYear][selectedMonth][categoryId][itemId] * item.emissionFactor;
+    return monthlyFormData[yearStr][selectedMonth][itemId] * item.emissionFactor;
   };
   
   const handleSaveData = () => {
@@ -151,8 +175,29 @@ export const GHGScope1Form = () => {
   };
 
   // Calculate totals
-  const monthlyTotal = monthlyTrendData.find(m => m.name === selectedMonth)?.value || 0;
-  const yearlyTotal = calculateYearlyTotal(monthlyFormData[selectedYear] || {}) / 1000;
+  const monthlyTotal = calculateMonthlyTotalForAllCategories() / 1000; // Convert to tonnes
+  const yearlyTotal = calculateYearTotal(selectedYear.toString()) / 1000; // Convert to tonnes
+
+  // Calculate total for all categories in the current month
+  function calculateMonthlyTotalForAllCategories(): number {
+    const yearStr = selectedYear.toString();
+    if (!monthlyFormData[yearStr] || !monthlyFormData[yearStr][selectedMonth]) return 0;
+    
+    let total = 0;
+    
+    Object.keys(monthlyFormData[yearStr][selectedMonth]).forEach(itemId => {
+      // Find the emission factor for this item
+      for (const category of scope1Categories) {
+        const item = category.items.find(i => i.id === itemId);
+        if (item) {
+          total += monthlyFormData[yearStr][selectedMonth][itemId] * item.emissionFactor;
+          break;
+        }
+      }
+    });
+    
+    return total;
+  }
   
   return (
     <div className="space-y-6">
@@ -220,7 +265,7 @@ export const GHGScope1Form = () => {
                             id={item.id}
                             type="number"
                             placeholder="0.00"
-                            value={monthlyFormData[selectedYear]?.[selectedMonth]?.[selectedCategory]?.[item.id] || ''}
+                            value={monthlyFormData[selectedYear.toString()]?.[selectedMonth]?.[item.id] || ''}
                             onChange={(e) => handleValueChange(selectedCategory, item.id, e.target.value)}
                           />
                           <span className="text-sm text-muted-foreground w-12">{item.unit}</span>
@@ -264,7 +309,7 @@ export const GHGScope1Form = () => {
                                 <div>
                                   <Label>Calculation Method</Label>
                                   <p className="text-sm mt-1">
-                                    Activity data ({monthlyFormData[selectedYear]?.[selectedMonth]?.[selectedCategory]?.[item.id] || 0} {item.unit}) × 
+                                    Activity data ({monthlyFormData[selectedYear.toString()]?.[selectedMonth]?.[item.id] || 0} {item.unit}) × 
                                     Emission factor ({item.emissionFactor} kgCO₂e/{item.unit}) ÷ 
                                     1000 = {calculateEmissions(selectedCategory, item.id).toFixed(2)} tCO₂e
                                   </p>
