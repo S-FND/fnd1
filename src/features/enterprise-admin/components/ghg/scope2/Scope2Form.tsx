@@ -7,7 +7,7 @@ import {
   calculateYearlyTotal, 
   ensureMonthExists,
   getPrePopulatedData
-} from './scope2Utils';
+} from './utils';
 import { YearlyData } from './types';
 import CategoryItems from './CategoryItems';
 import EmissionsSummaryPanel from './EmissionsSummaryPanel';

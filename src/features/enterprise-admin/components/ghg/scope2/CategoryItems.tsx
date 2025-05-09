@@ -2,7 +2,7 @@
 import React from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { calculateEmissions } from './scope2Utils';
+import { calculateEmissions } from './utils';
 import { CategoryItemsProps } from './types';
 
 const CategoryItems: React.FC<CategoryItemsProps> = ({ 
