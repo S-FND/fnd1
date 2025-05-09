@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import './App.css';
@@ -40,6 +39,7 @@ import StakeholdersOverviewPage from './features/enterprise-admin/pages/stakehol
 import ManageStakeholdersPage from './features/enterprise-admin/pages/stakeholders/ManageStakeholdersPage';
 import CategoriesPage from './features/enterprise-admin/pages/stakeholders/CategoriesPage';
 import EngagementPlanPage from './features/enterprise-admin/pages/stakeholders/EngagementPlanPage';
+import ESGManagementPage from './features/enterprise-admin/pages/ESGManagement';
 
 function App() {
   return (

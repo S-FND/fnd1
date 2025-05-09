@@ -4,8 +4,9 @@ import { Navbar } from '@/components/layout/Navbar';
 import { SidebarLayout } from '@/components/layout/Sidebar';
 import ESGDashboard from '@/features/enterprise-admin/components/ESGDashboard';
 import { useAuth } from '@/context/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Routes, Route } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
+import ESGManagementPage from './ESGManagement';
 
 const ESGPage = () => {
   const { isLoading } = useRouteProtection('enterprise_admin');
@@ -23,7 +24,10 @@ const ESGPage = () => {
     <div className="min-h-screen">
       <Navbar />
       <SidebarLayout>
-        <ESGDashboard />
+        <Routes>
+          <Route path="/" element={<ESGDashboard />} />
+          <Route path="/management" element={<ESGManagementPage />} />
+        </Routes>
       </SidebarLayout>
     </div>
   );

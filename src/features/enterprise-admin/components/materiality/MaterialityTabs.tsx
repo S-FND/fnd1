@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 import MaterialityMatrix from './MaterialityMatrix';
 import TopicsByPriority from './TopicsByPriority';
 import MaterialTopicsTab from './MaterialTopicsTab';
@@ -50,6 +52,12 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
   activeFrameworks,
   setActiveFrameworks
 }) => {
+  const navigate = useNavigate();
+
+  const handleNavigateToESGMetrics = () => {
+    navigate('/esg-management');
+  };
+
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
       <TabsList>
@@ -66,6 +74,15 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
           activeFrameworks={activeFrameworks}
           setActiveFrameworks={setActiveFrameworks}
         />
+        
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Topics By Priority</h2>
+          {highPriorityTopics.length > 0 && (
+            <Button onClick={handleNavigateToESGMetrics}>
+              Set ESG Metrics for High Priority Topics
+            </Button>
+          )}
+        </div>
         
         <TopicsByPriority 
           highPriorityTopics={highPriorityTopics}
