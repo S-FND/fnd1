@@ -131,6 +131,13 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
 
   const selectedTopic = materialTopics.find(topic => topic.id === selectedTopicId);
 
+  // Helper function to convert boolean values to strings for Input component
+  const convertValueForInput = (value: string | number | boolean | undefined): string | number => {
+    if (value === undefined || value === null) return '';
+    if (typeof value === 'boolean') return value ? 'true' : 'false';
+    return value;
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -281,7 +288,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
                           <label className="block text-xs mb-1">Value ({metric.unit})</label>
                           <Input 
                             type={metric.dataType === 'Numeric' || metric.dataType === 'Percentage' ? 'number' : 'text'} 
-                            value={metric.baselineValue || ''} 
+                            value={convertValueForInput(metric.baselineValue)} 
                             onChange={(e) => handleUpdateMetricData(
                               metric.id, 
                               'baselineValue', 
@@ -309,7 +316,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
                           <label className="block text-xs mb-1">Value ({metric.unit})</label>
                           <Input 
                             type={metric.dataType === 'Numeric' || metric.dataType === 'Percentage' ? 'number' : 'text'} 
-                            value={metric.targetValue || ''} 
+                            value={convertValueForInput(metric.targetValue)} 
                             onChange={(e) => handleUpdateMetricData(
                               metric.id, 
                               'targetValue', 
