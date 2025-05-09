@@ -36,6 +36,10 @@ import BRSRReport from './features/enterprise-admin/pages/BRSRReport';
 import GRIReport from './features/enterprise-admin/pages/GRIReport';
 import TCFDReport from './features/enterprise-admin/pages/TCFDReport';
 import ImpactReport from './features/enterprise-admin/pages/ImpactReport';
+import StakeholdersOverviewPage from './features/enterprise-admin/pages/stakeholders/StakeholdersOverviewPage';
+import ManageStakeholdersPage from './features/enterprise-admin/pages/stakeholders/ManageStakeholdersPage';
+import CategoriesPage from './features/enterprise-admin/pages/stakeholders/CategoriesPage';
+import EngagementPlanPage from './features/enterprise-admin/pages/stakeholders/EngagementPlanPage';
 
 function App() {
   return (
@@ -59,6 +63,13 @@ function App() {
       <Route path="/reports/gri" element={<GRIReport />} />
       <Route path="/reports/tcfd" element={<TCFDReport />} />
       <Route path="/reports/impact" element={<ImpactReport />} />
+      
+      {/* Stakeholder Management Routes */}
+      <Route path="/stakeholders" element={<StakeholdersOverviewPage />} />
+      <Route path="/stakeholders/manage" element={<ManageStakeholdersPage />} />
+      <Route path="/stakeholders/categories" element={<CategoriesPage />} />
+      <Route path="/stakeholders/engagement" element={<EngagementPlanPage />} />
+      
       <Route path="/units" element={<Units />} />
       <Route path="/ehs-trainings" element={<EHSTrainings />} />
       <Route path="/ehs-trainings/:id" element={<EHSTrainingDetails />} />

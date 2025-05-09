@@ -44,7 +44,8 @@ const EnhancedSidebar: React.FC = () => {
   const role = user?.role || 'employee';
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
     esgdd: location.pathname.startsWith('/esg-dd'),
-    reports: location.pathname.startsWith('/reports')
+    reports: location.pathname.startsWith('/reports'),
+    stakeholders: location.pathname.startsWith('/stakeholders')
   });
 
   const toggleMenu = (menuKey: string) => {

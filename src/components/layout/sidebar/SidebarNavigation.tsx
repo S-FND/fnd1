@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
   BarChart3, FileCheck, Building2, Calendar, 
   GraduationCap, LayoutDashboard, LineChart, 
   Settings, Users, BookOpen, ClipboardCheck, FileSearch,
-  FileText
+  FileText, Network
 } from 'lucide-react';
 import { SidebarNavItem } from './SidebarNavItem';
 import { SidebarSubmenu } from './SidebarSubmenu';
@@ -38,6 +37,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     { name: 'ESG Management', href: '/esg', icon: BarChart3 },
     { name: 'ESG DD', href: '/esg-dd', icon: FileSearch },
     { name: 'GHG Accounting', href: '/ghg-accounting', icon: LineChart },
+    { name: 'Stakeholders', href: '/stakeholders', icon: Network },
     { name: 'Compliance', href: '/compliance', icon: ClipboardCheck },
     { name: 'Reports', href: '/reports', icon: FileText },
     { name: 'Audit', href: '/audit', icon: FileCheck },
@@ -72,6 +72,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   const navigationItems = getNavigationItems();
   const isESGDDPath = location.pathname.startsWith('/esg-dd');
   const isReportsPath = location.pathname.startsWith('/reports');
+  const isStakeholdersPath = location.pathname.startsWith('/stakeholders');
   
   return (
     <SidebarGroup>
@@ -163,6 +164,48 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                     <SidebarMenuButton asChild isActive={location.pathname === '/reports/impact'} tooltip="Impact Assessment">
                       <Link to="/reports/impact" className="w-full">
                         <span>Impact Assessment</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarSubmenu>
+              );
+            }
+            
+            if (item.name === 'Stakeholders' && (role === 'admin' || role === 'manager')) {
+              return (
+                <SidebarSubmenu
+                  key={item.name}
+                  name={item.name}
+                  icon={item.icon}
+                  isExpanded={expandedMenus.stakeholders}
+                  isActive={isStakeholdersPath}
+                  onToggle={() => toggleMenu('stakeholders')}
+                >
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location.pathname === '/stakeholders'} tooltip="Overview">
+                      <Link to="/stakeholders" className="w-full">
+                        <span>Overview</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location.pathname === '/stakeholders/manage'} tooltip="Manage Stakeholders">
+                      <Link to="/stakeholders/manage" className="w-full">
+                        <span>Manage Stakeholders</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location.pathname === '/stakeholders/categories'} tooltip="Categories">
+                      <Link to="/stakeholders/categories" className="w-full">
+                        <span>Categories</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location.pathname === '/stakeholders/engagement'} tooltip="Engagement Plan">
+                      <Link to="/stakeholders/engagement" className="w-full">
+                        <span>Engagement Plan</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

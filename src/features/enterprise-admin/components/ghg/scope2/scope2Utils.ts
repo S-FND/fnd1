@@ -1,151 +1,223 @@
 
-import { scope2Categories } from '../mockData';
-import { EmissionCalculationProps, YearlyData } from './types';
-import { months } from '@/data/ghg/calculator';
+import { CategoryData, MonthlyData, YearlyData, EmissionCalculationProps } from './types';
 
-export const calculateEmissions = (
+/**
+ * Calculate emissions for a specific input
+ */
+export const calculateEmissions = ({ 
+  categoryId, 
+  itemId, 
+  formData, 
+  selectedMonth, 
+  selectedYear 
+}: EmissionCalculationProps): number => {
+  const value = formData?.[selectedYear]?.[selectedMonth]?.[categoryId]?.[itemId] || 0;
+  
+  // Emission factors would normally be sourced from a database or API
+  // These are placeholder values
+  const emissionFactors: Record<string, Record<string, number>> = {
+    electricity_grid: {
+      office_buildings: 0.5,
+      warehouses: 0.4,
+      data_centers: 0.6,
+      logistics_hubs: 0.45
+    },
+    thermal_energy: {
+      district_heating: 0.3,
+      steam_purchased: 0.35
+    },
+    renewable_energy: {
+      office_buildings: 0.05,
+      warehouses: 0.04,
+      data_centers: 0.06,
+      logistics_hubs: 0.045
+    }
+  };
+  
+  const factor = emissionFactors[categoryId]?.[itemId] || 1;
+  return value * factor;
+};
+
+/**
+ * Sum all emissions for a given category
+ */
+export const sumCategoryEmissions = (
   categoryId: string,
-  itemId: string,
   formData: YearlyData,
   selectedMonth: string,
   selectedYear: string
 ): number => {
-  if (!formData[selectedYear]?.[selectedMonth]?.[categoryId] || 
-      formData[selectedYear][selectedMonth][categoryId][itemId] === undefined) {
-    return 0;
-  }
-  
-  const item = scope2Categories
-    .find(cat => cat.id === categoryId)
-    ?.items.find(i => i.id === itemId);
-  
-  if (!item) return 0;
-  
-  const value = formData[selectedYear][selectedMonth][categoryId][itemId];
-  return (value * item.emissionFactor) / 1000; // Convert from kg to tonnes
-};
-
-export const calculateCategoryTotal = (
-  year: string,
-  month: string,
-  categoryId: string,
-  formData: YearlyData
-): number => {
-  if (!formData[year]?.[month]) return 0;
-  
+  const categoryData = formData?.[selectedYear]?.[selectedMonth]?.[categoryId] || {};
   let total = 0;
-  const categoryData = formData[year][month];
   
-  const category = scope2Categories.find(cat => cat.id === categoryId);
-  if (!category) return 0;
-  
-  category.items.forEach(item => {
-    total += calculateEmissions(categoryId, item.id, formData, month, year) * 1000; // Keep in kg for intermediate calculation
+  // Sum up emissions for each item in the category
+  Object.keys(categoryData).forEach(itemId => {
+    total += calculateEmissions({
+      categoryId,
+      itemId,
+      formData,
+      selectedMonth,
+      selectedYear
+    });
   });
   
   return total;
 };
 
-export const calculateMonthlyTotalForAllCategories = (
-  year: string, 
-  month: string, 
-  formData: YearlyData
+/**
+ * Calculate total emissions for the selected month
+ */
+export const calculateMonthlyTotal = (
+  formData: YearlyData,
+  selectedMonth: string,
+  selectedYear: string
 ): number => {
   let total = 0;
   
-  scope2Categories.forEach(category => {
-    total += calculateCategoryTotal(year, month, category.id, formData);
+  const categories = formData?.[selectedYear]?.[selectedMonth] || {};
+  Object.keys(categories).forEach(categoryId => {
+    total += sumCategoryEmissions(categoryId, formData, selectedMonth, selectedYear);
   });
   
   return total;
 };
 
-export const calculateYearTotal = (
-  year: string,
-  formData: YearlyData
+/**
+ * Calculate total emissions for the selected year
+ */
+export const calculateYearlyTotal = (
+  formData: YearlyData,
+  selectedYear: string
 ): number => {
-  let total = 0;
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
   
+  let total = 0;
   months.forEach(month => {
-    total += calculateMonthlyTotalForAllCategories(year, month, formData);
+    total += calculateMonthlyTotal(formData, month, selectedYear);
   });
   
   return total;
 };
 
-// Generate trend data for charts
-export const generateMonthlyTrendData = (
-  selectedYear: string | number,
-  selectedCategory: string,
-  formData: YearlyData
-) => {
-  return months.map(month => ({
-    name: month,
-    value: calculateCategoryTotal(selectedYear.toString(), month, selectedCategory, formData) / 1000, // Convert kg to tonnes
-  }));
-};
-
-export const generateYearlyTrendData = (
-  formData: YearlyData
-) => {
-  return Object.keys(formData).map(year => ({
-    name: year,
-    value: calculateYearTotal(year, formData) / 1000, // Convert kg to tonnes
-  }));
-};
-
-// Pre-populated data for IMR Resources
-export const prePopulatedData: YearlyData = {
-  '2025': {
-    "January": {
-      "grid_electricity": {
-        "office_buildings": 25600,
-        "warehouses": 68400,
-        "data_centers": 42000,
-        "logistics_hubs": 35800
-      },
-      "purchased_heat": {
-        "district_heating": 18500,
-        "steam_purchased": 12300
-      }
-    },
-    "February": {
-      "grid_electricity": {
-        "office_buildings": 24200,
-        "warehouses": 65800,
-        "data_centers": 41500,
-        "logistics_hubs": 34600
-      },
-      "purchased_heat": {
-        "district_heating": 17800,
-        "steam_purchased": 11900
-      }
-    },
-    "March": {
-      "grid_electricity": {
-        "office_buildings": 23500,
-        "warehouses": 63400,
-        "data_centers": 40800,
-        "logistics_hubs": 33900
-      },
-      "purchased_heat": {
-        "district_heating": 15200,
-        "steam_purchased": 10500
-      }
-    }
-  },
-  '2024': {
-    "January": {
-      "grid_electricity": {
-        "office_buildings": 26800,
-        "warehouses": 70200,
-        "data_centers": 43500,
-        "logistics_hubs": 37200
-      },
-      "purchased_heat": {
-        "district_heating": 19200,
-        "steam_purchased": 13100
-      }
-    }
+/**
+ * Create an empty entry for a month if it doesn't exist
+ */
+export const ensureMonthExists = (
+  formData: YearlyData,
+  year: string,
+  month: string
+): YearlyData => {
+  if (!formData[year]) {
+    formData[year] = {};
   }
+  
+  if (!formData[year][month]) {
+    formData[year][month] = {
+      electricity_grid: {
+        office_buildings: 0,
+        warehouses: 0,
+        data_centers: 0,
+        logistics_hubs: 0
+      },
+      thermal_energy: {
+        district_heating: 0,
+        steam_purchased: 0
+      },
+      renewable_energy: {
+        office_buildings: 0,
+        warehouses: 0,
+        data_centers: 0,
+        logistics_hubs: 0
+      }
+    };
+  }
+  
+  return { ...formData };
+};
+
+/**
+ * Sample pre-populated data for demonstration
+ */
+export const getPrePopulatedData = (): YearlyData => {
+  return {
+    "2025": {
+      "January": {
+        "electricity_grid": {
+          "office_buildings": 1200,
+          "warehouses": 3500,
+          "data_centers": 4800,
+          "logistics_hubs": 2200
+        },
+        "thermal_energy": {
+          "district_heating": 850,
+          "steam_purchased": 320
+        },
+        "renewable_energy": {
+          "office_buildings": 300,
+          "warehouses": 250,
+          "data_centers": 150,
+          "logistics_hubs": 200
+        }
+      },
+      "February": {
+        "electricity_grid": {
+          "office_buildings": 1150,
+          "warehouses": 3200,
+          "data_centers": 4750,
+          "logistics_hubs": 2050
+        },
+        "thermal_energy": {
+          "district_heating": 900,
+          "steam_purchased": 310
+        },
+        "renewable_energy": {
+          "office_buildings": 320,
+          "warehouses": 260,
+          "data_centers": 180,
+          "logistics_hubs": 210
+        }
+      },
+      "March": {
+        "electricity_grid": {
+          "office_buildings": 1100,
+          "warehouses": 3000,
+          "data_centers": 4600,
+          "logistics_hubs": 1900
+        },
+        "thermal_energy": {
+          "district_heating": 800,
+          "steam_purchased": 300
+        },
+        "renewable_energy": {
+          "office_buildings": 350,
+          "warehouses": 280,
+          "data_centers": 200,
+          "logistics_hubs": 230
+        }
+      }
+    },
+    "2024": {
+      "January": {
+        "electricity_grid": {
+          "office_buildings": 1300,
+          "warehouses": 3800,
+          "data_centers": 5000,
+          "logistics_hubs": 2500
+        },
+        "thermal_energy": {
+          "district_heating": 950,
+          "steam_purchased": 360
+        },
+        "renewable_energy": {
+          "office_buildings": 280,
+          "warehouses": 230,
+          "data_centers": 120,
+          "logistics_hubs": 180
+        }
+      }
+    }
+  };
 };
