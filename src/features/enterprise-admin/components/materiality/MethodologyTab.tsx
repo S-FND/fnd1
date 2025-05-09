@@ -1,89 +1,145 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { industries } from '../../data/materiality';
 
 interface MethodologyTabProps {
   selectedIndustries: string[];
+  frameworks: string[];
 }
 
-const MethodologyTab: React.FC<MethodologyTabProps> = ({ selectedIndustries }) => {
+const MethodologyTab: React.FC<MethodologyTabProps> = ({ selectedIndustries, frameworks }) => {
+  const selectedIndustryNames = selectedIndustries.map(industryId => {
+    const industry = industries.find(i => i.id === industryId);
+    return industry?.name || industryId;
+  });
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Materiality Assessment Methodology</CardTitle>
-        <CardDescription>Our approach to determining material ESG topics</CardDescription>
+        <CardTitle>Assessment Methodology</CardTitle>
+        <CardDescription>How the materiality assessment was conducted</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div>
           <h3 className="text-lg font-medium mb-2">Double Materiality Approach</h3>
-          <p className="text-sm">
-            Our materiality assessment follows the double materiality principle, which considers both:
+          <p className="text-sm text-muted-foreground">
+            This assessment uses a double materiality approach, which considers both:
           </p>
-          <ul className="list-disc pl-6 mt-2 space-y-1 text-sm">
+          <ul className="list-disc pl-6 mt-2 space-y-2 text-sm text-muted-foreground">
             <li>
-              <span className="font-medium">Impact Materiality:</span> How our company's activities impact the environment and society
+              <strong>Business Impact:</strong> How ESG topics affect financial performance, operations, and reputation
             </li>
             <li>
-              <span className="font-medium">Financial Materiality:</span> How ESG factors impact our company's financial performance and value creation
+              <strong>Sustainability Impact:</strong> How the organization's activities impact society and the environment
             </li>
           </ul>
         </div>
         
+        <Separator />
+        
         <div>
-          <h3 className="text-lg font-medium mb-2">Industry-Specific Considerations</h3>
-          <p className="text-sm">
-            Our materiality assessment is tailored to the specific industries in which we operate. We have selected {selectedIndustries.length} {selectedIndustries.length === 1 ? 'industry' : 'industries'} for this assessment:
-          </p>
-          <div className="mt-2">
-            {selectedIndustries.length > 0 ? (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {selectedIndustries.map(id => {
-                  const industry = industries.find(i => i.id === id);
-                  return industry ? (
-                    <Badge key={id} variant="outline">{industry.name}</Badge>
-                  ) : null;
-                })}
+          <h3 className="text-lg font-medium mb-2">Frameworks Used</h3>
+          <div className="space-y-4">
+            {frameworks.includes('SASB') && (
+              <div>
+                <h4 className="text-base font-medium">SASB Standards</h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  The Sustainability Accounting Standards Board (SASB) Standards identify the subset of 
+                  environmental, social, and governance issues most relevant to financial performance in 
+                  each of 77 industries. Topics from these standards have been included based on their
+                  relevance to the selected industries.
+                </p>
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground italic">No industries selected. Using default materiality assessment.</p>
+            )}
+            
+            {frameworks.includes('GRI') && (
+              <div>
+                <h4 className="text-base font-medium">GRI Standards</h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  The Global Reporting Initiative (GRI) provides a comprehensive framework for ESG 
+                  reporting. Material topics from GRI Standards have been included based on their 
+                  relevance to understanding the organization's impacts on the economy, environment, 
+                  and people.
+                </p>
+              </div>
+            )}
+            
+            {frameworks.includes('Custom') && (
+              <div>
+                <h4 className="text-base font-medium">Custom Topics</h4>
+                <p className="text-sm text-muted-foreground mt-1">
+                  In addition to standardized frameworks, custom material topics specific to the 
+                  organization's operations and context have been included to ensure comprehensive coverage.
+                </p>
+              </div>
             )}
           </div>
         </div>
         
-        <div>
-          <h3 className="text-lg font-medium mb-2">Assessment Process</h3>
-          <ol className="list-decimal pl-6 mt-2 space-y-3 text-sm">
-            <li>
-              <span className="font-medium block">Identification of Topics</span>
-              Topics were identified through stakeholder consultations, industry benchmarking, and ESG reporting frameworks (GRI, SASB, TCFD).
-            </li>
-            <li>
-              <span className="font-medium block">Stakeholder Engagement</span>
-              We engaged with various stakeholders including employees, investors, customers, suppliers, regulators, and community representatives.
-            </li>
-            <li>
-              <span className="font-medium block">Prioritization</span>
-              Topics were rated on a scale from 1-10 for both business impact and sustainability impact based on stakeholder input and expert assessment.
-            </li>
-            <li>
-              <span className="font-medium block">Validation</span>
-              The final materiality matrix was reviewed and validated by our ESG Committee and Board of Directors.
-            </li>
-          </ol>
-        </div>
+        <Separator />
         
         <div>
-          <h3 className="text-lg font-medium mb-2">Review Cycle</h3>
-          <p className="text-sm">
-            Our materiality assessment is reviewed annually and updated completely every three years to ensure continued relevance to our business strategy and stakeholder concerns.
+          <h3 className="text-lg font-medium mb-2">Industry Scope</h3>
+          {selectedIndustries.length > 0 ? (
+            <div>
+              <p className="text-sm text-muted-foreground mb-2">
+                Topics have been selected based on their relevance to the following industries:
+              </p>
+              <ul className="list-disc pl-6 space-y-1 text-sm text-muted-foreground">
+                {selectedIndustryNames.map((industry, index) => (
+                  <li key={index}>{industry}</li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Currently using a general set of material topics. Select specific industries to customize the assessment.
+            </p>
+          )}
+        </div>
+        
+        <Separator />
+        
+        <div>
+          <h3 className="text-lg font-medium mb-2">Stakeholder Input</h3>
+          <p className="text-sm text-muted-foreground">
+            The materiality assessment includes input from both internal and external stakeholders:
+          </p>
+          <ul className="list-disc pl-6 mt-2 space-y-2 text-sm text-muted-foreground">
+            <li>
+              <strong>Internal stakeholders:</strong> Executives, managers, employees
+            </li>
+            <li>
+              <strong>External stakeholders:</strong> Customers, suppliers, investors, community representatives, regulators
+            </li>
+          </ul>
+          <p className="text-sm text-muted-foreground mt-2">
+            Stakeholders prioritize the importance of each material topic from their perspective, which is then 
+            aggregated to determine overall priority for the organization.
           </p>
         </div>
         
-        <div className="flex justify-end mt-4">
-          <Button>Download Full Assessment Report</Button>
+        <Separator />
+        
+        <div>
+          <h3 className="text-lg font-medium mb-2">Matrix Interpretation</h3>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>The materiality matrix plots topics across four quadrants:</p>
+            <p>
+              <strong>Focus & Act (top-right):</strong> High priority topics with significant business and sustainability impacts
+            </p>
+            <p>
+              <strong>Manage (top-left):</strong> Topics with high business impact but lower sustainability impact
+            </p>
+            <p>
+              <strong>Maintain (bottom-right):</strong> Topics with high sustainability impact but lower business impact
+            </p>
+            <p>
+              <strong>Monitor (bottom-left):</strong> Lower priority topics to be monitored over time
+            </p>
+          </div>
         </div>
       </CardContent>
     </Card>

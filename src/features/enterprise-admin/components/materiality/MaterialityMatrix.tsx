@@ -18,13 +18,31 @@ interface MaterialityMatrixProps {
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
   materialityData: any[];
+  activeFrameworks?: string[];
+  setActiveFrameworks?: (frameworks: string[]) => void;
 }
 
 const MaterialityMatrix: React.FC<MaterialityMatrixProps> = ({ 
   selectedCategory,
   setSelectedCategory,
-  materialityData
+  materialityData,
+  activeFrameworks = ['SASB', 'GRI', 'Custom'],
+  setActiveFrameworks
 }) => {
+  const filteredData = materialityData.filter(item => {
+    // Filter by category
+    if (selectedCategory !== 'All' && item.category !== selectedCategory) {
+      return false;
+    }
+    
+    // Filter by framework
+    if (item.framework && !activeFrameworks.includes(item.framework)) {
+      return false;
+    }
+    
+    return true;
+  });
+  
   return (
     <Card>
       <CardHeader>
@@ -60,6 +78,34 @@ const MaterialityMatrix: React.FC<MaterialityMatrixProps> = ({
                 </button>
               ))}
             </div>
+            
+            {setActiveFrameworks && (
+              <div className="mt-6">
+                <h3 className="text-base font-medium mb-2">Filter by Framework</h3>
+                <div className="space-y-2">
+                  {['SASB', 'GRI', 'Custom'].map((framework) => (
+                    <div key={framework} className="flex items-center space-x-2">
+                      <input 
+                        type="checkbox" 
+                        id={`framework-${framework}`}
+                        checked={activeFrameworks.includes(framework)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setActiveFrameworks([...activeFrameworks, framework]);
+                          } else {
+                            setActiveFrameworks(activeFrameworks.filter(f => f !== framework));
+                          }
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <label htmlFor={`framework-${framework}`} className="text-sm cursor-pointer">
+                        {framework}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             
             <div className="mt-8">
               <h3 className="text-base font-medium mb-2">Legend</h3>
@@ -141,7 +187,7 @@ const MaterialityMatrix: React.FC<MaterialityMatrixProps> = ({
                 {/* Scatter plot points */}
                 <Scatter 
                   name="Material Topics" 
-                  data={materialityData} 
+                  data={filteredData} 
                   fill="#8884d8"
                   shape="circle"
                 >

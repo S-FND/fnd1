@@ -14,6 +14,8 @@ interface MaterialTopic {
   sustainabilityImpact: number;
   color: string;
   description: string;
+  framework?: string;
+  industryRelevance?: string[];
 }
 
 interface MaterialityTabsProps {
@@ -27,6 +29,8 @@ interface MaterialityTabsProps {
   mediumPriorityTopics: MaterialTopic[];
   lowPriorityTopics: MaterialTopic[];
   selectedIndustries: string[];
+  activeFrameworks?: string[];
+  setActiveFrameworks?: (frameworks: string[]) => void;
 }
 
 const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
@@ -39,7 +43,9 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
   highPriorityTopics,
   mediumPriorityTopics,
   lowPriorityTopics,
-  selectedIndustries
+  selectedIndustries,
+  activeFrameworks,
+  setActiveFrameworks
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -54,6 +60,8 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
           materialityData={materialityData}
+          activeFrameworks={activeFrameworks}
+          setActiveFrameworks={setActiveFrameworks}
         />
         
         <TopicsByPriority 
@@ -64,11 +72,18 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
       </TabsContent>
       
       <TabsContent value="topics">
-        <MaterialTopicsTab materialTopics={materialTopics} />
+        <MaterialTopicsTab 
+          materialTopics={materialTopics} 
+          activeFrameworks={activeFrameworks}
+          setActiveFrameworks={setActiveFrameworks}
+        />
       </TabsContent>
       
       <TabsContent value="methodology">
-        <MethodologyTab selectedIndustries={selectedIndustries} />
+        <MethodologyTab 
+          selectedIndustries={selectedIndustries}
+          frameworks={activeFrameworks || []}
+        />
       </TabsContent>
     </Tabs>
   );

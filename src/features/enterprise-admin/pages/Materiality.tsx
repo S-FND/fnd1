@@ -1,16 +1,23 @@
-
 import React, { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { SidebarLayout } from '@/components/layout/Sidebar';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
-import { defaultMaterialTopics, industries, materialTopicsByIndustry } from '../data/materiality';
+import { industries } from '../data/materiality';
 import { toast } from 'sonner';
+import { 
+  getCombinedTopics, 
+  generateMatrixData, 
+  MaterialTopic, 
+  sasbTopics, 
+  griTopics 
+} from '../data/frameworkTopics';
 
 // Import refactored components
 import IndustrySelection from '../components/materiality/IndustrySelection';
 import MaterialityTabs from '../components/materiality/MaterialityTabs';
+import StakeholderEngagement from '../components/materiality/StakeholderEngagement';
 
 const MaterialityPage = () => {
   const { isLoading } = useRouteProtection(['admin', 'manager', 'unit_admin']);
@@ -19,64 +26,45 @@ const MaterialityPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [tempSelectedIndustries, setTempSelectedIndustries] = useState<string[]>([]);
-  const [materialTopics, setMaterialTopics] = useState(defaultMaterialTopics);
+  const [materialTopics, setMaterialTopics] = useState<MaterialTopic[]>([]);
+  const [activeFrameworks, setActiveFrameworks] = useState<string[]>(['SASB', 'GRI', 'Custom']);
   
   // Update tempSelectedIndustries when selectedIndustries changes
   useEffect(() => {
     setTempSelectedIndustries([...selectedIndustries]);
   }, [selectedIndustries]);
   
+  // Initialize with some default topics
+  useEffect(() => {
+    // If no industries selected, use a mix of common topics
+    if (selectedIndustries.length === 0) {
+      const commonSasbTopics = sasbTopics.slice(0, 6);
+      const commonGriTopics = griTopics.slice(0, 6);
+      setMaterialTopics([...commonSasbTopics, ...commonGriTopics]);
+    } else {
+      // Otherwise, get topics for selected industries
+      const topics = getCombinedTopics(selectedIndustries, activeFrameworks);
+      setMaterialTopics(topics);
+    }
+  }, [selectedIndustries, activeFrameworks]);
+  
   const updateMatrixData = () => {
     // Update the actual selected industries from the temp selection
     setSelectedIndustries([...tempSelectedIndustries]);
     
     if (tempSelectedIndustries.length === 0) {
-      setMaterialTopics(defaultMaterialTopics);
+      const commonSasbTopics = sasbTopics.slice(0, 6);
+      const commonGriTopics = griTopics.slice(0, 6);
+      setMaterialTopics([...commonSasbTopics, ...commonGriTopics]);
       toast.info('Reset to default materiality assessment');
       return;
     }
     
-    // Combine material topics from all selected industries
-    const combinedTopics = new Map();
+    // Get combined topics from selected industries
+    const topics = getCombinedTopics(tempSelectedIndustries, activeFrameworks);
+    setMaterialTopics(topics);
     
-    // Count how many industries each topic appears in for proper averaging
-    const topicOccurrences = new Map();
-    
-    tempSelectedIndustries.forEach(industryId => {
-      const industryTopics = materialTopicsByIndustry[industryId as keyof typeof materialTopicsByIndustry];
-      if (!industryTopics) return;
-      
-      industryTopics.forEach(topic => {
-        if (combinedTopics.has(topic.id)) {
-          // Count occurrences for proper averaging
-          topicOccurrences.set(topic.id, topicOccurrences.get(topic.id) + 1);
-          
-          // Sum values for later averaging
-          const existingTopic = combinedTopics.get(topic.id);
-          existingTopic.businessImpact += topic.businessImpact;
-          existingTopic.sustainabilityImpact += topic.sustainabilityImpact;
-        } else {
-          // First occurrence of this topic
-          combinedTopics.set(topic.id, { ...topic });
-          topicOccurrences.set(topic.id, 1);
-        }
-      });
-    });
-    
-    // Calculate proper averages based on occurrence count
-    combinedTopics.forEach((topic, id) => {
-      const count = topicOccurrences.get(id);
-      if (count > 1) {
-        topic.businessImpact = topic.businessImpact / count;
-        topic.sustainabilityImpact = topic.sustainabilityImpact / count;
-      }
-    });
-    
-    // Convert map to array for state update
-    const updatedTopics = Array.from(combinedTopics.values());
-    setMaterialTopics(updatedTopics);
-    
-    toast.info(`Updated materiality assessment for ${tempSelectedIndustries.length} selected industries`);
+    toast.info(`Updated materiality assessment for ${tempSelectedIndustries.length} selected ${tempSelectedIndustries.length === 1 ? 'industry' : 'industries'}`);
   };
 
   if (isLoading) {
@@ -95,34 +83,49 @@ const MaterialityPage = () => {
     }
   };
 
+  const materialityData = generateMatrixData(materialTopics);
   const filteredTopics = selectedCategory === 'All' 
     ? materialTopics 
     : materialTopics.filter(topic => topic.category === selectedCategory);
 
-  const materialityData = filteredTopics.map(topic => ({
-    x: topic.businessImpact,
-    y: topic.sustainabilityImpact,
-    z: 100,
-    name: topic.name,
-    category: topic.category,
-    businessImpact: topic.businessImpact,
-    sustainabilityImpact: topic.sustainabilityImpact,
-    color: topic.color
-  }));
+  const filteredData = materialityData.filter(item => {
+    if (selectedCategory !== 'All' && item.category !== selectedCategory) {
+      return false;
+    }
+    if (item.framework && !activeFrameworks.includes(item.framework)) {
+      return false;
+    }
+    return true;
+  });
 
   const highPriorityTopics = materialTopics.filter(
-    topic => topic.businessImpact >= 7.5 && topic.sustainabilityImpact >= 7.5
+    topic => topic.businessImpact && topic.sustainabilityImpact &&
+    topic.businessImpact >= 7.5 && topic.sustainabilityImpact >= 7.5
   );
 
   const mediumPriorityTopics = materialTopics.filter(
-    topic => 
+    topic => topic.businessImpact && topic.sustainabilityImpact && (
       (topic.businessImpact >= 7.5 && topic.sustainabilityImpact < 7.5) || 
       (topic.businessImpact < 7.5 && topic.sustainabilityImpact >= 7.5)
+    )
   );
 
   const lowPriorityTopics = materialTopics.filter(
-    topic => topic.businessImpact < 7.5 && topic.sustainabilityImpact < 7.5
+    topic => topic.businessImpact && topic.sustainabilityImpact &&
+    topic.businessImpact < 7.5 && topic.sustainabilityImpact < 7.5
   );
+
+  // Handle updating topics from stakeholder prioritization
+  const handleUpdatePrioritization = (updatedTopics: MaterialTopic[]) => {
+    // Merge updated topics with existing ones
+    const updatedMaterialTopics = materialTopics.map(topic => {
+      const updatedTopic = updatedTopics.find(t => t.id === topic.id);
+      return updatedTopic || topic;
+    });
+    
+    setMaterialTopics(updatedMaterialTopics);
+    toast.info('Updated materiality assessment with stakeholder input');
+  };
 
   return (
     <div className="min-h-screen">
@@ -149,11 +152,19 @@ const MaterialityPage = () => {
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             materialTopics={materialTopics}
-            materialityData={materialityData}
+            materialityData={filteredData}
             highPriorityTopics={highPriorityTopics}
             mediumPriorityTopics={mediumPriorityTopics}
             lowPriorityTopics={lowPriorityTopics}
             selectedIndustries={selectedIndustries}
+            activeFrameworks={activeFrameworks}
+            setActiveFrameworks={setActiveFrameworks}
+          />
+          
+          <StakeholderEngagement
+            selectedIndustries={selectedIndustries}
+            materialTopics={materialTopics}
+            onUpdatePrioritization={handleUpdatePrioritization}
           />
         </div>
       </SidebarLayout>
