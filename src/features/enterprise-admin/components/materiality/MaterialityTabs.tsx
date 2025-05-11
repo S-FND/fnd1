@@ -77,9 +77,9 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
         
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-semibold">Topics By Priority</h2>
-          {highPriorityTopics.length > 0 && (
+          {materialTopics.length > 0 && (
             <Button onClick={handleNavigateToESGMetrics}>
-              Set ESG Metrics for High Priority Topics
+              Set ESG Metrics for Materiality Topics
             </Button>
           )}
         </div>
