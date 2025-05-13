@@ -10,7 +10,7 @@ import jsPDF from 'jspdf';
 
 interface ReportViewerProps {
   title: string;
-  reportType: 'BRSR' | 'GRI' | 'TCFD' | 'Impact';
+  reportType: 'BRSR' | 'GRI' | 'TCFD' | 'ESRS' | 'Impact';
   children: React.ReactNode;
 }
 
