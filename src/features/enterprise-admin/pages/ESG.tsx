@@ -7,6 +7,12 @@ import { useAuth } from '@/context/AuthContext';
 import { Navigate, Routes, Route } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 import ESGManagementPage from './ESGManagement';
+import BRSRReport from './BRSRReport';
+import GRIReport from './GRIReport';
+import TCFDReport from './TCFDReport';
+import ESRSReport from './ESRSReport';
+import ImpactReport from './ImpactReport';
+import ReportsPage from './Reports';
 
 const ESGPage = () => {
   const { isLoading } = useRouteProtection('enterprise_admin');
@@ -27,6 +33,12 @@ const ESGPage = () => {
         <Routes>
           <Route path="/" element={<ESGDashboard />} />
           <Route path="/management" element={<ESGManagementPage />} />
+          <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/reports/brsr" element={<BRSRReport />} />
+          <Route path="/reports/gri" element={<GRIReport />} />
+          <Route path="/reports/tcfd" element={<TCFDReport />} />
+          <Route path="/reports/esrs" element={<ESRSReport />} />
+          <Route path="/reports/impact" element={<ImpactReport />} />
         </Routes>
       </SidebarLayout>
     </div>

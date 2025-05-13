@@ -30,6 +30,12 @@ const ReportsPage: React.FC = () => {
       path: '/reports/tcfd',
     },
     {
+      id: 'esrs',
+      title: 'ESRS Report',
+      description: 'European Sustainability Reporting Standards - EU framework for comprehensive sustainability disclosures.',
+      path: '/reports/esrs',
+    },
+    {
       id: 'impact',
       title: 'Impact Assessment',
       description: 'Comprehensive analysis of environmental and social impacts of business activities.',
