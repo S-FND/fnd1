@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, Download, Eye, FilePdf } from 'lucide-react';
+import { FileText, Download, Eye, FilePlus } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -685,4 +684,3 @@ const ImpactPreview: React.FC = () => (
 );
 
 export default ReportsPage;
-
