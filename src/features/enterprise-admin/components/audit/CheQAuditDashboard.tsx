@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,7 +22,8 @@ interface Supplier {
 
 const CheQAuditDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [suppliers] = useState<Supplier[]>(cheqSuppliers);
+  // Make sure the imported suppliers array conforms to the Supplier interface
+  const [suppliers] = useState<Supplier[]>(cheqSuppliers as Supplier[]);
   
   const filteredSuppliers = suppliers.filter(supplier => 
     supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
