@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import AdminDashboard from '@/components/dashboard/AdminDashboard';
@@ -18,19 +19,7 @@ const Dashboard = () => {
 
   return (
     <UnifiedSidebarLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Welcome back, {user?.name}! 
-            {isCompanyUser() ? 
-              " Here's your company sustainability snapshot." : 
-              " Here's your personal sustainability snapshot."}
-          </p>
-        </div>
-        
-        {isCompanyUser() ? <AdminDashboard /> : <EmployeeDashboard />}
-      </div>
+      {isCompanyUser() ? <AdminDashboard /> : <EmployeeDashboard />}
     </UnifiedSidebarLayout>
   );
 };
