@@ -19,20 +19,18 @@ const FandoroAdminDashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <UnifiedSidebarLayout>
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Fandoro Admin Dashboard</h1>
-            <p className="text-muted-foreground">
-              Welcome, {user?.name}! Here's an overview of all enterprises and their ESG performance.
-            </p>
-          </div>
-          
-          <FandoroAdminDashboard />
+    <UnifiedSidebarLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Fandoro Admin Dashboard</h1>
+          <p className="text-muted-foreground">
+            Welcome, {user?.name}! Here's an overview of all enterprises and their ESG performance.
+          </p>
         </div>
-      </UnifiedSidebarLayout>
-    </div>
+        
+        <FandoroAdminDashboard />
+      </div>
+    </UnifiedSidebarLayout>
   );
 };
 
