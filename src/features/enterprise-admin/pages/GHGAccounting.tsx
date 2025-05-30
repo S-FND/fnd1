@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContext';
-import { EnhancedSidebarLayout } from '@/components/layout/EnhancedSidebar';
+import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { Navbar } from '@/components/layout/Navbar';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { Navigate } from 'react-router-dom';
@@ -34,7 +34,7 @@ const GHGAccountingPage = () => {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <EnhancedSidebarLayout>
+      <UnifiedSidebarLayout>
         <div className="space-y-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">GHG Accounting</h1>
@@ -117,7 +117,7 @@ const GHGAccountingPage = () => {
             </TabsContent>
           </Tabs>
         </div>
-      </EnhancedSidebarLayout>
+      </UnifiedSidebarLayout>
     </div>
   );
 };
