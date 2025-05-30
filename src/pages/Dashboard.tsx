@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Navbar } from '@/components/layout/Navbar';
 import { SidebarLayout } from '@/components/layout/Sidebar';
 import AdminDashboard from '@/components/dashboard/AdminDashboard';
 import EmployeeDashboard from '@/components/dashboard/EmployeeDashboard';
@@ -20,7 +19,6 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
       <SidebarLayout>
         <div className="space-y-6">
           <div>

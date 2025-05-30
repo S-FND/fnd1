@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Navbar } from '@/components/layout/Navbar';
 import { SidebarLayout } from '@/components/layout/Sidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContext';
@@ -22,7 +21,6 @@ const UnitAdminDashboardPage = () => {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
       <SidebarLayout>
         <div className="space-y-6">
           <div>
