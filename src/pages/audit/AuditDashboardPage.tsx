@@ -2,7 +2,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { SidebarLayout } from '@/components/layout/Sidebar';
+import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import AuditDashboard from '@/components/audit/AuditDashboard';
 
 const AuditDashboardPage = () => {
@@ -17,9 +17,9 @@ const AuditDashboardPage = () => {
   }
 
   return (
-    <SidebarLayout>
+    <UnifiedSidebarLayout>
       <AuditDashboard />
-    </SidebarLayout>
+    </UnifiedSidebarLayout>
   );
 };
 

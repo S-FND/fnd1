@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { SidebarLayout } from '@/components/layout/Sidebar';
+import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -19,7 +20,7 @@ const UnitAdminDashboardPage = () => {
   }
 
   return (
-    <SidebarLayout>
+    <UnifiedSidebarLayout>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Unit Dashboard</h1>
@@ -78,7 +79,7 @@ const UnitAdminDashboardPage = () => {
           </Card>
         </div>
       </div>
-    </SidebarLayout>
+    </UnifiedSidebarLayout>
   );
 };
 

@@ -20,16 +20,7 @@ const EnterpriseAdminDashboardPage = () => {
 
   return (
     <UnifiedSidebarLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Enterprise Dashboard</h1>
-          <p className="text-muted-foreground">
-            Welcome back, {user?.name}! Here's your company sustainability snapshot.
-          </p>
-        </div>
-        
-        <AdminDashboard />
-      </div>
+      <AdminDashboard />
     </UnifiedSidebarLayout>
   );
 };
