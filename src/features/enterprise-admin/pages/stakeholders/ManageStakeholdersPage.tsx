@@ -19,11 +19,9 @@ const ManageStakeholdersPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <UnifiedSidebarLayout>
-        <ManageStakeholders />
-      </UnifiedSidebarLayout>
-    </div>
+    <UnifiedSidebarLayout>
+      <ManageStakeholders />
+    </UnifiedSidebarLayout>
   );
 };
 

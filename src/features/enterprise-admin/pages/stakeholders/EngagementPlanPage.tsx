@@ -19,11 +19,9 @@ const EngagementPlanPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <UnifiedSidebarLayout>
-        <EngagementPlan />
-      </UnifiedSidebarLayout>
-    </div>
+    <UnifiedSidebarLayout>
+      <EngagementPlan />
+    </UnifiedSidebarLayout>
   );
 };
 

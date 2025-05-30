@@ -30,46 +30,44 @@ const AutomatedESGDDPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <UnifiedSidebarLayout>
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <Link to="/esg-dd" className="text-sm text-muted-foreground hover:text-foreground flex items-center mb-2">
-                <ArrowLeft className="h-4 w-4 mr-1" /> Back to ESG DD
-              </Link>
-              <h1 className="text-2xl font-bold tracking-tight">Automated ESG Due Diligence</h1>
-              <p className="text-muted-foreground">
-                Generate ESG due diligence reports automatically based on company information and regulatory requirements.
-              </p>
-            </div>
-            
-            {!wizardActive && (
-              <Button onClick={() => setWizardActive(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                New Automated Assessment
-              </Button>
-            )}
+    <UnifiedSidebarLayout>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <Link to="/esg-dd" className="text-sm text-muted-foreground hover:text-foreground flex items-center mb-2">
+              <ArrowLeft className="h-4 w-4 mr-1" /> Back to ESG DD
+            </Link>
+            <h1 className="text-2xl font-bold tracking-tight">Automated ESG Due Diligence</h1>
+            <p className="text-muted-foreground">
+              Generate ESG due diligence reports automatically based on company information and regulatory requirements.
+            </p>
           </div>
           
-          {wizardActive ? (
-            <ESGDDWizard onComplete={() => setWizardActive(false)} onCancel={() => setWizardActive(false)} />
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileSearch className="h-5 w-5 text-primary" />
-                  Automated ESG DD Reports
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ESGDDReportsList reports={automatedReports} />
-              </CardContent>
-            </Card>
+          {!wizardActive && (
+            <Button onClick={() => setWizardActive(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Automated Assessment
+            </Button>
           )}
         </div>
-      </UnifiedSidebarLayout>
-    </div>
+        
+        {wizardActive ? (
+          <ESGDDWizard onComplete={() => setWizardActive(false)} onCancel={() => setWizardActive(false)} />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileSearch className="h-5 w-5 text-primary" />
+                Automated ESG DD Reports
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ESGDDReportsList reports={automatedReports} />
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </UnifiedSidebarLayout>
   );
 };
 

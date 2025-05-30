@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { SidebarLayout } from '@/components/layout/Sidebar';
+import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import FandoroAdminDashboard from '@/features/fandoro-admin/components/Dashboard';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -19,7 +19,7 @@ const FandoroAdminDashboardPage = () => {
   }
 
   return (
-    <SidebarLayout>
+    <UnifiedSidebarLayout>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Fandoro Admin Dashboard</h1>
@@ -30,7 +30,7 @@ const FandoroAdminDashboardPage = () => {
         
         <FandoroAdminDashboard />
       </div>
-    </SidebarLayout>
+    </UnifiedSidebarLayout>
   );
 };
 

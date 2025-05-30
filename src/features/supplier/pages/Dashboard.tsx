@@ -1,8 +1,6 @@
 
 import React from 'react';
-import { Navbar } from '@/components/layout/Navbar';
 import { SupplierLayout } from "@/components/layout/SupplierLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';

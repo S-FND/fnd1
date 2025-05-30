@@ -19,11 +19,9 @@ const CategoriesPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <UnifiedSidebarLayout>
-        <CategoryManagement />
-      </UnifiedSidebarLayout>
-    </div>
+    <UnifiedSidebarLayout>
+      <CategoryManagement />
+    </UnifiedSidebarLayout>
   );
 };
 
