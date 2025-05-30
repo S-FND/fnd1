@@ -1,7 +1,7 @@
 
 import React from 'react';
 import StakeholderOverview from '../../components/stakeholders/StakeholderOverview';
-import { EnhancedSidebarLayout } from '@/components/layout/EnhancedSidebar';
+import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { Navbar } from '@/components/layout/Navbar';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -22,7 +22,7 @@ const StakeholdersOverviewPage = () => {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <EnhancedSidebarLayout>
+      <UnifiedSidebarLayout>
         <div className="space-y-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Stakeholder Management</h1>
@@ -33,7 +33,7 @@ const StakeholdersOverviewPage = () => {
           
           <StakeholderOverview />
         </div>
-      </EnhancedSidebarLayout>
+      </UnifiedSidebarLayout>
     </div>
   );
 };

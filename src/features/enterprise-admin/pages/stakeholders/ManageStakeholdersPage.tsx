@@ -1,7 +1,7 @@
 
 import React from 'react';
 import ManageStakeholders from '../../components/stakeholders/ManageStakeholders';
-import { EnhancedSidebarLayout } from '@/components/layout/EnhancedSidebar';
+import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { Navbar } from '@/components/layout/Navbar';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -22,9 +22,9 @@ const ManageStakeholdersPage = () => {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <EnhancedSidebarLayout>
+      <UnifiedSidebarLayout>
         <ManageStakeholders />
-      </EnhancedSidebarLayout>
+      </UnifiedSidebarLayout>
     </div>
   );
 };
