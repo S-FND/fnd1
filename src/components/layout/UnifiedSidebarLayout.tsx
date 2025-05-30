@@ -1,47 +1,29 @@
-
 import React, { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Bell, HelpCircle, Search, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarProvider, 
-  SidebarTrigger
-} from '@/components/ui/sidebar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Sidebar, SidebarContent, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { SidebarHeaderComponent } from './sidebar/SidebarHeader';
 import { SidebarNavigation } from './sidebar/SidebarNavigation';
 import { SidebarAdminSettings } from './sidebar/SidebarAdminSettings';
 import { SidebarUserProfile } from './sidebar/SidebarUserProfile';
 
 // Get environment name & API URL from Vite env variables
-const envName =
-  import.meta.env.VITE_ENV_NAME ||
-  (import.meta.env.MODE === 'production'
-    ? 'Production'
-    : import.meta.env.MODE === 'development'
-    ? 'Development'
-    : import.meta.env.MODE);
+const envName = import.meta.env.VITE_ENV_NAME || (import.meta.env.MODE === 'production' ? 'Production' : import.meta.env.MODE === 'development' ? 'Development' : import.meta.env.MODE);
 const apiUrl = import.meta.env.VITE_API_URL;
-
 interface UnifiedSidebarLayoutProps {
   children: React.ReactNode;
 }
-
-export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({ children }) => {
-  const { user, logout } = useAuth();
-
-  return (
-    <SidebarProvider>
+export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({
+  children
+}) => {
+  const {
+    user,
+    logout
+  } = useAuth();
+  return <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <UnifiedSidebar />
         <div className="flex-1">
@@ -51,41 +33,24 @@ export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({ chil
               <SidebarTrigger />
               
               <Link to="/" className="flex items-center gap-2 font-bold text-xl ml-4">
-                <div className="w-8 h-8 rounded-full eco-gradient flex items-center justify-center">
-                  <span className="text-white">F</span>
-                </div>
-                <span>Fandoro</span>
+                
+                
               </Link>
 
               {/* ENVIRONMENT NAME & API URL INDICATOR */}
               <div className="ml-6 flex items-center space-x-3">
-                <span
-                  className={`text-xs px-2 py-1 rounded font-semibold ${
-                    envName === 'Production'
-                      ? 'bg-green-500 text-white'
-                      : envName === 'Staging'
-                      ? 'bg-yellow-400 text-black'
-                      : 'bg-gray-400 text-white'
-                  }`}
-                  title="Current environment"
-                >
+                <span className={`text-xs px-2 py-1 rounded font-semibold ${envName === 'Production' ? 'bg-green-500 text-white' : envName === 'Staging' ? 'bg-yellow-400 text-black' : 'bg-gray-400 text-white'}`} title="Current environment">
                   {envName}
                 </span>
-                {apiUrl && (
-                  <span
-                    className="text-xs px-2 py-1 rounded bg-muted text-muted-foreground"
-                    title="API URL in use"
-                    style={{
-                      maxWidth: 220,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: 'inline-block',
-                    }}
-                  >
+                {apiUrl && <span className="text-xs px-2 py-1 rounded bg-muted text-muted-foreground" title="API URL in use" style={{
+                maxWidth: 220,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                display: 'inline-block'
+              }}>
                     {apiUrl}
-                  </span>
-                )}
+                  </span>}
               </div>
 
               {/* Search and Right Actions */}
@@ -93,11 +58,7 @@ export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({ chil
                 {/* Search */}
                 <div className="relative hidden md:block">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <input
-                    type="search"
-                    placeholder="Search..."
-                    className="rounded-md border border-input bg-background px-3 py-2 pl-8 text-sm"
-                  />
+                  <input type="search" placeholder="Search..." className="rounded-md border border-input bg-background px-3 py-2 pl-8 text-sm" />
                 </div>
                 
                 {/* Notification */}
@@ -130,8 +91,7 @@ export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({ chil
                 </Button>
                 
                 {/* User Menu */}
-                {user ? (
-                  <DropdownMenu>
+                {user ? <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon">
                         <User className="h-5 w-5" />
@@ -150,12 +110,9 @@ export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({ chil
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
                     </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <Button variant="default" asChild>
+                  </DropdownMenu> : <Button variant="default" asChild>
                     <Link to="/login">Log In</Link>
-                  </Button>
-                )}
+                  </Button>}
               </div>
             </div>
           </header>
@@ -165,47 +122,38 @@ export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({ chil
           </main>
         </div>
       </div>
-    </SidebarProvider>
-  );
+    </SidebarProvider>;
 };
-
 const UnifiedSidebar: React.FC = () => {
   const location = useLocation();
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const role = user?.role || 'employee';
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
     esgdd: location.pathname.startsWith('/esg-dd'),
     reports: location.pathname.startsWith('/reports'),
     stakeholders: location.pathname.startsWith('/stakeholders')
   });
-
   const toggleMenu = (menuKey: string) => {
-    setExpandedMenus((prev) => ({
+    setExpandedMenus(prev => ({
       ...prev,
       [menuKey]: !prev[menuKey]
     }));
   };
-
-  return (
-    <Sidebar>
+  return <Sidebar>
       <SidebarHeaderComponent user={user} />
       
       <SidebarContent>
-        <SidebarNavigation 
-          role={role} 
-          expandedMenus={expandedMenus} 
-          toggleMenu={toggleMenu} 
-        />
+        <SidebarNavigation role={role} expandedMenus={expandedMenus} toggleMenu={toggleMenu} />
         
         <SidebarAdminSettings role={role} />
       </SidebarContent>
       
       <SidebarUserProfile user={user} />
-    </Sidebar>
-  );
+    </Sidebar>;
 };
 
 // Export the unified sidebar as the default layout
 export const SidebarLayout = UnifiedSidebarLayout;
-
 export default UnifiedSidebarLayout;
