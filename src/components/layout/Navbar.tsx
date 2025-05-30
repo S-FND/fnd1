@@ -13,7 +13,5 @@ export const Navbar: React.FC = () => {
     user,
     logout
   } = useAuth();
-  return <header className="border-b sticky top-0 z-50 bg-background">
-      
-    </header>;
+  return;
 };
