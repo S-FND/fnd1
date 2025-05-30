@@ -43,6 +43,7 @@ import ManageStakeholdersPage from './features/enterprise-admin/pages/stakeholde
 import CategoriesPage from './features/enterprise-admin/pages/stakeholders/CategoriesPage';
 import EngagementPlanPage from './features/enterprise-admin/pages/stakeholders/EngagementPlanPage';
 import ESGManagementPage from './features/enterprise-admin/pages/ESGManagement';
+import TeamManagementPage from './features/enterprise-admin/pages/TeamManagement';
 
 function App() {
   return (
@@ -76,6 +77,7 @@ function App() {
       <Route path="/stakeholders/engagement" element={<EngagementPlanPage />} />
       
       <Route path="/units" element={<Units />} />
+      <Route path="/team-management" element={<TeamManagementPage />} />
       <Route path="/ehs-trainings" element={<EHSTrainings />} />
       <Route path="/ehs-trainings/:id" element={<EHSTrainingDetails />} />
       <Route path="/audit" element={<AuditDashboardPage />} />

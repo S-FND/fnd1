@@ -33,6 +33,13 @@ export const ESGDDSubmenu: React.FC<ESGDDSubmenuProps> = ({
         </SidebarMenuButton>
       </SidebarMenuItem>
       <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/irl'} tooltip="Information Request List">
+          <Link to="/esg-dd/irl" className="w-full">
+            <span>IRL</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+      <SidebarMenuItem>
         <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/reports'} tooltip="ESG DD Reports">
           <Link to="/esg-dd/reports" className="w-full">
             <span>ESG DD Reports</span>
@@ -43,13 +50,6 @@ export const ESGDDSubmenu: React.FC<ESGDDSubmenuProps> = ({
         <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/cap'} tooltip="ESG CAP">
           <Link to="/esg-dd/cap" className="w-full">
             <span>ESG CAP</span>
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/irl'} tooltip="Information Request List">
-          <Link to="/esg-dd/irl" className="w-full">
-            <span>IRL</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>

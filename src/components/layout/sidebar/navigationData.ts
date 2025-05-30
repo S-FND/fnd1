@@ -22,10 +22,10 @@ export const adminNavigationItems: NavigationItem[] = [
   { name: 'Compliance', href: '/compliance', icon: ClipboardCheck },
   { name: 'Reports', href: '/reports', icon: FileText },
   { name: 'Audit', href: '/audit', icon: FileCheck },
-  { name: 'LMS', href: '/lms', icon: GraduationCap },
+  { name: 'LMS', href: 'https://lms.fandoro.com/', icon: GraduationCap },
   { name: 'EHS Trainings', href: '/ehs-trainings', icon: BookOpen },
   { name: 'Unit Management', href: '/units', icon: Building2 },
-  { name: 'Team', href: '/team', icon: Users },
+  { name: 'Team Management', href: '/team-management', icon: Users },
 ];
 
 export const unitAdminNavigationItems: NavigationItem[] = [
@@ -33,14 +33,14 @@ export const unitAdminNavigationItems: NavigationItem[] = [
   { name: 'Unit GHG Data', href: '/unit/ghg-accounting', icon: LineChart },
   { name: 'Compliance', href: '/compliance', icon: ClipboardCheck },
   { name: 'Reports', href: '/reports', icon: FileText },
-  { name: 'LMS', href: '/lms', icon: GraduationCap },
+  { name: 'LMS', href: 'https://lms.fandoro.com/', icon: GraduationCap },
   { name: 'Team', href: '/team', icon: Users },
 ];
 
 export const employeeNavigationItems: NavigationItem[] = [
   { name: 'Dashboard', href: '/employee/dashboard', icon: LayoutDashboard },
   { name: 'Personal Carbon', href: '/personal-ghg', icon: LineChart },
-  { name: 'Learning', href: '/lms', icon: GraduationCap },
+  { name: 'Learning', href: 'https://lms.fandoro.com/', icon: GraduationCap },
   { name: 'Profile', href: '/profile', icon: Users },
 ];
 
