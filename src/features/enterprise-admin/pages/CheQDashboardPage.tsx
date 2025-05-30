@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Navbar } from '@/components/layout/Navbar';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -29,7 +28,6 @@ const CheQDashboardPage = () => {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
       <UnifiedSidebarLayout>
         <div className="space-y-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

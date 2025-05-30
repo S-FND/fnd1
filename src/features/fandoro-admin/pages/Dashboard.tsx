@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Navbar } from '@/components/layout/Navbar';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import FandoroAdminDashboard from '@/features/fandoro-admin/components/Dashboard';
 import { useAuth } from '@/context/AuthContext';
@@ -21,7 +20,6 @@ const FandoroAdminDashboardPage = () => {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
       <UnifiedSidebarLayout>
         <div className="space-y-6">
           <div>

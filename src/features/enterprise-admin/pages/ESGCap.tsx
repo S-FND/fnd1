@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { Navbar } from '@/components/layout/Navbar';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
@@ -67,7 +66,6 @@ const ESGCapPage = () => {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
       <UnifiedSidebarLayout>
         <div className="space-y-6">
           <div>
