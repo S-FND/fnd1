@@ -18,23 +18,21 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <SidebarLayout>
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground">
-              Welcome back, {user?.name}! 
-              {isCompanyUser() ? 
-                " Here's your company sustainability snapshot." : 
-                " Here's your personal sustainability snapshot."}
-            </p>
-          </div>
-          
-          {isCompanyUser() ? <AdminDashboard /> : <EmployeeDashboard />}
+    <SidebarLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Welcome back, {user?.name}! 
+            {isCompanyUser() ? 
+              " Here's your company sustainability snapshot." : 
+              " Here's your personal sustainability snapshot."}
+          </p>
         </div>
-      </SidebarLayout>
-    </div>
+        
+        {isCompanyUser() ? <AdminDashboard /> : <EmployeeDashboard />}
+      </div>
+    </SidebarLayout>
   );
 };
 
