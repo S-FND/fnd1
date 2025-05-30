@@ -30,7 +30,6 @@ import ESGDDPage from './features/enterprise-admin/pages/ESGDD';
 import ManualESGDDPage from './features/enterprise-admin/pages/ManualESGDD';
 import AutomatedESGDDPage from './features/enterprise-admin/pages/AutomatedESGDD';
 import ESGCapPage from './features/enterprise-admin/pages/ESGCap';
-import IRLPage from './features/enterprise-admin/pages/IRLPage';
 import ReportsPage from './features/enterprise-admin/pages/Reports';
 import BRSRReport from './features/enterprise-admin/pages/BRSRReport';
 import GRIReport from './features/enterprise-admin/pages/GRIReport';
@@ -41,8 +40,6 @@ import ManageStakeholdersPage from './features/enterprise-admin/pages/stakeholde
 import CategoriesPage from './features/enterprise-admin/pages/stakeholders/CategoriesPage';
 import EngagementPlanPage from './features/enterprise-admin/pages/stakeholders/EngagementPlanPage';
 import ESGManagementPage from './features/enterprise-admin/pages/ESGManagement';
-import TeamManagementPage from './features/enterprise-admin/pages/TeamManagement';
-import CompanyProfile from './features/enterprise-admin/pages/CompanyProfile';
 
 function App() {
   return (
@@ -59,7 +56,6 @@ function App() {
       <Route path="/esg-dd/manual" element={<ManualESGDDPage />} />
       <Route path="/esg-dd/automated" element={<AutomatedESGDDPage />} />
       <Route path="/esg-dd/cap" element={<ESGCapPage />} />
-      <Route path="/esg-dd/irl" element={<IRLPage />} />
       <Route path="/ghg-accounting" element={<GHGAccountingPage />} />
       <Route path="/compliance" element={<Compliance />} />
       <Route path="/reports" element={<ReportsPage />} />
@@ -75,8 +71,6 @@ function App() {
       <Route path="/stakeholders/engagement" element={<EngagementPlanPage />} />
       
       <Route path="/units" element={<Units />} />
-      <Route path="/company" element={<CompanyProfile />} />
-      <Route path="/team" element={<TeamManagementPage />} />
       <Route path="/ehs-trainings" element={<EHSTrainings />} />
       <Route path="/ehs-trainings/:id" element={<EHSTrainingDetails />} />
       <Route path="/audit" element={<AuditDashboardPage />} />

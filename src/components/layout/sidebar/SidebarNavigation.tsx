@@ -4,7 +4,7 @@ import {
   BarChart3, FileCheck, Building2, Calendar, 
   GraduationCap, LayoutDashboard, LineChart, 
   Settings, Users, BookOpen, ClipboardCheck, FileSearch,
-  FileText, Network, FileUser, Building
+  FileText, Network
 } from 'lucide-react';
 import { SidebarNavItem } from './SidebarNavItem';
 import { SidebarSubmenu } from './SidebarSubmenu';
@@ -45,7 +45,6 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     { name: 'EHS Trainings', href: '/ehs-trainings', icon: BookOpen },
     { name: 'Unit Management', href: '/units', icon: Building2 },
     { name: 'Team', href: '/team', icon: Users },
-    { name: 'Company Profile', href: '/company', icon: Building },
   ];
 
   const unitAdminNavigationItems = [
@@ -116,14 +115,6 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                     <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/cap'} tooltip="ESG CAP">
                       <Link to="/esg-dd/cap" className="w-full">
                         <span>ESG CAP</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/irl'} tooltip="IRL">
-                      <Link to="/esg-dd/irl" className="w-full">
-                        <FileUser className="h-4 w-4" />
-                        <span>IRL</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
