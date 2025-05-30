@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, HelpCircle, Search, User } from 'lucide-react';
@@ -9,19 +8,14 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 // Get environment name & API URL from Vite env variables
 const envName = import.meta.env.VITE_ENV_NAME || (import.meta.env.MODE === 'production' ? 'Production' : import.meta.env.MODE === 'development' ? 'Development' : import.meta.env.MODE);
 const apiUrl = import.meta.env.VITE_API_URL;
-
 export const Navbar: React.FC = () => {
   const {
     user,
     logout
   } = useAuth();
-  
-  return (
-    <header className="border-b sticky top-0 z-50 bg-background">
+  return <header className="border-b sticky top-0 z-50 bg-background">
       <div className="flex h-16 items-center px-4 md:px-6">
-        <Link to="/" className="flex items-center gap-2 font-bold text-xl">
-          Fandoro
-        </Link>
+        
 
         {/* ENVIRONMENT NAME & API URL INDICATOR */}
         <div className="ml-6 flex items-center space-x-3">
@@ -29,12 +23,12 @@ export const Navbar: React.FC = () => {
             {envName}
           </span>
           {apiUrl && <span className="text-xs px-2 py-1 rounded bg-muted text-muted-foreground" title="API URL in use" style={{
-            maxWidth: 220,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            display: 'inline-block'
-          }}>
+          maxWidth: 220,
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          display: 'inline-block'
+        }}>
             {apiUrl}
           </span>}
         </div>
@@ -77,8 +71,7 @@ export const Navbar: React.FC = () => {
           </Button>
           
           {/* User Menu */}
-          {user ? (
-            <DropdownMenu>
+          {user ? <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <User className="h-5 w-5" />
@@ -97,14 +90,10 @@ export const Navbar: React.FC = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
               </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button variant="default" asChild>
+            </DropdownMenu> : <Button variant="default" asChild>
               <Link to="/login">Log In</Link>
-            </Button>
-          )}
+            </Button>}
         </div>
       </div>
-    </header>
-  );
+    </header>;
 };
