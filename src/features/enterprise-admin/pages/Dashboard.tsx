@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Navbar } from '@/components/layout/Navbar';
-import { SidebarLayout } from '@/components/layout/Sidebar';
+import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import AdminDashboard from '@/features/enterprise-admin/components/Dashboard';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -22,7 +22,7 @@ const EnterpriseAdminDashboardPage = () => {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <SidebarLayout>
+      <UnifiedSidebarLayout>
         <div className="space-y-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Enterprise Dashboard</h1>
@@ -33,7 +33,7 @@ const EnterpriseAdminDashboardPage = () => {
           
           <AdminDashboard />
         </div>
-      </SidebarLayout>
+      </UnifiedSidebarLayout>
     </div>
   );
 };

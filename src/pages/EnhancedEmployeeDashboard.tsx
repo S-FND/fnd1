@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { EnhancedSidebarLayout } from '@/components/layout/EnhancedSidebar';
+import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Navbar } from '@/components/layout/Navbar';
@@ -24,7 +23,7 @@ const EnhancedEmployeeDashboard = () => {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <EnhancedSidebarLayout>
+      <UnifiedSidebarLayout>
         <div className="space-y-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Personal Dashboard</h1>
@@ -169,7 +168,7 @@ const EnhancedEmployeeDashboard = () => {
             </div>
           </div>
         </div>
-      </EnhancedSidebarLayout>
+      </UnifiedSidebarLayout>
     </div>
   );
 };

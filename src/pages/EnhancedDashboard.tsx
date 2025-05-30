@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { EnhancedSidebarLayout } from '@/components/layout/EnhancedSidebar';
+import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import OverviewDashboard from '@/components/dashboard/OverviewDashboard';
 import { Navbar } from '@/components/layout/Navbar';
 import { useAuth } from '@/context/AuthContext';
@@ -22,7 +22,7 @@ const EnhancedDashboard = () => {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <EnhancedSidebarLayout>
+      <UnifiedSidebarLayout>
         <div className="space-y-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Enterprise Dashboard</h1>
@@ -33,7 +33,7 @@ const EnhancedDashboard = () => {
           
           <OverviewDashboard />
         </div>
-      </EnhancedSidebarLayout>
+      </UnifiedSidebarLayout>
     </div>
   );
 };
