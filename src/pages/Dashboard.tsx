@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { SidebarLayout } from '@/components/layout/Sidebar';
+import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import AdminDashboard from '@/components/dashboard/AdminDashboard';
 import EmployeeDashboard from '@/components/dashboard/EmployeeDashboard';
 import { useAuth } from '@/context/AuthContext';
@@ -18,7 +17,7 @@ const Dashboard = () => {
   }
 
   return (
-    <SidebarLayout>
+    <UnifiedSidebarLayout>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
@@ -32,7 +31,7 @@ const Dashboard = () => {
         
         {isCompanyUser() ? <AdminDashboard /> : <EmployeeDashboard />}
       </div>
-    </SidebarLayout>
+    </UnifiedSidebarLayout>
   );
 };
 
