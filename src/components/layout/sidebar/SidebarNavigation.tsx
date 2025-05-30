@@ -2,9 +2,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { SidebarNavItem } from './SidebarNavItem';
-import { ESGDDSubmenu } from './ESGDDSubmenu';
-import { ReportsSubmenu } from './ReportsSubmenu';
-import { StakeholdersSubmenu } from './StakeholdersSubmenu';
 import { getNavigationItems } from './navigationData';
 import { 
   SidebarGroup, 
@@ -33,46 +30,14 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
       <SidebarGroupContent>
         <SidebarMenu>
           {navigationItems.map((item) => {
-            // Handle special submenu items
-            if (item.name === 'ESG DD') {
-              return (
-                <ESGDDSubmenu
-                  key={item.name}
-                  isExpanded={expandedMenus.esgdd}
-                  onToggle={() => toggleMenu('esgdd')}
-                />
-              );
-            }
-            
-            if (item.name === 'Reports') {
-              return (
-                <ReportsSubmenu
-                  key={item.name}
-                  isExpanded={expandedMenus.reports}
-                  onToggle={() => toggleMenu('reports')}
-                />
-              );
-            }
-            
-            if (item.name === 'Stakeholders') {
-              return (
-                <StakeholdersSubmenu
-                  key={item.name}
-                  isExpanded={expandedMenus.stakeholders}
-                  onToggle={() => toggleMenu('stakeholders')}
-                  role={role}
-                />
-              );
-            }
-            
-            // Regular navigation items
+            // Regular navigation items - all items are now treated as regular navigation
             return (
               <SidebarNavItem
                 key={item.name}
                 icon={item.icon}
                 label={item.name}
                 href={item.href}
-                isActive={location.pathname === item.href}
+                isActive={location.pathname === item.href || location.pathname.startsWith(item.href + '/')}
               />
             );
           })}
