@@ -1,9 +1,7 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 interface EmployeeData {
   function: string;
@@ -53,6 +51,17 @@ const IRLHRInformation = () => {
     female: '',
     total: ''
   });
+
+  // Auto-calculate totals for board directors and key managerial
+  useEffect(() => {
+    const boardTotal = (parseInt(boardDirectors.male) || 0) + (parseInt(boardDirectors.female) || 0);
+    setBoardDirectors(prev => ({ ...prev, total: boardTotal.toString() }));
+  }, [boardDirectors.male, boardDirectors.female]);
+
+  useEffect(() => {
+    const keyTotal = (parseInt(keyManagerial.male) || 0) + (parseInt(keyManagerial.female) || 0);
+    setKeyManagerial(prev => ({ ...prev, total: keyTotal.toString() }));
+  }, [keyManagerial.male, keyManagerial.female]);
 
   const addEmployeeRow = () => {
     setEmployeeData([...employeeData, { function: '', permanentMale: '', permanentFemale: '', otherMale: '', otherFemale: '' }]);
@@ -478,12 +487,8 @@ const IRLHRInformation = () => {
                 </tr>
                 <tr className="bg-blue-50 font-semibold">
                   <td className="border border-gray-300 p-2">Total</td>
-                  <td className="border border-gray-300 p-2 text-center">
-                    {(parseInt(boardDirectors.male) || 0) + (parseInt(boardDirectors.female) || 0)}
-                  </td>
-                  <td className="border border-gray-300 p-2 text-center">
-                    {(parseInt(keyManagerial.male) || 0) + (parseInt(keyManagerial.female) || 0)}
-                  </td>
+                  <td className="border border-gray-300 p-2 text-center">{boardDirectors.total}</td>
+                  <td className="border border-gray-300 p-2 text-center">{keyManagerial.total}</td>
                 </tr>
               </tbody>
             </table>
