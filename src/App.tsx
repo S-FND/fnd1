@@ -28,6 +28,7 @@ import PersonalGHGPage from './features/employee/pages/PersonalGHG';
 import GHGAccountingPage from './features/enterprise-admin/pages/GHGAccounting';
 import UnitGHGAccountingPage from './features/unit-admin/components/ghg/UnitGHGAccountingPage';
 import ESGDDPage from './features/enterprise-admin/pages/ESGDD';
+import ESGDDReportsPage from './features/enterprise-admin/pages/ESGDDReports';
 import ManualESGDDPage from './features/enterprise-admin/pages/ManualESGDD';
 import AutomatedESGDDPage from './features/enterprise-admin/pages/AutomatedESGDD';
 import ESGCapPage from './features/enterprise-admin/pages/ESGCap';
@@ -55,6 +56,7 @@ function App() {
       <Route path="/materiality" element={<MaterialityPage />} />
       <Route path="/esg" element={<ESGPage />} />
       <Route path="/esg-dd" element={<ESGDDPage />} />
+      <Route path="/esg-dd/reports" element={<ESGDDReportsPage />} />
       <Route path="/esg-dd/manual" element={<ManualESGDDPage />} />
       <Route path="/esg-dd/automated" element={<AutomatedESGDDPage />} />
       <Route path="/esg-dd/cap" element={<ESGCapPage />} />

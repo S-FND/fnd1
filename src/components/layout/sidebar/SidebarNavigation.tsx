@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
@@ -99,16 +98,9 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/manual'} tooltip="Manual ESG DD">
-                      <Link to="/esg-dd/manual" className="w-full">
-                        <span>Manual ESG DD</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/automated'} tooltip="Automated ESG DD">
-                      <Link to="/esg-dd/automated" className="w-full">
-                        <span>Automated ESG DD</span>
+                    <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/reports'} tooltip="ESG DD Reports">
+                      <Link to="/esg-dd/reports" className="w-full">
+                        <span>ESG DD Reports</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
