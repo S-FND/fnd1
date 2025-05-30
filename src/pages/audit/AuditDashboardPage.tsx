@@ -2,7 +2,6 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Navbar } from '@/components/layout/Navbar';
 import { SidebarLayout } from '@/components/layout/Sidebar';
 import AuditDashboard from '@/components/audit/AuditDashboard';
 
@@ -18,12 +17,9 @@ const AuditDashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
-      <SidebarLayout>
-        <AuditDashboard />
-      </SidebarLayout>
-    </div>
+    <SidebarLayout>
+      <AuditDashboard />
+    </SidebarLayout>
   );
 };
 
