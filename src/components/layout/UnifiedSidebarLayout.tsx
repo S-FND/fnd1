@@ -74,4 +74,7 @@ const UnifiedSidebar: React.FC = () => {
   );
 };
 
+// Export the unified sidebar as the default layout
+export const SidebarLayout = UnifiedSidebarLayout;
+
 export default UnifiedSidebarLayout;
