@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
@@ -115,6 +116,13 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                     <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/cap'} tooltip="ESG CAP">
                       <Link to="/esg-dd/cap" className="w-full">
                         <span>ESG CAP</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/irl'} tooltip="Information Request List">
+                      <Link to="/esg-dd/irl" className="w-full">
+                        <span>IRL</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
