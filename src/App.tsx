@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import './App.css';
@@ -42,6 +41,8 @@ import ManageStakeholdersPage from './features/enterprise-admin/pages/stakeholde
 import CategoriesPage from './features/enterprise-admin/pages/stakeholders/CategoriesPage';
 import EngagementPlanPage from './features/enterprise-admin/pages/stakeholders/EngagementPlanPage';
 import ESGManagementPage from './features/enterprise-admin/pages/ESGManagement';
+import TeamManagementPage from './features/enterprise-admin/pages/TeamManagement';
+import CompanyProfile from './features/enterprise-admin/pages/CompanyProfile';
 
 function App() {
   return (
@@ -74,6 +75,8 @@ function App() {
       <Route path="/stakeholders/engagement" element={<EngagementPlanPage />} />
       
       <Route path="/units" element={<Units />} />
+      <Route path="/company" element={<CompanyProfile />} />
+      <Route path="/team" element={<TeamManagementPage />} />
       <Route path="/ehs-trainings" element={<EHSTrainings />} />
       <Route path="/ehs-trainings/:id" element={<EHSTrainingDetails />} />
       <Route path="/audit" element={<AuditDashboardPage />} />

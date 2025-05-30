@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { 
   BarChart3, FileCheck, Building2, Calendar, 
   GraduationCap, LayoutDashboard, LineChart, 
   Settings, Users, BookOpen, ClipboardCheck, FileSearch,
-  FileText, Network, FileUser
+  FileText, Network, FileUser, Building
 } from 'lucide-react';
 import { SidebarNavItem } from './SidebarNavItem';
 import { SidebarSubmenu } from './SidebarSubmenu';
@@ -46,6 +45,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     { name: 'EHS Trainings', href: '/ehs-trainings', icon: BookOpen },
     { name: 'Unit Management', href: '/units', icon: Building2 },
     { name: 'Team', href: '/team', icon: Users },
+    { name: 'Company Profile', href: '/company', icon: Building },
   ];
 
   const unitAdminNavigationItems = [
