@@ -2,7 +2,6 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { FeaturesProvider } from '@/context/FeaturesContext';
-import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import './App.css';
 import Index from './pages/Index';
 import Login from './pages/Login';
@@ -57,46 +56,46 @@ function App() {
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
         
-        {/* Routes with Sidebar Layout */}
-        <Route path="/dashboard" element={<UnifiedSidebarLayout><EnhancedDashboard /></UnifiedSidebarLayout>} />
-        <Route path="/company" element={<UnifiedSidebarLayout><CompanyProfilePage /></UnifiedSidebarLayout>} />
-        <Route path="/materiality" element={<UnifiedSidebarLayout><MaterialityPage /></UnifiedSidebarLayout>} />
-        <Route path="/esg" element={<UnifiedSidebarLayout><ESGPage /></UnifiedSidebarLayout>} />
-        <Route path="/esg-dd" element={<UnifiedSidebarLayout><ESGDDPage /></UnifiedSidebarLayout>} />
-        <Route path="/esg-dd/reports" element={<UnifiedSidebarLayout><ESGDDReportsPage /></UnifiedSidebarLayout>} />
-        <Route path="/esg-dd/manual" element={<UnifiedSidebarLayout><ManualESGDDPage /></UnifiedSidebarLayout>} />
-        <Route path="/esg-dd/automated" element={<UnifiedSidebarLayout><AutomatedESGDDPage /></UnifiedSidebarLayout>} />
-        <Route path="/esg-dd/cap" element={<UnifiedSidebarLayout><ESGCapPage /></UnifiedSidebarLayout>} />
-        <Route path="/esg-dd/irl" element={<UnifiedSidebarLayout><IRLPage /></UnifiedSidebarLayout>} />
-        <Route path="/ghg-accounting" element={<UnifiedSidebarLayout><GHGAccountingPage /></UnifiedSidebarLayout>} />
-        <Route path="/compliance" element={<UnifiedSidebarLayout><Compliance /></UnifiedSidebarLayout>} />
-        <Route path="/reports" element={<UnifiedSidebarLayout><ReportsPage /></UnifiedSidebarLayout>} />
-        <Route path="/reports/brsr" element={<UnifiedSidebarLayout><BRSRReport /></UnifiedSidebarLayout>} />
-        <Route path="/reports/gri" element={<UnifiedSidebarLayout><GRIReport /></UnifiedSidebarLayout>} />
-        <Route path="/reports/tcfd" element={<UnifiedSidebarLayout><TCFDReport /></UnifiedSidebarLayout>} />
-        <Route path="/reports/impact" element={<UnifiedSidebarLayout><ImpactReport /></UnifiedSidebarLayout>} />
+        {/* Company / Enterprise Admin Routes */}
+        <Route path="/dashboard" element={<EnhancedDashboard />} />
+        <Route path="/company" element={<CompanyProfilePage />} />
+        <Route path="/materiality" element={<MaterialityPage />} />
+        <Route path="/esg" element={<ESGPage />} />
+        <Route path="/esg-dd" element={<ESGDDPage />} />
+        <Route path="/esg-dd/reports" element={<ESGDDReportsPage />} />
+        <Route path="/esg-dd/manual" element={<ManualESGDDPage />} />
+        <Route path="/esg-dd/automated" element={<AutomatedESGDDPage />} />
+        <Route path="/esg-dd/cap" element={<ESGCapPage />} />
+        <Route path="/esg-dd/irl" element={<IRLPage />} />
+        <Route path="/ghg-accounting" element={<GHGAccountingPage />} />
+        <Route path="/compliance" element={<Compliance />} />
+        <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/reports/brsr" element={<BRSRReport />} />
+        <Route path="/reports/gri" element={<GRIReport />} />
+        <Route path="/reports/tcfd" element={<TCFDReport />} />
+        <Route path="/reports/impact" element={<ImpactReport />} />
         
         {/* Stakeholder Management Routes */}
-        <Route path="/stakeholders" element={<UnifiedSidebarLayout><StakeholdersOverviewPage /></UnifiedSidebarLayout>} />
-        <Route path="/stakeholders/manage" element={<UnifiedSidebarLayout><ManageStakeholdersPage /></UnifiedSidebarLayout>} />
-        <Route path="/stakeholders/categories" element={<UnifiedSidebarLayout><CategoriesPage /></UnifiedSidebarLayout>} />
-        <Route path="/stakeholders/engagement" element={<UnifiedSidebarLayout><EngagementPlanPage /></UnifiedSidebarLayout>} />
+        <Route path="/stakeholders" element={<StakeholdersOverviewPage />} />
+        <Route path="/stakeholders/manage" element={<ManageStakeholdersPage />} />
+        <Route path="/stakeholders/categories" element={<CategoriesPage />} />
+        <Route path="/stakeholders/engagement" element={<EngagementPlanPage />} />
         
-        <Route path="/units" element={<UnifiedSidebarLayout><Units /></UnifiedSidebarLayout>} />
-        <Route path="/team-management" element={<UnifiedSidebarLayout><TeamManagementPage /></UnifiedSidebarLayout>} />
-        <Route path="/ehs-trainings" element={<UnifiedSidebarLayout><EHSTrainings /></UnifiedSidebarLayout>} />
-        <Route path="/ehs-trainings/:id" element={<UnifiedSidebarLayout><EHSTrainingDetails /></UnifiedSidebarLayout>} />
-        <Route path="/audit" element={<UnifiedSidebarLayout><AuditDashboardPage /></UnifiedSidebarLayout>} />
-        <Route path="/audit/:id" element={<UnifiedSidebarLayout><AuditChecklistPage /></UnifiedSidebarLayout>} />
-        <Route path="/settings" element={<UnifiedSidebarLayout><FeatureManagementPage /></UnifiedSidebarLayout>} />
+        <Route path="/units" element={<Units />} />
+        <Route path="/team-management" element={<TeamManagementPage />} />
+        <Route path="/ehs-trainings" element={<EHSTrainings />} />
+        <Route path="/ehs-trainings/:id" element={<EHSTrainingDetails />} />
+        <Route path="/audit" element={<AuditDashboardPage />} />
+        <Route path="/audit/:id" element={<AuditChecklistPage />} />
+        <Route path="/settings" element={<FeatureManagementPage />} />
         
         {/* Employee Routes */}
-        <Route path="/employee/dashboard" element={<UnifiedSidebarLayout><EmployeeDashboardPage /></UnifiedSidebarLayout>} />
-        <Route path="/personal-dashboard" element={<UnifiedSidebarLayout><EnhancedEmployeeDashboard /></UnifiedSidebarLayout>} />
-        <Route path="/personal-ghg" element={<UnifiedSidebarLayout><PersonalGHGPage /></UnifiedSidebarLayout>} />
+        <Route path="/employee/dashboard" element={<EmployeeDashboardPage />} />
+        <Route path="/personal-dashboard" element={<EnhancedEmployeeDashboard />} />
+        <Route path="/personal-ghg" element={<PersonalGHGPage />} />
         
         {/* Unit Admin Routes */}
-        <Route path="/unit/ghg-accounting" element={<UnifiedSidebarLayout><UnitGHGAccountingPage /></UnifiedSidebarLayout>} />
+        <Route path="/unit/ghg-accounting" element={<UnitGHGAccountingPage />} />
         
         {/* Supplier Routes */}
         <Route path="/supplier/dashboard" element={<SupplierDashboardPage />} />
