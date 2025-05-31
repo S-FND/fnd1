@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -127,7 +126,6 @@ const ManageStakeholders: React.FC = () => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="" disabled>Select a category</SelectItem>
                             {defaultStakeholderSubcategories.map((category) => (
                               <SelectItem key={category.id} value={category.id}>
                                 {category.name} ({category.category === 'internal' ? 'Internal' : 'External'})
