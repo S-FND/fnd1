@@ -78,7 +78,8 @@ const IRLCompanyInformation = () => {
     registeredOfficeAddress: '',
     headOfficeAddress: '',
     website: '',
-    financialYearReporting: ''
+    financialYearReporting: '',
+    businessActivitiesDescription: ''
   });
 
   const [officeSpaces, setOfficeSpaces] = useState<OfficeSpace[]>([
@@ -154,17 +155,17 @@ const IRLCompanyInformation = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="industry">Industry</Label>
+              <Label htmlFor="industry">Type of Industry</Label>
               <Input
                 id="industry"
                 value={formData.industry}
                 onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                placeholder="Enter Industry"
+                placeholder="Enter Type of Industry"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="website">Website</Label>
+              <Label htmlFor="website">Company Website</Label>
               <Input
                 id="website"
                 type="url"
@@ -214,6 +215,17 @@ const IRLCompanyInformation = () => {
           </div>
           
           <div className="grid grid-cols-1 gap-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="businessActivitiesDescription">Provide description of business activities (accounting for 90% of the turnover)</Label>
+              <Textarea
+                id="businessActivitiesDescription"
+                value={formData.businessActivitiesDescription}
+                onChange={(e) => setFormData({ ...formData, businessActivitiesDescription: e.target.value })}
+                placeholder="Describe the main business activities that account for 90% of your turnover"
+                rows={4}
+              />
+            </div>
+            
             <div className="space-y-2">
               <Label htmlFor="registeredOfficeAddress">Registered Office Address</Label>
               <Textarea
