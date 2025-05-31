@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { FileSearch } from 'lucide-react';
@@ -22,13 +21,13 @@ export const ESGDDSubmenu: React.FC<ESGDDSubmenuProps> = ({
   // Get company funding stage from user context or default to empty
   const companyFundingStage = user?.company?.fundingStage || '';
   
-  // Define funding stages that require Additional DD Details
+  // Define funding stages that require Additional DD Details (using enum values)
   const advancedFundingStages = [
-    'Series B',
-    'Series C', 
-    'Series D+',
-    'Pre-IPO',
-    'Public Listed'
+    'series_b',
+    'series_c', 
+    'series_d_plus',
+    'pre_ipo',
+    'public_listed'
   ];
   
   const showAdditionalDD = advancedFundingStages.includes(companyFundingStage);
