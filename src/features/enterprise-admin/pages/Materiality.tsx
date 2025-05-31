@@ -153,6 +153,11 @@ const MaterialityPage = () => {
     toast.info(`Updated materiality assessment for ${tempSelectedIndustries.length} selected ${tempSelectedIndustries.length === 1 ? 'industry' : 'industries'}`);
   };
 
+  // Handle updating topics from the MaterialTopicsTab
+  const handleUpdateTopics = (updatedTopics: MaterialTopic[]) => {
+    setMaterialTopics(updatedTopics);
+  };
+
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -241,6 +246,7 @@ const MaterialityPage = () => {
             selectedIndustries={selectedIndustries}
             activeFrameworks={activeFrameworks}
             setActiveFrameworks={setActiveFrameworks}
+            onUpdateTopics={handleUpdateTopics}
           />
           
           <StakeholderEngagement

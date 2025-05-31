@@ -36,6 +36,7 @@ interface MaterialityTabsProps {
   selectedIndustries: string[];
   activeFrameworks: Framework[];
   setActiveFrameworks: (frameworks: Framework[]) => void;
+  onUpdateTopics?: (topics: MaterialTopic[]) => void;
 }
 
 const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
@@ -50,7 +51,8 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
   lowPriorityTopics,
   selectedIndustries,
   activeFrameworks,
-  setActiveFrameworks
+  setActiveFrameworks,
+  onUpdateTopics
 }) => {
   const navigate = useNavigate();
 
@@ -96,6 +98,7 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
           materialTopics={materialTopics} 
           activeFrameworks={activeFrameworks}
           setActiveFrameworks={setActiveFrameworks}
+          onUpdateTopics={onUpdateTopics}
         />
       </TabsContent>
       

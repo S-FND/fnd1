@@ -2,7 +2,11 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CircleAlert, TrendingUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CircleAlert, TrendingUp, Edit, Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import EditTopicDialog from './EditTopicDialog';
+import CreateTopicDialog from './CreateTopicDialog';
 
 // Define allowed framework types
 type Framework = 'SASB' | 'GRI' | 'Custom';
@@ -23,15 +27,20 @@ interface MaterialTopicsTabProps {
   materialTopics: MaterialTopic[];
   activeFrameworks: Framework[];
   setActiveFrameworks: (frameworks: Framework[]) => void;
+  onUpdateTopics?: (topics: MaterialTopic[]) => void;
 }
 
 const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({ 
   materialTopics,
   activeFrameworks = ['SASB', 'GRI', 'Custom'],
-  setActiveFrameworks 
+  setActiveFrameworks,
+  onUpdateTopics
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [classificationView, setClassificationView] = useState<'all' | 'risks' | 'opportunities'>('all');
+  const [editingTopic, setEditingTopic] = useState<MaterialTopic | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   // Filter topics by search term and active frameworks
   const filteredTopics = materialTopics.filter(topic => {
@@ -67,11 +76,54 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
     return topic.businessImpact < 5 ? 'risk' : 'opportunity';
   };
 
+  const handleEditTopic = (topic: MaterialTopic) => {
+    setEditingTopic(topic);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveTopic = (updatedTopic: MaterialTopic) => {
+    if (onUpdateTopics) {
+      const updatedTopics = materialTopics.map(topic => 
+        topic.id === updatedTopic.id ? updatedTopic : topic
+      );
+      onUpdateTopics(updatedTopics);
+      toast.success('Topic updated successfully');
+    }
+  };
+
+  const handleCreateTopic = (newTopic: MaterialTopic) => {
+    if (onUpdateTopics) {
+      const updatedTopics = [...materialTopics, newTopic];
+      onUpdateTopics(updatedTopics);
+      toast.success('Custom topic created successfully');
+    }
+  };
+
+  const handleDeleteTopic = (topicId: string) => {
+    if (onUpdateTopics) {
+      const updatedTopics = materialTopics.filter(topic => topic.id !== topicId);
+      onUpdateTopics(updatedTopics);
+      toast.success('Topic deleted successfully');
+    }
+  };
+
+  const canEditOrDelete = (topic: MaterialTopic): boolean => {
+    return topic.framework === 'Custom' || topic.framework === undefined;
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Material Topics Assessment</CardTitle>
-        <CardDescription>Detailed assessment of key material ESG topics</CardDescription>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle>Material Topics Assessment</CardTitle>
+            <CardDescription>Detailed assessment of key material ESG topics</CardDescription>
+          </div>
+          <Button onClick={() => setIsCreateDialogOpen(true)} className="flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            Add Custom Topic
+          </Button>
+        </div>
         
         <div className="mt-4 flex flex-col md:flex-row gap-4">
           <div className="flex-1">
@@ -141,6 +193,22 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
             </p>
           </div>
         )}
+
+        <EditTopicDialog
+          topic={editingTopic}
+          isOpen={isEditDialogOpen}
+          onClose={() => {
+            setIsEditDialogOpen(false);
+            setEditingTopic(null);
+          }}
+          onSave={handleSaveTopic}
+        />
+
+        <CreateTopicDialog
+          isOpen={isCreateDialogOpen}
+          onClose={() => setIsCreateDialogOpen(false)}
+          onCreate={handleCreateTopic}
+        />
       </CardContent>
     </Card>
   );
@@ -153,11 +221,12 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
           <div className="grid gap-4 md:grid-cols-2">
             {topics.map(topic => {
               const classification = getTopicClassification(topic);
+              const canEdit = canEditOrDelete(topic);
               
               return (
                 <div key={topic.id} className="border rounded-lg p-4">
                   <div className="flex justify-between items-start mb-2">
-                    <div className="font-medium text-base">{topic.name}</div>
+                    <div className="font-medium text-base flex-1">{topic.name}</div>
                     <div className="flex gap-2 items-center">
                       {classification === 'risk' ? (
                         <span className="text-xs bg-red-100 px-2 py-0.5 rounded text-red-700 flex items-center gap-1">
@@ -172,6 +241,28 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
                         <span className="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-700">
                           {topic.framework}
                         </span>
+                      )}
+                      {onUpdateTopics && (
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={() => handleEditTopic(topic)}
+                          >
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                          {canEdit && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                              onClick={() => handleDeleteTopic(topic.id)}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
