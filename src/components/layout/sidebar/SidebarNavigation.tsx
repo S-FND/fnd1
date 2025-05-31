@@ -41,8 +41,8 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     <SidebarGroup>
       <SidebarGroupContent>
         {navigationItems.map((item) => {
-          // Handle Stakeholders submenu
-          if (item.name === 'Stakeholders') {
+          // Handle Stakeholders submenu - only show for admin/manager
+          if (item.name === 'Stakeholders' && (role === 'admin' || role === 'manager')) {
             return (
               <StakeholdersSubmenu
                 key={item.name}
@@ -75,6 +75,11 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             );
           }
 
+          // Skip Stakeholders for non-admin/manager roles to prevent empty space
+          if (item.name === 'Stakeholders' && !(role === 'admin' || role === 'manager')) {
+            return null;
+          }
+
           // Regular navigation items
           const isActive = location.pathname === item.href;
           const isExternalLink = item.href.startsWith('http');
@@ -83,12 +88,12 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             <SidebarMenuItem key={item.name}>
               <SidebarMenuButton asChild isActive={isActive} tooltip={item.name}>
                 {isExternalLink ? (
-                  <a href={item.href} target="_blank" rel="noopener noreferrer" className="w-full">
+                  <a href={item.href} target="_blank" rel="noopener noreferrer" className="flex items-center w-full">
                     <item.icon className="mr-2 h-4 w-4" />
                     <span>{item.name}</span>
                   </a>
                 ) : (
-                  <Link to={item.href} className="w-full">
+                  <Link to={item.href} className="flex items-center w-full">
                     <item.icon className="mr-2 h-4 w-4" />
                     <span>{item.name}</span>
                   </Link>
