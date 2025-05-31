@@ -88,8 +88,11 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
 
       <TabsContent value="matrix" className="space-y-4">
         <MaterialityMatrix 
-          data={materialityData}
+          materialityData={materialityData}
           selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          activeFrameworks={activeFrameworks}
+          setActiveFrameworks={setActiveFrameworks}
         />
       </TabsContent>
 
@@ -113,7 +116,10 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
       </TabsContent>
 
       <TabsContent value="methodology" className="space-y-4">
-        <MethodologyTab />
+        <MethodologyTab 
+          selectedIndustries={selectedIndustries}
+          frameworks={activeFrameworks}
+        />
       </TabsContent>
     </Tabs>
   );
