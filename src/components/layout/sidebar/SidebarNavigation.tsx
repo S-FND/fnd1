@@ -2,6 +2,7 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import { SidebarNavItem } from './SidebarNavItem';
+import { StakeholdersSubmenu } from './StakeholdersSubmenu';
 import { getNavigationItems } from './navigationData';
 import { 
   SidebarGroup, 
@@ -30,7 +31,19 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
       <SidebarGroupContent>
         <SidebarMenu>
           {navigationItems.map((item) => {
-            // Regular navigation items - all items are now treated as regular navigation
+            // Handle stakeholders submenu separately
+            if (item.name === 'Stakeholders' && (role === 'admin' || role === 'manager')) {
+              return (
+                <StakeholdersSubmenu
+                  key="stakeholders"
+                  isExpanded={expandedMenus.stakeholders || false}
+                  onToggle={() => toggleMenu('stakeholders')}
+                  role={role}
+                />
+              );
+            }
+            
+            // Regular navigation items
             return (
               <SidebarNavItem
                 key={item.name}
