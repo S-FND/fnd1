@@ -3,6 +3,7 @@ export type FeatureId =
   | 'lms'
   | 'ehs-trainings' 
   | 'audit'
+  | 'esg-dd'
   | 'ghg-accounting'
   | 'materiality'
   | 'esg-management'

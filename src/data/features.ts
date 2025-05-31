@@ -84,6 +84,15 @@ export const features: Feature[] = [
     category: 'operations'
   },
   {
+    id: 'esg-dd',
+    name: 'ESG Due Diligence',
+    description: 'ESG due diligence assessments and management',
+    isDefault: false,
+    dependencies: [],
+    dependents: [],
+    category: 'operations'
+  },
+  {
     id: 'ghg-accounting',
     name: 'GHG Accounting',
     description: 'Greenhouse gas emissions tracking and reporting',

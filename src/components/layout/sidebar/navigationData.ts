@@ -38,7 +38,7 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
         name: "ESG DD",
         href: "/esg-dd",
         icon: FileSearch,
-        featureId: 'esg-management',
+        featureId: 'esg-dd',
         submenu: [
           { name: "Overview", href: "/esg-dd", icon: FileSearch },
           { name: "Manual Assessment", href: "/esg-dd/manual", icon: FileText },
