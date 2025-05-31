@@ -1,13 +1,12 @@
-
-
 import React, { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Sidebar, SidebarContent, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarProvider } from '@/components/ui/sidebar';
 import { SidebarHeaderComponent } from './sidebar/SidebarHeader';
 import { SidebarNavigation } from './sidebar/SidebarNavigation';
 import { SidebarAdminSettings } from './sidebar/SidebarAdminSettings';
 import { SidebarUserProfile } from './sidebar/SidebarUserProfile';
+import { Navbar } from './Navbar';
 
 interface UnifiedSidebarLayoutProps {
   children: React.ReactNode;
@@ -22,15 +21,9 @@ export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
         <UnifiedSidebar />
-        <div className="flex-1">
-          {/* Minimal header with just the sidebar trigger */}
-          <header className="border-b sticky top-0 z-40 bg-background">
-            <div className="flex h-16 items-center px-4 md:px-6">
-              <SidebarTrigger />
-            </div>
-          </header>
-          
-          <main className="p-4 md:p-6 relative z-10">
+        <div className="flex-1 flex flex-col">
+          <Navbar />
+          <main className="flex-1 p-4 md:p-6">
             {children}
           </main>
         </div>

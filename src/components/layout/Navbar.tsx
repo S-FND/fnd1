@@ -5,14 +5,20 @@ import { Link } from 'react-router-dom';
 import { Bell, HelpCircle, Search, User } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
   
   return (
-    <header className="border-b sticky top-0 z-30 bg-background">
+    <header className="border-b sticky top-0 z-40 bg-background">
       <div className="flex h-16 items-center px-4 md:px-6">
+        {/* Left side with sidebar trigger */}
+        <div className="flex items-center gap-4">
+          <SidebarTrigger />
+        </div>
+
         {/* Search and Right Actions */}
         <div className="ml-auto flex items-center gap-4">
           {/* Search */}
