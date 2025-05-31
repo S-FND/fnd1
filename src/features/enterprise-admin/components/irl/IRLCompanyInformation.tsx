@@ -1,37 +1,18 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2 } from 'lucide-react';
-
-interface OfficeSpace {
-  location: string;
-  type: string;
-  address: string;
-  geotagLocation: string;
-  numberOfSeats: string;
-}
-
-interface OutsourcedService {
-  agencyName: string;
-  servicesDischarged: string;
-  malePersons: string;
-  femalePersons: string;
-}
-
-interface LocationDetails {
-  locationType: string;
-  warehouses: string;
-  offices: string;
-  distributionCenters: string;
-  total: string;
-}
+import ESGDDRequiredFields from './ESGDDRequiredFields';
+import BasicCompanyFields from './BasicCompanyFields';
+import OfficeSpaceSection from './OfficeSpaceSection';
+import OutsourcedServicesSection from './OutsourcedServicesSection';
+import { CompanyFormData, OfficeSpace, OutsourcedService, LocationDetails } from './types';
 
 const IRLCompanyInformation = () => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CompanyFormData>({
     legalEntityName: '',
     emailId: '',
     incorporationDate: '',
@@ -68,7 +49,6 @@ const IRLCompanyInformation = () => {
     transportationDetails: '',
     youngWorkers: '',
     retrenchmentDetails: '',
-    // New ESGDD fields
     gstNumber: '',
     assuranceProviderName: '',
     assuranceType: '',
@@ -94,30 +74,12 @@ const IRLCompanyInformation = () => {
     { locationType: 'International', warehouses: '', offices: '', distributionCenters: '', total: '' }
   ]);
 
-  const addOfficeSpace = () => {
-    setOfficeSpaces([...officeSpaces, { location: '', type: '', address: '', geotagLocation: '', numberOfSeats: '' }]);
-  };
-
-  const removeOfficeSpace = (index: number) => {
-    setOfficeSpaces(officeSpaces.filter((_, i) => i !== index));
-  };
-
-  const addOutsourcedService = () => {
-    setOutsourcedServices([...outsourcedServices, { agencyName: '', servicesDischarged: '', malePersons: '', femalePersons: '' }]);
-  };
-
-  const removeOutsourcedService = (index: number) => {
-    setOutsourcedServices(outsourcedServices.filter((_, i) => i !== index));
-  };
-
   const handleSave = () => {
     console.log('Saving form data:', { formData, officeSpaces, outsourcedServices, locationDetails });
-    // TODO: Implement save functionality
   };
 
   const handleSubmit = () => {
     console.log('Submitting form data:', { formData, officeSpaces, outsourcedServices, locationDetails });
-    // TODO: Implement submit functionality
   };
 
   return (
@@ -129,316 +91,11 @@ const IRLCompanyInformation = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* New ESGDD Required Fields */}
-        <div className="border-l-4 border-primary pl-4 mb-6">
-          <h3 className="text-lg font-semibold mb-4 text-primary">ESGDD Required Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="gstNumber">GST Number</Label>
-              <Input
-                id="gstNumber"
-                value={formData.gstNumber}
-                onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value })}
-                placeholder="Enter GST Number"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="cinNumber">CIN Number</Label>
-              <Input
-                id="cinNumber"
-                value={formData.cinNumber}
-                onChange={(e) => setFormData({ ...formData, cinNumber: e.target.value })}
-                placeholder="Enter CIN Number"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="industry">Industry</Label>
-              <Input
-                id="industry"
-                value={formData.industry}
-                onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                placeholder="Enter Industry"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="website">Company Website</Label>
-              <Input
-                id="website"
-                type="url"
-                value={formData.website}
-                onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                placeholder="https://www.example.com"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="assuranceProviderName">Name of Assurance Provider</Label>
-              <Input
-                id="assuranceProviderName"
-                value={formData.assuranceProviderName}
-                onChange={(e) => setFormData({ ...formData, assuranceProviderName: e.target.value })}
-                placeholder="Enter Assurance Provider Name"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="assuranceType">Type of Assurance Obtained</Label>
-              <Select
-                value={formData.assuranceType}
-                onValueChange={(value) => setFormData({ ...formData, assuranceType: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select assurance type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="limited">Limited Assurance</SelectItem>
-                  <SelectItem value="reasonable">Reasonable Assurance</SelectItem>
-                  <SelectItem value="none">No Assurance</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="financialYearReporting">Financial Year for which reporting is being done</Label>
-              <Input
-                id="financialYearReporting"
-                value={formData.financialYearReporting}
-                onChange={(e) => setFormData({ ...formData, financialYearReporting: e.target.value })}
-                placeholder="e.g., 2023-24"
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 gap-4 mt-4">
-            <div className="space-y-2">
-              <Label htmlFor="businessActivitiesDescription">Provide description of business activities (accounting for 90% of the turnover)</Label>
-              <Textarea
-                id="businessActivitiesDescription"
-                value={formData.businessActivitiesDescription}
-                onChange={(e) => setFormData({ ...formData, businessActivitiesDescription: e.target.value })}
-                placeholder="Describe the main business activities that account for 90% of your turnover"
-                rows={4}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="registeredOfficeAddress">Registered Office Address</Label>
-              <Textarea
-                id="registeredOfficeAddress"
-                value={formData.registeredOfficeAddress}
-                onChange={(e) => setFormData({ ...formData, registeredOfficeAddress: e.target.value })}
-                placeholder="Enter complete registered office address"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="headOfficeAddress">Head Office Address</Label>
-              <Textarea
-                id="headOfficeAddress"
-                value={formData.headOfficeAddress}
-                onChange={(e) => setFormData({ ...formData, headOfficeAddress: e.target.value })}
-                placeholder="Enter complete head office address"
-              />
-            </div>
-          </div>
-        </div>
+        <ESGDDRequiredFields formData={formData} setFormData={setFormData} />
+        
+        <BasicCompanyFields formData={formData} setFormData={setFormData} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="legalEntityName">1. Name of legal entity</Label>
-            <Input
-              id="legalEntityName"
-              value={formData.legalEntityName}
-              onChange={(e) => setFormData({ ...formData, legalEntityName: e.target.value })}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="emailId">2. Email ID</Label>
-            <Input
-              id="emailId"
-              type="email"
-              value={formData.emailId}
-              onChange={(e) => setFormData({ ...formData, emailId: e.target.value })}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="incorporationDate">3. Month & Year of Incorporation</Label>
-            <Input
-              id="incorporationDate"
-              type="month"
-              value={formData.incorporationDate}
-              onChange={(e) => setFormData({ ...formData, incorporationDate: e.target.value })}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="companyName">4. Name of company/brand</Label>
-            <Input
-              id="companyName"
-              value={formData.companyName}
-              onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="contactNumber">5. Contact Number</Label>
-            <Input
-              id="contactNumber"
-              value={formData.contactNumber}
-              onChange={(e) => setFormData({ ...formData, contactNumber: e.target.value })}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="paidUpCapital">6. Paid Up Capital (Rs)</Label>
-            <Input
-              id="paidUpCapital"
-              value={formData.paidUpCapital}
-              onChange={(e) => setFormData({ ...formData, paidUpCapital: e.target.value })}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="currentTurnover">7. Turnover - Current Year (Rs)</Label>
-            <Input
-              id="currentTurnover"
-              value={formData.currentTurnover}
-              onChange={(e) => setFormData({ ...formData, currentTurnover: e.target.value })}
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="previousTurnover">7. Turnover - Previous Year (Rs)</Label>
-            <Input
-              id="previousTurnover"
-              value={formData.previousTurnover}
-              onChange={(e) => setFormData({ ...formData, previousTurnover: e.target.value })}
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="parentCompany">8. Name of parent company/subsidiaries (if any)</Label>
-          <Textarea
-            id="parentCompany"
-            value={formData.parentCompany}
-            onChange={(e) => setFormData({ ...formData, parentCompany: e.target.value })}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="productsServices">9. List of products/services</Label>
-          <Textarea
-            id="productsServices"
-            value={formData.productsServices}
-            onChange={(e) => setFormData({ ...formData, productsServices: e.target.value })}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="foundingTeam">10. About the founding team (Name, educational details, previous work experience)</Label>
-          <Textarea
-            id="foundingTeam"
-            value={formData.foundingTeam}
-            onChange={(e) => setFormData({ ...formData, foundingTeam: e.target.value })}
-          />
-        </div>
-
-        <div className="space-y-4">
-          <Label>11. Type of office space & no. of seats</Label>
-          {officeSpaces.map((space, index) => (
-            <div key={index} className="border rounded-lg p-4 space-y-4">
-              <div className="flex justify-between items-center">
-                <h4 className="font-medium">Office Space {index + 1}</h4>
-                {officeSpaces.length > 1 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeOfficeSpace(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Location</Label>
-                  <Input
-                    value={space.location}
-                    onChange={(e) => {
-                      const newSpaces = [...officeSpaces];
-                      newSpaces[index].location = e.target.value;
-                      setOfficeSpaces(newSpaces);
-                    }}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Type</Label>
-                  <Select
-                    value={space.type}
-                    onValueChange={(value) => {
-                      const newSpaces = [...officeSpaces];
-                      newSpaces[index].type = value;
-                      setOfficeSpaces(newSpaces);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="coworking">Coworking</SelectItem>
-                      <SelectItem value="leased">Leased</SelectItem>
-                      <SelectItem value="wfh">Work From Home</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Address</Label>
-                  <Input
-                    value={space.address}
-                    onChange={(e) => {
-                      const newSpaces = [...officeSpaces];
-                      newSpaces[index].address = e.target.value;
-                      setOfficeSpaces(newSpaces);
-                    }}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Geotag Location</Label>
-                  <Input
-                    value={space.geotagLocation}
-                    onChange={(e) => {
-                      const newSpaces = [...officeSpaces];
-                      newSpaces[index].geotagLocation = e.target.value;
-                      setOfficeSpaces(newSpaces);
-                    }}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>No. of seats (NA if WFH)</Label>
-                  <Input
-                    value={space.numberOfSeats}
-                    onChange={(e) => {
-                      const newSpaces = [...officeSpaces];
-                      newSpaces[index].numberOfSeats = e.target.value;
-                      setOfficeSpaces(newSpaces);
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
-          <Button variant="outline" onClick={addOfficeSpace} className="w-full">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Office Space
-          </Button>
-        </div>
+        <OfficeSpaceSection officeSpaces={officeSpaces} setOfficeSpaces={setOfficeSpaces} />
 
         <div className="space-y-2">
           <Label htmlFor="totalBeneficiaries">12. Total Beneficiaries/Customer Base</Label>
@@ -505,77 +162,10 @@ const IRLCompanyInformation = () => {
           </div>
         </div>
 
-        <div className="space-y-4">
-          <Label>16. Any outsourced services through professional services agencies?</Label>
-          {outsourcedServices.map((service, index) => (
-            <div key={index} className="border rounded-lg p-4 space-y-4">
-              <div className="flex justify-between items-center">
-                <h4 className="font-medium">Outsourced Service {index + 1}</h4>
-                {outsourcedServices.length > 1 && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeOutsourcedService(index)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label>Name of Agency</Label>
-                  <Input
-                    value={service.agencyName}
-                    onChange={(e) => {
-                      const newServices = [...outsourcedServices];
-                      newServices[index].agencyName = e.target.value;
-                      setOutsourcedServices(newServices);
-                    }}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Services discharged</Label>
-                  <Input
-                    value={service.servicesDischarged}
-                    onChange={(e) => {
-                      const newServices = [...outsourcedServices];
-                      newServices[index].servicesDischarged = e.target.value;
-                      setOutsourcedServices(newServices);
-                    }}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Male Persons</Label>
-                  <Input
-                    type="number"
-                    value={service.malePersons}
-                    onChange={(e) => {
-                      const newServices = [...outsourcedServices];
-                      newServices[index].malePersons = e.target.value;
-                      setOutsourcedServices(newServices);
-                    }}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Female Persons</Label>
-                  <Input
-                    type="number"
-                    value={service.femalePersons}
-                    onChange={(e) => {
-                      const newServices = [...outsourcedServices];
-                      newServices[index].femalePersons = e.target.value;
-                      setOutsourcedServices(newServices);
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
-          <Button variant="outline" onClick={addOutsourcedService} className="w-full">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Outsourced Service
-          </Button>
-        </div>
+        <OutsourcedServicesSection 
+          outsourcedServices={outsourcedServices} 
+          setOutsourcedServices={setOutsourcedServices} 
+        />
 
         <div className="space-y-2">
           <Label htmlFor="facilitiesList">17. List of major facilities/Units/Departments (Manufacturing, Laboratory, Cafeteria) provided by property owner in the office space (With number of each facility)</Label>
