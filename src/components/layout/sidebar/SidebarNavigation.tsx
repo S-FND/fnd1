@@ -8,21 +8,34 @@ import { StakeholdersSubmenu } from './StakeholdersSubmenu';
 import { ESGDDSubmenu } from './ESGDDSubmenu';
 import { ReportsSubmenu } from './ReportsSubmenu';
 
-export const SidebarNavigation: React.FC = () => {
+interface SidebarNavigationProps {
+  role?: string;
+  expandedMenus?: Record<string, boolean>;
+  toggleMenu?: (menuKey: string) => void;
+}
+
+export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
+  role: propRole,
+  expandedMenus: propExpandedMenus,
+  toggleMenu: propToggleMenu
+}) => {
   const { user } = useAuth();
   const location = useLocation();
-  const [expandedSubmenus, setExpandedSubmenus] = useState<Record<string, boolean>>({});
+  const [localExpandedSubmenus, setLocalExpandedSubmenus] = useState<Record<string, boolean>>({});
 
   if (!user) return null;
 
-  const navigationItems = getNavigationItems(user.role);
-
-  const toggleSubmenu = (name: string) => {
-    setExpandedSubmenus(prev => ({
+  // Use props if provided, otherwise use local state and user role
+  const role = propRole || user.role;
+  const expandedMenus = propExpandedMenus || localExpandedSubmenus;
+  const toggleMenu = propToggleMenu || ((name: string) => {
+    setLocalExpandedSubmenus(prev => ({
       ...prev,
       [name]: !prev[name]
     }));
-  };
+  });
+
+  const navigationItems = getNavigationItems(role);
 
   return (
     <SidebarGroup>
@@ -33,9 +46,9 @@ export const SidebarNavigation: React.FC = () => {
             return (
               <StakeholdersSubmenu
                 key={item.name}
-                isExpanded={expandedSubmenus['Stakeholders'] || false}
-                onToggle={() => toggleSubmenu('Stakeholders')}
-                role={user.role}
+                isExpanded={expandedMenus['stakeholders'] || false}
+                onToggle={() => toggleMenu('stakeholders')}
+                role={role}
               />
             );
           }
@@ -45,9 +58,8 @@ export const SidebarNavigation: React.FC = () => {
             return (
               <ESGDDSubmenu
                 key={item.name}
-                isExpanded={expandedSubmenus['ESG DD'] || false}
-                onToggle={() => toggleSubmenu('ESG DD')}
-                role={user.role}
+                isExpanded={expandedMenus['esgdd'] || false}
+                onToggle={() => toggleMenu('esgdd')}
               />
             );
           }
@@ -57,9 +69,8 @@ export const SidebarNavigation: React.FC = () => {
             return (
               <ReportsSubmenu
                 key={item.name}
-                isExpanded={expandedSubmenus['Reports'] || false}
-                onToggle={() => toggleSubmenu('Reports')}
-                role={user.role}
+                isExpanded={expandedMenus['reports'] || false}
+                onToggle={() => toggleMenu('reports')}
               />
             );
           }
