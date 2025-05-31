@@ -1,11 +1,11 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import MaterialityMatrix from './MaterialityMatrix';
-import TopicsByPriority from './TopicsByPriority';
 import MaterialTopicsTab from './MaterialTopicsTab';
+import TopicsByPriority from './TopicsByPriority';
 import MethodologyTab from './MethodologyTab';
 
 // Define allowed framework types
@@ -20,7 +20,7 @@ interface MaterialTopic {
   color: string;
   description: string;
   framework?: string;
-  industryRelevance?: string[];
+  isRisk?: boolean;
 }
 
 interface MaterialityTabsProps {
@@ -37,6 +37,7 @@ interface MaterialityTabsProps {
   activeFrameworks: Framework[];
   setActiveFrameworks: (frameworks: Framework[]) => void;
   onUpdateTopics?: (topics: MaterialTopic[]) => void;
+  onUpdateSelectedTopics?: (topics: MaterialTopic[]) => void;
 }
 
 const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
@@ -52,61 +53,67 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
   selectedIndustries,
   activeFrameworks,
   setActiveFrameworks,
-  onUpdateTopics
+  onUpdateTopics,
+  onUpdateSelectedTopics
 }) => {
-  const navigate = useNavigate();
-
-  const handleNavigateToESGMetrics = () => {
-    navigate('/esg-management');
-  };
-
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList>
-        <TabsTrigger value="matrix">Materiality Matrix</TabsTrigger>
-        <TabsTrigger value="topics">Material Topics</TabsTrigger>
-        <TabsTrigger value="methodology">Assessment Methodology</TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="matrix" className="space-y-6">
+      <div className="flex items-center justify-between">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="matrix">Materiality Matrix</TabsTrigger>
+          <TabsTrigger value="topics">
+            Topics Assessment
+            <Badge variant="secondary" className="ml-2">
+              {materialTopics.length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="priority">Priority Analysis</TabsTrigger>
+          <TabsTrigger value="methodology">Methodology</TabsTrigger>
+        </TabsList>
+
+        <div className="flex items-center space-x-2">
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Categories</SelectItem>
+              <SelectItem value="Environment">Environment</SelectItem>
+              <SelectItem value="Social">Social</SelectItem>
+              <SelectItem value="Governance">Governance</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <TabsContent value="matrix" className="space-y-4">
         <MaterialityMatrix 
+          data={materialityData}
           selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
-          materialityData={materialityData}
+        />
+      </TabsContent>
+
+      <TabsContent value="topics" className="space-y-4">
+        <MaterialTopicsTab 
+          materialTopics={materialTopics}
           activeFrameworks={activeFrameworks}
           setActiveFrameworks={setActiveFrameworks}
+          selectedIndustries={selectedIndustries}
+          onUpdateTopics={onUpdateTopics}
+          onUpdateSelectedTopics={onUpdateSelectedTopics}
         />
-        
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Topics By Priority</h2>
-          {materialTopics.length > 0 && (
-            <Button onClick={handleNavigateToESGMetrics}>
-              Set ESG Metrics for Materiality Topics
-            </Button>
-          )}
-        </div>
-        
+      </TabsContent>
+
+      <TabsContent value="priority" className="space-y-4">
         <TopicsByPriority 
           highPriorityTopics={highPriorityTopics}
           mediumPriorityTopics={mediumPriorityTopics}
           lowPriorityTopics={lowPriorityTopics}
         />
       </TabsContent>
-      
-      <TabsContent value="topics">
-        <MaterialTopicsTab 
-          materialTopics={materialTopics} 
-          activeFrameworks={activeFrameworks}
-          setActiveFrameworks={setActiveFrameworks}
-          onUpdateTopics={onUpdateTopics}
-        />
-      </TabsContent>
-      
-      <TabsContent value="methodology">
-        <MethodologyTab 
-          selectedIndustries={selectedIndustries}
-          frameworks={activeFrameworks}
-        />
+
+      <TabsContent value="methodology" className="space-y-4">
+        <MethodologyTab />
       </TabsContent>
     </Tabs>
   );

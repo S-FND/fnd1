@@ -37,6 +37,7 @@ const MaterialityPage = () => {
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [tempSelectedIndustries, setTempSelectedIndustries] = useState<string[]>([]);
   const [materialTopics, setMaterialTopics] = useState<MaterialTopic[]>([]);
+  const [selectedTopicsForEngagement, setSelectedTopicsForEngagement] = useState<MaterialTopic[]>([]);
   const [activeFrameworks, setActiveFrameworks] = useState<Framework[]>(['SASB', 'GRI', 'Custom']);
   
   // Update tempSelectedIndustries when selectedIndustries changes
@@ -158,6 +159,12 @@ const MaterialityPage = () => {
     setMaterialTopics(updatedTopics);
   };
 
+  // Handle updating selected topics for stakeholder engagement
+  const handleUpdateSelectedTopics = (selectedTopics: MaterialTopic[]) => {
+    setSelectedTopicsForEngagement(selectedTopics);
+    toast.info(`${selectedTopics.length} topics selected for stakeholder engagement`);
+  };
+
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -247,11 +254,12 @@ const MaterialityPage = () => {
             activeFrameworks={activeFrameworks}
             setActiveFrameworks={setActiveFrameworks}
             onUpdateTopics={handleUpdateTopics}
+            onUpdateSelectedTopics={handleUpdateSelectedTopics}
           />
           
           <StakeholderEngagement
             selectedIndustries={selectedIndustries}
-            materialTopics={materialTopics}
+            materialTopics={selectedTopicsForEngagement.length > 0 ? selectedTopicsForEngagement : materialTopics}
             onUpdatePrioritization={handleUpdatePrioritization}
           />
         </div>
