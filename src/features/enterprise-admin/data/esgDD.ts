@@ -1,3 +1,4 @@
+
 import { ESGCapItem, ESGDDReport, FundingStage, RegulatoryRequirement } from "../types/esgDD";
 
 export const fundingStagesDisplay: Record<FundingStage, string> = {
@@ -6,6 +7,7 @@ export const fundingStagesDisplay: Record<FundingStage, string> = {
   pre_series_a: 'Pre-Series A',
   series_a: 'Series A',
   series_b: 'Series B',
+  series_c: 'Series C',
   series_c_plus: 'Series C+',
   series_d_plus: 'Series D+',
   pre_ipo: 'Pre-IPO',
