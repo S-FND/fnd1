@@ -5,8 +5,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { getMetricsByTopic, getDefaultMetricTracking, ESGMetricWithTracking } from '../../data/esgMetricsData';
 import { toast } from 'sonner';
+import { Plus, Edit, Trash2, ExternalLink } from 'lucide-react';
 
 interface MaterialTopic {
   id: string;
@@ -27,9 +30,17 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
   const [selectedTopicId, setSelectedTopicId] = useState<string>('');
   const [availableMetrics, setAvailableMetrics] = useState<ESGMetricWithTracking[]>([]);
   const [selectedMetrics, setSelectedMetrics] = useState<ESGMetricWithTracking[]>([]);
-  const [customMetricName, setCustomMetricName] = useState<string>('');
-  const [customMetricDescription, setCustomMetricDescription] = useState<string>('');
-  const [customMetricUnit, setCustomMetricUnit] = useState<string>('');
+  const [editingMetric, setEditingMetric] = useState<ESGMetricWithTracking | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  
+  // Custom metric form state
+  const [customMetricForm, setCustomMetricForm] = useState({
+    name: '',
+    description: '',
+    unit: '',
+    dataType: 'Numeric' as 'Numeric' | 'Percentage' | 'Text' | 'Boolean',
+  });
 
   // Load metrics when topic changes
   useEffect(() => {
@@ -47,25 +58,54 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
     setSelectedMetrics([]);
   };
 
-  const handleToggleMetric = (metricId: string) => {
-    const updatedMetrics = availableMetrics.map(metric => {
-      if (metric.id === metricId) {
-        return { ...metric, isSelected: !metric.isSelected };
-      }
-      return metric;
-    });
-    
-    setAvailableMetrics(updatedMetrics);
+  const handleAddMetric = (metricId: string) => {
+    const metric = availableMetrics.find(m => m.id === metricId);
+    if (metric && !selectedMetrics.find(sm => sm.id === metricId)) {
+      setSelectedMetrics([...selectedMetrics, { ...metric, isSelected: true }]);
+      toast.success('Metric added to your selection');
+    }
   };
 
-  const handleSaveSelectedMetrics = () => {
-    const newSelectedMetrics = availableMetrics.filter(metric => metric.isSelected);
-    setSelectedMetrics(newSelectedMetrics);
-    toast.success(`${newSelectedMetrics.length} metrics selected for tracking`);
+  const handleRemoveMetric = (metricId: string) => {
+    setSelectedMetrics(selectedMetrics.filter(m => m.id !== metricId));
+    toast.success('Metric removed from selection');
+  };
+
+  const handleEditMetric = (metric: ESGMetricWithTracking) => {
+    setEditingMetric(metric);
+    setCustomMetricForm({
+      name: metric.name,
+      description: metric.description,
+      unit: metric.unit,
+      dataType: metric.dataType,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (editingMetric) {
+      setSelectedMetrics(metrics =>
+        metrics.map(m =>
+          m.id === editingMetric.id
+            ? {
+                ...m,
+                name: customMetricForm.name,
+                description: customMetricForm.description,
+                unit: customMetricForm.unit,
+                dataType: customMetricForm.dataType,
+              }
+            : m
+        )
+      );
+      toast.success('Metric updated successfully');
+      setIsEditDialogOpen(false);
+      setEditingMetric(null);
+      resetCustomMetricForm();
+    }
   };
 
   const handleAddCustomMetric = () => {
-    if (!customMetricName.trim() || !selectedTopicId) {
+    if (!customMetricForm.name.trim() || !selectedTopicId) {
       toast.error('Please enter a metric name and select a topic');
       return;
     }
@@ -75,347 +115,319 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
 
     const customMetric: ESGMetricWithTracking = {
       id: `custom_${Date.now()}`,
-      name: customMetricName,
-      description: customMetricDescription || 'Custom metric',
-      unit: customMetricUnit || 'N/A',
+      name: customMetricForm.name,
+      description: customMetricForm.description || 'Custom metric',
+      unit: customMetricForm.unit || 'N/A',
       source: 'Custom',
       framework: 'Custom',
       relatedTopic: selectedTopicId,
       category: selectedTopic.category === 'Environment' 
         ? 'Environmental' 
         : (selectedTopic.category as 'Social' | 'Governance'),
-      dataType: 'Numeric',
+      dataType: customMetricForm.dataType,
       collectionFrequency: 'Monthly',
       dataPoints: [],
       isSelected: true
     };
 
-    setAvailableMetrics([...availableMetrics, customMetric]);
-    setCustomMetricName('');
-    setCustomMetricDescription('');
-    setCustomMetricUnit('');
-    toast.success('Custom metric added');
+    setSelectedMetrics([...selectedMetrics, customMetric]);
+    setIsAddDialogOpen(false);
+    resetCustomMetricForm();
+    toast.success('Custom metric added successfully');
   };
 
-  const handleUpdateMetricData = (metricId: string, field: keyof ESGMetricWithTracking, value: any) => {
-    setSelectedMetrics(selectedMetrics.map(metric => {
-      if (metric.id === metricId) {
-        return { ...metric, [field]: value };
-      }
-      return metric;
-    }));
-  };
-
-  const handleAddDataPoint = (metricId: string, date: string, value: string) => {
-    if (!date || !value.trim()) {
-      toast.error('Please provide both date and value');
-      return;
-    }
-
-    setSelectedMetrics(selectedMetrics.map(metric => {
-      if (metric.id === metricId) {
-        const parsedValue = metric.dataType === 'Numeric' || metric.dataType === 'Percentage' 
-          ? parseFloat(value) 
-          : value;
-        
-        return {
-          ...metric,
-          dataPoints: [...metric.dataPoints, { date, value: parsedValue }]
-        };
-      }
-      return metric;
-    }));
-
-    toast.success('Data point added');
+  const resetCustomMetricForm = () => {
+    setCustomMetricForm({
+      name: '',
+      description: '',
+      unit: '',
+      dataType: 'Numeric',
+    });
   };
 
   const selectedTopic = materialTopics.find(topic => topic.id === selectedTopicId);
-
-  // Helper function to convert boolean values to strings for Input component
-  const convertValueForInput = (value: string | number | boolean | undefined): string | number => {
-    if (value === undefined || value === null) return '';
-    if (typeof value === 'boolean') return value ? 'true' : 'false';
-    return value;
-  };
 
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>ESG Metrics Management</CardTitle>
-          <CardDescription>Select material topics and define metrics for tracking</CardDescription>
+          <CardTitle>Select Material Topic</CardTitle>
+          <CardDescription>Choose a material topic to view recommended GIIN IRIS+ metrics</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Select Material Topic</label>
-              <Select value={selectedTopicId} onValueChange={handleSelectTopic}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a material topic" />
-                </SelectTrigger>
-                <SelectContent>
-                  {materialTopics.map(topic => (
-                    <SelectItem key={topic.id} value={topic.id}>
-                      {topic.name} ({topic.category})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {selectedTopic && (
-              <div className="p-4 bg-muted rounded-md">
-                <h3 className="font-medium mb-1">{selectedTopic.name}</h3>
-                <p className="text-sm text-muted-foreground">{selectedTopic.description}</p>
-              </div>
-            )}
-
-            {selectedTopicId && (
-              <>
-                <div className="border rounded-md p-4 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-medium">Available Metrics</h3>
-                    <Button onClick={handleSaveSelectedMetrics} size="sm">Save Selected</Button>
-                  </div>
-                  {availableMetrics.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-12">Select</TableHead>
-                          <TableHead>Metric Name</TableHead>
-                          <TableHead>Description</TableHead>
-                          <TableHead>Unit</TableHead>
-                          <TableHead>Source</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {availableMetrics.map(metric => (
-                          <TableRow key={metric.id}>
-                            <TableCell>
-                              <input 
-                                type="checkbox" 
-                                checked={metric.isSelected} 
-                                onChange={() => handleToggleMetric(metric.id)} 
-                                className="h-4 w-4"
-                              />
-                            </TableCell>
-                            <TableCell>{metric.name}</TableCell>
-                            <TableCell>{metric.description}</TableCell>
-                            <TableCell>{metric.unit}</TableCell>
-                            <TableCell>{metric.source}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <div className="text-center py-4 text-muted-foreground">
-                      No predefined metrics available for this topic. Add a custom metric.
-                    </div>
-                  )}
-                </div>
-
-                <div className="border rounded-md p-4 space-y-4">
-                  <h3 className="font-medium">Add Custom Metric</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Select value={selectedTopicId} onValueChange={handleSelectTopic}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a material topic from your materiality assessment" />
+            </SelectTrigger>
+            <SelectContent>
+              {materialTopics.map(topic => (
+                <SelectItem key={topic.id} value={topic.id}>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: topic.color }}
+                    />
                     <div>
-                      <label className="block text-sm font-medium mb-1">Name</label>
+                      <div className="font-medium">{topic.name}</div>
+                      <div className="text-xs text-muted-foreground">{topic.category}</div>
+                    </div>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+
+      {selectedTopic && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Recommended GIIN IRIS+ Metrics</CardTitle>
+                <CardDescription>
+                  Metrics recommended for: <strong>{selectedTopic.name}</strong>
+                  <a 
+                    href="https://iris.thegiin.org/metrics/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 ml-2 text-blue-600 hover:text-blue-800"
+                  >
+                    View IRIS+ Database <ExternalLink className="h-3 w-3" />
+                  </a>
+                </CardDescription>
+              </div>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Custom Metric
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add Custom Metric</DialogTitle>
+                    <DialogDescription>
+                      Create a custom metric for {selectedTopic.name}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Metric Name *</label>
                       <Input 
-                        value={customMetricName} 
-                        onChange={(e) => setCustomMetricName(e.target.value)} 
-                        placeholder="Metric name"
+                        value={customMetricForm.name} 
+                        onChange={(e) => setCustomMetricForm(prev => ({...prev, name: e.target.value}))} 
+                        placeholder="Enter metric name"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Description</label>
                       <Input 
-                        value={customMetricDescription} 
-                        onChange={(e) => setCustomMetricDescription(e.target.value)} 
-                        placeholder="Description"
+                        value={customMetricForm.description} 
+                        onChange={(e) => setCustomMetricForm(prev => ({...prev, description: e.target.value}))} 
+                        placeholder="Describe the metric"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Unit</label>
+                      <label className="block text-sm font-medium mb-1">Unit of Measurement</label>
                       <Input 
-                        value={customMetricUnit} 
-                        onChange={(e) => setCustomMetricUnit(e.target.value)} 
-                        placeholder="e.g., kg, %, $"
+                        value={customMetricForm.unit} 
+                        onChange={(e) => setCustomMetricForm(prev => ({...prev, unit: e.target.value}))} 
+                        placeholder="e.g., kg, %, hours, USD"
                       />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Data Type</label>
+                      <Select 
+                        value={customMetricForm.dataType} 
+                        onValueChange={(value: any) => setCustomMetricForm(prev => ({...prev, dataType: value}))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Numeric">Numeric</SelectItem>
+                          <SelectItem value="Percentage">Percentage</SelectItem>
+                          <SelectItem value="Text">Text</SelectItem>
+                          <SelectItem value="Boolean">Yes/No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={handleAddCustomMetric}>
+                        Add Metric
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex justify-end">
-                    <Button onClick={handleAddCustomMetric}>Add Custom Metric</Button>
-                  </div>
-                </div>
-              </>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {availableMetrics.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Metric Name</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Unit</TableHead>
+                    <TableHead>Framework</TableHead>
+                    <TableHead>Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {availableMetrics.map(metric => (
+                    <TableRow key={metric.id}>
+                      <TableCell className="font-medium">{metric.name}</TableCell>
+                      <TableCell className="text-sm">{metric.description}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{metric.unit}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{metric.framework}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleAddMetric(metric.id)}
+                          disabled={selectedMetrics.some(sm => sm.id === metric.id)}
+                        >
+                          {selectedMetrics.some(sm => sm.id === metric.id) ? 'Added' : 'Add'}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No predefined IRIS+ metrics available for this topic.</p>
+                <p className="text-sm">You can add custom metrics using the button above.</p>
+              </div>
             )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {selectedMetrics.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Selected Metrics for {selectedTopic?.name}</CardTitle>
-            <CardDescription>Configure baseline, targets and data collection</CardDescription>
+            <CardTitle>Selected Metrics ({selectedMetrics.length})</CardTitle>
+            <CardDescription>
+              Your chosen metrics for {selectedTopic?.name}. You can edit or remove metrics as needed.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-8">
-              {selectedMetrics.map(metric => (
-                <div key={metric.id} className="border rounded-md p-4 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <h3 className="font-medium">{metric.name}</h3>
-                      <p className="text-sm text-muted-foreground">{metric.description} ({metric.unit})</p>
-                    </div>
-                    <div className="text-sm px-2 py-1 bg-muted rounded-full">
-                      {metric.source}
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="text-sm font-medium mb-2">Baseline Data</h4>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-xs mb-1">Date</label>
-                          <Input 
-                            type="date" 
-                            value={metric.baselineDate || ''} 
-                            onChange={(e) => handleUpdateMetricData(metric.id, 'baselineDate', e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs mb-1">Value ({metric.unit})</label>
-                          <Input 
-                            type={metric.dataType === 'Numeric' || metric.dataType === 'Percentage' ? 'number' : 'text'} 
-                            value={convertValueForInput(metric.baselineValue)} 
-                            onChange={(e) => handleUpdateMetricData(
-                              metric.id, 
-                              'baselineValue', 
-                              metric.dataType === 'Numeric' || metric.dataType === 'Percentage' 
-                                ? parseFloat(e.target.value) 
-                                : e.target.value
-                            )}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="text-sm font-medium mb-2">Target Data</h4>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-xs mb-1">Date</label>
-                          <Input 
-                            type="date" 
-                            value={metric.targetDate || ''} 
-                            onChange={(e) => handleUpdateMetricData(metric.id, 'targetDate', e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs mb-1">Value ({metric.unit})</label>
-                          <Input 
-                            type={metric.dataType === 'Numeric' || metric.dataType === 'Percentage' ? 'number' : 'text'} 
-                            value={convertValueForInput(metric.targetValue)} 
-                            onChange={(e) => handleUpdateMetricData(
-                              metric.id, 
-                              'targetValue', 
-                              metric.dataType === 'Numeric' || metric.dataType === 'Percentage' 
-                                ? parseFloat(e.target.value) 
-                                : e.target.value
-                            )}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Data Collection Frequency</h4>
-                    <Select 
-                      value={metric.collectionFrequency} 
-                      onValueChange={(value) => handleUpdateMetricData(
-                        metric.id, 
-                        'collectionFrequency', 
-                        value as ESGMetricWithTracking['collectionFrequency']
-                      )}
-                    >
-                      <SelectTrigger className="w-full md:w-1/3">
-                        <SelectValue placeholder="Select frequency" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Daily">Daily</SelectItem>
-                        <SelectItem value="Weekly">Weekly</SelectItem>
-                        <SelectItem value="Monthly">Monthly</SelectItem>
-                        <SelectItem value="Quarterly">Quarterly</SelectItem>
-                        <SelectItem value="Bi-Annually">Bi-Annually</SelectItem>
-                        <SelectItem value="Annually">Annually</SelectItem>
-                        <SelectItem value="Never">Never</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">Data Points</h4>
-                    <div className="grid grid-cols-3 gap-2 mb-2">
-                      <div>
-                        <Input 
-                          type="date" 
-                          id={`data-date-${metric.id}`} 
-                          placeholder="Date" 
-                        />
-                      </div>
-                      <div>
-                        <Input 
-                          type={metric.dataType === 'Numeric' || metric.dataType === 'Percentage' ? 'number' : 'text'} 
-                          id={`data-value-${metric.id}`} 
-                          placeholder={`Value (${metric.unit})`} 
-                        />
-                      </div>
-                      <div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Metric Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Unit</TableHead>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {selectedMetrics.map(metric => (
+                  <TableRow key={metric.id}>
+                    <TableCell className="font-medium">{metric.name}</TableCell>
+                    <TableCell className="text-sm">{metric.description}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{metric.unit}</TableCell>
+                    <TableCell>
+                      <Badge variant={metric.source === 'Custom' ? 'secondary' : 'outline'}>
+                        {metric.source}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
                         <Button 
-                          onClick={() => {
-                            const dateInput = document.getElementById(`data-date-${metric.id}`) as HTMLInputElement;
-                            const valueInput = document.getElementById(`data-value-${metric.id}`) as HTMLInputElement;
-                            handleAddDataPoint(metric.id, dateInput.value, valueInput.value);
-                            dateInput.value = '';
-                            valueInput.value = '';
-                          }}
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleEditMetric(metric)}
                         >
-                          Add
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleRemoveMetric(metric.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
-                    </div>
-
-                    {metric.dataPoints.length > 0 ? (
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Value</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {metric.dataPoints.map((point, index) => (
-                            <TableRow key={`${metric.id}-point-${index}`}>
-                              <TableCell>{point.date}</TableCell>
-                              <TableCell>{point.value} {metric.unit}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    ) : (
-                      <div className="text-center py-2 text-sm text-muted-foreground">
-                        No data points added yet
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       )}
+
+      {/* Edit Metric Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Metric</DialogTitle>
+            <DialogDescription>
+              Modify the metric details
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Metric Name *</label>
+              <Input 
+                value={customMetricForm.name} 
+                onChange={(e) => setCustomMetricForm(prev => ({...prev, name: e.target.value}))} 
+                placeholder="Enter metric name"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Description</label>
+              <Input 
+                value={customMetricForm.description} 
+                onChange={(e) => setCustomMetricForm(prev => ({...prev, description: e.target.value}))} 
+                placeholder="Describe the metric"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Unit of Measurement</label>
+              <Input 
+                value={customMetricForm.unit} 
+                onChange={(e) => setCustomMetricForm(prev => ({...prev, unit: e.target.value}))} 
+                placeholder="e.g., kg, %, hours, USD"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Data Type</label>
+              <Select 
+                value={customMetricForm.dataType} 
+                onValueChange={(value: any) => setCustomMetricForm(prev => ({...prev, dataType: value}))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Numeric">Numeric</SelectItem>
+                  <SelectItem value="Percentage">Percentage</SelectItem>
+                  <SelectItem value="Text">Text</SelectItem>
+                  <SelectItem value="Boolean">Yes/No</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit}>
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

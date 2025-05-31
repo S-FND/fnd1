@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ESGMetricsManager from '../components/esg-metrics/ESGMetricsManager';
+import MetricsAssignment from '../components/esg-metrics/MetricsAssignment';
 
 // Import sample material topics for development
 import { defaultMaterialTopics } from '../data/materiality';
@@ -53,33 +54,24 @@ const ESGManagementPage = () => {
       <SidebarLayout>
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">ESG Management</h1>
+            <h1 className="text-2xl font-bold tracking-tight">ESG Metrics Management</h1>
             <p className="text-muted-foreground">
-              Manage ESG metrics, goals, and performance based on materiality assessment
+              Select and configure ESG metrics based on your materiality assessment, then assign them to team members for data collection
             </p>
           </div>
           
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
-              <TabsTrigger value="metrics">ESG Metrics</TabsTrigger>
-              <TabsTrigger value="goals">ESG Goals</TabsTrigger>
-              <TabsTrigger value="performance">Performance Tracking</TabsTrigger>
+              <TabsTrigger value="metrics">Metrics Configuration</TabsTrigger>
+              <TabsTrigger value="assignment">Metrics Assignment</TabsTrigger>
             </TabsList>
             
             <TabsContent value="metrics" className="space-y-6 mt-4">
               <ESGMetricsManager materialTopics={prioritizedTopics} />
             </TabsContent>
             
-            <TabsContent value="goals" className="space-y-6 mt-4">
-              <div className="p-8 text-center text-muted-foreground">
-                <p>ESG Goals management module will be implemented in the next phase.</p>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="performance" className="space-y-6 mt-4">
-              <div className="p-8 text-center text-muted-foreground">
-                <p>Performance tracking module will be implemented in the next phase.</p>
-              </div>
+            <TabsContent value="assignment" className="space-y-6 mt-4">
+              <MetricsAssignment materialTopics={prioritizedTopics} />
             </TabsContent>
           </Tabs>
         </div>
