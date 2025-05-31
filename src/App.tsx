@@ -44,6 +44,7 @@ import CategoriesPage from './features/enterprise-admin/pages/stakeholders/Categ
 import EngagementPlanPage from './features/enterprise-admin/pages/stakeholders/EngagementPlanPage';
 import ESGManagementPage from './features/enterprise-admin/pages/ESGManagement';
 import TeamManagementPage from './features/enterprise-admin/pages/TeamManagement';
+import CompanyProfilePage from './pages/CompanyProfile';
 
 function App() {
   return (
@@ -54,6 +55,7 @@ function App() {
       
       {/* Company / Enterprise Admin Routes */}
       <Route path="/dashboard" element={<EnhancedDashboard />} />
+      <Route path="/company" element={<CompanyProfilePage />} />
       <Route path="/materiality" element={<MaterialityPage />} />
       <Route path="/esg" element={<ESGPage />} />
       <Route path="/esg-dd" element={<ESGDDPage />} />
