@@ -1,4 +1,3 @@
-
 // Define the types for ESG metrics
 export interface ESGMetric {
   id: string;
@@ -9,7 +8,7 @@ export interface ESGMetric {
   framework: string;
   relatedTopic: string;
   category: 'Environmental' | 'Social' | 'Governance';
-  dataType: 'Numeric' | 'Percentage' | 'Text' | 'Boolean' | 'Date';
+  dataType: 'Numeric' | 'Percentage' | 'Text' | 'Boolean';
 }
 
 export interface ESGMetricWithTracking extends ESGMetric {
