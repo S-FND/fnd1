@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, HelpCircle, Search, User } from 'lucide-react';
@@ -10,7 +11,7 @@ export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
   
   return (
-    <header className="border-b sticky top-0 z-50 bg-background">
+    <header className="border-b sticky top-0 z-30 bg-background">
       <div className="flex h-16 items-center px-4 md:px-6">
         {/* Search and Right Actions */}
         <div className="ml-auto flex items-center gap-4">
@@ -28,7 +29,7 @@ export const Navbar: React.FC = () => {
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
+            <DropdownMenuContent align="end" className="w-80 z-20">
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <div className="max-h-[300px] overflow-auto">
@@ -57,7 +58,7 @@ export const Navbar: React.FC = () => {
                   <User className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="z-20">
                 <DropdownMenuLabel>
                   <div>
                     <p>{user.name}</p>
@@ -81,3 +82,4 @@ export const Navbar: React.FC = () => {
     </header>
   );
 };
+

@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -23,13 +24,13 @@ export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({
         <UnifiedSidebar />
         <div className="flex-1">
           {/* Minimal header with just the sidebar trigger */}
-          <header className="border-b sticky top-0 z-50 bg-background">
+          <header className="border-b sticky top-0 z-40 bg-background">
             <div className="flex h-16 items-center px-4 md:px-6">
               <SidebarTrigger />
             </div>
           </header>
           
-          <main className="p-4 md:p-6">
+          <main className="p-4 md:p-6 relative z-10">
             {children}
           </main>
         </div>
