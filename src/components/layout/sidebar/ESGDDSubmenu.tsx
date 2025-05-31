@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { FileSearch } from 'lucide-react';
@@ -51,6 +52,13 @@ export const ESGDDSubmenu: React.FC<ESGDDSubmenuProps> = ({
         <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/irl'} tooltip="Information Request List">
           <Link to="/esg-dd/irl" className="w-full">
             <span>IRL</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/advanced'} tooltip="Advanced IRL">
+          <Link to="/esg-dd/advanced" className="w-full">
+            <span>Advanced IRL</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
