@@ -12,8 +12,8 @@ interface AssignedMetric {
   unit: string;
   category: string;
   topicId: string;
-  assignedTo: string;
-  assignmentLevel: string;
+  assignedTo: string | null;
+  assignmentLevel: string | null;
 }
 
 interface AssignedMetricsTableProps {

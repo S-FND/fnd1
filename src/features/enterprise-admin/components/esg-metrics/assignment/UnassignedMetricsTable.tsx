@@ -13,8 +13,8 @@ interface UnassignedMetric {
   unit: string;
   category: string;
   topicId: string;
-  assignedTo: null;
-  assignmentLevel: null;
+  assignedTo: string | null;
+  assignmentLevel: string | null;
 }
 
 interface AssigneeOption {
