@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
-import CompanyProfile from '@/features/enterprise-admin/components/profile/CompanyProfile';
+import EditableCompanyProfile from '@/features/enterprise-admin/components/profile/EditableCompanyProfile';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
@@ -24,10 +24,10 @@ const CompanyProfilePage = () => {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Company Profile</h1>
           <p className="text-muted-foreground">
-            Overview of company information, locations, and key metrics
+            Manage company information, locations, and key metrics
           </p>
         </div>
-        <CompanyProfile />
+        <EditableCompanyProfile />
       </div>
     </UnifiedSidebarLayout>
   );
