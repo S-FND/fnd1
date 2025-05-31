@@ -16,6 +16,8 @@ export const StageSelection: React.FC<StageSelectionProps> = ({ onStageSelect })
     'series_a',
     'series_b',
     'series_c_plus',
+    'series_d_plus',
+    'pre_ipo',
     'ipo'
   ];
 
@@ -26,15 +28,21 @@ export const StageSelection: React.FC<StageSelectionProps> = ({ onStageSelect })
       case 'seed':
         return 'Product development and early market entry, basic regulatory compliance needed';
       case 'pre_series_a':
-        return 'Established product with some traction, growing regulatory requirements';
+        return 'Product-market fit validation, preparing for significant growth and investment';
       case 'series_a':
         return 'Scaling operations, increased regulatory scrutiny across ESG parameters';
       case 'series_b':
         return 'Significant business scale, comprehensive ESG framework required';
       case 'series_c_plus':
         return 'Mature operation with complex operations, advanced ESG practices expected';
+      case 'series_d_plus':
+        return 'Late-stage growth company, extensive ESG governance and reporting required';
+      case 'pre_ipo':
+        return 'IPO preparation stage, comprehensive ESG disclosure and compliance framework needed';
       case 'ipo':
         return 'Public market readiness, extensive ESG disclosure and compliance required';
+      default:
+        return 'Select appropriate funding stage for ESG assessment';
     }
   };
 

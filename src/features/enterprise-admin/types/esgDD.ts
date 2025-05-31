@@ -1,12 +1,17 @@
-
 export type FundingStage = 
   | 'pre_seed'
   | 'seed'
   | 'pre_series_a'
   | 'series_a'
   | 'series_b'
+  | 'series_c'
   | 'series_c_plus'
-  | 'ipo';
+  | 'series_d_plus'
+  | 'pre_ipo'
+  | 'ipo'
+  | 'public_listed'
+  | 'bootstrapped'
+  | 'government_funded';
 
 export type ESGCategory = 'environmental' | 'social' | 'governance';
 

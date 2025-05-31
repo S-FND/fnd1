@@ -1,4 +1,3 @@
-
 import { ESGCapItem, ESGDDReport, FundingStage, RegulatoryRequirement } from "../types/esgDD";
 
 export const fundingStagesDisplay: Record<FundingStage, string> = {
@@ -8,7 +7,12 @@ export const fundingStagesDisplay: Record<FundingStage, string> = {
   series_a: 'Series A',
   series_b: 'Series B',
   series_c_plus: 'Series C+',
-  ipo: 'IPO'
+  series_d_plus: 'Series D+',
+  pre_ipo: 'Pre-IPO',
+  ipo: 'IPO',
+  public_listed: 'Public Listed',
+  bootstrapped: 'Bootstrapped',
+  government_funded: 'Government Funded'
 };
 
 export const mockESGDDReports: ESGDDReport[] = [

@@ -2,13 +2,13 @@
 export const fundingStageOptions = [
   'Pre-Seed',
   'Seed',
+  'Pre-Series A',
   'Series A',
   'Series B',
   'Series C',
   'Series D+',
   'Pre-IPO',
   'Public Listed',
-  'Private Equity',
   'Bootstrapped',
   'Government Funded'
 ];
