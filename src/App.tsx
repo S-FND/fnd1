@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { FeaturesProvider } from '@/context/FeaturesContext';
 import './App.css';
 import Index from './pages/Index';
 import Login from './pages/Login';
@@ -45,67 +46,71 @@ import EngagementPlanPage from './features/enterprise-admin/pages/stakeholders/E
 import ESGManagementPage from './features/enterprise-admin/pages/ESGManagement';
 import TeamManagementPage from './features/enterprise-admin/pages/TeamManagement';
 import CompanyProfilePage from './pages/CompanyProfile';
+import FeatureManagementPage from './pages/FeatureManagement';
 
 function App() {
   return (
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<Index />} />
-      <Route path="/login" element={<Login />} />
-      
-      {/* Company / Enterprise Admin Routes */}
-      <Route path="/dashboard" element={<EnhancedDashboard />} />
-      <Route path="/company" element={<CompanyProfilePage />} />
-      <Route path="/materiality" element={<MaterialityPage />} />
-      <Route path="/esg" element={<ESGPage />} />
-      <Route path="/esg-dd" element={<ESGDDPage />} />
-      <Route path="/esg-dd/reports" element={<ESGDDReportsPage />} />
-      <Route path="/esg-dd/manual" element={<ManualESGDDPage />} />
-      <Route path="/esg-dd/automated" element={<AutomatedESGDDPage />} />
-      <Route path="/esg-dd/cap" element={<ESGCapPage />} />
-      <Route path="/esg-dd/irl" element={<IRLPage />} />
-      <Route path="/ghg-accounting" element={<GHGAccountingPage />} />
-      <Route path="/compliance" element={<Compliance />} />
-      <Route path="/reports" element={<ReportsPage />} />
-      <Route path="/reports/brsr" element={<BRSRReport />} />
-      <Route path="/reports/gri" element={<GRIReport />} />
-      <Route path="/reports/tcfd" element={<TCFDReport />} />
-      <Route path="/reports/impact" element={<ImpactReport />} />
-      
-      {/* Stakeholder Management Routes */}
-      <Route path="/stakeholders" element={<StakeholdersOverviewPage />} />
-      <Route path="/stakeholders/manage" element={<ManageStakeholdersPage />} />
-      <Route path="/stakeholders/categories" element={<CategoriesPage />} />
-      <Route path="/stakeholders/engagement" element={<EngagementPlanPage />} />
-      
-      <Route path="/units" element={<Units />} />
-      <Route path="/team-management" element={<TeamManagementPage />} />
-      <Route path="/ehs-trainings" element={<EHSTrainings />} />
-      <Route path="/ehs-trainings/:id" element={<EHSTrainingDetails />} />
-      <Route path="/audit" element={<AuditDashboardPage />} />
-      <Route path="/audit/:id" element={<AuditChecklistPage />} />
-      
-      {/* Employee Routes */}
-      <Route path="/employee/dashboard" element={<EmployeeDashboardPage />} />
-      <Route path="/personal-dashboard" element={<EnhancedEmployeeDashboard />} />
-      <Route path="/personal-ghg" element={<PersonalGHGPage />} />
-      
-      {/* Unit Admin Routes */}
-      <Route path="/unit/ghg-accounting" element={<UnitGHGAccountingPage />} />
-      
-      {/* Supplier Routes */}
-      <Route path="/supplier/dashboard" element={<SupplierDashboardPage />} />
-      <Route path="/supplier/audit-response/:id" element={<SupplierAuditResponsePage />} />
-      
-      {/* Vendor Routes */}
-      <Route path="/vendor/dashboard" element={<VendorDashboard />} />
-      <Route path="/vendor/profile" element={<VendorProfile />} />
-      <Route path="/vendor/bids" element={<VendorBids />} />
-      <Route path="/vendor/bids/new" element={<VendorBidForm />} />
-      <Route path="/vendor/trainings" element={<VendorTrainings />} />
-      
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <FeaturesProvider>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        
+        {/* Company / Enterprise Admin Routes */}
+        <Route path="/dashboard" element={<EnhancedDashboard />} />
+        <Route path="/company" element={<CompanyProfilePage />} />
+        <Route path="/materiality" element={<MaterialityPage />} />
+        <Route path="/esg" element={<ESGPage />} />
+        <Route path="/esg-dd" element={<ESGDDPage />} />
+        <Route path="/esg-dd/reports" element={<ESGDDReportsPage />} />
+        <Route path="/esg-dd/manual" element={<ManualESGDDPage />} />
+        <Route path="/esg-dd/automated" element={<AutomatedESGDDPage />} />
+        <Route path="/esg-dd/cap" element={<ESGCapPage />} />
+        <Route path="/esg-dd/irl" element={<IRLPage />} />
+        <Route path="/ghg-accounting" element={<GHGAccountingPage />} />
+        <Route path="/compliance" element={<Compliance />} />
+        <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/reports/brsr" element={<BRSRReport />} />
+        <Route path="/reports/gri" element={<GRIReport />} />
+        <Route path="/reports/tcfd" element={<TCFDReport />} />
+        <Route path="/reports/impact" element={<ImpactReport />} />
+        
+        {/* Stakeholder Management Routes */}
+        <Route path="/stakeholders" element={<StakeholdersOverviewPage />} />
+        <Route path="/stakeholders/manage" element={<ManageStakeholdersPage />} />
+        <Route path="/stakeholders/categories" element={<CategoriesPage />} />
+        <Route path="/stakeholders/engagement" element={<EngagementPlanPage />} />
+        
+        <Route path="/units" element={<Units />} />
+        <Route path="/team-management" element={<TeamManagementPage />} />
+        <Route path="/ehs-trainings" element={<EHSTrainings />} />
+        <Route path="/ehs-trainings/:id" element={<EHSTrainingDetails />} />
+        <Route path="/audit" element={<AuditDashboardPage />} />
+        <Route path="/audit/:id" element={<AuditChecklistPage />} />
+        <Route path="/settings" element={<FeatureManagementPage />} />
+        
+        {/* Employee Routes */}
+        <Route path="/employee/dashboard" element={<EmployeeDashboardPage />} />
+        <Route path="/personal-dashboard" element={<EnhancedEmployeeDashboard />} />
+        <Route path="/personal-ghg" element={<PersonalGHGPage />} />
+        
+        {/* Unit Admin Routes */}
+        <Route path="/unit/ghg-accounting" element={<UnitGHGAccountingPage />} />
+        
+        {/* Supplier Routes */}
+        <Route path="/supplier/dashboard" element={<SupplierDashboardPage />} />
+        <Route path="/supplier/audit-response/:id" element={<SupplierAuditResponsePage />} />
+        
+        {/* Vendor Routes */}
+        <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+        <Route path="/vendor/profile" element={<VendorProfile />} />
+        <Route path="/vendor/bids" element={<VendorBids />} />
+        <Route path="/vendor/bids/new" element={<VendorBidForm />} />
+        <Route path="/vendor/trainings" element={<VendorTrainings />} />
+        
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </FeaturesProvider>
   );
 }
 
