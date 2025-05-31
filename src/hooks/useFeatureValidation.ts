@@ -22,8 +22,12 @@ export const useFeatureValidation = () => {
       });
     });
 
-    // Check for orphaned dependents
-    selectedFeatures.forEach(featureId => {
+    // Check for orphaned dependents - when removing a feature, warn about dependent features
+    const featuresToRemove = features
+      .filter(f => f.isDefault ? false : !selectedFeatures.includes(f.id))
+      .map(f => f.id);
+
+    featuresToRemove.forEach(featureId => {
       const feature = features.find(f => f.id === featureId);
       if (!feature) return;
 
@@ -65,8 +69,22 @@ export const useFeatureValidation = () => {
     return [...new Set(fixedFeatures)];
   };
 
+  const getAvailableFeatures = (currentFeatures: FeatureId[]): FeatureId[] => {
+    // Return features that can be enabled based on current selection
+    return features
+      .filter(feature => {
+        // Always allow default features
+        if (feature.isDefault) return true;
+        
+        // Check if all dependencies are met
+        return feature.dependencies.every(depId => currentFeatures.includes(depId));
+      })
+      .map(f => f.id);
+  };
+
   return {
     validateFeatureSelection,
-    autoFixFeatureSelection
+    autoFixFeatureSelection,
+    getAvailableFeatures
   };
 };

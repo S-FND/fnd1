@@ -14,13 +14,13 @@ import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { features, getFeaturesByCategory } from '@/data/features';
 import { FeatureId } from '@/types/features';
 import { toast } from 'sonner';
-import { AlertTriangle, CheckCircle, Info } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Info, Lock } from 'lucide-react';
 
 const FeatureManagementPage = () => {
   const { isLoading } = useRouteProtection(['admin']);
   const { user, isAuthenticated } = useAuth();
   const { companyFeatures, isFeatureActive, updateFeatures } = useFeatures();
-  const { validateFeatureSelection, autoFixFeatureSelection } = useFeatureValidation();
+  const { validateFeatureSelection, autoFixFeatureSelection, getAvailableFeatures } = useFeatureValidation();
   
   const [pendingFeatures, setPendingFeatures] = useState<FeatureId[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
@@ -79,6 +79,7 @@ const FeatureManagementPage = () => {
   };
 
   const validation = validateFeatureSelection(pendingFeatures);
+  const availableFeatures = getAvailableFeatures(pendingFeatures);
   const categorizedFeatures = {
     core: getFeaturesByCategory('core'),
     operations: getFeaturesByCategory('operations'),
@@ -140,6 +141,7 @@ const FeatureManagementPage = () => {
                 {categoryFeatures.map((feature) => {
                   const isPending = pendingFeatures.includes(feature.id);
                   const isCurrentlyActive = isFeatureActive(feature.id);
+                  const isAvailable = availableFeatures.includes(feature.id);
                   const activationDate = companyFeatures?.activationDates[feature.id];
                   
                   return (
@@ -154,6 +156,12 @@ const FeatureManagementPage = () => {
                             <Badge variant="outline" className="text-green-600">
                               <CheckCircle className="h-3 w-3 mr-1" />
                               Active
+                            </Badge>
+                          )}
+                          {!isAvailable && !feature.isDefault && !isPending && (
+                            <Badge variant="outline" className="text-gray-500">
+                              <Lock className="h-3 w-3 mr-1" />
+                              Requires Dependencies
                             </Badge>
                           )}
                         </div>
@@ -177,7 +185,7 @@ const FeatureManagementPage = () => {
                       <Switch
                         checked={isPending}
                         onCheckedChange={(enabled) => handleFeatureToggle(feature.id, enabled)}
-                        disabled={feature.isDefault}
+                        disabled={feature.isDefault || (!isAvailable && !isPending)}
                       />
                     </div>
                   );
