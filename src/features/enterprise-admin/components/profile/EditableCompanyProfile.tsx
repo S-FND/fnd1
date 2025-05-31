@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,6 +17,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const companySchema = z.object({
   name: z.string().min(1, 'Company name is required'),
@@ -39,6 +45,78 @@ const companySchema = z.object({
 });
 
 type CompanyFormData = z.infer<typeof companySchema>;
+
+// Dropdown options
+const fundingStageOptions = [
+  'Pre-Seed',
+  'Seed',
+  'Series A',
+  'Series B',
+  'Series C',
+  'Series D+',
+  'Pre-IPO',
+  'Public Listed',
+  'Private Equity',
+  'Bootstrapped',
+  'Government Funded'
+];
+
+const employeeStrengthOptions = [
+  '1-10',
+  '11-50',
+  '51-200',
+  '201-500',
+  '501-1000',
+  '1001-5000',
+  '5001-10000',
+  '10000+',
+  '2,500+',
+  '5,000+',
+  '10,000+'
+];
+
+const financialYearOptions = [
+  '2020-21',
+  '2021-22',
+  '2022-23',
+  '2023-24',
+  '2024-25',
+  '2025-26'
+];
+
+const listedOnOptions = [
+  'Not Listed',
+  'National Stock Exchange of India (NSE)',
+  'Bombay Stock Exchange (BSE)',
+  'National Stock Exchange of India (NSE) and Bombay Stock Exchange (BSE)',
+  'NASDAQ',
+  'NYSE',
+  'London Stock Exchange',
+  'Other International Exchange'
+];
+
+const industryOptions = [
+  'Technology',
+  'Healthcare',
+  'Finance & Banking',
+  'Manufacturing',
+  'Retail & E-commerce',
+  'Real Estate',
+  'Education',
+  'Transportation',
+  'Logistics & Transportation',
+  'Energy & Utilities',
+  'Agriculture',
+  'Hospitality & Tourism',
+  'Media & Entertainment',
+  'Telecommunications',
+  'Construction',
+  'Pharmaceutical',
+  'Automotive',
+  'Food & Beverage',
+  'Consulting',
+  'Other'
+];
 
 const EditableCompanyProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -199,9 +277,20 @@ const EditableCompanyProfile = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Industry</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select industry" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {industryOptions.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -255,9 +344,20 @@ const EditableCompanyProfile = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Financial Year</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select financial year" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {financialYearOptions.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -283,9 +383,20 @@ const EditableCompanyProfile = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Employee Strength</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select employee strength" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {employeeStrengthOptions.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -297,9 +408,20 @@ const EditableCompanyProfile = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Funding Stage</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select funding stage" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {fundingStageOptions.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -311,9 +433,20 @@ const EditableCompanyProfile = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Listed On</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select exchange" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {listedOnOptions.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
