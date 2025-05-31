@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -155,12 +154,12 @@ const IRLCompanyInformation = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="industry">Type of Industry</Label>
+              <Label htmlFor="industry">Industry</Label>
               <Input
                 id="industry"
                 value={formData.industry}
                 onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                placeholder="Enter Type of Industry"
+                placeholder="Enter Industry"
               />
             </div>
             
