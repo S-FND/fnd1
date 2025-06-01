@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Navbar } from '@/components/layout/Navbar';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -30,74 +29,71 @@ const IRLPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
-      <UnifiedSidebarLayout>
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Information Request List (IRL)</h1>
-            <p className="text-muted-foreground">
-              Complete the comprehensive information request forms for ESG due diligence.
-            </p>
-          </div>
-          
-          <Tabs defaultValue="company" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10">
-              <TabsTrigger value="company">Company</TabsTrigger>
-              <TabsTrigger value="hr">HR</TabsTrigger>
-              <TabsTrigger value="business">Business</TabsTrigger>
-              <TabsTrigger value="photographs">Photos</TabsTrigger>
-              <TabsTrigger value="compliance">Compliance</TabsTrigger>
-              <TabsTrigger value="management">Management</TabsTrigger>
-              <TabsTrigger value="itsecurity">IT Security</TabsTrigger>
-              <TabsTrigger value="warehouse">Warehouse</TabsTrigger>
-              <TabsTrigger value="facility">Facility</TabsTrigger>
-              <TabsTrigger value="governance">Governance</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="company">
-              <IRLCompanyInformation />
-            </TabsContent>
-            
-            <TabsContent value="hr">
-              <IRLHRInformation />
-            </TabsContent>
-
-            <TabsContent value="business">
-              <IRLBusinessOperations />
-            </TabsContent>
-
-            <TabsContent value="photographs">
-              <IRLPhotographs />
-            </TabsContent>
-
-            <TabsContent value="compliance">
-              <IRLCompliance />
-            </TabsContent>
-
-            <TabsContent value="management">
-              <IRLManagement />
-            </TabsContent>
-
-            <TabsContent value="itsecurity">
-              <IRLITSecurity />
-            </TabsContent>
-
-            <TabsContent value="warehouse">
-              <IRLWarehouse />
-            </TabsContent>
-
-            <TabsContent value="facility">
-              <IRLAdditionalFacility />
-            </TabsContent>
-
-            <TabsContent value="governance">
-              <IRLGovernance />
-            </TabsContent>
-          </Tabs>
+    <UnifiedSidebarLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Information Request List (IRL)</h1>
+          <p className="text-muted-foreground">
+            Complete the comprehensive information request forms for ESG due diligence.
+          </p>
         </div>
-      </UnifiedSidebarLayout>
-    </div>
+        
+        <Tabs defaultValue="company" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10">
+            <TabsTrigger value="company">Company</TabsTrigger>
+            <TabsTrigger value="hr">HR</TabsTrigger>
+            <TabsTrigger value="business">Business</TabsTrigger>
+            <TabsTrigger value="photographs">Photos</TabsTrigger>
+            <TabsTrigger value="compliance">Compliance</TabsTrigger>
+            <TabsTrigger value="management">Management</TabsTrigger>
+            <TabsTrigger value="itsecurity">IT Security</TabsTrigger>
+            <TabsTrigger value="warehouse">Warehouse</TabsTrigger>
+            <TabsTrigger value="facility">Facility</TabsTrigger>
+            <TabsTrigger value="governance">Governance</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="company">
+            <IRLCompanyInformation />
+          </TabsContent>
+          
+          <TabsContent value="hr">
+            <IRLHRInformation />
+          </TabsContent>
+
+          <TabsContent value="business">
+            <IRLBusinessOperations />
+          </TabsContent>
+
+          <TabsContent value="photographs">
+            <IRLPhotographs />
+          </TabsContent>
+
+          <TabsContent value="compliance">
+            <IRLCompliance />
+          </TabsContent>
+
+          <TabsContent value="management">
+            <IRLManagement />
+          </TabsContent>
+
+          <TabsContent value="itsecurity">
+            <IRLITSecurity />
+          </TabsContent>
+
+          <TabsContent value="warehouse">
+            <IRLWarehouse />
+          </TabsContent>
+
+          <TabsContent value="facility">
+            <IRLAdditionalFacility />
+          </TabsContent>
+
+          <TabsContent value="governance">
+            <IRLGovernance />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </UnifiedSidebarLayout>
   );
 };
 
