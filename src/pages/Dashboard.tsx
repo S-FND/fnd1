@@ -4,12 +4,14 @@ import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import AdminDashboard from '@/components/dashboard/AdminDashboard';
 import EmployeeDashboard from '@/components/dashboard/EmployeeDashboard';
 import { useAuth } from '@/context/AuthContext';
+import { useFeatures } from '@/context/FeaturesContext';
 import { Navigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const { user, isAuthenticated, isCompanyUser, isEmployeeUser, isLoading } = useAuth();
+  const { isLoading: featuresLoading } = useFeatures();
 
-  if (isLoading) {
+  if (isLoading || featuresLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 

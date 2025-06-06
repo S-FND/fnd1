@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -68,24 +67,29 @@ export const useAuthProvider = () => {
   };
 
   const redirectBasedOnRole = (role: string) => {
+    // Check if there's a redirect from location state
+    const from = location.state?.from;
+    
     switch(role) {
       case "admin":
-        navigate("/dashboard");
+      case "manager":
+        // Always redirect admin and manager to main dashboard
+        navigate(from || "/dashboard");
         break;
       case "unit_admin":
-        navigate("/unit-admin/dashboard");
+        navigate(from || "/unit-admin/dashboard");
         break;
       case "employee":
-        navigate("/employee/dashboard");
+        navigate(from || "/employee/dashboard");
         break;
       case "supplier":
-        navigate("/supplier/dashboard");
+        navigate(from || "/supplier/dashboard");
         break;
       case "vendor":
-        navigate("/vendor/dashboard");
+        navigate(from || "/vendor/dashboard");
         break;
       default:
-        navigate("/dashboard");
+        navigate(from || "/dashboard");
     }
   };
 
