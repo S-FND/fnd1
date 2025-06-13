@@ -73,8 +73,8 @@ export const useAuthProvider = () => {
     switch(role) {
       case "admin":
       case "manager":
-        // Always redirect admin and manager to main dashboard
-        navigate(from || "/dashboard");
+        // Redirect admin and manager to settings by default
+        navigate(from || "/settings");
         break;
       case "unit_admin":
         navigate(from || "/unit-admin/dashboard");
@@ -89,7 +89,7 @@ export const useAuthProvider = () => {
         navigate(from || "/vendor/dashboard");
         break;
       default:
-        navigate(from || "/dashboard");
+        navigate(from || "/settings");
     }
   };
 
