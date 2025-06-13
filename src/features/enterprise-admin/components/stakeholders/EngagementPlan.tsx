@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -6,11 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { sampleStakeholders, defaultStakeholderSubcategories } from '../../data/stakeholders';
 import { Calendar, Network, Clock, Users, MapPin, ExternalLink } from 'lucide-react';
 import { CreateEngagementActivityDialog } from './CreateEngagementActivityDialog';
+import PriorityStakeholdersView from './PriorityStakeholdersView';
 import { EngagementActivity } from './types';
 import { format } from 'date-fns';
 
 const EngagementPlan: React.FC = () => {
   const [activities, setActivities] = useState<EngagementActivity[]>([]);
+  const [showPriorityView, setShowPriorityView] = useState(false);
   
   const highPriorityStakeholders = sampleStakeholders.filter(
     s => s.engagementLevel === 'high' && s.influence === 'high'
@@ -54,6 +55,10 @@ const EngagementPlan: React.FC = () => {
         return 'bg-gray-100 text-gray-800';
     }
   };
+
+  if (showPriorityView) {
+    return <PriorityStakeholdersView onBack={() => setShowPriorityView(false)} />;
+  }
   
   return (
     <div className="space-y-6">
@@ -201,7 +206,13 @@ const EngagementPlan: React.FC = () => {
             </div>
           </CardContent>
           <CardFooter>
-            <Button variant="outline" className="w-full">View All Priority Stakeholders</Button>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={() => setShowPriorityView(true)}
+            >
+              View All Priority Stakeholders
+            </Button>
           </CardFooter>
         </Card>
       </div>
