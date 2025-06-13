@@ -282,11 +282,11 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
                         <div className="grid grid-cols-2 gap-2 text-xs">
                           <div>
                             <div className="text-muted-foreground">Business Impact</div>
-                            <div className="font-medium">{topic.businessImpact} / 10</div>
+                            <div className="font-medium">{topic.businessImpact.toFixed(2)} / 10</div>
                           </div>
                           <div>
                             <div className="text-muted-foreground">Sustainability Impact</div>
-                            <div className="font-medium">{topic.sustainabilityImpact} / 10</div>
+                            <div className="font-medium">{topic.sustainabilityImpact.toFixed(2)} / 10</div>
                           </div>
                         </div>
                       </CardContent>
