@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,17 +21,19 @@ const PriorityStakeholdersView: React.FC<PriorityStakeholdersViewProps> = ({ onB
     };
 
     sampleStakeholders.forEach(stakeholder => {
-      const isHighInfluence = stakeholder.influence === 'high';
-      const isHighInterest = stakeholder.interest === 'high';
+      // Type cast to ensure proper typing
+      const typedStakeholder = stakeholder as Stakeholder;
+      const isHighInfluence = typedStakeholder.influence === 'high';
+      const isHighInterest = typedStakeholder.interest === 'high';
 
       if (isHighInfluence && isHighInterest) {
-        groups.manageClosely.push(stakeholder);
+        groups.manageClosely.push(typedStakeholder);
       } else if (isHighInfluence && !isHighInterest) {
-        groups.keepSatisfied.push(stakeholder);
+        groups.keepSatisfied.push(typedStakeholder);
       } else if (!isHighInfluence && isHighInterest) {
-        groups.keepInformed.push(stakeholder);
+        groups.keepInformed.push(typedStakeholder);
       } else {
-        groups.monitor.push(stakeholder);
+        groups.monitor.push(typedStakeholder);
       }
     });
 

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Calendar, Users, Building, Clock, MapPin, BookOpen } from 'lucide-react';
@@ -6,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { fetchEHSTrainings } from '@/data';
+import { fetchEHSTrainings, EHSTraining } from '@/data';
 import { Link } from 'react-router-dom';
 import TrainingApprovalCard from './TrainingApprovalCard';
 
@@ -38,7 +37,7 @@ const EHSTrainingsList = () => {
     );
   }
 
-  const getStatusVariant = (status) => {
+  const getStatusVariant = (status: EHSTraining['status']) => {
     switch (status) {
       case 'completed':
         return 'default';
@@ -51,7 +50,7 @@ const EHSTrainingsList = () => {
     }
   };
 
-  const getStatusLabel = (status) => {
+  const getStatusLabel = (status: EHSTraining['status']) => {
     switch (status) {
       case 'completed':
         return 'Completed';
