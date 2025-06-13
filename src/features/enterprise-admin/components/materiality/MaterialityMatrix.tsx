@@ -49,9 +49,9 @@ const MaterialityMatrix: React.FC<MaterialityMatrixProps> = ({
 
   // Define category colors
   const categoryColors = {
-    'Environment': '#22c55e', // green
-    'Social': '#60a5fa',     // blue
-    'Governance': '#f59e0b'  // amber
+    'Environment': '#16a34a', // green-600 for better visibility
+    'Social': '#2563eb',     // blue-600
+    'Governance': '#d97706'  // amber-600
   };
 
   // Custom dot component to render colored dots
@@ -140,21 +140,21 @@ const MaterialityMatrix: React.FC<MaterialityMatrixProps> = ({
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <div 
-                    className="w-3 h-3 rounded-full" 
+                    className="w-4 h-4 rounded-full border border-gray-300" 
                     style={{ backgroundColor: categoryColors.Environment }}
                   ></div>
                   <span className="text-sm">Environmental</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div 
-                    className="w-3 h-3 rounded-full" 
+                    className="w-4 h-4 rounded-full border border-gray-300" 
                     style={{ backgroundColor: categoryColors.Social }}
                   ></div>
                   <span className="text-sm">Social</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div 
-                    className="w-3 h-3 rounded-full" 
+                    className="w-4 h-4 rounded-full border border-gray-300" 
                     style={{ backgroundColor: categoryColors.Governance }}
                   ></div>
                   <span className="text-sm">Governance</span>
