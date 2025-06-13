@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Sidebar, SidebarContent, SidebarProvider } from '@/components/ui/sidebar';
@@ -39,24 +39,44 @@ const UnifiedSidebar: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const role = user?.role || 'employee';
+  const sidebarContentRef = useRef<HTMLDivElement>(null);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
     esgdd: location.pathname.startsWith('/esg-dd'),
     reports: location.pathname.startsWith('/reports'),
     stakeholders: location.pathname.startsWith('/stakeholders')
   });
   
+  // Save scroll position before menu toggle
   const toggleMenu = (menuKey: string) => {
+    if (sidebarContentRef.current) {
+      setScrollPosition(sidebarContentRef.current.scrollTop);
+    }
+    
     setExpandedMenus(prev => ({
       ...prev,
       [menuKey]: !prev[menuKey]
     }));
   };
 
+  // Restore scroll position after menu state changes
+  useEffect(() => {
+    if (sidebarContentRef.current && scrollPosition > 0) {
+      // Use setTimeout to ensure the DOM has updated
+      setTimeout(() => {
+        if (sidebarContentRef.current) {
+          sidebarContentRef.current.scrollTop = scrollPosition;
+        }
+      }, 0);
+    }
+  }, [expandedMenus, scrollPosition]);
+
   return (
     <Sidebar className="border-r border-border bg-sidebar">
       <SidebarHeaderComponent user={user} />
       
-      <SidebarContent className="px-2">
+      <SidebarContent ref={sidebarContentRef} className="px-2">
         <SidebarNavigation role={role} expandedMenus={expandedMenus} toggleMenu={toggleMenu} />
         
         <SidebarAdminSettings role={role} />
