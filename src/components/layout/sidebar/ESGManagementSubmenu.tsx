@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { ChevronDown, ChevronRight, BarChart3, FileText, LineChart } from 'lucide-react';
 import { SidebarMenuItem, SidebarMenuButton, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -45,10 +45,10 @@ export const ESGManagementSubmenu: React.FC<ESGManagementSubmenuProps> = ({
               return (
                 <SidebarMenuSubItem key={item.name}>
                   <SidebarMenuSubButton asChild isActive={isActive}>
-                    <a href={item.href}>
+                    <Link to={item.href}>
                       <item.icon className="h-4 w-4" />
                       <span>{item.name}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuSubButton>
                 </SidebarMenuSubItem>
               );
