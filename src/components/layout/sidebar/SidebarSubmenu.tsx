@@ -28,15 +28,15 @@ export const SidebarSubmenu: React.FC<SidebarSubmenuProps> = ({
           onClick={onToggle}
           isActive={isActive}
           tooltip={name}
-          className="w-full justify-between"
+          className="w-full justify-between hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors duration-200"
         >
-          <div className="flex items-center gap-2">
-            <Icon className="h-4 w-4" />
-            <span>{name}</span>
+          <div className="flex items-center gap-3">
+            <Icon className="h-4 w-4 shrink-0" />
+            <span className="truncate">{name}</span>
           </div>
           <ChevronRight 
             className={cn(
-              "h-4 w-4 transition-transform duration-200",
+              "h-4 w-4 shrink-0 transition-transform duration-200",
               isExpanded && "rotate-90"
             )} 
           />
@@ -44,7 +44,7 @@ export const SidebarSubmenu: React.FC<SidebarSubmenuProps> = ({
       </SidebarMenuItem>
       
       {isExpanded && (
-        <SidebarMenuSub>
+        <SidebarMenuSub className="ml-4 border-l border-sidebar-border/50">
           {children}
         </SidebarMenuSub>
       )}

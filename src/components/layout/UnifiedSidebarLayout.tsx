@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -19,12 +20,14 @@ export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({
   
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
+      <div className="flex min-h-screen w-full bg-background">
         <UnifiedSidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           <Navbar />
-          <main className="flex-1 p-4 md:p-6">
-            {children}
+          <main className="flex-1 p-4 md:p-6 overflow-auto">
+            <div className="max-w-full">
+              {children}
+            </div>
           </main>
         </div>
       </div>
@@ -50,10 +53,10 @@ const UnifiedSidebar: React.FC = () => {
   };
 
   return (
-    <Sidebar>
+    <Sidebar className="border-r border-border bg-sidebar">
       <SidebarHeaderComponent user={user} />
       
-      <SidebarContent>
+      <SidebarContent className="px-2">
         <SidebarNavigation role={role} expandedMenus={expandedMenus} toggleMenu={toggleMenu} />
         
         <SidebarAdminSettings role={role} />

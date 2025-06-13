@@ -1,18 +1,13 @@
 
 import React from 'react';
 import { useLocation } from 'react-router-dom';
+import { SidebarGroup, SidebarGroupContent, SidebarMenu } from '@/components/ui/sidebar';
 import { SidebarNavItem } from './SidebarNavItem';
-import { StakeholdersSubmenu } from './StakeholdersSubmenu';
 import { ESGDDSubmenu } from './ESGDDSubmenu';
 import { ReportsSubmenu } from './ReportsSubmenu';
-import { getNavigationItems } from './navigationData';
-import { useFeatures } from '@/context/FeaturesContext';
-import { 
-  SidebarGroup, 
-  SidebarGroupContent, 
-  SidebarGroupLabel, 
-  SidebarMenu
-} from '@/components/ui/sidebar';
+import { StakeholdersSubmenu } from './StakeholdersSubmenu';
+import { navigationItems } from './navigationData';
+import { useAuth } from '@/context/AuthContext';
 
 interface SidebarNavigationProps {
   role: string;
@@ -26,63 +21,66 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   toggleMenu
 }) => {
   const location = useLocation();
-  const { isFeatureActive } = useFeatures();
-  const navigationItems = getNavigationItems(role);
-  
-  // Filter navigation items based on active features
-  const filteredItems = navigationItems.filter(item => {
-    if (!item.featureId) return true;
-    return isFeatureActive(item.featureId);
-  });
-  
+  const { user } = useAuth();
+
+  const getVisibleItems = () => {
+    return navigationItems.filter(item => {
+      if (!item.roles || item.roles.length === 0) return true;
+      return item.roles.includes(role);
+    });
+  };
+
+  const visibleItems = getVisibleItems();
+
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Main Navigation</SidebarGroupLabel>
       <SidebarGroupContent>
-        <SidebarMenu>
-          {filteredItems.map((item) => {
-            // Handle stakeholders submenu separately
-            if (item.name === 'Stakeholders' && (role === 'admin' || role === 'manager')) {
+        <SidebarMenu className="space-y-1">
+          {visibleItems.map((item) => {
+            const isActive = location.pathname === item.href || 
+                           (item.href !== '/' && location.pathname.startsWith(item.href));
+
+            // Handle special menu items with submenus
+            if (item.id === 'esg-dd') {
+              return (
+                <ESGDDSubmenu
+                  key={item.id}
+                  isExpanded={expandedMenus.esgdd}
+                  onToggle={() => toggleMenu('esgdd')}
+                />
+              );
+            }
+
+            if (item.id === 'reports') {
+              return (
+                <ReportsSubmenu
+                  key={item.id}
+                  isExpanded={expandedMenus.reports}
+                  onToggle={() => toggleMenu('reports')}
+                  role={role}
+                />
+              );
+            }
+
+            if (item.id === 'stakeholders') {
               return (
                 <StakeholdersSubmenu
-                  key="stakeholders"
-                  isExpanded={expandedMenus.stakeholders || false}
+                  key={item.id}
+                  isExpanded={expandedMenus.stakeholders}
                   onToggle={() => toggleMenu('stakeholders')}
                   role={role}
                 />
               );
             }
-            
-            // Handle ESG DD submenu separately
-            if (item.name === 'ESG DD' && (role === 'admin' || role === 'manager')) {
-              return (
-                <ESGDDSubmenu
-                  key="esgdd"
-                  isExpanded={expandedMenus.esgdd || false}
-                  onToggle={() => toggleMenu('esgdd')}
-                />
-              );
-            }
-            
-            // Handle Reports submenu separately
-            if (item.name === 'Reports' && (role === 'admin' || role === 'manager')) {
-              return (
-                <ReportsSubmenu
-                  key="reports"
-                  isExpanded={expandedMenus.reports || false}
-                  onToggle={() => toggleMenu('reports')}
-                />
-              );
-            }
-            
-            // Regular navigation items
+
+            // Regular menu items
             return (
               <SidebarNavItem
-                key={item.name}
+                key={item.id}
                 icon={item.icon}
-                label={item.name}
+                label={item.label}
                 href={item.href}
-                isActive={location.pathname === item.href || location.pathname.startsWith(item.href + '/')}
+                isActive={isActive}
               />
             );
           })}
