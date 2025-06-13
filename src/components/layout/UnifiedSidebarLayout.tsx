@@ -41,7 +41,6 @@ const UnifiedSidebar: React.FC = () => {
   const role = user?.role || 'employee';
   const sidebarContentRef = useRef<HTMLDivElement>(null);
   const [scrollPosition, setScrollPosition] = useState(0);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
     esgdd: location.pathname.startsWith('/esg-dd'),
@@ -49,18 +48,10 @@ const UnifiedSidebar: React.FC = () => {
     stakeholders: location.pathname.startsWith('/stakeholders')
   });
   
-  // Save scroll position continuously during scrolling
-  const handleScroll = () => {
-    if (sidebarContentRef.current) {
-      setScrollPosition(sidebarContentRef.current.scrollTop);
-    }
-  };
-
-  // Save scroll position before menu toggle with improved timing
+  // Save scroll position before menu toggle
   const toggleMenu = (menuKey: string) => {
     if (sidebarContentRef.current) {
-      const currentScroll = sidebarContentRef.current.scrollTop;
-      setScrollPosition(currentScroll);
+      setScrollPosition(sidebarContentRef.current.scrollTop);
     }
     
     setExpandedMenus(prev => ({
@@ -69,54 +60,23 @@ const UnifiedSidebar: React.FC = () => {
     }));
   };
 
-  // Restore scroll position after menu state changes with better timing
+  // Restore scroll position after menu state changes
   useEffect(() => {
-    if (sidebarContentRef.current && scrollPosition >= 0) {
-      // Clear any existing timeout
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-      
-      // Use requestAnimationFrame for better timing with DOM updates
-      const restoreScroll = () => {
+    if (sidebarContentRef.current && scrollPosition > 0) {
+      // Use setTimeout to ensure the DOM has updated
+      setTimeout(() => {
         if (sidebarContentRef.current) {
           sidebarContentRef.current.scrollTop = scrollPosition;
         }
-      };
-      
-      // Use both immediate and delayed restoration for reliability
-      requestAnimationFrame(restoreScroll);
-      
-      scrollTimeoutRef.current = setTimeout(restoreScroll, 50);
+      }, 0);
     }
-    
-    return () => {
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-    };
   }, [expandedMenus, scrollPosition]);
-
-  // Add scroll event listener
-  useEffect(() => {
-    const sidebar = sidebarContentRef.current;
-    if (sidebar) {
-      sidebar.addEventListener('scroll', handleScroll);
-      return () => {
-        sidebar.removeEventListener('scroll', handleScroll);
-      };
-    }
-  }, []);
 
   return (
     <Sidebar className="border-r border-border bg-sidebar">
       <SidebarHeaderComponent user={user} />
       
-      <SidebarContent 
-        ref={sidebarContentRef} 
-        className="px-2"
-        style={{ scrollBehavior: 'auto' }}
-      >
+      <SidebarContent ref={sidebarContentRef} className="px-2">
         <SidebarNavigation role={role} expandedMenus={expandedMenus} toggleMenu={toggleMenu} />
         
         <SidebarAdminSettings role={role} />
