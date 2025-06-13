@@ -1,23 +1,127 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { sampleStakeholders, defaultStakeholderSubcategories } from '../../data/stakeholders';
-import { Calendar, Network } from 'lucide-react';
+import { Calendar, Network, Clock, Users, MapPin, ExternalLink } from 'lucide-react';
+import { CreateEngagementActivityDialog } from './CreateEngagementActivityDialog';
+import { EngagementActivity } from './types';
+import { format } from 'date-fns';
 
 const EngagementPlan: React.FC = () => {
+  const [activities, setActivities] = useState<EngagementActivity[]>([]);
+  
   const highPriorityStakeholders = sampleStakeholders.filter(
     s => s.engagementLevel === 'high' && s.influence === 'high'
   );
+
+  const handleActivityCreated = (activity: EngagementActivity) => {
+    setActivities([...activities, activity]);
+  };
+
+  const getActivityTypeIcon = (type: string) => {
+    switch (type) {
+      case 'newsletter':
+      case 'email':
+        return '📧';
+      case 'townhall':
+        return '🏛️';
+      case 'group_activity':
+        return '👥';
+      case 'webinar':
+        return '💻';
+      case 'meeting':
+        return '🤝';
+      case 'survey':
+        return '📊';
+      default:
+        return '📅';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'scheduled':
+        return 'bg-blue-100 text-blue-800';
+      case 'sent':
+        return 'bg-purple-100 text-purple-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
   
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Stakeholder Engagement Plan</h1>
-        <Button>
-          <Calendar className="mr-2 h-4 w-4" /> Create Engagement Activity
-        </Button>
+        <CreateEngagementActivityDialog onActivityCreated={handleActivityCreated} />
       </div>
+
+      {/* Recent Activities */}
+      {activities.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Engagement Activities</CardTitle>
+            <CardDescription>Latest planned and completed stakeholder activities</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {activities.slice(0, 5).map((activity) => (
+                <div key={activity.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{getActivityTypeIcon(activity.type)}</span>
+                    <div>
+                      <div className="font-medium">{activity.title}</div>
+                      <div className="text-sm text-muted-foreground flex items-center gap-4">
+                        <span className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {activity.targetStakeholders.length} stakeholder(s)
+                        </span>
+                        {activity.scheduledDate && (
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {format(activity.scheduledDate, 'MMM d, yyyy')}
+                          </span>
+                        )}
+                        {activity.location && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {activity.location}
+                          </span>
+                        )}
+                        {activity.meetingLink && (
+                          <span className="flex items-center gap-1">
+                            <ExternalLink className="h-3 w-3" />
+                            Virtual
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={activity.purpose === 'invite' ? 'default' : 'outline'}>
+                      {activity.purpose === 'invite' ? 'Invite' : 'Reminder'}
+                    </Badge>
+                    <Badge className={getStatusColor(activity.status)}>
+                      {activity.status.charAt(0).toUpperCase() + activity.status.slice(1)}
+                    </Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+          {activities.length > 5 && (
+            <CardFooter>
+              <Button variant="outline" className="w-full">View All Activities</Button>
+            </CardFooter>
+          )}
+        </Card>
+      )}
       
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
