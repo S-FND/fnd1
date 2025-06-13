@@ -1,12 +1,41 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const HeroSection = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleGetStarted = () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    } else {
+      // Redirect based on user role
+      switch(user?.role) {
+        case "admin":
+        case "manager":
+          navigate("/settings");
+          break;
+        case "unit_admin":
+          navigate("/unit-admin/dashboard");
+          break;
+        case "employee":
+          navigate("/employee/dashboard");
+          break;
+        case "supplier":
+          navigate("/supplier/dashboard");
+          break;
+        case "vendor":
+          navigate("/vendor/dashboard");
+          break;
+        default:
+          navigate("/settings");
+      }
+    }
+  };
   
   return (
     <section className="py-20 px-4 bg-gradient-to-b from-[#F0FDFA] to-white">
@@ -26,10 +55,8 @@ const HeroSection = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" asChild>
-                <Link to={isAuthenticated ? "/dashboard" : "/login"} className="gap-2">
-                  Get Started <ArrowRight className="h-4 w-4" />
-                </Link>
+              <Button size="lg" onClick={handleGetStarted} className="gap-2">
+                Get Started <ArrowRight className="h-4 w-4" />
               </Button>
               <Button size="lg" variant="outline">
                 Book a Demo
