@@ -38,16 +38,16 @@ const HeroSection = () => {
             
             <div className="flex items-center gap-8 pt-4">
               <div>
-                <div className="text-2xl font-bold">500+</div>
-                <div className="text-muted-foreground">Companies</div>
+                <div className="text-2xl font-bold">150+</div>
+                <div className="text-muted-foreground">Companies Helped</div>
               </div>
               <div>
-                <div className="text-2xl font-bold">98%</div>
-                <div className="text-muted-foreground">Satisfaction</div>
+                <div className="text-2xl font-bold">$800Mn+</div>
+                <div className="text-muted-foreground">Sustainable Investments</div>
               </div>
               <div>
-                <div className="text-2xl font-bold">24/7</div>
-                <div className="text-muted-foreground">Support</div>
+                <div className="text-2xl font-bold">99%</div>
+                <div className="text-muted-foreground">Client Satisfaction</div>
               </div>
             </div>
           </div>
