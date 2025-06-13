@@ -1,4 +1,3 @@
-
 // Re-export all data modules
 export * from './sdg/goals';
 export * from './compliance/items';
@@ -335,3 +334,7 @@ export const trainingModules = [
     duration: '1.5 hours',
   },
 ];
+
+// Export EHS training types and functions
+export type { EHSTraining, Attendee, Vendor, TrainingBid } from './ehs/trainings';
+export { fetchEHSTrainings, fetchEHSTrainingById, fetchVendorProfile, fetchTrainingBids, fetchVendorTrainings, approveTraining, rejectTraining } from './ehs/trainings';
