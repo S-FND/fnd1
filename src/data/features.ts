@@ -51,7 +51,7 @@ export const features: Feature[] = [
     id: 'lms',
     name: 'Learning Management System',
     description: 'Training modules and learning programs',
-    isDefault: false,
+    isDefault: true,
     dependencies: [],
     dependents: [],
     category: 'operations'
@@ -60,7 +60,7 @@ export const features: Feature[] = [
     id: 'ehs-trainings',
     name: 'EHS Trainings',
     description: 'Environment, Health & Safety training programs',
-    isDefault: false,
+    isDefault: true,
     dependencies: [],
     dependents: ['compliance'],
     category: 'operations'
@@ -87,7 +87,7 @@ export const features: Feature[] = [
     id: 'esg-dd',
     name: 'ESG Due Diligence',
     description: 'ESG due diligence assessments and management',
-    isDefault: false,
+    isDefault: true,
     dependencies: [],
     dependents: [],
     category: 'operations'

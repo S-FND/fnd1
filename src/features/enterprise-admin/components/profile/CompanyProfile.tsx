@@ -1,52 +1,41 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building2, MapPin, Users, TrendingUp, Calendar, DollarSign, Mail, Phone, Globe } from 'lucide-react';
+import { fetchProfileData } from '../../services/companyApi';
 
 const CompanyProfile = () => {
-  const companyData = {
-    name: 'Translog India Ltd.',
-    legalName: 'Translog India Ltd.',
-    cin: 'L63030MH1995PLC089758',
-    founded: '1995',
-    incorporationDate: 'October 1995',
-    registeredOffice: 'Translog House, Plot No. 84, Sector 44, Gurugram - 122003, Haryana, India',
-    corporateOffice: 'Translog Towers, 14th Floor, Bandra Kurla Complex, Mumbai - 400051, Maharashtra, India',
-    email: 'investor.relations@translogindia.com',
-    phone: '+91-22-66780800',
-    website: 'www.translogindia.com',
-    financialYear: '2023-24',
-    listedOn: 'National Stock Exchange of India (NSE) and Bombay Stock Exchange (BSE)',
-    revenue: '₹2,500 Cr',
-    fundingStage: 'Public Listed',
-    employeeStrength: '2,500+',
-    industry: 'Logistics & Transportation',
-    founders: [
-      { name: 'Rajesh Kumar', title: 'Chairman & Managing Director', experience: '25+ years in Logistics' },
-      { name: 'Priya Singh', title: 'Executive Director', experience: '20+ years in Operations' }
-    ],
-    locations: [
-      { name: 'Mumbai Corporate Office', type: 'Headquarters', employees: 800, address: 'Bandra Kurla Complex, Mumbai' },
-      { name: 'Gurugram Registered Office', type: 'Registered Office', employees: 200, address: 'Sector 44, Gurugram' },
-      { name: 'Bangalore Operations Center', type: 'Operations Hub', employees: 600, address: 'Electronic City, Bangalore' },
-      { name: 'Delhi Logistics Hub', type: 'Warehouse', employees: 400, address: 'Gurgaon Industrial Area' },
-      { name: 'Chennai Regional Office', type: 'Regional Office', employees: 300, address: 'OMR, Chennai' },
-      { name: 'Pune Distribution Center', type: 'Distribution Center', employees: 200, address: 'Hinjewadi, Pune' }
-    ],
-    keyMetrics: {
-      totalLocations: 15,
-      cities: 8,
-      states: 12,
-      sustainability: 'ESG Compliant',
-      stockExchanges: 2
-    }
-  };
+  const [companyData, setCompanyData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const data = await fetchProfileData();
+        setCompanyData(data);
+      } catch (error) {
+        console.error('Error loading company data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  if (isLoading) {
+    return <div className="flex justify-center p-8">Loading company profile...</div>;
+  }
+
+  if (!companyData) {
+    return <div className="flex justify-center p-8">No company data available</div>;
+  }
 
   return (
     <div className="space-y-6">
-      {/* Header Section with Key Company Info */}
-      <Card>
+       {/* Header Section with Key Company Info */}
+       <Card>
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>

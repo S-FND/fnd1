@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
+import { toast } from 'sonner';
+import { fetchfacilitiesData, updateCompanyData } from '../../services/companyApi';
 interface WarehouseItem {
   id: number;
   name: string;
@@ -18,6 +19,31 @@ const IRLWarehouse = () => {
   const [warehouseItems, setWarehouseItems] = useState<WarehouseItem[]>([
     { id: 1, name: '', plotArea: '', itemsStored: '', location: '', exclusiveSupplier: '' }
   ]);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const data: any = await fetchfacilitiesData();
+        if (data) {
+          console.log('_____________data______________',data);
+        } else {
+          console.error('Error fetching company data');
+        }
+      } catch (error) {
+        console.error('Error fetching company data:', error);
+        setError('Failed to load company data');
+        toast.error('Failed to load company data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   const addWarehouseRow = () => {
     const newId = Math.max(...warehouseItems.map(item => item.id)) + 1;
