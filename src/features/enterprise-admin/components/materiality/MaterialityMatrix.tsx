@@ -136,25 +136,25 @@ const MaterialityMatrix: React.FC<MaterialityMatrixProps> = ({
             )}
             
             <div className="mt-8">
-              <h3 className="text-base font-medium mb-2">Legend</h3>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
+              <h3 className="text-base font-medium mb-3">Legend</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
                   <div 
-                    className="w-4 h-4 rounded-full border border-gray-300" 
+                    className="w-5 h-5 rounded-full border-2 border-white shadow-sm flex-shrink-0" 
                     style={{ backgroundColor: categoryColors.Environment }}
                   ></div>
                   <span className="text-sm">Environmental</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <div 
-                    className="w-4 h-4 rounded-full border border-gray-300" 
+                    className="w-5 h-5 rounded-full border-2 border-white shadow-sm flex-shrink-0" 
                     style={{ backgroundColor: categoryColors.Social }}
                   ></div>
                   <span className="text-sm">Social</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <div 
-                    className="w-4 h-4 rounded-full border border-gray-300" 
+                    className="w-5 h-5 rounded-full border-2 border-white shadow-sm flex-shrink-0" 
                     style={{ backgroundColor: categoryColors.Governance }}
                   ></div>
                   <span className="text-sm">Governance</span>
