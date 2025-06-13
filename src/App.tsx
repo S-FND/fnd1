@@ -61,7 +61,7 @@ function App() {
         <Route path="/dashboard" element={<EnhancedDashboard />} />
         <Route path="/company" element={<CompanyProfilePage />} />
         <Route path="/materiality" element={<MaterialityPage />} />
-        <Route path="/esg" element={<ESGPage />} />
+        <Route path="/esg/*" element={<ESGPage />} />
         <Route path="/esg-dd" element={<ESGDDPage />} />
         <Route path="/esg-dd/reports" element={<ESGDDReportsPage />} />
         <Route path="/esg-dd/manual" element={<ManualESGDDPage />} />

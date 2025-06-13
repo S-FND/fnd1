@@ -1,4 +1,3 @@
-
 import { LayoutDashboard, BarChart3, FileSearch, LineChart, ClipboardCheck, GraduationCap, Calendar, Users, Building2, Settings, FileText, TreePine } from 'lucide-react';
 import { FeatureId } from '@/types/features';
 
@@ -26,7 +25,12 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
         name: "ESG Management",
         href: "/esg",
         icon: BarChart3,
-        featureId: 'esg-management'
+        featureId: 'esg-management',
+        submenu: [
+          { name: "Overview", href: "/esg", icon: BarChart3 },
+          { name: "ESMS", href: "/esg/esms", icon: FileText },
+          { name: "ESG Metrics", href: "/esg/metrics", icon: LineChart }
+        ]
       },
       {
         name: "Materiality",

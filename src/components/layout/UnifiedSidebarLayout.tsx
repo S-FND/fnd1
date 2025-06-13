@@ -43,6 +43,7 @@ const UnifiedSidebar: React.FC = () => {
   const [scrollPosition, setScrollPosition] = useState(0);
   
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
+    esgManagement: location.pathname.startsWith('/esg'),
     esgdd: location.pathname.startsWith('/esg-dd'),
     reports: location.pathname.startsWith('/reports'),
     stakeholders: location.pathname.startsWith('/stakeholders')

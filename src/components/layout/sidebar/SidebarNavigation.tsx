@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { SidebarGroup, SidebarGroupContent, SidebarMenu } from '@/components/ui/sidebar';
 import { SidebarNavItem } from './SidebarNavItem';
 import { ESGDDSubmenu } from './ESGDDSubmenu';
+import { ESGManagementSubmenu } from './ESGManagementSubmenu';
 import { ReportsSubmenu } from './ReportsSubmenu';
 import { StakeholdersSubmenu } from './StakeholdersSubmenu';
 import { getNavigationItems } from './navigationData';
@@ -34,6 +35,16 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                            (item.href !== '/' && location.pathname.startsWith(item.href));
 
             // Handle special menu items with submenus
+            if (item.name === 'ESG Management') {
+              return (
+                <ESGManagementSubmenu
+                  key={item.name}
+                  isExpanded={expandedMenus.esgManagement}
+                  onToggle={() => toggleMenu('esgManagement')}
+                />
+              );
+            }
+
             if (item.name === 'ESG DD') {
               return (
                 <ESGDDSubmenu
