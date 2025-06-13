@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
-import ESGDashboard from '@/features/enterprise-admin/components/ESGDashboard';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate, Routes, Route } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
@@ -16,65 +15,31 @@ import ImpactReport from './ImpactReport';
 import ReportsPage from './Reports';
 
 const ESGPage = () => {
-  const { isLoading } = useRouteProtection('enterprise_admin');
-  const { user, isEnterpriseAdmin } = useAuth();
+  const { isLoading } = useRouteProtection(['admin', 'manager']);
+  const { user, isAuthenticated } = useAuth();
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isEnterpriseAdmin()) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" />;
   }
 
   return (
-    <Routes>
-      <Route index element={
-        <UnifiedSidebarLayout>
-          <ESGManagementPage />
-        </UnifiedSidebarLayout>
-      } />
-      <Route path="esms" element={
-        <UnifiedSidebarLayout>
-          <ESMSPage />
-        </UnifiedSidebarLayout>
-      } />
-      <Route path="metrics" element={
-        <UnifiedSidebarLayout>
-          <ESGMetricsPage />
-        </UnifiedSidebarLayout>
-      } />
-      <Route path="reports" element={
-        <UnifiedSidebarLayout>
-          <ReportsPage />
-        </UnifiedSidebarLayout>
-      } />
-      <Route path="reports/brsr" element={
-        <UnifiedSidebarLayout>
-          <BRSRReport />
-        </UnifiedSidebarLayout>
-      } />
-      <Route path="reports/gri" element={
-        <UnifiedSidebarLayout>
-          <GRIReport />
-        </UnifiedSidebarLayout>
-      } />
-      <Route path="reports/tcfd" element={
-        <UnifiedSidebarLayout>
-          <TCFDReport />
-        </UnifiedSidebarLayout>
-      } />
-      <Route path="reports/esrs" element={
-        <UnifiedSidebarLayout>
-          <ESRSReport />
-        </UnifiedSidebarLayout>
-      } />
-      <Route path="reports/impact" element={
-        <UnifiedSidebarLayout>
-          <ImpactReport />
-        </UnifiedSidebarLayout>
-      } />
-    </Routes>
+    <UnifiedSidebarLayout>
+      <Routes>
+        <Route index element={<ESGManagementPage />} />
+        <Route path="esms" element={<ESMSPage />} />
+        <Route path="metrics" element={<ESGMetricsPage />} />
+        <Route path="reports" element={<ReportsPage />} />
+        <Route path="reports/brsr" element={<BRSRReport />} />
+        <Route path="reports/gri" element={<GRIReport />} />
+        <Route path="reports/tcfd" element={<TCFDReport />} />
+        <Route path="reports/esrs" element={<ESRSReport />} />
+        <Route path="reports/impact" element={<ImpactReport />} />
+      </Routes>
+    </UnifiedSidebarLayout>
   );
 };
 
