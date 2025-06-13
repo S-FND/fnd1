@@ -6,7 +6,7 @@ import { SidebarNavItem } from './SidebarNavItem';
 import { ESGDDSubmenu } from './ESGDDSubmenu';
 import { ReportsSubmenu } from './ReportsSubmenu';
 import { StakeholdersSubmenu } from './StakeholdersSubmenu';
-import { navigationItems } from './navigationData';
+import { getNavigationItems } from './navigationData';
 import { useAuth } from '@/context/AuthContext';
 
 interface SidebarNavigationProps {
@@ -23,14 +23,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   const location = useLocation();
   const { user } = useAuth();
 
-  const getVisibleItems = () => {
-    return navigationItems.filter(item => {
-      if (!item.roles || item.roles.length === 0) return true;
-      return item.roles.includes(role);
-    });
-  };
-
-  const visibleItems = getVisibleItems();
+  const visibleItems = getNavigationItems(role);
 
   return (
     <SidebarGroup>
@@ -41,31 +34,30 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                            (item.href !== '/' && location.pathname.startsWith(item.href));
 
             // Handle special menu items with submenus
-            if (item.id === 'esg-dd') {
+            if (item.name === 'ESG DD') {
               return (
                 <ESGDDSubmenu
-                  key={item.id}
+                  key={item.name}
                   isExpanded={expandedMenus.esgdd}
                   onToggle={() => toggleMenu('esgdd')}
                 />
               );
             }
 
-            if (item.id === 'reports') {
+            if (item.name === 'Reports') {
               return (
                 <ReportsSubmenu
-                  key={item.id}
+                  key={item.name}
                   isExpanded={expandedMenus.reports}
                   onToggle={() => toggleMenu('reports')}
-                  role={role}
                 />
               );
             }
 
-            if (item.id === 'stakeholders') {
+            if (item.name === 'Stakeholders') {
               return (
                 <StakeholdersSubmenu
-                  key={item.id}
+                  key={item.name}
                   isExpanded={expandedMenus.stakeholders}
                   onToggle={() => toggleMenu('stakeholders')}
                   role={role}
@@ -76,9 +68,9 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             // Regular menu items
             return (
               <SidebarNavItem
-                key={item.id}
+                key={item.name}
                 icon={item.icon}
-                label={item.label}
+                label={item.name}
                 href={item.href}
                 isActive={isActive}
               />
