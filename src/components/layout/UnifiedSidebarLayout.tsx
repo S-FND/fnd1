@@ -46,7 +46,8 @@ const UnifiedSidebar: React.FC = () => {
     esgManagement: location.pathname.startsWith('/esg'),
     esgdd: location.pathname.startsWith('/esg-dd'),
     reports: location.pathname.startsWith('/reports'),
-    stakeholders: location.pathname.startsWith('/stakeholders')
+    stakeholders: location.pathname.startsWith('/stakeholders'),
+    audit: location.pathname.startsWith('/audit')
   });
   
   // Save scroll position before menu toggle

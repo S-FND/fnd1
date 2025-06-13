@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { FeaturesProvider } from '@/context/FeaturesContext';
@@ -48,6 +47,9 @@ import ESGManagementPage from './features/enterprise-admin/pages/ESGManagement';
 import TeamManagementPage from './features/enterprise-admin/pages/TeamManagement';
 import CompanyProfilePage from './pages/CompanyProfile';
 import FeatureManagementPage from './pages/FeatureManagement';
+import SupplierAuditsPage from './pages/audit/SupplierAuditsPage';
+import EHSAuditsPage from './pages/audit/EHSAuditsPage';
+import InternalAuditsPage from './pages/audit/InternalAuditsPage';
 
 function App() {
   return (
@@ -88,8 +90,14 @@ function App() {
         <Route path="/team-management" element={<TeamManagementPage />} />
         <Route path="/ehs-trainings" element={<EHSTrainings />} />
         <Route path="/ehs-trainings/:id" element={<EHSTrainingDetails />} />
+        
+        {/* Audit Routes */}
         <Route path="/audit" element={<AuditDashboardPage />} />
+        <Route path="/audit/supplier" element={<SupplierAuditsPage />} />
+        <Route path="/audit/ehs" element={<EHSAuditsPage />} />
+        <Route path="/audit/internal" element={<InternalAuditsPage />} />
         <Route path="/audit/:id" element={<AuditChecklistPage />} />
+        
         <Route path="/settings" element={<FeatureManagementPage />} />
         
         {/* Employee Routes */}

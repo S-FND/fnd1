@@ -1,3 +1,4 @@
+
 import { LayoutDashboard, BarChart3, FileSearch, LineChart, ClipboardCheck, GraduationCap, Calendar, Users, Building2, Settings, FileText, TreePine } from 'lucide-react';
 import { FeatureId } from '@/types/features';
 
@@ -68,7 +69,12 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
         name: "Audit",
         href: "/audit",
         icon: FileText,
-        featureId: 'audit'
+        featureId: 'audit',
+        submenu: [
+          { name: "Supplier Audits", href: "/audit/supplier", icon: Users },
+          { name: "EHS Audits", href: "/audit/ehs", icon: ClipboardCheck },
+          { name: "Internal Audits", href: "/audit/internal", icon: Building2 }
+        ]
       },
       {
         name: "LMS",

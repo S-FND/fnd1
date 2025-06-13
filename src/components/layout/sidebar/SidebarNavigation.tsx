@@ -7,6 +7,7 @@ import { ESGDDSubmenu } from './ESGDDSubmenu';
 import { ESGManagementSubmenu } from './ESGManagementSubmenu';
 import { ReportsSubmenu } from './ReportsSubmenu';
 import { StakeholdersSubmenu } from './StakeholdersSubmenu';
+import { AuditSubmenu } from './AuditSubmenu';
 import { getNavigationItems } from './navigationData';
 import { useAuth } from '@/context/AuthContext';
 
@@ -51,6 +52,16 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                   key={item.name}
                   isExpanded={expandedMenus.esgdd}
                   onToggle={() => toggleMenu('esgdd')}
+                />
+              );
+            }
+
+            if (item.name === 'Audit') {
+              return (
+                <AuditSubmenu
+                  key={item.name}
+                  isExpanded={expandedMenus.audit}
+                  onToggle={() => toggleMenu('audit')}
                 />
               );
             }
