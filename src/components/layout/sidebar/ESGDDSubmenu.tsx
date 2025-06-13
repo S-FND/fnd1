@@ -2,7 +2,7 @@
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { FileSearch } from 'lucide-react';
-import { SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
+import { SidebarMenuSubItem, SidebarMenuSubButton } from '@/components/ui/sidebar';
 import { SidebarSubmenu } from './SidebarSubmenu';
 import { useAuth } from '@/context/AuthContext';
 
@@ -41,49 +41,49 @@ export const ESGDDSubmenu: React.FC<ESGDDSubmenuProps> = ({
       isActive={isESGDDPath}
       onToggle={onToggle}
     >
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd'} tooltip="ESG DD Hub">
-          <Link to="/esg-dd" className="w-full">
+      <SidebarMenuSubItem>
+        <SidebarMenuSubButton asChild isActive={location.pathname === '/esg-dd'}>
+          <Link to="/esg-dd">
             <span>Overview</span>
           </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/irl'} tooltip="Information Request List">
-          <Link to="/esg-dd/irl" className="w-full">
+        </SidebarMenuSubButton>
+      </SidebarMenuSubItem>
+      <SidebarMenuSubItem>
+        <SidebarMenuSubButton asChild isActive={location.pathname === '/esg-dd/irl'}>
+          <Link to="/esg-dd/irl">
             <span>IRL</span>
           </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/advanced'} tooltip="Advanced IRL">
-          <Link to="/esg-dd/advanced" className="w-full">
+        </SidebarMenuSubButton>
+      </SidebarMenuSubItem>
+      <SidebarMenuSubItem>
+        <SidebarMenuSubButton asChild isActive={location.pathname === '/esg-dd/advanced'}>
+          <Link to="/esg-dd/advanced">
             <span>Advanced IRL</span>
           </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/reports'} tooltip="ESG DD Reports">
-          <Link to="/esg-dd/reports" className="w-full">
+        </SidebarMenuSubButton>
+      </SidebarMenuSubItem>
+      <SidebarMenuSubItem>
+        <SidebarMenuSubButton asChild isActive={location.pathname === '/esg-dd/reports'}>
+          <Link to="/esg-dd/reports">
             <span>ESG DD Reports</span>
           </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/cap'} tooltip="ESG CAP">
-          <Link to="/esg-dd/cap" className="w-full">
+        </SidebarMenuSubButton>
+      </SidebarMenuSubItem>
+      <SidebarMenuSubItem>
+        <SidebarMenuSubButton asChild isActive={location.pathname === '/esg-dd/cap'}>
+          <Link to="/esg-dd/cap">
             <span>ESG CAP</span>
           </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
+        </SidebarMenuSubButton>
+      </SidebarMenuSubItem>
       {showAdditionalDD && (
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild isActive={location.pathname === '/esg-dd/additional'} tooltip="Additional DD Details">
-            <Link to="/esg-dd/additional" className="w-full">
+        <SidebarMenuSubItem>
+          <SidebarMenuSubButton asChild isActive={location.pathname === '/esg-dd/additional'}>
+            <Link to="/esg-dd/additional">
               <span>Additional DD Details</span>
             </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+          </SidebarMenuSubButton>
+        </SidebarMenuSubItem>
       )}
     </SidebarSubmenu>
   );

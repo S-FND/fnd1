@@ -24,12 +24,12 @@ export const SidebarNavItem: React.FC<SidebarNavItemProps> = ({
       <SidebarMenuButton asChild isActive={isActive} tooltip={label}>
         {isExternal ? (
           <a href={href} target="_blank" rel="noopener noreferrer" className="w-full">
-            <Icon />
+            <Icon className="h-4 w-4" />
             <span>{label}</span>
           </a>
         ) : (
           <Link to={href} className="w-full">
-            <Icon />
+            <Icon className="h-4 w-4" />
             <span>{label}</span>
           </Link>
         )}
