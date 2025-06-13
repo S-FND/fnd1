@@ -31,11 +31,6 @@ const ESGPage = () => {
     <Routes>
       <Route path="/" element={
         <UnifiedSidebarLayout>
-          <ESGDashboard />
-        </UnifiedSidebarLayout>
-      } />
-      <Route path="/management" element={
-        <UnifiedSidebarLayout>
           <ESGManagementPage />
         </UnifiedSidebarLayout>
       } />
