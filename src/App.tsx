@@ -58,7 +58,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         
         {/* Company / Enterprise Admin Routes */}
-        <Route path="/dashboard" element={<EnhancedDashboard />} />
+        <Route path="/enhanced-dashboard" element={<EnhancedDashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/company" element={<CompanyProfilePage />} />
         <Route path="/materiality" element={<MaterialityPage />} />
         <Route path="/esg/*" element={<ESGPage />} />
