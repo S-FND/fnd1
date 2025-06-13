@@ -51,7 +51,7 @@ export const features: Feature[] = [
     id: 'lms',
     name: 'Learning Management System',
     description: 'Training modules and learning programs',
-    isDefault: true,
+    isDefault: false,
     dependencies: [],
     dependents: [],
     category: 'operations'
@@ -60,7 +60,7 @@ export const features: Feature[] = [
     id: 'ehs-trainings',
     name: 'EHS Trainings',
     description: 'Environment, Health & Safety training programs',
-    isDefault: true,
+    isDefault: false,
     dependencies: [],
     dependents: ['compliance'],
     category: 'operations'
@@ -69,7 +69,7 @@ export const features: Feature[] = [
     id: 'compliance',
     name: 'Compliance Management',
     description: 'Regulatory compliance tracking and management',
-    isDefault: true,
+    isDefault: false,
     dependencies: ['ehs-trainings'],
     dependents: [],
     category: 'operations'
@@ -78,7 +78,7 @@ export const features: Feature[] = [
     id: 'audit',
     name: 'Audit Management',
     description: 'Supplier and internal audit management',
-    isDefault: true,
+    isDefault: false,
     dependencies: [],
     dependents: [],
     category: 'operations'
@@ -87,7 +87,7 @@ export const features: Feature[] = [
     id: 'esg-dd',
     name: 'ESG Due Diligence',
     description: 'ESG due diligence assessments and management',
-    isDefault: true,
+    isDefault: false,
     dependencies: [],
     dependents: [],
     category: 'operations'
@@ -96,7 +96,7 @@ export const features: Feature[] = [
     id: 'ghg-accounting',
     name: 'GHG Accounting',
     description: 'Greenhouse gas emissions tracking and reporting',
-    isDefault: true,
+    isDefault: false,
     dependencies: [],
     dependents: [],
     category: 'operations'
@@ -105,7 +105,7 @@ export const features: Feature[] = [
     id: 'materiality',
     name: 'Materiality Assessment',
     description: 'ESG materiality analysis and stakeholder engagement',
-    isDefault: true,
+    isDefault: false,
     dependencies: [],
     dependents: ['esg-management'],
     category: 'operations'
@@ -114,7 +114,7 @@ export const features: Feature[] = [
     id: 'esg-management',
     name: 'ESG Management',
     description: 'Comprehensive ESG strategy and performance management',
-    isDefault: true,
+    isDefault: false,
     dependencies: ['materiality'],
     dependents: [],
     category: 'operations'
@@ -123,7 +123,7 @@ export const features: Feature[] = [
     id: 'reports',
     name: 'Reports & Analytics',
     description: 'Comprehensive reporting and analytics suite',
-    isDefault: true,
+    isDefault: false,
     dependencies: ['lms', 'ehs-trainings', 'audit', 'ghg-accounting', 'materiality', 'esg-management'],
     dependents: [],
     category: 'reporting'
