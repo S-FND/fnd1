@@ -48,6 +48,15 @@ export const features: Feature[] = [
     category: 'management'
   },
   {
+    id: 'stakeholder-management',
+    name: 'Stakeholder Management',
+    description: 'Manage stakeholders and engagement plans',
+    isDefault: false,
+    dependencies: [],
+    dependents: [],
+    category: 'operations'
+  },
+  {
     id: 'lms',
     name: 'Learning Management System',
     description: 'Training modules and learning programs',

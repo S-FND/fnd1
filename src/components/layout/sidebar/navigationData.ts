@@ -95,7 +95,7 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
         name: "Stakeholders",
         href: "/stakeholders",
         icon: Users,
-        featureId: 'esg-management',
+        featureId: 'stakeholder-management',
         submenu: [
           { name: "Overview", href: "/stakeholders", icon: Users },
           { name: "Manage Stakeholders", href: "/stakeholders/manage", icon: Users },

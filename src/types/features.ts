@@ -1,4 +1,3 @@
-
 export type FeatureId = 
   | 'lms'
   | 'ehs-trainings' 
@@ -13,7 +12,8 @@ export type FeatureId =
   | 'team-management'
   | 'company-profile'
   | 'settings'
-  | 'dashboard';
+  | 'dashboard'
+  | 'stakeholder-management';
 
 export interface Feature {
   id: FeatureId;
