@@ -29,47 +29,47 @@ const ESGPage = () => {
 
   return (
     <Routes>
-      <Route path="/" element={
+      <Route index element={
         <UnifiedSidebarLayout>
           <ESGManagementPage />
         </UnifiedSidebarLayout>
       } />
-      <Route path="/esms" element={
+      <Route path="esms" element={
         <UnifiedSidebarLayout>
           <ESMSPage />
         </UnifiedSidebarLayout>
       } />
-      <Route path="/metrics" element={
+      <Route path="metrics" element={
         <UnifiedSidebarLayout>
           <ESGMetricsPage />
         </UnifiedSidebarLayout>
       } />
-      <Route path="/reports" element={
+      <Route path="reports" element={
         <UnifiedSidebarLayout>
           <ReportsPage />
         </UnifiedSidebarLayout>
       } />
-      <Route path="/reports/brsr" element={
+      <Route path="reports/brsr" element={
         <UnifiedSidebarLayout>
           <BRSRReport />
         </UnifiedSidebarLayout>
       } />
-      <Route path="/reports/gri" element={
+      <Route path="reports/gri" element={
         <UnifiedSidebarLayout>
           <GRIReport />
         </UnifiedSidebarLayout>
       } />
-      <Route path="/reports/tcfd" element={
+      <Route path="reports/tcfd" element={
         <UnifiedSidebarLayout>
           <TCFDReport />
         </UnifiedSidebarLayout>
       } />
-      <Route path="/reports/esrs" element={
+      <Route path="reports/esrs" element={
         <UnifiedSidebarLayout>
           <ESRSReport />
         </UnifiedSidebarLayout>
       } />
-      <Route path="/reports/impact" element={
+      <Route path="reports/impact" element={
         <UnifiedSidebarLayout>
           <ImpactReport />
         </UnifiedSidebarLayout>
