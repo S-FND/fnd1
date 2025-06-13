@@ -26,18 +26,28 @@ const ESGPage = () => {
   }
 
   return (
-    <UnifiedSidebarLayout>
-      <Routes>
-        <Route path="/" element={<ESGDashboard />} />
-        <Route path="/management" element={<ESGManagementPage />} />
-        <Route path="/reports" element={<ReportsPage />} />
-        <Route path="/reports/brsr" element={<BRSRReport />} />
-        <Route path="/reports/gri" element={<GRIReport />} />
-        <Route path="/reports/tcfd" element={<TCFDReport />} />
-        <Route path="/reports/esrs" element={<ESRSReport />} />
-        <Route path="/reports/impact" element={<ImpactReport />} />
-      </Routes>
-    </UnifiedSidebarLayout>
+    <Routes>
+      <Route path="/" element={
+        <UnifiedSidebarLayout>
+          <ESGDashboard />
+        </UnifiedSidebarLayout>
+      } />
+      <Route path="/management" element={
+        <UnifiedSidebarLayout>
+          <ESGManagementPage />
+        </UnifiedSidebarLayout>
+      } />
+      <Route path="/reports" element={
+        <UnifiedSidebarLayout>
+          <ReportsPage />
+        </UnifiedSidebarLayout>
+      } />
+      <Route path="/reports/brsr" element={<BRSRReport />} />
+      <Route path="/reports/gri" element={<GRIReport />} />
+      <Route path="/reports/tcfd" element={<TCFDReport />} />
+      <Route path="/reports/esrs" element={<ESRSReport />} />
+      <Route path="/reports/impact" element={<ImpactReport />} />
+    </Routes>
   );
 };
 
