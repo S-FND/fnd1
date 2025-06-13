@@ -9,7 +9,8 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ZAxis 
+  ZAxis,
+  Cell
 } from 'recharts';
 import MatrixQuadrant from './MatrixQuadrant';
 import CustomTooltip from './CustomTooltip';
@@ -45,6 +46,30 @@ const MaterialityMatrix: React.FC<MaterialityMatrixProps> = ({
     
     return true;
   });
+
+  // Define category colors
+  const categoryColors = {
+    'Environment': '#22c55e', // green
+    'Social': '#60a5fa',     // blue
+    'Governance': '#f59e0b'  // amber
+  };
+
+  // Custom dot component to render colored dots
+  const CustomDot = (props: any) => {
+    const { cx, cy, payload } = props;
+    const color = categoryColors[payload.category as keyof typeof categoryColors] || '#94a3b8';
+    
+    return (
+      <circle 
+        cx={cx} 
+        cy={cy} 
+        r={6} 
+        fill={color} 
+        stroke="#fff"
+        strokeWidth={1}
+      />
+    );
+  };
   
   return (
     <Card>
@@ -187,14 +212,12 @@ const MaterialityMatrix: React.FC<MaterialityMatrixProps> = ({
                 <Tooltip content={<CustomTooltip />} />
                 {/* Reference lines for quadrants */}
                 <CartesianGrid strokeDasharray="3 3" />
-                {/* Scatter plot points */}
+                {/* Scatter plot points with custom colored dots */}
                 <Scatter 
                   name="Material Topics" 
                   data={filteredData} 
-                  fill="#8884d8"
-                  shape="circle"
-                >
-                </Scatter>
+                  shape={<CustomDot />}
+                />
               </ScatterChart>
             </ResponsiveContainer>
           </div>
