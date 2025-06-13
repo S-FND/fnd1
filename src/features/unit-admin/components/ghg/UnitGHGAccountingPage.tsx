@@ -1,7 +1,5 @@
 
 import React from 'react';
-import { Navbar } from '@/components/layout/Navbar';
-import { SidebarLayout } from '@/components/layout/Sidebar';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
