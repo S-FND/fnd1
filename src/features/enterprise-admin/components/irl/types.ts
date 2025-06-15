@@ -56,4 +56,17 @@ export interface CompanyFormData {
   website: string;
   financialYearReporting: string;
   businessActivitiesDescription: string;
+  // HR-related properties that are still used in Company Information
+  facilitiesCompliance: string;
+  labourCompliances: string;
+  fireTraining: string;
+  hrPoliciesTraining: string;
+  mockDrills: string;
+  employeeWellbeingHealthInsurance: string;
+  employeeWellbeingAccidentInsurance: string;
+  employeeWellbeingMaternityBenefits: string;
+  employeeWellbeingPaternityBenefits: string;
+  employeeWellbeingDayCare: string;
+  employeeWellbeingLifeInsurance: string;
+  retrenchmentDetails: string;
 }
