@@ -105,7 +105,7 @@ export const AttendeesList: React.FC<AttendeesListProps> = ({ control, onInviteN
                 </div>
 
                 {/* Show non-existing email alert and invite button conditionally */}
-                {nonExistingEmails[index] && field.email && (
+                {nonExistingEmails[index]  && (
                   <div className="flex items-center justify-between pl-2">
                     <Alert variant="default" className="bg-muted">
                       <AlertDescription className="text-sm">

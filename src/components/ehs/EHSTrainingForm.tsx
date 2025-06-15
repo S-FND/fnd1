@@ -12,6 +12,7 @@ import { TrainingSchedule } from './training-form/TrainingSchedule';
 import { TrainingDetails } from './training-form/TrainingDetails';
 import { AttendeesList } from './training-form/AttendeesList';
 import { formSchema, type FormValues } from './training-form/types';
+import { toast as toasts } from 'sonner';
 
 interface EHSTrainingFormProps {
   onComplete: () => void;
@@ -41,13 +42,25 @@ const EHSTrainingForm: React.FC<EHSTrainingFormProps> = ({ onComplete }) => {
     },
   });
 
-  const onSubmit = (data: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
     console.log('Training data:', data);
     
-    toast({
-      title: "Training created",
-      description: `${data.name} for ${data.clientCompany} has been scheduled from ${format(data.startDate, 'MMMM d, yyyy')} to ${format(data.endDate, 'MMMM d, yyyy')}`,
+    const res = await fetch(`${import.meta.env.VITE_API_URL}`+"/company-admin/trainings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json",Authorization : `Bearer ${localStorage.getItem("fandoro-token")}` },
+      body: JSON.stringify({ ...data }),
     });
+    if (!res.ok) {
+      toasts.error("Invalid credentials");
+      // setIsLoading(false);
+      return;
+    }
+    else{
+      toast({
+        title: "Training created",
+        description: `${data.name} for ${data.clientCompany} has been scheduled from ${format(data.startDate, 'MMMM d, yyyy')} to ${format(data.endDate, 'MMMM d, yyyy')}`,
+      });
+    }
     
     onComplete();
   };
