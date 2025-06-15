@@ -1,7 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import OutsourcedServicesSection from './OutsourcedServicesSection';
+import { OutsourcedService } from './types';
 
 interface EmployeeData {
   function: string;
@@ -28,6 +33,22 @@ interface DifferentlyAbledData {
 }
 
 const IRLHRInformation = () => {
+  const [formData, setFormData] = useState({
+    workingHours: '',
+    shiftTiming: '',
+    otHoursCurrent: '',
+    otHoursPrevious: '',
+    otPayCompensation: '',
+    facilitiesList: '',
+    productSafetyCertifications: '',
+    emergencyIncidents: '',
+    retrenchmentDetails: ''
+  });
+
+  const [outsourcedServices, setOutsourcedServices] = useState<OutsourcedService[]>([
+    { agencyName: '', servicesDischarged: '', malePersons: '', femalePersons: '' }
+  ]);
+
   const [employeeData, setEmployeeData] = useState<EmployeeData[]>([
     { function: '', permanentMale: '', permanentFemale: '', otherMale: '', otherFemale: '' }
   ]);
@@ -130,13 +151,11 @@ const IRLHRInformation = () => {
   };
 
   const handleSave = () => {
-    console.log('Saving HR data:', { employeeData, workerData, differentlyAbledData, boardDirectors, keyManagerial });
-    // TODO: Implement save functionality
+    console.log('Saving HR data:', { formData, outsourcedServices, employeeData, workerData, differentlyAbledData, boardDirectors, keyManagerial });
   };
 
   const handleSubmit = () => {
-    console.log('Submitting HR data:', { employeeData, workerData, differentlyAbledData, boardDirectors, keyManagerial });
-    // TODO: Implement submit functionality
+    console.log('Submitting HR data:', { formData, outsourcedServices, employeeData, workerData, differentlyAbledData, boardDirectors, keyManagerial });
   };
 
   const employeeTotals = calculateEmployeeTotal();
@@ -152,10 +171,95 @@ const IRLHRInformation = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-8">
-        {/* 1. Human Resource Management - Employees */}
+        {/* 1. Working hours for FTEs */}
+        <div className="space-y-2">
+          <Label htmlFor="workingHours">1. Working hours for FTEs</Label>
+          <Input
+            id="workingHours"
+            value={formData.workingHours}
+            onChange={(e) => setFormData({ ...formData, workingHours: e.target.value })}
+          />
+        </div>
+
+        {/* 2. Shift timing for contract workers */}
+        <div className="space-y-4">
+          <Label>2. Shift timing for contract workers (if any)</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="shiftTiming">Shift timing</Label>
+              <Input
+                id="shiftTiming"
+                value={formData.shiftTiming}
+                onChange={(e) => setFormData({ ...formData, shiftTiming: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="otHoursCurrent">Total OT hours - Current FY</Label>
+              <Input
+                id="otHoursCurrent"
+                value={formData.otHoursCurrent}
+                onChange={(e) => setFormData({ ...formData, otHoursCurrent: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="otHoursPrevious">Total OT hours - Previous FY</Label>
+              <Input
+                id="otHoursPrevious"
+                value={formData.otHoursPrevious}
+                onChange={(e) => setFormData({ ...formData, otHoursPrevious: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="otPayCompensation">Total OT Pay/Compensation</Label>
+              <Input
+                id="otPayCompensation"
+                value={formData.otPayCompensation}
+                onChange={(e) => setFormData({ ...formData, otPayCompensation: e.target.value })}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* 3. Outsourced Services */}
+        <OutsourcedServicesSection 
+          outsourcedServices={outsourcedServices} 
+          setOutsourcedServices={setOutsourcedServices} 
+        />
+
+        {/* 4. List of major facilities */}
+        <div className="space-y-2">
+          <Label htmlFor="facilitiesList">4. List of major facilities/Units/Departments (Manufacturing, Laboratory, Cafeteria) provided by property owner in the office space (With number of each facility)</Label>
+          <Textarea
+            id="facilitiesList"
+            value={formData.facilitiesList}
+            onChange={(e) => setFormData({ ...formData, facilitiesList: e.target.value })}
+          />
+        </div>
+
+        {/* 5. Product safety certifications */}
+        <div className="space-y-2">
+          <Label htmlFor="productSafetyCertifications">5. Certifications (if any) for product safety</Label>
+          <Textarea
+            id="productSafetyCertifications"
+            value={formData.productSafetyCertifications}
+            onChange={(e) => setFormData({ ...formData, productSafetyCertifications: e.target.value })}
+          />
+        </div>
+
+        {/* 6. Emergency incidents */}
+        <div className="space-y-2">
+          <Label htmlFor="emergencyIncidents">6. Have the employees (on-roll, contract) been involved in any emergency incidents or accidents occurred in the workplace or during work related activities?</Label>
+          <Textarea
+            id="emergencyIncidents"
+            value={formData.emergencyIncidents}
+            onChange={(e) => setFormData({ ...formData, emergencyIncidents: e.target.value })}
+          />
+        </div>
+
+        {/* 7. Human Resource Management - Employees */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">1. Human Resource Management - Employees</h3>
+            <h3 className="text-lg font-semibold">7. Human Resource Management - Employees</h3>
             <Button onClick={addEmployeeRow} size="sm">Add Row</Button>
           </div>
           
@@ -247,10 +351,10 @@ const IRLHRInformation = () => {
           </div>
         </div>
 
-        {/* 2. Human Resource Management - Workers */}
+        {/* 8. Human Resource Management - Workers */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">2. Human Resource Management - Workers</h3>
+            <h3 className="text-lg font-semibold">8. Human Resource Management - Workers</h3>
             <Button onClick={addWorkerRow} size="sm">Add Row</Button>
           </div>
           
@@ -342,10 +446,10 @@ const IRLHRInformation = () => {
           </div>
         </div>
 
-        {/* 3. Human Resource Management - Differently Abled Personnel */}
+        {/* 9. Human Resource Management - Differently Abled Personnel */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">3. Human Resource Management (Differently Abled Personnel)</h3>
+            <h3 className="text-lg font-semibold">9. Human Resource Management (Differently Abled Personnel)</h3>
             <Button onClick={addDifferentlyAbledRow} size="sm">Add Row</Button>
           </div>
           
@@ -437,9 +541,9 @@ const IRLHRInformation = () => {
           </div>
         </div>
 
-        {/* 4. Key Managerial Positions / Board of Directors */}
+        {/* 10. Key Managerial Positions / Board of Directors */}
         <div className="space-y-4">
-          <h3 className="text-lg font-semibold">4. Key Managerial Positions / Board of Directors</h3>
+          <h3 className="text-lg font-semibold">10. Key Managerial Positions / Board of Directors</h3>
           
           <div className="overflow-x-auto">
             <table className="w-full border-collapse border border-gray-300">
@@ -493,6 +597,16 @@ const IRLHRInformation = () => {
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* 11. Retrenchment details */}
+        <div className="space-y-2">
+          <Label htmlFor="retrenchmentDetails">11. Any retrenchment or mass dismissal of employees conducted?</Label>
+          <Textarea
+            id="retrenchmentDetails"
+            value={formData.retrenchmentDetails}
+            onChange={(e) => setFormData({ ...formData, retrenchmentDetails: e.target.value })}
+          />
         </div>
 
         <div className="flex gap-4 pt-6">

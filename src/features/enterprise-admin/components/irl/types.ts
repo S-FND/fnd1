@@ -36,14 +36,6 @@ export interface CompanyFormData {
   foundingTeam: string;
   totalBeneficiaries: string;
   litigationDetails: string;
-  workingHours: string;
-  shiftTiming: string;
-  otHoursCurrent: string;
-  otHoursPrevious: string;
-  otPayCompensation: string;
-  facilitiesList: string;
-  productSafetyCertifications: string;
-  emergencyIncidents: string;
   esgTeamMembers: string;
   facilitiesCompliance: string;
   labourCompliances: string;
