@@ -8,22 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2 } from 'lucide-react';
-
-interface OfficeSpace {
-  location: string;
-  type: string;
-  address: string;
-  geotagLocation: string;
-  numberOfSeats: string;
-}
-
-interface LocationDetails {
-  locationType: string;
-  warehouses: string;
-  offices: string;
-  distributionCenters: string;
-  total: string;
-}
+import { OfficeSpace, LocationDetails, WarehouseItem } from '../irl/types';
 
 const AdvancedIRLFacility = () => {
   const [formData, setFormData] = useState({
@@ -53,6 +38,10 @@ const AdvancedIRLFacility = () => {
     { locationType: 'International', warehouses: '', offices: '', distributionCenters: '', total: '' }
   ]);
 
+  const [warehouseItems, setWarehouseItems] = useState<WarehouseItem[]>([
+    { id: 1, name: '', plotArea: '', itemsStored: '', location: '', exclusiveSupplier: '' }
+  ]);
+
   const addOfficeSpace = () => {
     setOfficeSpaces([...officeSpaces, { location: '', type: '', address: '', geotagLocation: '', numberOfSeats: '' }]);
   };
@@ -61,12 +50,36 @@ const AdvancedIRLFacility = () => {
     setOfficeSpaces(officeSpaces.filter((_, i) => i !== index));
   };
 
+  const addWarehouseRow = () => {
+    const newId = Math.max(...warehouseItems.map(item => item.id)) + 1;
+    setWarehouseItems([...warehouseItems, { 
+      id: newId, 
+      name: '', 
+      plotArea: '', 
+      itemsStored: '', 
+      location: '', 
+      exclusiveSupplier: '' 
+    }]);
+  };
+
+  const removeWarehouseRow = (id: number) => {
+    if (warehouseItems.length > 1) {
+      setWarehouseItems(warehouseItems.filter(item => item.id !== id));
+    }
+  };
+
+  const handleWarehouseChange = (id: number, field: keyof WarehouseItem, value: string) => {
+    setWarehouseItems(items =>
+      items.map(item => item.id === id ? { ...item, [field]: value } : item)
+    );
+  };
+
   const handleSave = () => {
-    console.log('Saving Advanced IRL Facility data:', { formData, officeSpaces, locationDetails });
+    console.log('Saving Advanced IRL Facility data:', { formData, officeSpaces, locationDetails, warehouseItems });
   };
 
   const handleSubmit = () => {
-    console.log('Submitting Advanced IRL Facility data:', { formData, officeSpaces, locationDetails });
+    console.log('Submitting Advanced IRL Facility data:', { formData, officeSpaces, locationDetails, warehouseItems });
   };
 
   return (
@@ -74,11 +87,11 @@ const AdvancedIRLFacility = () => {
       <CardHeader>
         <CardTitle>Advanced IRL - Facility Information</CardTitle>
         <CardDescription>
-          Office spaces, facility locations, fire safety infrastructure, and operational information
+          Office spaces, facility locations, fire safety infrastructure, warehouse information, and operational information
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Question 1: Type of office space & no. of seats (moved from Company) */}
+        {/* Question 1: Type of office space & no. of seats */}
         <div className="space-y-4">
           <Label>1. Type of office space & no. of seats</Label>
           {officeSpaces.map((space, index) => (
@@ -169,7 +182,7 @@ const AdvancedIRLFacility = () => {
           </Button>
         </div>
 
-        {/* Question 2: Number of locations (moved from Company) */}
+        {/* Question 2: Number of locations */}
         <div className="space-y-4">
           <Label>2. Number of locations where plants (in case of manufacturing businesses) and/or operations/offices (in case of non-manufacturing) of the Company are situated:</Label>
           {locationDetails.map((location, index) => (
@@ -229,7 +242,7 @@ const AdvancedIRLFacility = () => {
           ))}
         </div>
 
-        {/* Question 3: Transportation details (moved from Company) */}
+        {/* Question 3: Transportation details */}
         <div className="space-y-2">
           <Label htmlFor="transportationDetails">3. Does the company organise transportation of raw materials and/or finished goods. If yes, are any vehicles owned. If yes, please provide details</Label>
           <Textarea
@@ -241,7 +254,7 @@ const AdvancedIRLFacility = () => {
           />
         </div>
 
-        {/* Question 4: Young workers (moved from Company) */}
+        {/* Question 4: Young workers */}
         <div className="space-y-2">
           <Label htmlFor="youngWorkers">4. Are any workers between the age of 14 - 18 years employed at the facility?</Label>
           <Textarea
@@ -356,9 +369,86 @@ const AdvancedIRLFacility = () => {
           )}
         </div>
 
+        {/* Question 9: Warehouse Information */}
+        <div className="space-y-4">
+          <Label>9. Warehouse Information</Label>
+          <div className="flex justify-between items-center">
+            <h4 className="text-md font-medium">Warehouse Details</h4>
+            <Button onClick={addWarehouseRow} size="sm">Add Row</Button>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-300">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="border border-gray-300 p-3 text-left">S. No.</th>
+                  <th className="border border-gray-300 p-3 text-left">Name and Plot area (sq.ft)</th>
+                  <th className="border border-gray-300 p-3 text-left">Items Stored</th>
+                  <th className="border border-gray-300 p-3 text-left">Location (City)</th>
+                  <th className="border border-gray-300 p-3 text-center">Whether exclusive supplier? (Yes/no)</th>
+                  <th className="border border-gray-300 p-3 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {warehouseItems.map((item, index) => (
+                  <tr key={item.id}>
+                    <td className="border border-gray-300 p-3 text-center">{index + 1}</td>
+                    <td className="border border-gray-300 p-3">
+                      <Input
+                        value={item.plotArea}
+                        onChange={(e) => handleWarehouseChange(item.id, 'plotArea', e.target.value)}
+                        placeholder="Enter name and plot area"
+                      />
+                    </td>
+                    <td className="border border-gray-300 p-3">
+                      <Input
+                        value={item.itemsStored}
+                        onChange={(e) => handleWarehouseChange(item.id, 'itemsStored', e.target.value)}
+                        placeholder="Enter items stored"
+                      />
+                    </td>
+                    <td className="border border-gray-300 p-3">
+                      <Input
+                        value={item.location}
+                        onChange={(e) => handleWarehouseChange(item.id, 'location', e.target.value)}
+                        placeholder="Enter city"
+                      />
+                    </td>
+                    <td className="border border-gray-300 p-3">
+                      <Select 
+                        value={item.exclusiveSupplier} 
+                        onValueChange={(value) => handleWarehouseChange(item.id, 'exclusiveSupplier', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="border border-gray-300 p-3 text-center">
+                      {warehouseItems.length > 1 && (
+                        <Button 
+                          onClick={() => removeWarehouseRow(item.id)} 
+                          variant="destructive" 
+                          size="sm"
+                        >
+                          Remove
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         {/* Markets Served */}
         <div className="border-l-4 border-blue-500 pl-4 mb-6">
-          <h3 className="text-lg font-semibold mb-4 text-blue-700">9. Markets Served by the Entity</h3>
+          <h3 className="text-lg font-semibold mb-4 text-blue-700">10. Markets Served by the Entity</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">

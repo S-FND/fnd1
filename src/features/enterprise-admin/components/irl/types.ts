@@ -22,6 +22,15 @@ export interface LocationDetails {
   total: string;
 }
 
+export interface WarehouseItem {
+  id: number;
+  name: string;
+  plotArea: string;
+  itemsStored: string;
+  location: string;
+  exclusiveSupplier: string;
+}
+
 export interface CompanyFormData {
   legalEntityName: string;
   emailId: string;
@@ -37,18 +46,6 @@ export interface CompanyFormData {
   totalBeneficiaries: string;
   litigationDetails: string;
   esgTeamMembers: string;
-  facilitiesCompliance: string;
-  labourCompliances: string;
-  fireTraining: string;
-  hrPoliciesTraining: string;
-  mockDrills: string;
-  employeeWellbeingHealthInsurance: string;
-  employeeWellbeingAccidentInsurance: string;
-  employeeWellbeingMaternityBenefits: string;
-  employeeWellbeingPaternityBenefits: string;
-  employeeWellbeingDayCare: string;
-  employeeWellbeingLifeInsurance: string;
-  retrenchmentDetails: string;
   gstNumber: string;
   assuranceProviderName: string;
   assuranceType: string;
