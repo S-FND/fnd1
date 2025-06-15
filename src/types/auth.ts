@@ -22,6 +22,12 @@ export interface VendorInfo {
   specialties: string[];
 }
 
+export interface CompanyInfo {
+  id: string;
+  name: string;
+  fundingStage?: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -31,6 +37,7 @@ export interface User {
   locationId: string;
   unitId?: string;
   units?: CompanyUnit[];
+  company?: CompanyInfo;
   supplierInfo?: SupplierInfo;
   vendorInfo?: VendorInfo;
 }
@@ -54,7 +61,7 @@ export interface AuthContextType {
   isSupplier: () => boolean;
   isVendor: () => boolean;
   isFandoroAdmin: () => boolean;
-  isEnterpriseAdmin: () => boolean; // Added isEnterpriseAdmin function
+  isEnterpriseAdmin: () => boolean;
   hasReadAccess: (feature: string) => boolean;
   hasWriteAccess: (feature: string) => boolean;
 }

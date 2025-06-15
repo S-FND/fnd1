@@ -1,7 +1,9 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { esgKPIs, sdgGoals } from '@/data';
 import { 
   ResponsiveContainer, 
@@ -15,13 +17,83 @@ import {
   YAxis,
   CartesianGrid,
   Legend,
+  LineChart,
+  Line,
+  AreaChart,
+  Area
 } from 'recharts';
 
 const COLORS = ['#22c55e', '#60a5fa', '#f59e0b', '#ec4899', '#8b5cf6'];
 const SDG_COLORS = ['#e11d3f', '#dda63a', '#4c9f38', '#c5192d', '#ff3a21', '#26bde2', '#fcc30b', '#a21942', '#fd6925', '#dd1367', '#fd9d24', '#bf8b2e', '#3f7e44', '#0a97d9', '#56c02b', '#00689d', '#19486a'];
 
+// Monthly trend data for ESG metrics
+const monthlyTrendData = [
+  { month: 'Jan', environmental: 65, social: 58, governance: 72 },
+  { month: 'Feb', environmental: 68, social: 62, governance: 74 },
+  { month: 'Mar', environmental: 70, social: 65, governance: 75 },
+  { month: 'Apr', environmental: 72, social: 68, governance: 77 },
+  { month: 'May', environmental: 75, social: 70, governance: 78 }
+];
+
+// Material topics data
+const materialTopics = [
+  { 
+    id: 'climate', 
+    name: 'Climate Change & Emissions',
+    category: 'Environment',
+    importance: 'High',
+    businessImpact: 'High',
+    sustainabilityImpact: 'High',
+    description: 'Managing greenhouse gas emissions and adapting to climate risks',
+    baseline: '18,000 tCO2e (2020)',
+    target: '9,000 tCO2e (2030)',
+    currentStatus: '12,500 tCO2e',
+    progress: 61
+  },
+  { 
+    id: 'water', 
+    name: 'Water Management',
+    category: 'Environment',
+    importance: 'Medium',
+    businessImpact: 'Medium',
+    sustainabilityImpact: 'High',
+    description: 'Reducing water consumption and ensuring water quality',
+    baseline: '4.5M liters (2020)',
+    target: '2.5M liters (2030)',
+    currentStatus: '3.2M liters',
+    progress: 65
+  },
+  { 
+    id: 'diversity', 
+    name: 'Diversity & Inclusion',
+    category: 'Social',
+    importance: 'High',
+    businessImpact: 'Medium',
+    sustainabilityImpact: 'Medium',
+    description: 'Fostering diverse and inclusive workplace',
+    baseline: '30% diversity (2020)',
+    target: '50% diversity (2030)',
+    currentStatus: '38% diversity',
+    progress: 40
+  },
+  { 
+    id: 'ethics', 
+    name: 'Ethics & Governance',
+    category: 'Governance',
+    importance: 'High',
+    businessImpact: 'High',
+    sustainabilityImpact: 'Medium',
+    description: 'Ensuring corporate ethics, transparency and anti-corruption',
+    baseline: '70% compliance (2020)',
+    target: '100% compliance (2030)',
+    currentStatus: '85% compliance',
+    progress: 50
+  }
+];
+
 const ESGDashboard: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = React.useState<string>("All");
+  const [selectedMateriality, setSelectedMateriality] = React.useState<string>("All");
   
   const filteredKPIs = selectedCategory === "All" 
     ? esgKPIs 
@@ -38,6 +110,10 @@ const ESGDashboard: React.FC = () => {
     const avgProgress = kpis.reduce((sum, kpi) => sum + kpi.progress, 0) / kpis.length;
     return { name: category.name, progress: Math.round(avgProgress) };
   });
+
+  const filteredMaterialTopics = selectedMateriality === "All" 
+    ? materialTopics 
+    : materialTopics.filter(topic => topic.category === selectedMateriality);
   
   return (
     <div className="space-y-6">
@@ -51,10 +127,13 @@ const ESGDashboard: React.FC = () => {
       <Tabs defaultValue="kpis" className="space-y-4">
         <TabsList>
           <TabsTrigger value="kpis">ESG KPIs</TabsTrigger>
+          <TabsTrigger value="material">Material Topics</TabsTrigger>
+          <TabsTrigger value="trends">Monthly Trends</TabsTrigger>
           <TabsTrigger value="sdgs">SDG Goals</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
         </TabsList>
         
+        {/* ESG KPIs Tab */}
         <TabsContent value="kpis">
           <div className="grid gap-4 md:grid-cols-4">
             <Card className="md:col-span-1">
@@ -117,7 +196,8 @@ const ESGDashboard: React.FC = () => {
                       </div>
                       <Progress value={kpi.progress} className="h-2" />
                       <div className="flex justify-between text-xs text-muted-foreground pt-1">
-                        <span>Target: {kpi.target} {kpi.unit}</span>
+                        <span>Baseline: {kpi.baseline} {kpi.unit} (2020)</span>
+                        <span>Target: {kpi.target} {kpi.unit} (2030)</span>
                         <span>{kpi.progress}% of target</span>
                       </div>
                     </div>
@@ -183,6 +263,147 @@ const ESGDashboard: React.FC = () => {
           </div>
         </TabsContent>
         
+        {/* Material Topics Tab */}
+        <TabsContent value="material">
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card className="md:col-span-1">
+              <CardHeader>
+                <CardTitle className="text-base">Categories</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <button
+                  onClick={() => setSelectedMateriality("All")}
+                  className={`w-full text-left px-3 py-2 text-sm rounded-md ${
+                    selectedMateriality === "All" 
+                      ? "bg-primary text-primary-foreground" 
+                      : "hover:bg-muted"
+                  }`}
+                >
+                  All Categories
+                </button>
+                {['Environment', 'Social', 'Governance'].map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => setSelectedMateriality(category)}
+                    className={`w-full text-left px-3 py-2 text-sm rounded-md ${
+                      selectedMateriality === category 
+                        ? "bg-primary text-primary-foreground" 
+                        : "hover:bg-muted"
+                    }`}
+                  >
+                    {category}
+                  </button>
+                ))}
+              </CardContent>
+            </Card>
+            
+            <div className="md:col-span-3 grid gap-4 grid-cols-1 md:grid-cols-2">
+              {filteredMaterialTopics.map((topic) => (
+                <Card key={topic.id}>
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <CardTitle className="text-base">{topic.name}</CardTitle>
+                      <Badge variant={
+                        topic.importance === 'High' ? "destructive" : 
+                        topic.importance === 'Medium' ? "default" : "outline"
+                      }>
+                        {topic.importance} Priority
+                      </Badge>
+                    </div>
+                    <CardDescription>{topic.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <div className="text-sm font-medium mb-1">Progress Toward Target</div>
+                        <Progress value={topic.progress} className="h-2" />
+                        <div className="flex justify-between text-xs text-muted-foreground pt-1">
+                          <span>Baseline: {topic.baseline}</span>
+                          <span>Target: {topic.target}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 pt-2">
+                        <div>
+                          <div className="text-xs text-muted-foreground">Business Impact</div>
+                          <div className="font-medium">{topic.businessImpact}</div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-muted-foreground">Sustainability Impact</div>
+                          <div className="font-medium">{topic.sustainabilityImpact}</div>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <div className="text-xs text-muted-foreground">Current Status</div>
+                        <div className="font-medium">{topic.currentStatus}</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </TabsContent>
+        
+        {/* Monthly Trends Tab */}
+        <TabsContent value="trends">
+          <Card>
+            <CardHeader>
+              <CardTitle>ESG Performance Trends</CardTitle>
+              <CardDescription>Month-on-month progress for each ESG category</CardDescription>
+            </CardHeader>
+            <CardContent className="h-[400px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={monthlyTrendData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="environmental" name="Environmental" stroke="#22c55e" strokeWidth={2} />
+                  <Line type="monotone" dataKey="social" name="Social" stroke="#60a5fa" strokeWidth={2} />
+                  <Line type="monotone" dataKey="governance" name="Governance" stroke="#f59e0b" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+          
+          <div className="grid gap-4 mt-4 md:grid-cols-3">
+            {['Environmental', 'Social', 'Governance'].map((category, index) => (
+              <Card key={category}>
+                <CardHeader>
+                  <CardTitle>{category} Metrics</CardTitle>
+                  <CardDescription>Monthly progression</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[250px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={monthlyTrendData}
+                      margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis domain={[0, 100]} />
+                      <Tooltip />
+                      <Area 
+                        type="monotone" 
+                        dataKey={category.toLowerCase()} 
+                        fill={COLORS[index % COLORS.length]} 
+                        stroke={COLORS[index % COLORS.length]} 
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+        
+        {/* SDGs Tab */}
         <TabsContent value="sdgs">
           <Card>
             <CardHeader>
@@ -221,6 +442,7 @@ const ESGDashboard: React.FC = () => {
           </Card>
         </TabsContent>
         
+        {/* Reports Tab */}
         <TabsContent value="reports">
           <Card>
             <CardHeader>

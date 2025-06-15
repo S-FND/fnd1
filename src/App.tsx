@@ -1,129 +1,128 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
-import { AuthProvider } from "@/context/AuthContext";
-import { useAuth } from "@/context/AuthContext";
-import { Suspense, ReactNode } from "react";
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { FeaturesProvider } from '@/context/FeaturesContext';
+import './App.css';
+import Index from './pages/Index';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import EnhancedDashboard from './pages/EnhancedDashboard';
+import Compliance from './pages/Compliance';
+import Units from './pages/Units';
+import NotFound from './pages/NotFound';
+import EHSTrainings from './pages/EHSTrainings';
+import EHSTrainingDetails from './pages/EHSTrainingDetails';
+import EnhancedEmployeeDashboard from './pages/EnhancedEmployeeDashboard';
+import AuditDashboardPage from './pages/audit/AuditDashboardPage';
+import AuditChecklistPage from './pages/audit/AuditChecklistPage';
+import SupplierDashboardPage from './pages/supplier/SupplierDashboardPage';
+import SupplierAuditResponsePage from './pages/supplier/SupplierAuditResponsePage';
+import VendorDashboard from './pages/vendor/VendorDashboard';
+import VendorProfile from './pages/vendor/VendorProfile';
+import VendorBids from './pages/vendor/VendorBids';
+import VendorBidForm from './pages/vendor/VendorBidForm';
+import VendorTrainings from './pages/vendor/VendorTrainings';
+import ESGPage from './features/enterprise-admin/pages/ESG';
+import EmployeeDashboardPage from './features/employee/pages/Dashboard';
+import MaterialityPage from './features/enterprise-admin/pages/Materiality';
+import PersonalGHGPage from './features/employee/pages/PersonalGHG';
+import GHGAccountingPage from './features/enterprise-admin/pages/GHGAccounting';
+import UnitGHGAccountingPage from './features/unit-admin/components/ghg/UnitGHGAccountingPage';
+import ESGDDPage from './features/enterprise-admin/pages/ESGDD';
+import ESGDDReportsPage from './features/enterprise-admin/pages/ESGDDReports';
+import ManualESGDDPage from './features/enterprise-admin/pages/ManualESGDD';
+import AutomatedESGDDPage from './features/enterprise-admin/pages/AutomatedESGDD';
+import ESGCapPage from './features/enterprise-admin/pages/ESGCap';
+import IRLPage from './features/enterprise-admin/pages/IRLPage';
+import AdvancedIRLPage from './features/enterprise-admin/pages/AdvancedIRLPage';
+import ReportsPage from './features/enterprise-admin/pages/Reports';
+import BRSRReport from './features/enterprise-admin/pages/BRSRReport';
+import GRIReport from './features/enterprise-admin/pages/GRIReport';
+import TCFDReport from './features/enterprise-admin/pages/TCFDReport';
+import ImpactReport from './features/enterprise-admin/pages/ImpactReport';
+import StakeholdersOverviewPage from './features/enterprise-admin/pages/stakeholders/StakeholdersOverviewPage';
+import ManageStakeholdersPage from './features/enterprise-admin/pages/stakeholders/ManageStakeholdersPage';
+import CategoriesPage from './features/enterprise-admin/pages/stakeholders/CategoriesPage';
+import EngagementPlanPage from './features/enterprise-admin/pages/stakeholders/EngagementPlanPage';
+import ESGManagementPage from './features/enterprise-admin/pages/ESGManagement';
+import TeamManagementPage from './features/enterprise-admin/pages/TeamManagement';
+import CompanyProfilePage from './pages/CompanyProfile';
+import FeatureManagementPage from './pages/FeatureManagement';
+import SupplierAuditsPage from './pages/audit/SupplierAuditsPage';
+import EHSAuditsPage from './pages/audit/EHSAuditsPage';
+import InternalAuditsPage from './pages/audit/InternalAuditsPage';
 
-// Pages
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-
-// Enterprise Admin Pages
-import EnterpriseAdminDashboardPage from "./features/enterprise-admin/pages/Dashboard";
-import ESGPage from "@/features/enterprise-admin/pages/ESG";
-import GHGPage from "@/features/enterprise-admin/pages/GHG";
-import CompliancePage from "./pages/Compliance";
-import LMSPage from "@/features/enterprise-admin/pages/LMS";
-import UnitsPage from "./pages/Units";
-import EHSTrainingsPage from "./pages/EHSTrainings";
-import EHSTrainingDetails from "./pages/EHSTrainingDetails";
-import NotFound from "./pages/NotFound";
-import AuditDashboardPage from "./pages/audit/AuditDashboardPage";
-import AuditChecklistPage from "./pages/audit/AuditChecklistPage";
-
-// Employee Pages
-import EmployeeDashboardPage from "./features/employee/pages/Dashboard";
-import PersonalGHGPage from "@/features/employee/pages/PersonalGHG";
-
-// Unit Admin Pages
-import UnitAdminDashboardPage from "./features/unit-admin/pages/Dashboard";
-
-// Supplier pages
-import SupplierDashboardPage from "./features/supplier/pages/Dashboard";
-import SupplierAuditResponsePage from "./pages/supplier/SupplierAuditResponsePage";
-
-// Vendor pages
-import VendorDashboard from "./features/vendor/pages/Dashboard";
-import VendorTrainings from "./pages/vendor/VendorTrainings";
-import VendorBids from "./pages/vendor/VendorBids";
-import VendorBidForm from "./pages/vendor/VendorBidForm";
-import VendorProfile from "./pages/vendor/VendorProfile";
-
-// Fandoro Admin pages
-import FandoroAdminDashboardPage from "./features/fandoro-admin/pages/Dashboard";
-import EnterprisesPage from "./features/fandoro-admin/pages/Enterprises";
-import ESGCapPage from "./features/fandoro-admin/pages/ESGCap";
-import NonCompliancesPage from "./features/fandoro-admin/pages/NonCompliances";
-import ESGRisksPage from "./features/fandoro-admin/pages/ESGRisks";
-
-const queryClient = new QueryClient();
-
-// Protected route component
-const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-  
-  if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  }
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            
-            {/* Enterprise/Company Admin routes */}
-            <Route path="/dashboard" element={<ProtectedRoute><EnterpriseAdminDashboardPage /></ProtectedRoute>} />
-            <Route path="/esg" element={<ProtectedRoute><ESGPage /></ProtectedRoute>} />
-            <Route path="/ghg" element={<ProtectedRoute><GHGPage /></ProtectedRoute>} />
-            <Route path="/compliance" element={<ProtectedRoute><CompliancePage /></ProtectedRoute>} />
-            <Route path="/lms" element={<ProtectedRoute><LMSPage /></ProtectedRoute>} />
-            <Route path="/units" element={<ProtectedRoute><UnitsPage /></ProtectedRoute>} />
-            
-            {/* EHS Trainings routes */}
-            <Route path="/ehs-trainings" element={<ProtectedRoute><EHSTrainingsPage /></ProtectedRoute>} />
-            <Route path="/ehs-trainings/:trainingId" element={<ProtectedRoute><EHSTrainingDetails /></ProtectedRoute>} />
-            
-            {/* Audit routes */}
-            <Route path="/audit" element={<ProtectedRoute><AuditDashboardPage /></ProtectedRoute>} />
-            <Route path="/audit/checklist" element={<ProtectedRoute><AuditChecklistPage /></ProtectedRoute>} />
-            
-            {/* Employee routes */}
-            <Route path="/employee/dashboard" element={<ProtectedRoute><EmployeeDashboardPage /></ProtectedRoute>} />
-            <Route path="/personal-ghg" element={<ProtectedRoute><PersonalGHGPage /></ProtectedRoute>} />
-            
-            {/* Unit Admin routes */}
-            <Route path="/unit-admin/dashboard" element={<ProtectedRoute><UnitAdminDashboardPage /></ProtectedRoute>} />
-            
-            {/* Supplier routes */}
-            <Route path="/supplier/dashboard" element={<ProtectedRoute><SupplierDashboardPage /></ProtectedRoute>} />
-            <Route path="/supplier/audit/:auditId" element={<ProtectedRoute><SupplierAuditResponsePage /></ProtectedRoute>} />
-            
-            {/* Vendor routes */}
-            <Route path="/vendor/dashboard" element={<ProtectedRoute><VendorDashboard /></ProtectedRoute>} />
-            <Route path="/vendor/trainings" element={<ProtectedRoute><VendorTrainings /></ProtectedRoute>} />
-            <Route path="/vendor/bids" element={<ProtectedRoute><VendorBids /></ProtectedRoute>} />
-            <Route path="/vendor/bid/:trainingId" element={<ProtectedRoute><VendorBidForm /></ProtectedRoute>} />
-            <Route path="/vendor/profile" element={<ProtectedRoute><VendorProfile /></ProtectedRoute>} />
-            
-            {/* Fandoro Admin routes */}
-            <Route path="/fandoro-admin/dashboard" element={<ProtectedRoute><FandoroAdminDashboardPage /></ProtectedRoute>} />
-            <Route path="/fandoro-admin/enterprises" element={<ProtectedRoute><EnterprisesPage /></ProtectedRoute>} />
-            <Route path="/fandoro-admin/esg-cap" element={<ProtectedRoute><ESGCapPage /></ProtectedRoute>} />
-            <Route path="/fandoro-admin/non-compliances" element={<ProtectedRoute><NonCompliancesPage /></ProtectedRoute>} />
-            <Route path="/fandoro-admin/esg-risks" element={<ProtectedRoute><ESGRisksPage /></ProtectedRoute>} />
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </TooltipProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <FeaturesProvider>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Index />} />
+        <Route path="/login" element={<Login />} />
+        
+        {/* Company / Enterprise Admin Routes */}
+        <Route path="/enhanced-dashboard" element={<EnhancedDashboard />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/company" element={<CompanyProfilePage />} />
+        <Route path="/materiality" element={<MaterialityPage />} />
+        <Route path="/esg/*" element={<ESGPage />} />
+        <Route path="/esg-dd" element={<ESGDDPage />} />
+        <Route path="/esg-dd/reports" element={<ESGDDReportsPage />} />
+        <Route path="/esg-dd/manual" element={<ManualESGDDPage />} />
+        <Route path="/esg-dd/automated" element={<AutomatedESGDDPage />} />
+        <Route path="/esg-dd/cap" element={<ESGCapPage />} />
+        <Route path="/esg-dd/irl" element={<IRLPage />} />
+        <Route path="/esg-dd/advanced" element={<AdvancedIRLPage />} />
+        <Route path="/ghg-accounting" element={<GHGAccountingPage />} />
+        <Route path="/compliance" element={<Compliance />} />
+        <Route path="/reports" element={<ReportsPage />} />
+        <Route path="/reports/brsr" element={<BRSRReport />} />
+        <Route path="/reports/gri" element={<GRIReport />} />
+        <Route path="/reports/tcfd" element={<TCFDReport />} />
+        <Route path="/reports/impact" element={<ImpactReport />} />
+        
+        {/* Stakeholder Management Routes */}
+        <Route path="/stakeholders" element={<StakeholdersOverviewPage />} />
+        <Route path="/stakeholders/manage" element={<ManageStakeholdersPage />} />
+        <Route path="/stakeholders/categories" element={<CategoriesPage />} />
+        <Route path="/stakeholders/engagement" element={<EngagementPlanPage />} />
+        
+        <Route path="/units" element={<Units />} />
+        <Route path="/team-management" element={<TeamManagementPage />} />
+        <Route path="/ehs-trainings" element={<EHSTrainings />} />
+        <Route path="/ehs-trainings/:id" element={<EHSTrainingDetails />} />
+        
+        {/* Audit Routes */}
+        <Route path="/audit" element={<AuditDashboardPage />} />
+        <Route path="/audit/supplier" element={<SupplierAuditsPage />} />
+        <Route path="/audit/ehs" element={<EHSAuditsPage />} />
+        <Route path="/audit/internal" element={<InternalAuditsPage />} />
+        <Route path="/audit/:id" element={<AuditChecklistPage />} />
+        
+        <Route path="/settings" element={<FeatureManagementPage />} />
+        
+        {/* Employee Routes */}
+        <Route path="/employee/dashboard" element={<EmployeeDashboardPage />} />
+        <Route path="/personal-dashboard" element={<EnhancedEmployeeDashboard />} />
+        <Route path="/personal-ghg" element={<PersonalGHGPage />} />
+        
+        {/* Unit Admin Routes */}
+        <Route path="/unit/ghg-accounting" element={<UnitGHGAccountingPage />} />
+        
+        {/* Supplier Routes */}
+        <Route path="/supplier/dashboard" element={<SupplierDashboardPage />} />
+        <Route path="/supplier/audit-response/:id" element={<SupplierAuditResponsePage />} />
+        
+        {/* Vendor Routes */}
+        <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+        <Route path="/vendor/profile" element={<VendorProfile />} />
+        <Route path="/vendor/bids" element={<VendorBids />} />
+        <Route path="/vendor/bids/new" element={<VendorBidForm />} />
+        <Route path="/vendor/trainings" element={<VendorTrainings />} />
+        
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </FeaturesProvider>
+  );
+}
 
 export default App;

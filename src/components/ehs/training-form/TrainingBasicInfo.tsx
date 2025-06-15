@@ -1,65 +1,49 @@
 
 import React from 'react';
-import { Control } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { FormValues } from './types';
+import { TrainingFormData } from './types';
 
 interface TrainingBasicInfoProps {
-  control: Control<FormValues>;
+  formData: TrainingFormData;
+  updateFormData: (updates: Partial<TrainingFormData>) => void;
 }
 
-export const TrainingBasicInfo: React.FC<TrainingBasicInfoProps> = ({ control }) => {
+export const TrainingBasicInfo: React.FC<TrainingBasicInfoProps> = ({ formData, updateFormData }) => {
   return (
     <div className="grid gap-4">
       <div className="grid gap-4 md:grid-cols-2">
-        <FormField
-          control={control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Training Name</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter training name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium mb-1">Training Name</label>
+          <Input
+            id="name"
+            placeholder="Enter training name"
+            value={formData.name}
+            onChange={(e) => updateFormData({ name: e.target.value })}
+          />
+        </div>
         
-        <FormField
-          control={control}
-          name="clientCompany"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Client Company</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter client company name" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div>
+          <label htmlFor="clientCompany" className="block text-sm font-medium mb-1">Client Company</label>
+          <Input
+            id="clientCompany"
+            placeholder="Enter client company name"
+            value={formData.clientCompany}
+            onChange={(e) => updateFormData({ clientCompany: e.target.value })}
+          />
+        </div>
       </div>
 
-      <FormField
-        control={control}
-        name="description"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Description</FormLabel>
-            <FormControl>
-              <Textarea 
-                placeholder="Enter training description" 
-                className="min-h-[100px]" 
-                {...field} 
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      <div>
+        <label htmlFor="description" className="block text-sm font-medium mb-1">Description</label>
+        <Textarea
+          id="description"
+          placeholder="Enter training description"
+          className="min-h-[100px]"
+          value={formData.description}
+          onChange={(e) => updateFormData({ description: e.target.value })}
+        />
+      </div>
     </div>
   );
 };

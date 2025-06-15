@@ -361,10 +361,10 @@ const EHSTrainingDetails = () => {
                         <span>{training.attendees.length} attendees</span>
                       </div>
 
-                      {training['trainerName'] && (
+                      {training.trainerName && (
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4 text-muted-foreground" />
-                          <span>Trainer: {training['trainerName']}</span>
+                          <span>Trainer: {training.trainerName}</span>
                         </div>
                       )}
                     </div>
@@ -387,7 +387,7 @@ const EHSTrainingDetails = () => {
                         {training.attendees.map((attendee, index) => (
                           <TableRow key={index}>
                             <TableCell>{attendee.name}</TableCell>
-                            <TableCell>{attendee['email']}</TableCell>
+                            <TableCell>{attendee.email}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

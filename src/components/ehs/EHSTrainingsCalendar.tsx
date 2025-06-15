@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, Clock, MapPin, BookOpen, Calendar as CalendarIcon } from 'lucide-react';
+import { Users, Clock, MapPin, BookOpen, Calendar as CalendarIcon, Truck } from 'lucide-react';
 import { fetchEHSTrainings } from '@/data';
 import { Link } from 'react-router-dom';
 
@@ -74,12 +74,26 @@ const EHSTrainingsCalendar = () => {
     }
   };
 
+  // Function to get a relevant icon for the training name
+  const getTrainingIcon = (trainingName: string) => {
+    const name = trainingName.toLowerCase();
+    
+    if (name.includes('driver') || name.includes('transport') || name.includes('road')) {
+      return <Truck className="h-5 w-5 text-primary" />;
+    }
+    
+    return <BookOpen className="h-5 w-5 text-primary" />;
+  };
+
   return (
     <div className="flex flex-col lg:flex-row gap-6">
       <div className="lg:w-1/2">
         <Card>
           <CardHeader>
-            <CardTitle>Training Schedule</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5" />
+              <span>Translog EHS Training Schedule</span>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <Calendar 
@@ -94,6 +108,12 @@ const EHSTrainingsCalendar = () => {
                 hasTraining: "bg-primary/10 font-medium text-primary",
               }}
             />
+            <div className="mt-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-primary/10"></div>
+                <p>Days with scheduled trainings</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -110,7 +130,11 @@ const EHSTrainingsCalendar = () => {
           </CardHeader>
           <CardContent>
             {trainingsForDate.length === 0 ? (
-              <p className="text-muted-foreground py-8 text-center">No trainings scheduled for this date.</p>
+              <div className="flex flex-col items-center justify-center py-10">
+                <BookOpen className="h-12 w-12 text-muted-foreground mb-3" />
+                <p className="text-muted-foreground text-center">No trainings scheduled for this date.</p>
+                <p className="text-sm text-muted-foreground mt-1 text-center">Select another date or contact EHS department to schedule a training.</p>
+              </div>
             ) : (
               <ScrollArea className="h-[400px] pr-4">
                 <div className="space-y-4">
@@ -118,14 +142,19 @@ const EHSTrainingsCalendar = () => {
                     <Card key={training.id} className="bg-muted/50">
                       <CardContent className="p-4">
                         <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <h3 className="font-medium">{training.name}</h3>
+                          <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-2">
+                              {getTrainingIcon(training.name)}
+                              <h3 className="font-medium">{training.name}</h3>
+                            </div>
                             <Badge variant={getStatusVariant(training.status)}>
                               {getStatusLabel(training.status)}
                             </Badge>
                           </div>
-                          <p className="text-muted-foreground">{training.clientCompany}</p>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <p className="text-muted-foreground text-sm">{training.description.length > 100 ? 
+                            `${training.description.substring(0, 100)}...` : 
+                            training.description}</p>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
                             <CalendarIcon className="h-4 w-4" />
                             <span>
                               {training.startDate 
@@ -136,7 +165,7 @@ const EHSTrainingsCalendar = () => {
                           </div>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Clock className="h-4 w-4" />
-                            <span>{training.startTime || training.time} {training.endTime ? `- ${training.endTime}` : ''}</span>
+                            <span>{training.startTime || training.time} {training.endTime ? `- ${training.endTime}` : ''} ({training.duration})</span>
                           </div>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Users className="h-4 w-4" />

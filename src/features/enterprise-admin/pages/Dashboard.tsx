@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { Navbar } from '@/components/layout/Navbar';
-import { SidebarLayout } from '@/components/layout/Sidebar';
+import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import AdminDashboard from '@/features/enterprise-admin/components/Dashboard';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -20,21 +19,9 @@ const EnterpriseAdminDashboardPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
-      <SidebarLayout>
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Enterprise Dashboard</h1>
-            <p className="text-muted-foreground">
-              Welcome back, {user?.name}! Here's your company sustainability snapshot.
-            </p>
-          </div>
-          
-          <AdminDashboard />
-        </div>
-      </SidebarLayout>
-    </div>
+    <UnifiedSidebarLayout>
+      <AdminDashboard />
+    </UnifiedSidebarLayout>
   );
 };
 

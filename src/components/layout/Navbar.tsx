@@ -1,70 +1,22 @@
 
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, HelpCircle, Search, User } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-
-// Get environment name & API URL from Vite env variables
-const envName =
-  import.meta.env.VITE_ENV_NAME ||
-  (import.meta.env.MODE === 'production'
-    ? 'Production'
-    : import.meta.env.MODE === 'development'
-    ? 'Development'
-    : import.meta.env.MODE);
-const apiUrl = import.meta.env.VITE_API_URL;
+import { SidebarTrigger } from '@/components/ui/sidebar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
-
+  
   return (
-    <header className="border-b sticky top-0 z-50 bg-background">
+    <header className="border-b sticky top-0 z-40 bg-background">
       <div className="flex h-16 items-center px-4 md:px-6">
-        <Link to="/" className="flex items-center gap-2 font-bold text-xl">
-          <div className="w-8 h-8 rounded-full eco-gradient flex items-center justify-center">
-            <span className="text-white">F</span>
-          </div>
-          <span>Fandoro</span>
-        </Link>
-
-        {/* ENVIRONMENT NAME & API URL INDICATOR */}
-        <div className="ml-6 flex items-center space-x-3">
-          <span
-            className={`text-xs px-2 py-1 rounded font-semibold ${
-              envName === 'Production'
-                ? 'bg-green-500 text-white'
-                : envName === 'Staging'
-                ? 'bg-yellow-400 text-black'
-                : 'bg-gray-400 text-white'
-            }`}
-            title="Current environment"
-          >
-            {envName}
-          </span>
-          {apiUrl && (
-            <span
-              className="text-xs px-2 py-1 rounded bg-muted text-muted-foreground"
-              title="API URL in use"
-              style={{
-                maxWidth: 220,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                display: 'inline-block',
-              }}
-            >
-              {apiUrl}
-            </span>
-          )}
+        {/* Left side with sidebar trigger */}
+        <div className="flex items-center gap-4">
+          <SidebarTrigger />
         </div>
 
         {/* Search and Right Actions */}
@@ -72,11 +24,7 @@ export const Navbar: React.FC = () => {
           {/* Search */}
           <div className="relative hidden md:block">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <input
-              type="search"
-              placeholder="Search..."
-              className="rounded-md border border-input bg-background px-3 py-2 pl-8 text-sm"
-            />
+            <input type="search" placeholder="Search..." className="rounded-md border border-input bg-background px-3 py-2 pl-8 text-sm" />
           </div>
           
           {/* Notification */}
@@ -87,7 +35,7 @@ export const Navbar: React.FC = () => {
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
+            <DropdownMenuContent align="end" className="w-80 z-20">
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <div className="max-h-[300px] overflow-auto">
@@ -116,7 +64,7 @@ export const Navbar: React.FC = () => {
                   <User className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="z-20">
                 <DropdownMenuLabel>
                   <div>
                     <p>{user.name}</p>
@@ -140,3 +88,4 @@ export const Navbar: React.FC = () => {
     </header>
   );
 };
+
