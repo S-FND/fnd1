@@ -7,9 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import ESGDDRequiredFields from './ESGDDRequiredFields';
 import BasicCompanyFields from './BasicCompanyFields';
-import OfficeSpaceSection from './OfficeSpaceSection';
 import OutsourcedServicesSection from './OutsourcedServicesSection';
-import { CompanyFormData, OfficeSpace, OutsourcedService, LocationDetails } from './types';
+import { CompanyFormData, OutsourcedService } from './types';
 
 const IRLCompanyInformation = () => {
   const [formData, setFormData] = useState<CompanyFormData>({
@@ -61,25 +60,16 @@ const IRLCompanyInformation = () => {
     businessActivitiesDescription: ''
   });
 
-  const [officeSpaces, setOfficeSpaces] = useState<OfficeSpace[]>([
-    { location: '', type: '', address: '', geotagLocation: '', numberOfSeats: '' }
-  ]);
-
   const [outsourcedServices, setOutsourcedServices] = useState<OutsourcedService[]>([
     { agencyName: '', servicesDischarged: '', malePersons: '', femalePersons: '' }
   ]);
 
-  const [locationDetails, setLocationDetails] = useState<LocationDetails[]>([
-    { locationType: 'National', warehouses: '', offices: '', distributionCenters: '', total: '' },
-    { locationType: 'International', warehouses: '', offices: '', distributionCenters: '', total: '' }
-  ]);
-
   const handleSave = () => {
-    console.log('Saving form data:', { formData, officeSpaces, outsourcedServices, locationDetails });
+    console.log('Saving form data:', { formData, outsourcedServices });
   };
 
   const handleSubmit = () => {
-    console.log('Submitting form data:', { formData, officeSpaces, outsourcedServices, locationDetails });
+    console.log('Submitting form data:', { formData, outsourcedServices });
   };
 
   return (
@@ -95,10 +85,8 @@ const IRLCompanyInformation = () => {
         
         <BasicCompanyFields formData={formData} setFormData={setFormData} />
 
-        <OfficeSpaceSection officeSpaces={officeSpaces} setOfficeSpaces={setOfficeSpaces} />
-
         <div className="space-y-2">
-          <Label htmlFor="totalBeneficiaries">12. Total Beneficiaries/Customer Base</Label>
+          <Label htmlFor="totalBeneficiaries">11. Total Beneficiaries/Customer Base</Label>
           <Input
             id="totalBeneficiaries"
             value={formData.totalBeneficiaries}
@@ -107,7 +95,7 @@ const IRLCompanyInformation = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="litigationDetails">13. Provide details of litigation or financial penalties against Company/Board of Directors/Founders or KMPs, if any?</Label>
+          <Label htmlFor="litigationDetails">12. Provide details of litigation or financial penalties against Company/Board of Directors/Founders or KMPs, if any?</Label>
           <Textarea
             id="litigationDetails"
             value={formData.litigationDetails}
@@ -116,7 +104,7 @@ const IRLCompanyInformation = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="workingHours">14. Working hours for FTEs</Label>
+          <Label htmlFor="workingHours">13. Working hours for FTEs</Label>
           <Input
             id="workingHours"
             value={formData.workingHours}
@@ -125,7 +113,7 @@ const IRLCompanyInformation = () => {
         </div>
 
         <div className="space-y-4">
-          <Label>15. Shift timing for contract workers (if any)</Label>
+          <Label>14. Shift timing for contract workers (if any)</Label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="shiftTiming">Shift timing</Label>
@@ -168,7 +156,7 @@ const IRLCompanyInformation = () => {
         />
 
         <div className="space-y-2">
-          <Label htmlFor="facilitiesList">17. List of major facilities/Units/Departments (Manufacturing, Laboratory, Cafeteria) provided by property owner in the office space (With number of each facility)</Label>
+          <Label htmlFor="facilitiesList">16. List of major facilities/Units/Departments (Manufacturing, Laboratory, Cafeteria) provided by property owner in the office space (With number of each facility)</Label>
           <Textarea
             id="facilitiesList"
             value={formData.facilitiesList}
@@ -177,7 +165,7 @@ const IRLCompanyInformation = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="productSafetyCertifications">18. Certifications (if any) for product safety</Label>
+          <Label htmlFor="productSafetyCertifications">17. Certifications (if any) for product safety</Label>
           <Textarea
             id="productSafetyCertifications"
             value={formData.productSafetyCertifications}
@@ -186,7 +174,7 @@ const IRLCompanyInformation = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="emergencyIncidents">19. Have the employees (on-roll, contract) been involved in any emergency incidents or accidents occurred in the workplace or during work related activities?</Label>
+          <Label htmlFor="emergencyIncidents">18. Have the employees (on-roll, contract) been involved in any emergency incidents or accidents occurred in the workplace or during work related activities?</Label>
           <Textarea
             id="emergencyIncidents"
             value={formData.emergencyIncidents}
@@ -195,7 +183,7 @@ const IRLCompanyInformation = () => {
         </div>
 
         <div className="space-y-4">
-          <Label>20. Team members/designation assigned the following responsibilities on ESG management?</Label>
+          <Label>19. Team members/designation assigned the following responsibilities on ESG management?</Label>
           <div className="grid grid-cols-1 gap-4">
             <div className="space-y-2">
               <Label htmlFor="facilitiesCompliance">(a) Compliances related to facility management (e-waste, waste management, water management, batteries, fire infra, occupancy certificate, fire NOC)</Label>
@@ -241,66 +229,7 @@ const IRLCompanyInformation = () => {
         </div>
 
         <div className="space-y-4">
-          <Label>21. Number of locations where plants (in case of manufacturing businesses) and/or operations/offices (in case of non-manufacturing) of the Company are situated:</Label>
-          {locationDetails.map((location, index) => (
-            <div key={index} className="border rounded-lg p-4 space-y-4">
-              <h4 className="font-medium">{location.locationType}</h4>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label>Number of Warehouses</Label>
-                  <Input
-                    type="number"
-                    value={location.warehouses}
-                    onChange={(e) => {
-                      const newLocations = [...locationDetails];
-                      newLocations[index].warehouses = e.target.value;
-                      setLocationDetails(newLocations);
-                    }}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Number of offices</Label>
-                  <Input
-                    type="number"
-                    value={location.offices}
-                    onChange={(e) => {
-                      const newLocations = [...locationDetails];
-                      newLocations[index].offices = e.target.value;
-                      setLocationDetails(newLocations);
-                    }}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Number of DCs</Label>
-                  <Input
-                    type="number"
-                    value={location.distributionCenters}
-                    onChange={(e) => {
-                      const newLocations = [...locationDetails];
-                      newLocations[index].distributionCenters = e.target.value;
-                      setLocationDetails(newLocations);
-                    }}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Total</Label>
-                  <Input
-                    type="number"
-                    value={location.total}
-                    onChange={(e) => {
-                      const newLocations = [...locationDetails];
-                      newLocations[index].total = e.target.value;
-                      setLocationDetails(newLocations);
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="space-y-4">
-          <Label>22. Details of measures for the well-being of employees (including differently abled): % of employees covered by</Label>
+          <Label>20. Details of measures for the well-being of employees (including differently abled): % of employees covered by</Label>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="healthInsurance">Health insurance</Label>
@@ -354,25 +283,7 @@ const IRLCompanyInformation = () => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="transportationDetails">23. Does the company organise transportation of raw materials and/or finished goods. If yes, are any vehicles owned. If yes, please provide details</Label>
-          <Textarea
-            id="transportationDetails"
-            value={formData.transportationDetails}
-            onChange={(e) => setFormData({ ...formData, transportationDetails: e.target.value })}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="youngWorkers">24. Are any workers between the age of 14 - 18 years employed at the facility?</Label>
-          <Textarea
-            id="youngWorkers"
-            value={formData.youngWorkers}
-            onChange={(e) => setFormData({ ...formData, youngWorkers: e.target.value })}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="retrenchmentDetails">25. Any retrenchment or mass dismissal of employees conducted?</Label>
+          <Label htmlFor="retrenchmentDetails">21. Any retrenchment or mass dismissal of employees conducted?</Label>
           <Textarea
             id="retrenchmentDetails"
             value={formData.retrenchmentDetails}

@@ -56,8 +56,6 @@ export interface CompanyFormData {
   employeeWellbeingPaternityBenefits: string;
   employeeWellbeingDayCare: string;
   employeeWellbeingLifeInsurance: string;
-  transportationDetails: string;
-  youngWorkers: string;
   retrenchmentDetails: string;
   gstNumber: string;
   assuranceProviderName: string;
