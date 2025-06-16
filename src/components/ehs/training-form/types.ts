@@ -36,3 +36,19 @@ export const formSchema = z.object({
 });
 
 export type FormValues = z.infer<typeof formSchema>;
+
+// Add the TrainingFormData type that matches the simple form structure
+export interface TrainingFormData {
+  name: string;
+  description: string;
+  clientCompany: string;
+  trainingType: 'online' | 'offline';
+  date: string;
+  time: string;
+  duration: string;
+  location: string;
+  attendees: Array<{
+    name: string;
+    email: string;
+  }>;
+}

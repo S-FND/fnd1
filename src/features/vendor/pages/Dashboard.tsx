@@ -6,16 +6,31 @@ import { useAuth } from "@/context/AuthContext";
 import { fetchVendorTrainings, fetchTrainingBids, fetchVendorProfile } from "@/data";
 import { Navigate } from "react-router-dom";
 import { useRouteProtection } from "@/hooks/useRouteProtection";
+import { useQuery } from "@tanstack/react-query";
 
 const VendorDashboard: React.FC = () => {
   const { isLoading } = useRouteProtection("vendor");
   const { user, isVendor } = useAuth();
 
-  // Data fetching would be done with useQuery in a real application
   const vendorId = user?.vendorInfo?.id || '';
-  const trainings = fetchVendorTrainings(vendorId);
-  const bids = fetchTrainingBids(undefined, vendorId);
-  const vendorProfile = fetchVendorProfile(vendorId);
+  
+  const { data: trainings = [] } = useQuery({
+    queryKey: ['vendor-trainings', vendorId],
+    queryFn: () => fetchVendorTrainings(vendorId),
+    enabled: !!vendorId
+  });
+  
+  const { data: bids = [] } = useQuery({
+    queryKey: ['training-bids', vendorId],
+    queryFn: () => fetchTrainingBids(undefined, vendorId),
+    enabled: !!vendorId
+  });
+  
+  const { data: vendorProfile } = useQuery({
+    queryKey: ['vendor-profile', vendorId],
+    queryFn: () => fetchVendorProfile(vendorId),
+    enabled: !!vendorId
+  });
 
   if (isLoading) {
     return <div className="flex h-screen items-center justify-center">Loading...</div>;

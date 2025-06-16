@@ -4,12 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Upload, X } from 'lucide-react';
 
 interface ITSecurityItem {
   id: number;
   name: string;
   status: string;
   notes: string;
+  uploadedFiles: File[];
 }
 
 const itSecurityQuestions = [
@@ -30,7 +33,8 @@ const IRLITSecurity = () => {
       id: index + 1,
       name: question,
       status: '',
-      notes: ''
+      notes: '',
+      uploadedFiles: []
     }))
   );
 
@@ -43,6 +47,29 @@ const IRLITSecurity = () => {
   const handleNotesChange = (id: number, notes: string) => {
     setITSecurityItems(items => 
       items.map(item => item.id === id ? { ...item, notes } : item)
+    );
+  };
+
+  const handleFileUpload = (id: number, files: FileList | null) => {
+    if (!files) return;
+    
+    const newFiles = Array.from(files);
+    setITSecurityItems(items => 
+      items.map(item => 
+        item.id === id 
+          ? { ...item, uploadedFiles: [...item.uploadedFiles, ...newFiles] }
+          : item
+      )
+    );
+  };
+
+  const handleRemoveFile = (id: number, fileIndex: number) => {
+    setITSecurityItems(items => 
+      items.map(item => 
+        item.id === id 
+          ? { ...item, uploadedFiles: item.uploadedFiles.filter((_, index) => index !== fileIndex) }
+          : item
+      )
     );
   };
 
@@ -73,6 +100,7 @@ const IRLITSecurity = () => {
                 <th className="border border-gray-300 p-3 text-left">IT Security</th>
                 <th className="border border-gray-300 p-3 text-center">Status (Yes/No)</th>
                 <th className="border border-gray-300 p-3 text-left">Company Notes (if any)</th>
+                <th className="border border-gray-300 p-3 text-left">Supporting Documents</th>
               </tr>
             </thead>
             <tbody>
@@ -101,6 +129,45 @@ const IRLITSecurity = () => {
                       placeholder="Enter notes..."
                       className="min-h-[80px]"
                     />
+                  </td>
+                  <td className="border border-gray-300 p-3">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="file"
+                          multiple
+                          accept=".pdf,.doc,.docx,.jpg,.png,.jpeg"
+                          onChange={(e) => handleFileUpload(item.id, e.target.files)}
+                          className="hidden"
+                          id={`file-upload-${item.id}`}
+                        />
+                        <label
+                          htmlFor={`file-upload-${item.id}`}
+                          className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
+                        >
+                          <Upload className="h-4 w-4" />
+                          Upload Files
+                        </label>
+                      </div>
+                      
+                      {item.uploadedFiles.length > 0 && (
+                        <div className="space-y-1">
+                          {item.uploadedFiles.map((file, fileIndex) => (
+                            <div key={fileIndex} className="flex items-center justify-between bg-gray-50 p-2 rounded text-sm">
+                              <span className="truncate flex-1">{file.name}</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveFile(item.id, fileIndex)}
+                                className="h-6 w-6 p-0"
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

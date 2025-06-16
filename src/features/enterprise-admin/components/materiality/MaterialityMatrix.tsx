@@ -9,7 +9,8 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ZAxis 
+  ZAxis,
+  Cell
 } from 'recharts';
 import MatrixQuadrant from './MatrixQuadrant';
 import CustomTooltip from './CustomTooltip';
@@ -45,6 +46,30 @@ const MaterialityMatrix: React.FC<MaterialityMatrixProps> = ({
     
     return true;
   });
+
+  // Define category colors
+  const categoryColors = {
+    'Environment': '#16a34a', // green-600 for better visibility
+    'Social': '#2563eb',     // blue-600
+    'Governance': '#d97706'  // amber-600
+  };
+
+  // Custom dot component to render colored dots
+  const CustomDot = (props: any) => {
+    const { cx, cy, payload } = props;
+    const color = categoryColors[payload.category as keyof typeof categoryColors] || '#94a3b8';
+    
+    return (
+      <circle 
+        cx={cx} 
+        cy={cy} 
+        r={6} 
+        fill={color} 
+        stroke="#fff"
+        strokeWidth={1}
+      />
+    );
+  };
   
   return (
     <Card>
@@ -111,18 +136,27 @@ const MaterialityMatrix: React.FC<MaterialityMatrixProps> = ({
             )}
             
             <div className="mt-8">
-              <h3 className="text-base font-medium mb-2">Legend</h3>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <h3 className="text-base font-medium mb-3">Legend</h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-5 h-5 rounded-full border-2 border-white shadow-sm flex-shrink-0" 
+                    style={{ backgroundColor: categoryColors.Environment }}
+                  ></div>
                   <span className="text-sm">Environmental</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-5 h-5 rounded-full border-2 border-white shadow-sm flex-shrink-0" 
+                    style={{ backgroundColor: categoryColors.Social }}
+                  ></div>
                   <span className="text-sm">Social</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-5 h-5 rounded-full border-2 border-white shadow-sm flex-shrink-0" 
+                    style={{ backgroundColor: categoryColors.Governance }}
+                  ></div>
                   <span className="text-sm">Governance</span>
                 </div>
               </div>
@@ -187,14 +221,12 @@ const MaterialityMatrix: React.FC<MaterialityMatrixProps> = ({
                 <Tooltip content={<CustomTooltip />} />
                 {/* Reference lines for quadrants */}
                 <CartesianGrid strokeDasharray="3 3" />
-                {/* Scatter plot points */}
+                {/* Scatter plot points with custom colored dots */}
                 <Scatter 
                   name="Material Topics" 
                   data={filteredData} 
-                  fill="#8884d8"
-                  shape="circle"
-                >
-                </Scatter>
+                  shape={<CustomDot />}
+                />
               </ScatterChart>
             </ResponsiveContainer>
           </div>

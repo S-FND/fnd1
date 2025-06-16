@@ -68,27 +68,32 @@ export const useAuthProvider = () => {
   };
 
   const redirectBasedOnRole = (role: string) => {
+    // Check if there's a redirect from location state
+    const from = location.state?.from;
+    
     switch(role) {
       case "fandoro_admin":
         navigate("/fandoro-admin/dashboard");
         break;
       case "admin":
-        navigate("/dashboard");
+      case "manager":
+        // Redirect admin and manager to settings by default
+        navigate(from || "/settings");
         break;
       case "unit_admin":
-        navigate("/unit-admin/dashboard");
+        navigate(from || "/unit-admin/dashboard");
         break;
       case "employee":
-        navigate("/employee/dashboard");
+        navigate(from || "/employee/dashboard");
         break;
       case "supplier":
-        navigate("/supplier/dashboard");
+        navigate(from || "/supplier/dashboard");
         break;
       case "vendor":
-        navigate("/vendor/dashboard");
+        navigate(from || "/vendor/dashboard");
         break;
       default:
-        navigate("/dashboard");
+        navigate(from || "/settings");
     }
   };
 

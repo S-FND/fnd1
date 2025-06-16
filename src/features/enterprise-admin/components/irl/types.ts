@@ -22,6 +22,15 @@ export interface LocationDetails {
   total: string;
 }
 
+export interface WarehouseItem {
+  id: number;
+  name: string;
+  plotArea: string;
+  itemsStored: string;
+  location: string;
+  exclusiveSupplier: string;
+}
+
 export interface CompanyFormData {
   legalEntityName: string;
   emailId: string;
@@ -36,15 +45,18 @@ export interface CompanyFormData {
   foundingTeam: string;
   totalBeneficiaries: string;
   litigationDetails: string;
-  workingHours: string;
-  shiftTiming: string;
-  otHoursCurrent: string;
-  otHoursPrevious: string;
-  otPayCompensation: string;
-  facilitiesList: string;
-  productSafetyCertifications: string;
-  emergencyIncidents: string;
   esgTeamMembers: string;
+  gstNumber: string;
+  assuranceProviderName: string;
+  assuranceType: string;
+  cinNumber: string;
+  industry: string;
+  registeredOfficeAddress: string;
+  headOfficeAddress: string;
+  website: string;
+  financialYearReporting: string;
+  businessActivitiesDescription: string;
+  // HR-related properties that are still used in Company Information
   facilitiesCompliance: string;
   labourCompliances: string;
   fireTraining: string;
@@ -56,17 +68,5 @@ export interface CompanyFormData {
   employeeWellbeingPaternityBenefits: string;
   employeeWellbeingDayCare: string;
   employeeWellbeingLifeInsurance: string;
-  transportationDetails: string;
-  youngWorkers: string;
   retrenchmentDetails: string;
-  gstNumber: string;
-  assuranceProviderName: string;
-  assuranceType: string;
-  cinNumber: string;
-  industry: string;
-  registeredOfficeAddress: string;
-  headOfficeAddress: string;
-  website: string;
-  financialYearReporting: string;
-  businessActivitiesDescription: string;
 }

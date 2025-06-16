@@ -122,8 +122,8 @@ const EHSTrainingDetails = () => {
               <p>List of participants for this training session:</p>
               
               <ul className="mt-2 space-y-2">
-                {training.attendees.map((attendee) => (
-                  <li key={attendee.id} className="flex items-center gap-2">
+                {training.attendees.map((attendee, index) => (
+                  <li key={`${attendee.name}-${index}`} className="flex items-center gap-2">
                     <User className="h-4 w-4" />
                     {attendee.name}
                   </li>

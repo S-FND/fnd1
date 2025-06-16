@@ -1,28 +1,19 @@
 
 import React, { useState } from 'react';
-import { Control, useFieldArray } from 'react-hook-form';
 import { Mail, Plus, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { isExistingEmployee } from '@/data/ehs/employees';
-import { FormValues } from './types';
+import { TrainingFormData } from './types';
 
 interface AttendeesListProps {
-  control: Control<FormValues>;
-  onInviteNew: (index: number) => void;
+  formData: TrainingFormData;
+  updateFormData: (updates: Partial<TrainingFormData>) => void;
 }
 
-const defaultAttendee = { name: '', email: '' };
-
-export const AttendeesList: React.FC<AttendeesListProps> = ({ control, onInviteNew }) => {
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "attendees"
-  });
-
+export const AttendeesList: React.FC<AttendeesListProps> = ({ formData, updateFormData }) => {
   // State to track which attendees have non-existing emails
   const [nonExistingEmails, setNonExistingEmails] = useState<{ [key: number]: boolean }>({});
 
@@ -38,6 +29,28 @@ export const AttendeesList: React.FC<AttendeesListProps> = ({ control, onInviteN
     }
   };
 
+  const addAttendee = () => {
+    updateFormData({
+      attendees: [...formData.attendees, { name: '', email: '' }]
+    });
+  };
+
+  const removeAttendee = (index: number) => {
+    const newAttendees = formData.attendees.filter((_, i) => i !== index);
+    updateFormData({ attendees: newAttendees });
+  };
+
+  const updateAttendee = (index: number, field: 'name' | 'email', value: string) => {
+    const newAttendees = [...formData.attendees];
+    newAttendees[index] = { ...newAttendees[index], [field]: value };
+    updateFormData({ attendees: newAttendees });
+  };
+
+  const handleInviteNew = (index: number) => {
+    // TODO: Implement invitation logic
+    console.log('Invite new attendee at index:', index);
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-2">
@@ -46,7 +59,7 @@ export const AttendeesList: React.FC<AttendeesListProps> = ({ control, onInviteN
           type="button" 
           variant="outline" 
           size="sm" 
-          onClick={() => append(defaultAttendee)}
+          onClick={addAttendee}
         >
           <Plus className="h-4 w-4 mr-1" /> Add Attendee
         </Button>
@@ -55,41 +68,21 @@ export const AttendeesList: React.FC<AttendeesListProps> = ({ control, onInviteN
       <Card>
         <CardContent className="p-4">
           <div className="space-y-4">
-            {fields.map((field, index) => (
-              <div key={field.id} className="space-y-2">
+            {formData.attendees.map((attendee, index) => (
+              <div key={index} className="space-y-2">
                 <div className="flex gap-2 items-start">
                   <div className="grid gap-4 flex-1 md:grid-cols-2">
-                    <FormField
-                      control={control}
-                      name={`attendees.${index}.name`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Input placeholder="Attendee name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                    <Input 
+                      placeholder="Attendee name" 
+                      value={attendee.name}
+                      onChange={(e) => updateAttendee(index, 'name', e.target.value)}
                     />
                     
-                    <FormField
-                      control={control}
-                      name={`attendees.${index}.email`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormControl>
-                            <Input 
-                              placeholder="Email address" 
-                              {...field} 
-                              onBlur={() => {
-                                field.onBlur();
-                                handleEmailBlur(field.value, index);
-                              }}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                    <Input 
+                      placeholder="Email address" 
+                      value={attendee.email}
+                      onChange={(e) => updateAttendee(index, 'email', e.target.value)}
+                      onBlur={() => handleEmailBlur(attendee.email, index)}
                     />
                   </div>
                   
@@ -97,15 +90,15 @@ export const AttendeesList: React.FC<AttendeesListProps> = ({ control, onInviteN
                     type="button"
                     variant="ghost"
                     size="icon"
-                    onClick={() => remove(index)}
-                    disabled={fields.length <= 1}
+                    onClick={() => removeAttendee(index)}
+                    disabled={formData.attendees.length <= 1}
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
 
                 {/* Show non-existing email alert and invite button conditionally */}
-                {nonExistingEmails[index] && field.email && (
+                {nonExistingEmails[index] && attendee.email && (
                   <div className="flex items-center justify-between pl-2">
                     <Alert variant="default" className="bg-muted">
                       <AlertDescription className="text-sm">
@@ -117,7 +110,7 @@ export const AttendeesList: React.FC<AttendeesListProps> = ({ control, onInviteN
                       variant="outline"
                       size="sm"
                       className="ml-2"
-                      onClick={() => onInviteNew(index)}
+                      onClick={() => handleInviteNew(index)}
                     >
                       <Mail className="h-4 w-4 mr-1" />
                       Send Invitation

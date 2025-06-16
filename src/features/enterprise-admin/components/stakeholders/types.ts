@@ -33,3 +33,27 @@ export interface StakeholderFormData {
   influence?: 'low' | 'medium' | 'high';
   interest?: 'low' | 'medium' | 'high';
 }
+
+export type EngagementActivityType = 'newsletter' | 'email' | 'townhall' | 'group_activity' | 'webinar' | 'meeting' | 'survey';
+
+export type ActivityPurpose = 'invite' | 'reminder';
+
+export type ActivityFrequency = 'once' | 'weekly' | 'monthly' | 'quarterly' | 'annually';
+
+export interface EngagementActivity {
+  id: string;
+  title: string;
+  type: EngagementActivityType;
+  purpose: ActivityPurpose;
+  description: string;
+  targetStakeholders: string[]; // stakeholder IDs
+  topics: string[]; // topic names or IDs
+  scheduledDate?: Date;
+  frequency?: ActivityFrequency;
+  location?: string; // for physical events
+  meetingLink?: string; // for virtual events
+  duration?: number; // in minutes
+  createdAt: Date;
+  createdBy: string;
+  status: 'draft' | 'scheduled' | 'sent' | 'completed' | 'cancelled';
+}

@@ -1,12 +1,41 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 const HeroSection = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleGetStarted = () => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    } else {
+      // Redirect based on user role
+      switch(user?.role) {
+        case "admin":
+        case "manager":
+          navigate("/settings");
+          break;
+        case "unit_admin":
+          navigate("/unit-admin/dashboard");
+          break;
+        case "employee":
+          navigate("/employee/dashboard");
+          break;
+        case "supplier":
+          navigate("/supplier/dashboard");
+          break;
+        case "vendor":
+          navigate("/vendor/dashboard");
+          break;
+        default:
+          navigate("/settings");
+      }
+    }
+  };
   
   return (
     <section className="py-20 px-4 bg-gradient-to-b from-[#F0FDFA] to-white">
@@ -26,10 +55,8 @@ const HeroSection = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" asChild>
-                <Link to={isAuthenticated ? "/dashboard" : "/login"} className="gap-2">
-                  Get Started <ArrowRight className="h-4 w-4" />
-                </Link>
+              <Button size="lg" onClick={handleGetStarted} className="gap-2">
+                Get Started <ArrowRight className="h-4 w-4" />
               </Button>
               <Button size="lg" variant="outline">
                 Book a Demo
@@ -38,16 +65,16 @@ const HeroSection = () => {
             
             <div className="flex items-center gap-8 pt-4">
               <div>
-                <div className="text-2xl font-bold">500+</div>
-                <div className="text-muted-foreground">Companies</div>
+                <div className="text-2xl font-bold">150+</div>
+                <div className="text-muted-foreground">Companies Helped</div>
               </div>
               <div>
-                <div className="text-2xl font-bold">98%</div>
-                <div className="text-muted-foreground">Satisfaction</div>
+                <div className="text-2xl font-bold">$800Mn+</div>
+                <div className="text-muted-foreground">Sustainable Investments</div>
               </div>
               <div>
-                <div className="text-2xl font-bold">24/7</div>
-                <div className="text-muted-foreground">Support</div>
+                <div className="text-2xl font-bold">99%</div>
+                <div className="text-muted-foreground">Client Satisfaction</div>
               </div>
             </div>
           </div>

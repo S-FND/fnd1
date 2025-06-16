@@ -1,4 +1,3 @@
-
 export interface Attendee {
   name: string;
   email: string;
@@ -13,7 +12,7 @@ export interface EHSTraining {
   time: string;
   duration: string;
   location: string;
-  status: 'scheduled' | 'in-progress' | 'completed';
+  status: 'scheduled' | 'in-progress' | 'completed' | 'pending-approval' | 'approved' | 'rejected';
   attendees: Attendee[];
   startDate?: string;
   endDate?: string;
@@ -23,6 +22,12 @@ export interface EHSTraining {
   trainerName?: string;
   assignedVendorId?: string;
   bidOpen?: boolean;
+  approvalStatus?: 'pending' | 'approved' | 'rejected';
+  recommendedBy?: string;
+  submittedDate?: string;
+  approvedBy?: string;
+  approvedDate?: string;
+  rejectionReason?: string;
 }
 
 export interface Vendor {
@@ -148,6 +153,30 @@ const trainingBids: TrainingBid[] = [
 ];
 
 const ehsTrainings: EHSTraining[] = [
+  {
+    id: '9',
+    name: 'Chemical Safety & Hazmat Handling for Logistics',
+    description: 'Comprehensive training on chemical safety protocols, hazardous materials handling, and emergency response procedures for logistics operations.',
+    clientCompany: 'Translog India Ltd.',
+    date: '2025-04-30',
+    time: '9:00 AM',
+    duration: '6 hours',
+    location: 'Mumbai CFS Facility, JNPT Area',
+    status: 'pending-approval',
+    trainingType: 'offline',
+    bidOpen: false,
+    approvalStatus: 'pending',
+    recommendedBy: 'EHS Department',
+    submittedDate: '2025-04-12',
+    attendees: [
+      { name: 'Arvind Patil', email: 'a.patil@translogindia.com' },
+      { name: 'Suman Shah', email: 's.shah@translogindia.com' },
+      { name: 'Rakesh Kumar', email: 'r.kumar@translogindia.com' },
+      { name: 'Neha Gupta', email: 'n.gupta@translogindia.com' },
+      { name: 'Mohammed Khan', email: 'm.khan@translogindia.com' },
+      { name: 'Priya Sharma', email: 'p.sharma@translogindia.com' },
+    ]
+  },
   {
     id: '1',
     name: 'Warehouse Safety Training',
@@ -279,7 +308,7 @@ const ehsTrainings: EHSTraining[] = [
     name: 'Emergency Response for Chemical Spills',
     description: 'Specialized training on handling chemical spill emergencies in transportation and storage facilities, including containment and cleanup procedures.',
     clientCompany: 'Translog India Ltd.',
-    date: '2025-06-02', // Added the required 'date' property
+    date: '2025-06-02',
     startDate: '2025-06-02',
     endDate: '2025-06-03',
     startTime: '9:00 AM',
@@ -365,4 +394,31 @@ export const fetchVendorTrainings = async (vendorId: string): Promise<EHSTrainin
   return ehsTrainings.filter(training => (
     (training.bidOpen === true) || (training.assignedVendorId === vendorId)
   ));
+};
+
+export const approveTraining = async (trainingId: string, approvedBy: string): Promise<EHSTraining | undefined> => {
+  // Simulating API request delay
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  const training = ehsTrainings.find(t => t.id === trainingId);
+  if (training) {
+    training.status = 'scheduled';
+    training.approvalStatus = 'approved';
+    training.approvedBy = approvedBy;
+    training.approvedDate = new Date().toISOString().split('T')[0];
+  }
+  return training;
+};
+
+export const rejectTraining = async (trainingId: string, rejectionReason: string): Promise<EHSTraining | undefined> => {
+  // Simulating API request delay
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  const training = ehsTrainings.find(t => t.id === trainingId);
+  if (training) {
+    training.status = 'rejected';
+    training.approvalStatus = 'rejected';
+    training.rejectionReason = rejectionReason;
+  }
+  return training;
 };

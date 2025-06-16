@@ -26,7 +26,12 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
         name: "ESG Management",
         href: "/esg",
         icon: BarChart3,
-        featureId: 'esg-management'
+        featureId: 'esg-management',
+        submenu: [
+          { name: "Overview", href: "/esg", icon: BarChart3 },
+          { name: "ESMS", href: "/esg/esms", icon: FileText },
+          { name: "ESG Metrics", href: "/esg/metrics", icon: LineChart }
+        ]
       },
       {
         name: "Materiality",
@@ -64,7 +69,12 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
         name: "Audit",
         href: "/audit",
         icon: FileText,
-        featureId: 'audit'
+        featureId: 'audit',
+        submenu: [
+          { name: "Supplier Audits", href: "/audit/supplier", icon: Users },
+          { name: "EHS Audits", href: "/audit/ehs", icon: ClipboardCheck },
+          { name: "Internal Audits", href: "/audit/internal", icon: Building2 }
+        ]
       },
       {
         name: "LMS",
@@ -95,7 +105,7 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
         name: "Stakeholders",
         href: "/stakeholders",
         icon: Users,
-        featureId: 'esg-management',
+        featureId: 'stakeholder-management',
         submenu: [
           { name: "Overview", href: "/stakeholders", icon: Users },
           { name: "Manage Stakeholders", href: "/stakeholders/manage", icon: Users },
@@ -116,6 +126,16 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
         featureId: 'team-management'
       }
     );
+
+    // Add Settings only for admin users
+    if (role === 'admin') {
+      baseItems.push({
+        name: "Settings",
+        href: "/settings",
+        icon: Settings,
+        featureId: 'settings'
+      });
+    }
   }
 
   if (role === 'employee') {

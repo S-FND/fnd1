@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Navbar } from '@/components/layout/Navbar';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -27,59 +26,56 @@ const AdvancedIRLPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
-      <UnifiedSidebarLayout>
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Advanced Information Request List (IRL)</h1>
-            <p className="text-muted-foreground">
-              Complete the comprehensive advanced ESG due diligence forms with detailed BRSR compliance requirements.
-            </p>
-          </div>
-          
-          <Tabs defaultValue="company" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7">
-              <TabsTrigger value="company">Company</TabsTrigger>
-              <TabsTrigger value="hr">HR</TabsTrigger>
-              <TabsTrigger value="environment">Environment</TabsTrigger>
-              <TabsTrigger value="photos">Photos</TabsTrigger>
-              <TabsTrigger value="management">Management</TabsTrigger>
-              <TabsTrigger value="facility">Facility</TabsTrigger>
-              <TabsTrigger value="itsecurity">IT Security</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="company">
-              <AdvancedIRLCompany />
-            </TabsContent>
-            
-            <TabsContent value="hr">
-              <AdvancedIRLHR />
-            </TabsContent>
-
-            <TabsContent value="environment">
-              <AdvancedIRLEnvironment />
-            </TabsContent>
-
-            <TabsContent value="photos">
-              <AdvancedIRLPhotos />
-            </TabsContent>
-
-            <TabsContent value="management">
-              <AdvancedIRLManagement />
-            </TabsContent>
-
-            <TabsContent value="facility">
-              <AdvancedIRLFacility />
-            </TabsContent>
-
-            <TabsContent value="itsecurity">
-              <AdvancedIRLITSecurity />
-            </TabsContent>
-          </Tabs>
+    <UnifiedSidebarLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Advanced Information Request List (IRL)</h1>
+          <p className="text-muted-foreground">
+            Complete the comprehensive advanced ESG due diligence forms with detailed BRSR compliance requirements.
+          </p>
         </div>
-      </UnifiedSidebarLayout>
-    </div>
+        
+        <Tabs defaultValue="company" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7">
+            <TabsTrigger value="company">Company</TabsTrigger>
+            <TabsTrigger value="hr">HR</TabsTrigger>
+            <TabsTrigger value="environment">Environment</TabsTrigger>
+            <TabsTrigger value="photos">Photos</TabsTrigger>
+            <TabsTrigger value="management">Management</TabsTrigger>
+            <TabsTrigger value="facility">Facility</TabsTrigger>
+            <TabsTrigger value="itsecurity">IT Security</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="company">
+            <AdvancedIRLCompany />
+          </TabsContent>
+          
+          <TabsContent value="hr">
+            <AdvancedIRLHR />
+          </TabsContent>
+
+          <TabsContent value="environment">
+            <AdvancedIRLEnvironment />
+          </TabsContent>
+
+          <TabsContent value="photos">
+            <AdvancedIRLPhotos />
+          </TabsContent>
+
+          <TabsContent value="management">
+            <AdvancedIRLManagement />
+          </TabsContent>
+
+          <TabsContent value="facility">
+            <AdvancedIRLFacility />
+          </TabsContent>
+
+          <TabsContent value="itsecurity">
+            <AdvancedIRLITSecurity />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </UnifiedSidebarLayout>
   );
 };
 

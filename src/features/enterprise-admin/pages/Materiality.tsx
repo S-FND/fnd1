@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Navbar } from '@/components/layout/Navbar';
-import { SidebarLayout } from '@/components/layout/Sidebar';
+import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
@@ -222,49 +221,46 @@ const MaterialityPage = () => {
   };
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
-      <SidebarLayout>
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Materiality Assessment</h1>
-            <p className="text-muted-foreground">
-              Analyze and prioritize ESG material topics based on business impact and sustainability impact
-            </p>
-          </div>
-          
-          <IndustrySelection 
-            selectedIndustries={tempSelectedIndustries} 
-            onIndustryChange={handleIndustryChange}
-            onClearSelection={() => setTempSelectedIndustries([])}
-            onUpdateMatrix={updateMatrixData}
-          />
-          
-          <MaterialityTabs 
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            selectedCategory={selectedCategory}
-            setSelectedCategory={setSelectedCategory}
-            materialTopics={materialTopics}
-            materialityData={filteredData}
-            highPriorityTopics={highPriorityTopics}
-            mediumPriorityTopics={mediumPriorityTopics}
-            lowPriorityTopics={lowPriorityTopics}
-            selectedIndustries={selectedIndustries}
-            activeFrameworks={activeFrameworks}
-            setActiveFrameworks={setActiveFrameworks}
-            onUpdateTopics={handleUpdateTopics}
-            onUpdateSelectedTopics={handleUpdateSelectedTopics}
-          />
-          
-          <StakeholderEngagement
-            selectedIndustries={selectedIndustries}
-            materialTopics={selectedTopicsForEngagement.length > 0 ? selectedTopicsForEngagement : materialTopics}
-            onUpdatePrioritization={handleUpdatePrioritization}
-          />
+    <UnifiedSidebarLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Materiality Assessment</h1>
+          <p className="text-muted-foreground">
+            Analyze and prioritize ESG material topics based on business impact and sustainability impact
+          </p>
         </div>
-      </SidebarLayout>
-    </div>
+        
+        <IndustrySelection 
+          selectedIndustries={tempSelectedIndustries} 
+          onIndustryChange={handleIndustryChange}
+          onClearSelection={() => setTempSelectedIndustries([])}
+          onUpdateMatrix={updateMatrixData}
+        />
+        
+        <MaterialityTabs 
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          materialTopics={materialTopics}
+          materialityData={filteredData}
+          highPriorityTopics={highPriorityTopics}
+          mediumPriorityTopics={mediumPriorityTopics}
+          lowPriorityTopics={lowPriorityTopics}
+          selectedIndustries={selectedIndustries}
+          activeFrameworks={activeFrameworks}
+          setActiveFrameworks={setActiveFrameworks}
+          onUpdateTopics={handleUpdateTopics}
+          onUpdateSelectedTopics={handleUpdateSelectedTopics}
+        />
+        
+        <StakeholderEngagement
+          selectedIndustries={selectedIndustries}
+          materialTopics={selectedTopicsForEngagement.length > 0 ? selectedTopicsForEngagement : materialTopics}
+          onUpdatePrioritization={handleUpdatePrioritization}
+        />
+      </div>
+    </UnifiedSidebarLayout>
   );
 };
 

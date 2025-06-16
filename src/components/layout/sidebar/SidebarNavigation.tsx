@@ -1,18 +1,15 @@
 
 import React from 'react';
 import { useLocation } from 'react-router-dom';
+import { SidebarGroup, SidebarGroupContent, SidebarMenu } from '@/components/ui/sidebar';
 import { SidebarNavItem } from './SidebarNavItem';
-import { StakeholdersSubmenu } from './StakeholdersSubmenu';
 import { ESGDDSubmenu } from './ESGDDSubmenu';
+import { ESGManagementSubmenu } from './ESGManagementSubmenu';
 import { ReportsSubmenu } from './ReportsSubmenu';
+import { StakeholdersSubmenu } from './StakeholdersSubmenu';
+import { AuditSubmenu } from './AuditSubmenu';
 import { getNavigationItems } from './navigationData';
-import { useFeatures } from '@/context/FeaturesContext';
-import { 
-  SidebarGroup, 
-  SidebarGroupContent, 
-  SidebarGroupLabel, 
-  SidebarMenu
-} from '@/components/ui/sidebar';
+import { useAuth } from '@/context/AuthContext';
 
 interface SidebarNavigationProps {
   role: string;
@@ -26,63 +23,78 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   toggleMenu
 }) => {
   const location = useLocation();
-  const { isFeatureActive } = useFeatures();
-  const navigationItems = getNavigationItems(role);
-  
-  // Filter navigation items based on active features
-  const filteredItems = navigationItems.filter(item => {
-    if (!item.featureId) return true;
-    return isFeatureActive(item.featureId);
-  });
-  
+  const { user } = useAuth();
+
+  const visibleItems = getNavigationItems(role);
+
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Main Navigation</SidebarGroupLabel>
       <SidebarGroupContent>
-        <SidebarMenu>
-          {filteredItems.map((item) => {
-            // Handle stakeholders submenu separately
-            if (item.name === 'Stakeholders' && (role === 'admin' || role === 'manager')) {
+        <SidebarMenu className="space-y-1">
+          {visibleItems.map((item) => {
+            const isActive = location.pathname === item.href || 
+                           (item.href !== '/' && location.pathname.startsWith(item.href));
+
+            // Handle special menu items with submenus
+            if (item.name === 'ESG Management') {
+              return (
+                <ESGManagementSubmenu
+                  key={item.name}
+                  isExpanded={expandedMenus.esgManagement}
+                  onToggle={() => toggleMenu('esgManagement')}
+                />
+              );
+            }
+
+            if (item.name === 'ESG DD') {
+              return (
+                <ESGDDSubmenu
+                  key={item.name}
+                  isExpanded={expandedMenus.esgdd}
+                  onToggle={() => toggleMenu('esgdd')}
+                />
+              );
+            }
+
+            if (item.name === 'Audit') {
+              return (
+                <AuditSubmenu
+                  key={item.name}
+                  isExpanded={expandedMenus.audit}
+                  onToggle={() => toggleMenu('audit')}
+                />
+              );
+            }
+
+            if (item.name === 'Reports') {
+              return (
+                <ReportsSubmenu
+                  key={item.name}
+                  isExpanded={expandedMenus.reports}
+                  onToggle={() => toggleMenu('reports')}
+                />
+              );
+            }
+
+            if (item.name === 'Stakeholders') {
               return (
                 <StakeholdersSubmenu
-                  key="stakeholders"
-                  isExpanded={expandedMenus.stakeholders || false}
+                  key={item.name}
+                  isExpanded={expandedMenus.stakeholders}
                   onToggle={() => toggleMenu('stakeholders')}
                   role={role}
                 />
               );
             }
-            
-            // Handle ESG DD submenu separately
-            if (item.name === 'ESG DD' && (role === 'admin' || role === 'manager')) {
-              return (
-                <ESGDDSubmenu
-                  key="esgdd"
-                  isExpanded={expandedMenus.esgdd || false}
-                  onToggle={() => toggleMenu('esgdd')}
-                />
-              );
-            }
-            
-            // Handle Reports submenu separately
-            if (item.name === 'Reports' && (role === 'admin' || role === 'manager')) {
-              return (
-                <ReportsSubmenu
-                  key="reports"
-                  isExpanded={expandedMenus.reports || false}
-                  onToggle={() => toggleMenu('reports')}
-                />
-              );
-            }
-            
-            // Regular navigation items
+
+            // Regular menu items
             return (
               <SidebarNavItem
                 key={item.name}
                 icon={item.icon}
                 label={item.name}
                 href={item.href}
-                isActive={location.pathname === item.href || location.pathname.startsWith(item.href + '/')}
+                isActive={isActive}
               />
             );
           })}

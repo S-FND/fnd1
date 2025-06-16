@@ -25,7 +25,7 @@ const OutsourcedServicesSection: React.FC<OutsourcedServicesSectionProps> = ({
 
   return (
     <div className="space-y-4">
-      <Label>16. Any outsourced services through professional services agencies?</Label>
+      <Label>3. Any outsourced services through professional services agencies?</Label>
       {outsourcedServices.map((service, index) => (
         <div key={index} className="border rounded-lg p-4 space-y-4">
           <div className="flex justify-between items-center">
