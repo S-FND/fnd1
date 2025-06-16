@@ -7,15 +7,6 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { fetchBoData, updateBoData } from '../../services/companyApi';
@@ -71,41 +62,39 @@ const IRLBusinessOperations = () => {
 
   const entityId = getUserEntityId();
 
+  const loadData = async () => {
+    if (!entityId) {
+      setError('Entity ID not found in localStorage');
+      setIsLoading(false);
+      return;
+    }
+    try {
+      const response: any = await fetchBoData(entityId);
+      const updatedOps = operations.map(op => {
+        const key = operationNameToKeyMap[op.name];
+        const boData = response[key] || {};
+        return {
+          ...op,
+          status: boData.isApplicable || '',
+          notes: boData.reason || ''
+        };
+      });
+      setFilePaths({
+        corporate_deck: (response.corporate_deck?.file_path || []).map(getS3FilePath),
+        product_deck: (response.product_deck?.file_path || []).map(getS3FilePath)
+      });
+      setOperations(updatedOps);
+    } catch (err) {
+      console.error('Error loading business operations:', err);
+      setError('Failed to load business operations');
+      toast.error('Failed to load business operations');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Now useEffect can just call loadData()
   useEffect(() => {
-    const loadData = async () => {
-      if (!entityId) {
-        setError('Entity ID not found in localStorage');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const response: any = await fetchBoData(entityId);
-        const updatedOps = operations.map(op => {
-          const key = operationNameToKeyMap[op.name];
-          const boData = response[key] || {};
-          return {
-            ...op,
-            status: boData.isApplicable || '',
-            notes: boData.reason || ''
-          };
-        });
-
-        setFilePaths({
-          corporate_deck: (response.corporate_deck?.file_path || []).map(getS3FilePath),
-          product_deck: (response.product_deck?.file_path || []).map(getS3FilePath)
-        });
-
-        setOperations(updatedOps);
-      } catch (err) {
-        console.error('Error loading business operations:', err);
-        setError('Failed to load business operations');
-        toast.error('Failed to load business operations');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadData();
   }, [entityId]);
 
@@ -181,6 +170,7 @@ const IRLBusinessOperations = () => {
       });
 
       await updateBoData(formData);
+      await loadData();
       toast.success(isDraft ? 'Draft saved successfully!' : 'Form submitted successfully!');
     } catch (err) {
       toast.error('Something went wrong. Please try again.');
@@ -279,6 +269,7 @@ console.log('mergedSelectedValues',mergedSelectedValues);
                         setErrors={setErrors}
                         operationNameToKeyMap={operationNameToKeyMap}
                         existingFiles={currentFiles}
+                        setOperations={setOperations}
                       />
                     );
                   })}

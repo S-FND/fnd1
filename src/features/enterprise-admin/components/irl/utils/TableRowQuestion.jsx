@@ -13,6 +13,7 @@ const TableRowQuestion = ({
   setErrors,
   operationNameToKeyMap,
   existingFiles,
+  setOperations,
   onDeleteFile
 }) => {
   const key = operationNameToKeyMap[op.name];
@@ -22,10 +23,20 @@ const TableRowQuestion = ({
     setSelectedValues(
       produce((draft) => {
         draft[key].answer = value;
-        draft[key].file = null;
+        draft[key].file = null; // Reset file if needed
       })
     );
-
+  
+    // Update operations state in parent
+    setOperations(
+      produce((draft) => {
+        const item = draft.find((item) => item.name === op.name);
+        if (item) {
+          item.status = value;
+        }
+      })
+    );
+  
     if (errors[key]) {
       setErrors(
         produce((draft) => {
@@ -55,10 +66,20 @@ const TableRowQuestion = ({
 
   const handleNotesChange = (e) => {
     const { value } = e.target;
-
+  
     setSelectedValues(
       produce((draft) => {
         draft[key].reason = value;
+      })
+    );
+  
+    // Also update operations.notes
+    setOperations(
+      produce((draft) => {
+        const item = draft.find((item) => item.name === op.name);
+        if (item) {
+          item.notes = value;
+        }
       })
     );
   };
