@@ -434,7 +434,7 @@ const IRLPhotographs = () => {
                   <th className="border border-gray-300 p-3 text-left">Description</th>
                   <th className="border border-gray-300 p-3 text-center">Status (Yes/No)</th>
                   <th className="border border-gray-300 p-3 text-center">Office Attachment</th>
-                  <th className="border border-gray-300 p-3 text-center">Warehouse Attachment</th>
+                  {/* <th className="border border-gray-300 p-3 text-center">Warehouse Attachment</th> */}
                 </tr>
               </thead>
               <tbody>
@@ -456,9 +456,9 @@ const IRLPhotographs = () => {
                     <td className="border border-gray-300 p-3">
                       {renderOfficeAttachmentCell(photo, 'office')}
                     </td>
-                    <td className="border border-gray-300 p-3">
+                    {/* <td className="border border-gray-300 p-3">
                       {renderOfficeAttachmentCell(photo, 'warehouse')}
-                    </td>
+                    </td> */}
                   </tr>
                 ))}
               </tbody>
