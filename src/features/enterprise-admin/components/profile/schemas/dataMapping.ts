@@ -21,7 +21,7 @@ const fieldMapping = {
     fundingStage: 'funding_stage',
     employeeStrength: 'employee_strength',
   };
-  console.log('fieldMapping',fieldMapping);
+
   export const mapApiResponseToFormData = (apiResponse: any): CompanyFormData => {
     const mappedData: Partial<CompanyFormData> = {};
   

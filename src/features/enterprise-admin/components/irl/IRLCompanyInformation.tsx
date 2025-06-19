@@ -16,6 +16,7 @@ import { fetchCompanyData, updateCompanyData } from '../../services/companyApi';
 const IRLCompanyInformation = () => {
   const [formData, setFormData] = useState<CompanyFormData>({
     legalEntityName: '',
+    user_id: '',
     emailId: '',
     incorporationDate: '',
     companyName: '',
@@ -67,6 +68,7 @@ const IRLCompanyInformation = () => {
             ...prev,
             legalEntityName: data.legal_name || '',
             companyName: data.company_name || '',
+            user_id: data.user_id._id || '',
             emailId: data.email || '',
             contactNumber: data.contact_number || '',
             incorporationDate: data.incorporation_date || '',
@@ -79,38 +81,28 @@ const IRLCompanyInformation = () => {
             assuranceType: data.assurance_type || '',
             industry: data.industry || '',
             website: data.website || '',
-            currentTurnover: '',
-            previousTurnover: '',
-            parentCompany: '',
-            productsServices: '',
-            foundingTeam: '',
-            totalBeneficiaries: '',
-            litigationDetails: '',
-            workingHours: '',
-            shiftTiming: '',
-            otHoursCurrent: '',
-            otHoursPrevious: '',
-            otPayCompensation: '',
-            facilitiesList: '',
-            productSafetyCertifications: '',
-            emergencyIncidents: '',
-            esgTeamMembers: '',
-            facilitiesCompliance: '',
-            labourCompliances: '',
-            fireTraining: '',
-            hrPoliciesTraining: '',
-            mockDrills: '',
-            employeeWellbeingHealthInsurance: '',
-            employeeWellbeingAccidentInsurance: '',
-            employeeWellbeingMaternityBenefits: '',
-            employeeWellbeingPaternityBenefits: '',
-            employeeWellbeingDayCare: '',
-            employeeWellbeingLifeInsurance: '',
-            transportationDetails: '',
-            youngWorkers: '',
-            retrenchmentDetails: '',
+            currentTurnover: data.currentTurnover || '',
+            previousTurnover: data.previousTurnover || '',
+            parentCompany: data.parentCompany || '',
+            productsServices: data.productsServices || '',
+            foundingTeam: data.foundingTeam || '',
+            totalBeneficiaries: data.totalBeneficiaries || '',
+            litigationDetails: data.litigationDetails || '',
+            esgTeamMembers: data.esgTeamMembers || '',
+            facilitiesCompliance: data.facilitiesCompliance || '',
+            labourCompliances: data.labourCompliances || '',
+            fireTraining: data.fireTraining || '',
+            hrPoliciesTraining: data.hrPoliciesTraining || '',
+            mockDrills: data.mockDrills || '',
+            employeeWellbeingHealthInsurance: data.employeeWellbeingHealthInsurance || '',
+            employeeWellbeingAccidentInsurance: data.employeeWellbeingAccidentInsurance || '',
+            employeeWellbeingMaternityBenefits: data.employeeWellbeingMaternityBenefits || '',
+            employeeWellbeingPaternityBenefits: data.employeeWellbeingPaternityBenefits || '', // ✅ Now mapped
+            employeeWellbeingDayCare: data.employeeWellbeingDayCare || '',
+            employeeWellbeingLifeInsurance: data.employeeWellbeingLifeInsurance || '',
+            retrenchmentDetails: data.retrenchmentDetails || '',
             financialYearReporting: data.financial_year || '',
-            businessActivitiesDescription: ''
+            businessActivitiesDescription: data.businessActivitiesDescription || ''
           }));
         } else {
           console.error('Error fetching company data');
@@ -126,8 +118,9 @@ const IRLCompanyInformation = () => {
     loadData();
   }, []);
 
-  const buildCompanyPayload = () => ({
+  const buildCompanyPayload = (isDraft = false) => ({
     legal_name: formData.legalEntityName,
+    user_id: formData.user_id,
     company_name: formData.companyName,
     email: formData.emailId,
     contact_number: formData.contactNumber,
@@ -173,14 +166,14 @@ const IRLCompanyInformation = () => {
     retrenchmentDetails: formData.retrenchmentDetails,
     financial_year: formData.financialYearReporting,
     businessActivitiesDescription: formData.businessActivitiesDescription,
+    isDraft: isDraft
   });
-  
 
   const handleSave = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = buildCompanyPayload();
+      const data = buildCompanyPayload(true);
       const response = await updateCompanyData(data);
 
       toast.success('Draft saved successfully!');
@@ -205,7 +198,8 @@ const IRLCompanyInformation = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = buildCompanyPayload();
+      const data = buildCompanyPayload(false);
+      console.log('Payload being sent:', data);
       const response = await updateCompanyData(data);
 
       toast.success('Form submitted successfully!');

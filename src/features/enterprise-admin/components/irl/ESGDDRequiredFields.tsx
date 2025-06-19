@@ -33,6 +33,7 @@ const ESGDDRequiredFields: React.FC<ESGDDRequiredFieldsProps> = ({ formData, set
             value={formData.cinNumber}
             onChange={(e) => setFormData({ ...formData, cinNumber: e.target.value })}
             placeholder="Enter CIN Number"
+            readOnly={!!formData.cinNumber}
           />
         </div>
         

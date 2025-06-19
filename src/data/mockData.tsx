@@ -63,7 +63,7 @@ export const mainNavItems = [
   { name: "ESG Management", href: "/esg", icon: "BarChart3" },
   { id: "GHG Accounting", href: "/ghg", icon: "LineChart" },
   { name: "Compliance", href: "/compliance", icon: "ClipboardCheck" },
-  { name: "LMS", href: "/https://lms.fandoro.com/", icon: "GraduationCap" },
+  { name: "LMS", href: "/lms", icon: "GraduationCap" },
   { name: "EHS Trainings", href: "/ehs-trainings", icon: "Calendar" },
 ];
 

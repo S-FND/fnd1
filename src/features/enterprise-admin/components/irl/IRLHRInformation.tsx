@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { fetchHrData, updateHrData } from '../../services/companyApi';import { Label } from '@/components/ui/label';
+import { fetchHrData, updateHrData } from '../../services/companyApi'; 
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import OutsourcedServicesSection from './OutsourcedServicesSection';
 import { OutsourcedService } from './types';
@@ -91,6 +92,27 @@ const IRLHRInformation = () => {
         const hrData: any = await fetchHrData(entityId);
 
         if (hrData) {
+          setFormData(prev => ({
+            ...prev,
+            workingHours: hrData.workingHours || '',
+            shiftTiming: hrData.shiftTiming || '',
+            otHoursCurrent: hrData.otHoursCurrent || '',
+            otHoursPrevious: hrData.otHoursPrevious || '',
+            otPayCompensation: hrData.otPayCompensation || '',
+            facilitiesList: hrData.facilitiesList || '',
+            productSafetyCertifications: hrData.productSafetyCertifications || '',
+            emergencyIncidents: hrData.emergencyIncidents || '',
+            retrenchmentDetails: hrData.retrenchmentDetails || ''
+          }));
+
+          if (Array.isArray(hrData.outsourcedServices)) {
+            setOutsourcedServices(hrData.outsourcedServices);
+          } else {
+            setOutsourcedServices([
+              { agencyName: '', servicesDischarged: '', malePersons: '', femalePersons: '' }
+            ]);
+          }
+
           const managementData = hrData?.hrFunction;
           if (managementData) {
             // Map employeeData
@@ -127,7 +149,7 @@ const IRLHRInformation = () => {
 
             setDifferentlyAbledData(employeeRows || []);
           }
-          
+
           setBoardDirectors(hrData.boardDirectors || { male: '', female: '', total: '' });
           setKeyManagerial(hrData.keyManagerial || { male: '', female: '', total: '' });
         }
@@ -223,41 +245,55 @@ const IRLHRInformation = () => {
   const handleSave = async () => {
     setIsLoading(true);
     setError(null);
-  
+
     try {
       const entityId = user.entityId;
       if (!entityId) {
         throw new Error('entityId not found in localStorage');
       }
-  
+
       const payload = {
-        // isDraft: true,
-          entityId:entityId,
-          hrFunction: employeeData.map((emp, index) => ({
-            hr_management_function: emp.function,
-            hr_management_emp_male: emp.permanentMale,
-            hr_management_emp_female: emp.permanentFemale,
-            other_hr_management_emp_male: emp.otherMale,
-            other_hr_management_emp_female: emp.otherFemale,
-  
-            hr_management_workers_male: workerData[index]?.permanentMale || '',
-            hr_management_workers_female: workerData[index]?.permanentFemale || '',
-            other_hr_management_workers_male: workerData[index]?.otherMale || '',
-            other_hr_management_workers_female: workerData[index]?.otherFemale || ''
-          })),
-  
-          hrmDifferentlyAbled: differentlyAbledData.map(item => ({
-            hr_management_function_da: item.function,
-            hr_management_emp_male_da: item.employedMale,
-            hr_management_emp_female_da: item.employedFemale,
-            hr_management_contract_male_da: item.contractMale,
-            hr_management_contract_female_da: item.contractFemale
-          })),
-  
-          boardDirectors,
-          keyManagerial
+        isDraft: true,
+        entityId: entityId,
+        workingHours: formData.workingHours,
+        shiftTiming: formData.shiftTiming,
+        otHoursCurrent: formData.otHoursCurrent,
+        otHoursPrevious: formData.otHoursPrevious,
+        otPayCompensation: formData.otPayCompensation,
+        facilitiesList: formData.facilitiesList,
+        productSafetyCertifications: formData.productSafetyCertifications,
+        emergencyIncidents: formData.emergencyIncidents,
+        retrenchmentDetails: formData.retrenchmentDetails,
+
+        outsourcedServices,
+
+        hrFunction: employeeData.map((emp, index) => ({
+          hr_management_function: emp.function,
+          hr_management_emp_male: emp.permanentMale,
+          hr_management_emp_female: emp.permanentFemale,
+          other_hr_management_emp_male: emp.otherMale,
+          other_hr_management_emp_female: emp.otherFemale,
+
+          hr_management_workers_male: workerData[index]?.permanentMale || '',
+          hr_management_workers_female: workerData[index]?.permanentFemale || '',
+          other_hr_management_workers_male: workerData[index]?.otherMale || '',
+          other_hr_management_workers_female: workerData[index]?.otherFemale || ''
+        })),
+
+        hrmDifferentlyAbled: differentlyAbledData.map(item => ({
+          hr_management_function_da: item.function,
+          hr_management_emp_male_da: item.employedMale,
+          hr_management_emp_female_da: item.employedFemale,
+          hr_management_contract_male_da: item.contractMale,
+          hr_management_contract_female_da: item.contractFemale
+        })),
+
+        boardDirectors,
+        keyManagerial,
+
+
       };
-  
+
       await updateHrData(payload);
       toast.success('Draft saved successfully!');
     } catch (err) {
@@ -272,41 +308,58 @@ const IRLHRInformation = () => {
   const handleSubmit = async () => {
     setIsLoading(true);
     setError(null);
-  
+
     try {
       const entityId = user.entityId;
       if (!entityId) {
         throw new Error('entityId not found in localStorage');
       }
-  
+
       const payload = {
-        // isDraft: false,
-          entityId:entityId,
-          hrFunction: employeeData.map((emp, index) => ({
-            hr_management_function: emp.function,
-            hr_management_emp_male: emp.permanentMale,
-            hr_management_emp_female: emp.permanentFemale,
-            other_hr_management_emp_male: emp.otherMale,
-            other_hr_management_emp_female: emp.otherFemale,
-  
-            hr_management_workers_male: workerData[index]?.permanentMale || '',
-            hr_management_workers_female: workerData[index]?.permanentFemale || '',
-            other_hr_management_workers_male: workerData[index]?.otherMale || '',
-            other_hr_management_workers_female: workerData[index]?.otherFemale || ''
-          })),
-  
-          hrmDifferentlyAbled: differentlyAbledData.map(item => ({
-            hr_management_function_da: item.function,
-            hr_management_emp_male_da: item.employedMale,
-            hr_management_emp_female_da: item.employedFemale,
-            hr_management_contract_male_da: item.contractMale,
-            hr_management_contract_female_da: item.contractFemale
-          })),
-  
-          boardDirectors,
-          keyManagerial
+        isDraft: false,
+        entityId: entityId,
+        workingHours: formData.workingHours,
+        shiftTiming: formData.shiftTiming,
+        otHoursCurrent: formData.otHoursCurrent,
+        otHoursPrevious: formData.otHoursPrevious,
+        otPayCompensation: formData.otPayCompensation,
+        facilitiesList: formData.facilitiesList,
+        productSafetyCertifications: formData.productSafetyCertifications,
+        emergencyIncidents: formData.emergencyIncidents,
+        retrenchmentDetails: formData.retrenchmentDetails,
+
+        outsourcedServices: outsourcedServices.map(service => ({
+          agencyName: service.agencyName,
+          servicesDischarged: service.servicesDischarged,
+          malePersons: service.malePersons,
+          femalePersons: service.femalePersons
+        })),
+
+        hrFunction: employeeData.map((emp, index) => ({
+          hr_management_function: emp.function,
+          hr_management_emp_male: emp.permanentMale,
+          hr_management_emp_female: emp.permanentFemale,
+          other_hr_management_emp_male: emp.otherMale,
+          other_hr_management_emp_female: emp.otherFemale,
+
+          hr_management_workers_male: workerData[index]?.permanentMale || '',
+          hr_management_workers_female: workerData[index]?.permanentFemale || '',
+          other_hr_management_workers_male: workerData[index]?.otherMale || '',
+          other_hr_management_workers_female: workerData[index]?.otherFemale || ''
+        })),
+
+        hrmDifferentlyAbled: differentlyAbledData.map(item => ({
+          hr_management_function_da: item.function,
+          hr_management_emp_male_da: item.employedMale,
+          hr_management_emp_female_da: item.employedFemale,
+          hr_management_contract_male_da: item.contractMale,
+          hr_management_contract_female_da: item.contractFemale
+        })),
+
+        boardDirectors,
+        keyManagerial,
       };
-  
+
       await updateHrData(payload);
       toast.success('Form submitted successfully!');
     } catch (err) {
@@ -381,9 +434,9 @@ const IRLHRInformation = () => {
         </div>
 
         {/* 3. Outsourced Services */}
-        <OutsourcedServicesSection 
-          outsourcedServices={outsourcedServices} 
-          setOutsourcedServices={setOutsourcedServices} 
+        <OutsourcedServicesSection
+          outsourcedServices={outsourcedServices}
+          setOutsourcedServices={setOutsourcedServices}
         />
 
         {/* 4. List of major facilities */}
@@ -704,7 +757,7 @@ const IRLHRInformation = () => {
         {/* 10. Key Managerial Positions / Board of Directors */}
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">10. Key Managerial Positions / Board of Directors</h3>
-          
+
           <div className="overflow-x-auto">
             <table className="w-full border-collapse border border-gray-300">
               <thead>

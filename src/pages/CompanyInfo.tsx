@@ -37,7 +37,6 @@ export default function CompanyInfo() {
       if (!res.ok) throw new Error("Failed to fetch company info");
       
       const jsonData = await res.json();
-      console.log('Company data:', jsonData);
 
       if (jsonData.data) {
         setFormData({

@@ -6,7 +6,7 @@ import { companySchema, CompanyFormData } from './schemas/companySchema';
 import { defaultCompanyData } from './data/defaultCompanyData';
 import CompanyEditForm from './CompanyEditForm';
 import CompanyDisplay from './CompanyDisplay';
-import { fetchProfileData, updateCompanyData } from '../../services/companyApi';
+import { fetchProfileData, updateProfileData } from '../../services/companyApi';
 
 const EditableCompanyProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -42,7 +42,7 @@ const EditableCompanyProfile = () => {
     console.log('Submitting Form Data:', data); // Debugging log
     try {
       setIsLoading(true);
-      const updatedData = await updateCompanyData(data);
+      const updatedData = await updateProfileData(data);
       const response = await fetchProfileData();
       setApiData(response);
       form.reset(response); // Reset form with updated data
