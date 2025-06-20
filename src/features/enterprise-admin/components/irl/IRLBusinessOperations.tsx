@@ -219,7 +219,6 @@ const IRLBusinessOperations = () => {
       file_path: filePaths.product_deck
     }
   };
-console.log('mergedSelectedValues',mergedSelectedValues);
   return (
     <Card className="max-w-6xl mx-auto">
       <CardHeader>

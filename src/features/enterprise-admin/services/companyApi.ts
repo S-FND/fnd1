@@ -119,7 +119,6 @@ export const fetchHrData = async (
   try {
     const baseUrl = "/company/hr"; // Base path known by the client
     const url = `${API_URL}${baseUrl}/${entityId}`;
-    console.log("url");
     const response = await axios.get(url, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("fandoro-token")}`,

@@ -16,8 +16,7 @@ import {
   fetchITSecurityData, updateITSecurityData,
   // fetchGovernanceData, 
   // updateGovernanceData,
-  fetchFacilityData, 
-  // updateFacilityData
+  fetchFacilityData, updateFacilityData
 } from '../../services/companyApi';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -96,7 +95,8 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
         return { fetch: fetchComplianceData, update: updateComplianceData };
       case 'management':
         return {
-          fetch: fetchManagementData, update: updateManagementData };
+          fetch: fetchManagementData, update: updateManagementData
+        };
       case 'it security':
         return {
           fetch: fetchITSecurityData, update: updateITSecurityData
@@ -107,8 +107,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       //  };
       case 'additional (facility level)':
         return {
-          fetch: fetchFacilityData, 
-          // update: updateFacilityData
+          fetch: fetchFacilityData, update: updateFacilityData
         };
       default:
         return { fetch: fetchComplianceData, update: updateComplianceData };
@@ -182,20 +181,25 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   const buildPayload = (isDraft = false) => {
     const payload: any = {
       entityId,
+      isDraft
     };
 
     complianceItems.forEach(item => {
       const key = item.key;
       if (TEXT_INPUT_KEYS.includes(key) || TEXTAREA_KEYS.includes(key)) {
-        payload[key] = item.status; // Just the string value
+        payload[key] = item.status;
       } else {
-      payload[key] = {
-        answer: item.status,
-        reason: item.notes || '',
-        file_path: (filePaths[key] || []).map(getS3FilePath),
-        fileChange: !!item.attachment.length
-      };
-    }
+        payload[key] = {
+          isApplicable: item.status,
+          reason: item.notes || '',
+          // Send both original and new file info
+          existing_files: filePaths[key]?.map(path => {
+            // Extract just the filename if server expects it
+            return path.split('/').pop(); // or other transformation
+          }) || [],
+          new_files: item.attachment.map(file => file.name)
+        };
+      }
     });
 
     return payload;
@@ -217,9 +221,17 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
         if (!item.status) {
           newErrors[key] = 'Please select a status';
           isValid = false;
-        } else if (item.status === 'yes' && !item.attachment.length && !filePaths[key]?.length) {
-          newErrors[key] = 'File is required when Yes';
-          isValid = false;
+        } else if (item.status === 'yes') {
+          // More robust file checking
+          const hasExistingFiles = filePaths[key]?.some(path =>
+            path && typeof path === 'string' && path.length > 0
+          );
+          const hasNewFiles = item.attachment.length > 0;
+
+          if (!hasExistingFiles && !hasNewFiles) {
+            newErrors[key] = 'File is required when Yes';
+            isValid = false;
+          }
         } else if (item.status === 'no' && !item.notes.trim()) {
           newErrors[key] = 'Reason is required when No';
           isValid = false;
@@ -235,11 +247,6 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   const handleSubmit = async (isDraft = false) => {
     if (!entityId) {
       toast.error('Entity ID not found');
-      return;
-    }
-
-    if (!isDraft && !validateForm()) {
-      toast.error('Please fix the errors before submitting');
       return;
     }
 
@@ -263,6 +270,27 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
 
       const { update } = getAPIFunctions();
       await update(formData);
+
+      // Clear attachments and reset form state without reloading
+      setComplianceItems(prevItems =>
+        prevItems.map(item => ({
+          ...item,
+          attachment: [],
+          // Keep the status/notes as they were submitted
+        }))
+      );
+
+      setFilePaths(prev => {
+        // Update file paths for items that had attachments
+        const newPaths = { ...prev };
+        complianceItems.forEach(item => {
+          if (item.attachment.length > 0) {
+            // This assumes your backend updates file paths - adjust as needed
+            newPaths[item.key] = item.attachment.map(file => URL.createObjectURL(file));
+          }
+        });
+        return newPaths;
+      });
       toast.success(isDraft ? 'Draft saved successfully!' : 'Form submitted successfully!');
     } catch (err) {
       console.error('Submission failed:', err);
