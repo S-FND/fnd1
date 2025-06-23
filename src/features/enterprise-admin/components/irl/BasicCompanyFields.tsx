@@ -37,7 +37,7 @@ const BasicCompanyFields: React.FC<BasicCompanyFieldsProps> = ({ formData, setFo
           <Label htmlFor="incorporationDate">3. Month & Year of Incorporation</Label>
           <Input
             id="incorporationDate"
-            type="month"
+            // type="month"
             value={formData.incorporationDate}
             onChange={(e) => setFormData({ ...formData, incorporationDate: e.target.value })}
           />

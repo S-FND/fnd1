@@ -17,7 +17,6 @@ export const FeaturesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const { user } = useAuth();
   const [companyFeatures, setCompanyFeatures] = useState<CompanyFeatures | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     if (user?.companyId) {
       loadCompanyFeatures(user.companyId);

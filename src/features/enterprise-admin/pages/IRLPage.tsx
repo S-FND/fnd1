@@ -15,7 +15,7 @@ import IRLITSecurity from '../components/irl/IRLITSecurity';
 import IRLWarehouse from '../components/irl/IRLWarehouse';
 import IRLAdditionalFacility from '../components/irl/IRLAdditionalFacility';
 import IRLGovernance from '../components/irl/IRLGovernance';
-
+import { Toaster } from 'sonner';
 const IRLPage = () => {
   const { isLoading } = useRouteProtection(['admin', 'manager']);
   const { user, isAuthenticated } = useAuth();
@@ -31,6 +31,11 @@ const IRLPage = () => {
   return (
     <UnifiedSidebarLayout>
       <div className="space-y-6">
+      <Toaster 
+        position="bottom-right" 
+        richColors 
+        duration={3000} 
+      />
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Information Request List (IRL)</h1>
           <p className="text-muted-foreground">
@@ -47,7 +52,7 @@ const IRLPage = () => {
             <TabsTrigger value="compliance">Compliance</TabsTrigger>
             <TabsTrigger value="management">Management</TabsTrigger>
             <TabsTrigger value="itsecurity">IT Security</TabsTrigger>
-            <TabsTrigger value="warehouse">Warehouse</TabsTrigger>
+            {/* <TabsTrigger value="warehouse">Warehouse</TabsTrigger> */}
             <TabsTrigger value="facility">Facility</TabsTrigger>
             <TabsTrigger value="governance">Governance</TabsTrigger>
           </TabsList>
@@ -80,9 +85,9 @@ const IRLPage = () => {
             <IRLITSecurity />
           </TabsContent>
 
-          <TabsContent value="warehouse">
+          {/* <TabsContent value="warehouse">
             <IRLWarehouse />
-          </TabsContent>
+          </TabsContent> */}
 
           <TabsContent value="facility">
             <IRLAdditionalFacility />

@@ -33,6 +33,7 @@ export interface WarehouseItem {
 
 export interface CompanyFormData {
   legalEntityName: string;
+  user_id: string;
   emailId: string;
   incorporationDate: string;
   companyName: string;
