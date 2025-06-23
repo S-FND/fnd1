@@ -1,0 +1,20 @@
+[
+    {
+      "question": "Corporate Deck",
+      "id": "corporate_deck",
+      "values": [
+        { "id": "yes", "label": "Yes" },
+        { "id": "no", "label": "No" }
+      ],
+      "fields": ["answer", "reason", "file"]
+    },
+    {
+      "question": "Product related deck",
+      "id": "product_deck",
+      "values": [
+        { "id": "yes", "label": "Yes" },
+        { "id": "no", "label": "No" }
+      ],
+      "fields": ["answer", "file"]
+    }
+  ]

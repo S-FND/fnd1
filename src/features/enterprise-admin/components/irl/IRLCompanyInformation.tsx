@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,11 +7,16 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import ESGDDRequiredFields from './ESGDDRequiredFields';
 import BasicCompanyFields from './BasicCompanyFields';
-import { CompanyFormData } from './types';
+import OfficeSpaceSection from './OfficeSpaceSection';
+import OutsourcedServicesSection from './OutsourcedServicesSection';
+import { CompanyFormData, OfficeSpace, OutsourcedService, LocationDetails } from './types';
+import { toast } from 'sonner';
+import { fetchCompanyData, updateCompanyData } from '../../services/companyApi';
 
 const IRLCompanyInformation = () => {
   const [formData, setFormData] = useState<CompanyFormData>({
     legalEntityName: '',
+    user_id: '',
     emailId: '',
     incorporationDate: '',
     companyName: '',
@@ -49,13 +54,177 @@ const IRLCompanyInformation = () => {
     businessActivitiesDescription: ''
   });
 
-  const handleSave = () => {
-    console.log('Saving form data:', { formData });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const data: any = await fetchCompanyData();
+        if (data) {
+          setFormData(prev => ({
+            ...prev,
+            legalEntityName: data.legal_name || '',
+            companyName: data.company_name || '',
+            user_id: data.user_id._id || '',
+            emailId: data.email || '',
+            contactNumber: data.contact_number || '',
+            incorporationDate: data.incorporation_date || '',
+            paidUpCapital: data.paid_up_capital?.toString() || '',
+            cinNumber: data.cin || '',
+            gstNumber: data.gst || '',
+            registeredOfficeAddress: data.registered_office || '',
+            headOfficeAddress: data.head_office || '',
+            assuranceProviderName: data.assurance_provider_name || '',
+            assuranceType: data.assurance_type || '',
+            industry: data.industry || '',
+            website: data.website || '',
+            currentTurnover: data.currentTurnover || '',
+            previousTurnover: data.previousTurnover || '',
+            parentCompany: data.parentCompany || '',
+            productsServices: data.productsServices || '',
+            foundingTeam: data.foundingTeam || '',
+            totalBeneficiaries: data.totalBeneficiaries || '',
+            litigationDetails: data.litigationDetails || '',
+            esgTeamMembers: data.esgTeamMembers || '',
+            facilitiesCompliance: data.facilitiesCompliance || '',
+            labourCompliances: data.labourCompliances || '',
+            fireTraining: data.fireTraining || '',
+            hrPoliciesTraining: data.hrPoliciesTraining || '',
+            mockDrills: data.mockDrills || '',
+            employeeWellbeingHealthInsurance: data.employeeWellbeingHealthInsurance || '',
+            employeeWellbeingAccidentInsurance: data.employeeWellbeingAccidentInsurance || '',
+            employeeWellbeingMaternityBenefits: data.employeeWellbeingMaternityBenefits || '',
+            employeeWellbeingPaternityBenefits: data.employeeWellbeingPaternityBenefits || '', // ✅ Now mapped
+            employeeWellbeingDayCare: data.employeeWellbeingDayCare || '',
+            employeeWellbeingLifeInsurance: data.employeeWellbeingLifeInsurance || '',
+            retrenchmentDetails: data.retrenchmentDetails || '',
+            financialYearReporting: data.financial_year || '',
+            businessActivitiesDescription: data.businessActivitiesDescription || ''
+          }));
+        } else {
+          console.error('Error fetching company data');
+        }
+      } catch (error) {
+        console.error('Error fetching company data:', error);
+        setError('Failed to load company data');
+        toast.error('Failed to load company data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  const buildCompanyPayload = (isDraft = false) => ({
+    legal_name: formData.legalEntityName,
+    user_id: formData.user_id,
+    company_name: formData.companyName,
+    email: formData.emailId,
+    contact_number: formData.contactNumber,
+    incorporation_date: formData.incorporationDate,
+    paid_up_capital: formData.paidUpCapital,
+    cin: formData.cinNumber,
+    gst: formData.gstNumber,
+    registered_office: formData.registeredOfficeAddress,
+    head_office: formData.headOfficeAddress,
+    assurance_provider_name: formData.assuranceProviderName,
+    assurance_type: formData.assuranceType,
+    industry: formData.industry,
+    website: formData.website,
+    currentTurnover: formData.currentTurnover,
+    previousTurnover: formData.previousTurnover,
+    parentCompany: formData.parentCompany,
+    productsServices: formData.productsServices,
+    foundingTeam: formData.foundingTeam,
+    totalBeneficiaries: formData.totalBeneficiaries,
+    litigationDetails: formData.litigationDetails,
+    // workingHours: formData.workingHours,
+    // shiftTiming: formData.shiftTiming,
+    // otHoursCurrent: formData.otHoursCurrent,
+    // otHoursPrevious: formData.otHoursPrevious,
+    // otPayCompensation: formData.otPayCompensation,
+    // facilitiesList: formData.facilitiesList,
+    // productSafetyCertifications: formData.productSafetyCertifications,
+    // emergencyIncidents: formData.emergencyIncidents,
+    esgTeamMembers: formData.esgTeamMembers,
+    facilitiesCompliance: formData.facilitiesCompliance,
+    labourCompliances: formData.labourCompliances,
+    fireTraining: formData.fireTraining,
+    hrPoliciesTraining: formData.hrPoliciesTraining,
+    mockDrills: formData.mockDrills,
+    employeeWellbeingHealthInsurance: formData.employeeWellbeingHealthInsurance,
+    employeeWellbeingAccidentInsurance: formData.employeeWellbeingAccidentInsurance,
+    employeeWellbeingMaternityBenefits: formData.employeeWellbeingMaternityBenefits,
+    employeeWellbeingPaternityBenefits: formData.employeeWellbeingPaternityBenefits,
+    employeeWellbeingDayCare: formData.employeeWellbeingPaternityBenefits,
+    employeeWellbeingLifeInsurance: formData.employeeWellbeingLifeInsurance,
+    // transportationDetails: formData.transportationDetails,
+    // youngWorkers: formData.youngWorkers,
+    retrenchmentDetails: formData.retrenchmentDetails,
+    financial_year: formData.financialYearReporting,
+    businessActivitiesDescription: formData.businessActivitiesDescription,
+    isDraft: isDraft
+  });
+
+  const handleSave = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = buildCompanyPayload(true);
+      const response = await updateCompanyData(data);
+
+      toast.success('Draft saved successfully!');
+      console.log('Draft saved:', response);
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      setError('Failed to save draft');
+      toast.error('Failed to save draft');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleSubmit = () => {
-    console.log('Submitting form data:', { formData });
+  const handleSubmit = async () => {
+    // Basic validation
+    if (!formData.legalEntityName || !formData.emailId) {
+      setError('Please fill in all required fields');
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = buildCompanyPayload(false);
+      console.log('Payload being sent:', data);
+      const response = await updateCompanyData(data);
+
+      toast.success('Form submitted successfully!');
+      console.log('Form submitted:', response);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setError('Failed to submit form');
+      toast.error('Failed to submit form');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const [officeSpaces, setOfficeSpaces] = useState<OfficeSpace[]>([
+    { location: '', type: '', address: '', geotagLocation: '', numberOfSeats: '' }
+  ]);
+
+  const [outsourcedServices, setOutsourcedServices] = useState<OutsourcedService[]>([
+    { agencyName: '', servicesDischarged: '', malePersons: '', femalePersons: '' }
+  ]);
+
+  const [locationDetails, setLocationDetails] = useState<LocationDetails[]>([
+    { locationType: 'National', warehouses: '', offices: '', distributionCenters: '', total: '' },
+    { locationType: 'International', warehouses: '', offices: '', distributionCenters: '', total: '' }
+  ]);
 
   return (
     <Card>
@@ -67,7 +236,7 @@ const IRLCompanyInformation = () => {
       </CardHeader>
       <CardContent className="space-y-6">
         <ESGDDRequiredFields formData={formData} setFormData={setFormData} />
-        
+
         <BasicCompanyFields formData={formData} setFormData={setFormData} />
 
         <div className="space-y-2">

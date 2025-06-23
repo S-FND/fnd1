@@ -78,7 +78,7 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
       },
       {
         name: "LMS",
-        href: "/lms",
+        href: "https://lms.fandoro.com/",
         icon: GraduationCap,
         featureId: 'lms'
       },
