@@ -444,3 +444,41 @@ export const updateProductPhotographs = async (formData: FormData) => {
     throw error;
   }
 };
+
+export const fetchGovernanceData = async (
+  entityId: string
+): Promise<CompanyFormData> => {
+  try {
+    const baseUrl = "/document/governance"; // Base path known by the client
+    const url = `${API_URL}${baseUrl}/${entityId}`;
+    console.log('url',url);
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("fandoro-token")}`,
+      },
+    });
+
+    return response?.data;
+  } catch (error) {
+    console.error("Error fetching Document data:", error);
+    throw error;
+  }
+};
+
+export const updateGovernanceData = async (formData: FormData) => {
+  try {
+    const token = localStorage.getItem("fandoro-token");
+
+    const response = await axios.post(`${API_URL}/document/governance`, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching Document data:", error);
+    throw error;
+  }
+};

@@ -14,8 +14,7 @@ import {
   fetchComplianceData, updateComplianceData,
   fetchManagementData, updateManagementData,
   fetchITSecurityData, updateITSecurityData,
-  // fetchGovernanceData, 
-  // updateGovernanceData,
+  fetchGovernanceData,  updateGovernanceData,
   fetchFacilityData, updateFacilityData
 } from '../../services/companyApi';
 import { Input } from '@/components/ui/input';
@@ -101,10 +100,9 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
         return {
           fetch: fetchITSecurityData, update: updateITSecurityData
         };
-      // case 'governance':
-      // return { fetch: fetchGovernanceData,
-      //  update: updateGovernanceData
-      //  };
+      case 'governance':
+      return { fetch: fetchGovernanceData, update: updateGovernanceData
+       };
       case 'additional (facility level)':
         return {
           fetch: fetchFacilityData, update: updateFacilityData
@@ -125,6 +123,10 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       try {
         const { fetch } = getAPIFunctions();
         const response: any = await fetch(entityId);
+
+        if (!response || response.status === false) {
+          toast.error('No data found');
+        }
 
         // Create map of known compliance keys for filtering
         const allowedKeys = new Set(complianceItems.map(item => item.key));
@@ -168,7 +170,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
 
       } catch (err) {
         console.error(`Error loading ${title} data:`, err);
-        setError(`Failed to load ${title} data`);
+        // setError(`Failed to load ${title} data`);
         toast.error(`Failed to load ${title} data`);
       } finally {
         setIsLoading(false);
@@ -271,26 +273,26 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       const { update } = getAPIFunctions();
       await update(formData);
 
-      // Clear attachments and reset form state without reloading
-      setComplianceItems(prevItems =>
-        prevItems.map(item => ({
-          ...item,
-          attachment: [],
-          // Keep the status/notes as they were submitted
-        }))
-      );
+      // // Clear attachments and reset form state without reloading
+      // setComplianceItems(prevItems =>
+      //   prevItems.map(item => ({
+      //     ...item,
+      //     attachment: [],
+      //     // Keep the status/notes as they were submitted
+      //   }))
+      // );
 
-      setFilePaths(prev => {
-        // Update file paths for items that had attachments
-        const newPaths = { ...prev };
-        complianceItems.forEach(item => {
-          if (item.attachment.length > 0) {
-            // This assumes your backend updates file paths - adjust as needed
-            newPaths[item.key] = item.attachment.map(file => URL.createObjectURL(file));
-          }
-        });
-        return newPaths;
-      });
+      // setFilePaths(prev => {
+      //   // Update file paths for items that had attachments
+      //   const newPaths = { ...prev };
+      //   complianceItems.forEach(item => {
+      //     if (item.attachment.length > 0) {
+      //       // This assumes your backend updates file paths - adjust as needed
+      //       newPaths[item.key] = item.attachment.map(file => URL.createObjectURL(file));
+      //     }
+      //   });
+      //   return newPaths;
+      // });
       toast.success(isDraft ? 'Draft saved successfully!' : 'Form submitted successfully!');
     } catch (err) {
       console.error('Submission failed:', err);
