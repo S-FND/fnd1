@@ -11,13 +11,8 @@ import type { EHSTraining } from '@/data/ehs/trainings';
 import { Link } from 'react-router-dom';
 import TrainingApprovalCard from './TrainingApprovalCard';
 
-<<<<<<< HEAD
 const EHSTrainingsList = ({trainingList}) => {
-  const { data: trainings, isLoading } = useQuery({
-=======
-const EHSTrainingsList = () => {
-  const { data: trainings, isLoading, refetch } = useQuery({
->>>>>>> 39f8dd471cc343e277a7a88e82b262d3f5486b4c
+  const { data: trainings, isLoading,refetch } = useQuery({
     queryKey: ['ehs-trainings'],
     queryFn: fetchEHSTrainings,
   });
@@ -75,113 +70,6 @@ const EHSTrainingsList = () => {
   const otherTrainings = trainings?.filter(training => training.status !== 'pending-approval') || [];
 
   return (
-<<<<<<< HEAD
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {trainingList?.map((training) => (
-        <Card key={training.id} className="overflow-hidden">
-          <CardHeader className="p-4">
-            <div className="flex justify-between items-start">
-              <CardTitle className="text-lg">{training.name}</CardTitle>
-              <Badge variant={getStatusVariant(training.status)}>
-                {getStatusLabel(training.status)}
-              </Badge>
-            </div>
-            <CardDescription className="flex items-center gap-1 mt-2">
-              <Calendar className="h-3.5 w-3.5" />
-              {new Date(training.startDate || training.date).toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
-              {training.endDate && (' to ' + 
-                new Date(training.endDate).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-              <Building className="h-3.5 w-3.5" />
-              <span>{training.clientCompany}</span>
-            </div>
-            <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-              <Users className="h-3.5 w-3.5" />
-              <span>{training.attendees.length} attendees</span>
-            </div>
-            <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-              <BookOpen className="h-3.5 w-3.5" />
-              <span>{training.trainingType === 'online' ? 'Online (LMS)' : 'Offline (In-Person)'}</span>
-            </div>
-            {training.location && (
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <MapPin className="h-3.5 w-3.5" />
-                <span>{training.location}</span>
-              </div>
-            )}
-          </CardContent>
-          <CardFooter className="p-4">
-            <Button variant="outline" className="w-full" asChild>
-              <Link to={`/ehs-trainings/${training._id}`}>View Training Details</Link>
-            </Button>
-          </CardFooter>
-        </Card>
-      ))}
-      {trainings?.map((training) => (
-        <Card key={training.id} className="overflow-hidden">
-          <CardHeader className="p-4">
-            <div className="flex justify-between items-start">
-              <CardTitle className="text-lg">{training.name}</CardTitle>
-              <Badge variant={getStatusVariant(training.status)}>
-                {getStatusLabel(training.status)}
-              </Badge>
-            </div>
-            <CardDescription className="flex items-center gap-1 mt-2">
-              <Calendar className="h-3.5 w-3.5" />
-              {new Date(training.startDate || training.date).toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
-              {training.endDate && (' to ' + 
-                new Date(training.endDate).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-4 pt-0">
-            <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-              <Building className="h-3.5 w-3.5" />
-              <span>{training.clientCompany}</span>
-            </div>
-            <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-              <Users className="h-3.5 w-3.5" />
-              <span>{training.attendees.length} attendees</span>
-            </div>
-            <div className="flex items-center gap-1 text-sm text-muted-foreground mb-1">
-              <BookOpen className="h-3.5 w-3.5" />
-              <span>{training.trainingType === 'online' ? 'Online (LMS)' : 'Offline (In-Person)'}</span>
-            </div>
-            {training.location && (
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <MapPin className="h-3.5 w-3.5" />
-                <span>{training.location}</span>
-              </div>
-            )}
-          </CardContent>
-          <CardFooter className="p-4">
-            <Button variant="outline" className="w-full" asChild>
-              <Link to={`/ehs-trainings/${training.id}`}>View Training Details</Link>
-            </Button>
-          </CardFooter>
-        </Card>
-      ))}
-=======
     <div className="space-y-6">
       {/* Pending Approval Section */}
       {pendingTrainings.length > 0 && (
@@ -262,7 +150,6 @@ const EHSTrainingsList = () => {
           ))}
         </div>
       </div>
->>>>>>> 39f8dd471cc343e277a7a88e82b262d3f5486b4c
     </div>
   );
 };
