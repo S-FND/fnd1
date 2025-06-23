@@ -147,8 +147,11 @@ class HttpClient {
       };
 
       if (!response.ok) {
+        // Handle error response data safely
+        const errorMessage = this.extractErrorMessage(data) || response.statusText || 'Request failed';
+        
         const error: ApiError = {
-          message: data?.message || response.statusText || 'Request failed',
+          message: errorMessage,
           status: response.status,
           statusText: response.statusText,
           data,
@@ -182,6 +185,14 @@ class HttpClient {
 
       throw apiError;
     }
+  }
+
+  private extractErrorMessage(data: any): string | null {
+    // Safely extract error message from response data
+    if (typeof data === 'object' && data !== null) {
+      return data.message || data.error || data.detail || null;
+    }
+    return null;
   }
 
   async get<T>(url: string, config?: Omit<RequestConfig, 'method' | 'body'>): Promise<ApiResponse<T>> {
