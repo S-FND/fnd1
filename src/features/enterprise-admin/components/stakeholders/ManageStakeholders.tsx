@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { StakeholderFormData, Stakeholder } from './types';
 import { useForm } from 'react-hook-form';
+import { httpClient } from '@/lib/httpClient';
 
 const ManageStakeholders: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -56,7 +57,7 @@ const ManageStakeholders: React.FC = () => {
       ...data,
       lastContact: new Date()
     };
-    
+    // httpClient.get()
     setStakeholders([...stakeholders, newStakeholder]);
     setIsDialogOpen(false);
     form.reset();

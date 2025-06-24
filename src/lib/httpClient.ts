@@ -98,6 +98,9 @@ class HttpClient {
 
   private async handleRequest<T>(url: string, config: RequestConfig = {}): Promise<ApiResponse<T>> {
     const fullUrl = this.baseURL + url;
+    if(!url.split('/').includes('auth')){
+      config['headers']['authorization']=localStorage.getItem('fandoro-token')
+    }
     let requestConfig: RequestConfig & { url: string } = {
       method: 'GET',
       headers: { ...this.defaultHeaders, ...config.headers },
