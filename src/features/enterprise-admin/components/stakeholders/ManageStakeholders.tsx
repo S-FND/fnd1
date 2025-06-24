@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -19,6 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { StakeholderFormData, Stakeholder } from './types';
 import { useForm } from 'react-hook-form';
 import { httpClient } from '@/lib/httpClient';
+import { useApiGet } from '@/hooks/useApi';
 
 const ManageStakeholders: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -51,17 +52,35 @@ const ManageStakeholders: React.FC = () => {
     }
   });
 
-  const onSubmit = (data: StakeholderFormData) => {
+  const onSubmit = async (data: StakeholderFormData) => {
     const newStakeholder: Stakeholder = {
       id: `${stakeholders.length + 1}`,
       ...data,
       lastContact: new Date()
     };
+    let stakeHolderCreate=await httpClient.post("/stakeholders",newStakeholder);
+    console.log('stakeHolderCreate',stakeHolderCreate)
     // httpClient.get()
     setStakeholders([...stakeholders, newStakeholder]);
     setIsDialogOpen(false);
     form.reset();
   };
+
+  const getStakeHolders= async()=>{
+    try {
+     
+      // let stakeHolderList= 
+      await httpClient.get("/stakeholders");
+      // console.log('stakeHolderList',stakeHolderList)
+    } catch (error) {
+      
+    }
+  }
+
+  useEffect(()=>{
+    console.log('This is stakeholder get')
+    getStakeHolders();
+  },[])
 
   return (
     <div className="space-y-6">
