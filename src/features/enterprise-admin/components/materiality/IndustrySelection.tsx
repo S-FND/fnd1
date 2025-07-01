@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { industries } from '../../data/materiality';
+import industryList from "../../../../data/industry.json";
 
 interface IndustrySelectionProps {
   selectedIndustries: string[];
@@ -26,12 +27,12 @@ const IndustrySelection: React.FC<IndustrySelectionProps> = ({
       </CardHeader>
       <CardContent>
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {industries.map((industry) => (
-            <div key={industry.id} className="flex items-start space-x-2">
+          {industryList.map((industry,index) => (
+            <div key={index} className="flex items-start space-x-2">
               <Checkbox 
                 id={`industry-${industry.id}`}
-                checked={selectedIndustries.includes(industry.id)}
-                onCheckedChange={(checked) => onIndustryChange(industry.id, checked === true)}
+                checked={selectedIndustries.includes(industry.name)}
+                onCheckedChange={(checked) => onIndustryChange(industry.name, checked === true)}
               />
               <label 
                 htmlFor={`industry-${industry.id}`}

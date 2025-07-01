@@ -28,10 +28,10 @@ export const API_ENDPOINTS = {
     DELETE: (id: string) => `/audits/${id}`,
   },
   STAKEHOLDERS: {
-    LIST: '/stakeholders',
-    CREATE: '/stakeholders',
-    UPDATE: (id: string) => `/stakeholders/${id}`,
-    DELETE: (id: string) => `/stakeholders/${id}`,
+    LIST: 'stakeholders',
+    CREATE: 'stakeholders',
+    UPDATE: (id: string) => `stakeholders/${id}`,
+    DELETE: (id: string) => `stakeholders/${id}`,
   },
   REPORTS: {
     BRSR: '/reports/brsr',

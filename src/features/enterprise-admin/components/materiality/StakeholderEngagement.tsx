@@ -22,6 +22,8 @@ import StakeholderPrioritizationForm from './StakeholderPrioritizationForm';
 import StakeholderGroupForm from './StakeholderGroupForm';
 import { sampleStakeholders } from '../../data/stakeholders';
 import { Stakeholder as ManageStakeholder } from '../stakeholders/types';
+import { httpClient } from '@/lib/httpClient';
+import { API_ENDPOINTS } from '@/lib/apiEndpoints';
 
 interface StakeholderEngagementProps {
   selectedIndustries: string[];
@@ -46,7 +48,7 @@ const StakeholderEngagement: React.FC<StakeholderEngagementProps> = ({
   onUpdatePrioritization
 }) => {
   const [activeTab, setActiveTab] = useState('groups');
-  const [stakeholders, setStakeholders] = useState<Stakeholder[]>(initialStakeholders);
+  const [stakeholders, setStakeholders] = useState<Stakeholder[]>([]);
   const [stakeholderGroups, setStakeholderGroups] = useState<StakeholderGroup[]>(initialStakeholderGroups);
   const [selectedGroup, setSelectedGroup] = useState<StakeholderGroup | null>(null);
   const [showAddGroupForm, setShowAddGroupForm] = useState(false);
@@ -60,7 +62,28 @@ const StakeholderEngagement: React.FC<StakeholderEngagementProps> = ({
   // Load stakeholders from the Manage Stakeholders section
   useEffect(() => {
     setAvailableStakeholders(sampleStakeholders as ManageStakeholder[]);
+    handleFetchStakeholders();
   }, []);
+
+
+
+  const handleFetchStakeholders = async () => {
+    try {
+      let stakeHolderList=await httpClient.get(API_ENDPOINTS.STAKEHOLDERS.LIST)
+      
+      if(stakeHolderList.status == 200){
+        if (stakeHolderList?.data && Array.isArray(stakeHolderList.data)) {
+          let data: Stakeholder[] = stakeHolderList.data;
+          data=data.map((d)=> {return {...d,type:d['subcategoryId'].split("|")[1]}})
+          console.log('handleFetchStakeholders :: data',data)
+          setStakeholders(data);
+        }
+      }
+    } catch (error) {
+      // Error already handled by interceptors, using local data
+      console.log('Fallback to local data');
+    }
+  };
 
   // Generate temporary credentials for unregistered stakeholders
   const generateTempCredentials = () => {
@@ -123,14 +146,15 @@ const StakeholderEngagement: React.FC<StakeholderEngagementProps> = ({
 
   // Handle creating a new stakeholder group
   const handleCreateGroup = (newGroup: StakeholderGroup) => {
+    console.log('newGroup',newGroup)
     setStakeholderGroups([...stakeholderGroups, newGroup]);
-    setShowAddGroupForm(false);
+    // setShowAddGroupForm(false);
   };
   
   // Handle saving a stakeholder's prioritization
   const handleSavePrioritization = (stakeholderId: string, topicPrioritizations: any[]) => {
     const updatedStakeholders = stakeholders.map(stakeholder => {
-      if (stakeholder.id === stakeholderId) {
+      if (stakeholder._id === stakeholderId) {
         return {
           ...stakeholder,
           prioritizations: topicPrioritizations.map(p => ({
@@ -159,7 +183,7 @@ const StakeholderEngagement: React.FC<StakeholderEngagementProps> = ({
         let count = 0;
         
         updatedStakeholders
-          .filter(s => selectedGroup.stakeholders.includes(s.id))
+          .filter(s => selectedGroup.stakeholders.includes(s._id))
           .forEach(s => {
             const prioritization = s.prioritizations.find(p => p.topicId === topic.id);
             if (prioritization) {
@@ -189,7 +213,7 @@ const StakeholderEngagement: React.FC<StakeholderEngagementProps> = ({
     let completedPrioritizations = 0;
     
     group.stakeholders.forEach(stakeholderId => {
-      const stakeholder = stakeholders.find(s => s.id === stakeholderId);
+      const stakeholder = stakeholders.find(s => s._id === stakeholderId);
       if (stakeholder) {
         stakeholder.prioritizations.forEach(p => {
           if (group.topics.includes(p.topicId)) {
@@ -201,6 +225,10 @@ const StakeholderEngagement: React.FC<StakeholderEngagementProps> = ({
     
     return Math.round((completedPrioritizations / totalPossiblePrioritizations) * 100);
   };
+
+  useEffect(()=>{
+    console.log('stakeholders',stakeholders)
+  },[stakeholders])
 
   return (
     <Card>
@@ -305,7 +333,7 @@ const StakeholderEngagement: React.FC<StakeholderEngagementProps> = ({
                           <h4 className="text-sm font-medium mb-2">Stakeholders in this group</h4>
                           <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
                             {selectedGroup.stakeholders.map(stakeholderId => {
-                              const stakeholder = stakeholders.find(s => s.id === stakeholderId);
+                              const stakeholder = stakeholders.find(s => s._id === stakeholderId);
                               if (!stakeholder) return null;
                               
                               const completedTopics = stakeholder.prioritizations.filter(
@@ -313,7 +341,7 @@ const StakeholderEngagement: React.FC<StakeholderEngagementProps> = ({
                               ).length;
                               
                               return (
-                                <div key={stakeholder.id} className="border rounded-md p-3">
+                                <div key={stakeholder._id} className="border rounded-md p-3">
                                   <div className="flex justify-between mb-1">
                                     <span className="font-medium">{stakeholder.name}</span>
                                     <Badge variant={stakeholder.type === 'internal' ? 'secondary' : 'outline'}>
@@ -479,7 +507,7 @@ const StakeholderEngagement: React.FC<StakeholderEngagementProps> = ({
           <StakeholderPrioritizationForm
             stakeholder={selectedStakeholder}
             topics={materialTopics.filter(topic => selectedGroup.topics.includes(topic.id))}
-            onSave={(prioritizations) => handleSavePrioritization(selectedStakeholder.id, prioritizations)}
+            onSave={(prioritizations) => handleSavePrioritization(selectedStakeholder._id, prioritizations)}
             onCancel={() => {
               setShowPrioritizationForm(false);
               setSelectedStakeholder(null);

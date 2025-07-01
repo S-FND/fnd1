@@ -66,9 +66,9 @@ class HttpClient {
         if (error.status === 401) {
           toast.error('Authentication required. Please login again.');
           // Redirect to login or handle auth refresh
-          localStorage.removeItem('fandoro-token');
-          localStorage.removeItem('fandoro-user');
-          window.location.href = '/login';
+          // localStorage.removeItem('fandoro-token');
+          // localStorage.removeItem('fandoro-user');
+          // window.location.href = '/login';
         } else if (error.status === 403) {
           toast.error('Access denied. You do not have permission for this action.');
         } else if (error.status === 404) {
@@ -97,13 +97,16 @@ class HttpClient {
   }
 
   private async handleRequest<T>(url: string, config: RequestConfig = {}): Promise<ApiResponse<T>> {
-    const fullUrl = this.baseURL + url;
+    const fullUrl = `${import.meta.env.VITE_API_URL}/${url}`
+    // this.baseURL + url;
+    let headers={ ...this.defaultHeaders, ...config.headers }
     if(!url.split('/').includes('auth')){
-      config['headers']['authorization']=localStorage.getItem('fandoro-token')
+      // headers['authorization']=`Bearer ${localStorage.getItem('fandoro-token')}`
     }
+    console.log('headers',headers)
     let requestConfig: RequestConfig & { url: string } = {
       method: 'GET',
-      headers: { ...this.defaultHeaders, ...config.headers },
+      headers: headers,
       ...config,
       url: fullUrl,
     };
