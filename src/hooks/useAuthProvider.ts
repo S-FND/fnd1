@@ -26,45 +26,45 @@ export const useAuthProvider = () => {
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
-    try {
-      const res = await fetch(import.meta.env.VITE_API_URL+"/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+    // try {
+    //   const res = await fetch(import.meta.env.VITE_API_URL+"/auth/login", {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({ email, password }),
+    //   });
       
-      const data = await res.json();
-      if (!res.ok || !data.status || !data.user) {
-        toast.error(data.message || "Invalid credentials");
-        setIsLoading(false);
-        return;
-      }
-      const { user, token } = data;
+    //   const data = await res.json();
+    //   if (!res.ok || !data.status || !data.user) {
+    //     toast.error(data.message || "Invalid credentials");
+    //     setIsLoading(false);
+    //     return;
+    //   }
+    //   const { user, token } = data;
 
-      // 👇 Assign _id to companyId if role is company-type and companyId is missing
-      if (
-        (user.role === 'admin') &&
-        !user.companyId
-      ) {
-        user.companyId = user._id;
-      }
+    //   // 👇 Assign _id to companyId if role is company-type and companyId is missing
+    //   if (
+    //     (user.role === 'admin') &&
+    //     !user.companyId
+    //   ) {
+    //     user.companyId = user._id;
+    //   }
 
-      const rolePermissions = defaultPermissions[user.role] || {};
-      setUser(user);
-      setToken(token);
-      setPermissions(rolePermissions);
-      localStorage.setItem("fandoro-user", JSON.stringify(user));
-      localStorage.setItem("fandoro-token", token);
-      localStorage.setItem("fandoro-permissions", JSON.stringify(rolePermissions));
+    //   const rolePermissions = defaultPermissions[user.role] || {};
+    //   setUser(user);
+    //   setToken(token);
+    //   setPermissions(rolePermissions);
+    //   localStorage.setItem("fandoro-user", JSON.stringify(user));
+    //   localStorage.setItem("fandoro-token", token);
+    //   localStorage.setItem("fandoro-permissions", JSON.stringify(rolePermissions));
       
-      toast.success("Login successful!");
-      redirectBasedOnRole(user.role);
-    } catch (error) {
-      console.error("Login error:", error);
-      toast.error("Login failed. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+    //   toast.success("Login successful!");
+    //   redirectBasedOnRole(user.role);
+    // } catch (error) {
+    //   console.error("Login error:", error);
+    //   toast.error("Login failed. Please try again.");
+    // } finally {
+    //   setIsLoading(false);
+    // }
   };
 
   const redirectBasedOnRole = (role: string) => {
