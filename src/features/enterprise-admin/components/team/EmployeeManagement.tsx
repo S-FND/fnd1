@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,59 +8,141 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { UserPlus, Search, Filter } from 'lucide-react';
+import { createTeam } from '../../services/teamMangment'; // Import your API service
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
-const EmployeeManagement = () => {
+interface Employee {
+  _id: string;
+  name: string;
+  email: string;
+  employeeId: string;
+  active: boolean;
+  accessUrls: string[];
+  createdAt: string;
+  updatedAt: string;
+  role?: string; // Added to match your table structure
+  department?: string; // Added to match your table structure
+  location?: string; // Added to match your table structure
+  city?: string; // Added to match your table structure
+}
+
+const EmployeeManagement = ({ employees, locations, refreshData, loading }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('all');
   const [filterLocation, setFilterLocation] = useState('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  // const [employees, setEmployees] = useState<Employee[]>([]);
+  // const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Mock employee data
-  const employees = [
-    {
-      id: 1,
-      name: 'John Doe',
-      email: 'john.doe@company.com',
-      role: 'Maker',
-      department: 'Finance',
-      location: 'Mumbai Office',
-      city: 'Mumbai',
-      status: 'Active'
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      email: 'jane.smith@company.com',
-      role: 'Checker',
-      department: 'HR',
-      location: 'Delhi Warehouse',
-      city: 'Delhi',
-      status: 'Active'
-    },
-    {
-      id: 3,
-      name: 'Mike Johnson',
-      email: 'mike.johnson@company.com',
-      role: 'Maker',
-      department: 'Operations',
-      location: 'Bangalore Manufacturing',
-      city: 'Bangalore',
-      status: 'Inactive'
-    }
-  ];
+  // Fetch employee data from API
+  // useEffect(() => {
+  //   const loadEmployees = async () => {
+  //     try {
+  //       setLoading(true);
+  //       const response = await fetchTeamData();
 
-  const roles = ['Maker', 'Checker'];
-  const departments = ['HR', 'Admin', 'Finance', 'Operations'];
-  const locations = ['Mumbai Office', 'Delhi Warehouse', 'Bangalore Manufacturing', 'Chennai Office'];
+  //       // Transform API data to match your table structure
+  //       const transformedEmployees = response.data[0]?.subuser?.map((emp: any) => ({
+  //         ...emp,
+  //         role: emp.accessUrls?.includes('admin') ? 'Admin' : 'User', // Example role mapping
+  //         department: 'General', // Default department
+  //         location: emp.selectedLocation || 'Unassigned',
+  //         city: emp.selectedLocation?.split(' ')[0] || 'Unknown',
+  //         status: emp.active ? 'Active' : 'Inactive'
+  //       })) || [];
+  //       // toast.success('Team members loaded successfully.');
+  //       setEmployees(transformedEmployees);
+  //     } catch (err) {
+  //       toast.error('Unable to fetch team members. Please try again.');
+  //       console.error(err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-  const filteredEmployees = employees.filter(employee => {
-    const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         employee.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = filterRole === 'all' || employee.role === filterRole;
-    const matchesLocation = filterLocation === 'all' || employee.location === filterLocation;
-    
+  //   loadEmployees();
+  // }, []);
+
+  const roles = ['Admin', 'User']; // Adjust based on your actual roles
+  // const departments = ['HR', 'Admin', 'Finance', 'Operations'];
+  // const locations = Array.from(new Set(employees.map(e => e.location))).filter(Boolean);
+
+  const filteredEmployees = employees.filter((employee) => {
+    const matchesSearch =
+      employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      employee.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = filterRole === 'all' || employee.accessUrls?.includes(filterRole);
+    const loc = employee.selectedLocation || 'Unassigned';
+    const matchesLocation = filterLocation === 'all' || loc === filterLocation;
+
     return matchesSearch && matchesRole && matchesLocation;
   });
+
+  // const handleDelete = async (id: string) => {
+  //   try {
+  //     // Call your API here
+  //     await deleteEmployee(id); // Replace with actual API call
+  //     toast.success("Employee deleted successfully");
+  //     refreshData(); // Re-fetch data
+  //   } catch (err) {
+  //     toast.error("Failed to delete employee");
+  //   }
+  // };
+
+  // const handleEdit = async (employee: Employee) => {
+  //   try {
+  //     await updateEmployee(employee); // Replace with actual API call
+  //     toast.success("Employee updated successfully");
+  //     refreshData();
+  //   } catch (err) {
+  //     toast.error("Failed to update employee");
+  //   }
+  // };
+
+  const handleAddEmployee = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+
+    const newEmployee = {
+      name: formData.get('name'),
+      email: formData.get('email'),
+      employeeId: formData.get('employeeId'),
+      role: formData.get('role'),
+      selectedLocation: formData.get('location')
+    };
+
+    try {
+      console.log('newEmployee', newEmployee);
+
+      const payload = {
+        employeeList: [newEmployee],
+      };
+      console.log('payload', payload);
+
+      const response = await createTeam(payload); // Uses your actual API function
+
+      if (response) {
+        toast.success('Employee added successfully!');
+        setIsAddDialogOpen(false);
+        refreshData(); // Refresh data after adding
+      } else {
+        toast.error('Failed to add employee');
+      }
+    } catch (err) {
+      toast.error(err.message || 'Failed to add employee.');
+      console.error(err);
+    }
+  };
+
+  if (loading) {
+    return <div className="p-4">Loading employees...</div>;
+  }
+
+  if (error) {
+    return <div className="p-4 text-red-500">{error}</div>;
+  }
 
   return (
     <Card>
@@ -79,63 +160,58 @@ const EmployeeManagement = () => {
               <DialogHeader>
                 <DialogTitle>Add New Employee</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" placeholder="Enter full name" />
+              <form onSubmit={handleAddEmployee} className="space-y-4">
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input id="name" name="name" placeholder="Enter full name" />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" name="email" type="email" placeholder="Enter email address" />
+                  </div>
+                  <div>
+                    <Label htmlFor="employeeId">Employee ID</Label>
+                    <Input id="employeeId" name="employeeId" placeholder="Enter employee ID" />
+                  </div>
+                  <div>
+                    <Label htmlFor="role">Role</Label>
+                    <Select  name="role">
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {roles.map(role => (
+                          <SelectItem key={role} value={role.toLowerCase()}>{role}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="location">Location</Label>
+                    <Select name="location">
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {locations.map(location => (
+                          <SelectItem key={location._id} value={location._id}>
+                            {location.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={() => setIsAddDialogOpen(false)} variant="outline" className="flex-1">
+                      Cancel
+                    </Button>
+                    <Button onClick={() => setIsAddDialogOpen(false)} className="flex-1">
+                      Add Employee
+                    </Button>
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="Enter email address" />
-                </div>
-                <div>
-                  <Label htmlFor="role">Role</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.map(role => (
-                        <SelectItem key={role} value={role.toLowerCase()}>{role}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="department">Department</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {departments.map(dept => (
-                        <SelectItem key={dept} value={dept.toLowerCase()}>{dept}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="location">Location</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select location" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {locations.map(location => (
-                        <SelectItem key={location} value={location.toLowerCase()}>{location}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex gap-2">
-                  <Button onClick={() => setIsAddDialogOpen(false)} variant="outline" className="flex-1">
-                    Cancel
-                  </Button>
-                  <Button onClick={() => setIsAddDialogOpen(false)} className="flex-1">
-                    Add Employee
-                  </Button>
-                </div>
-              </div>
+              </form>
             </DialogContent>
           </Dialog>
         </div>
@@ -170,7 +246,9 @@ const EmployeeManagement = () => {
             <SelectContent>
               <SelectItem value="all">All Locations</SelectItem>
               {locations.map(location => (
-                <SelectItem key={location} value={location}>{location}</SelectItem>
+                <SelectItem key={location._id} value={location._id}>
+                  {location.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -182,8 +260,8 @@ const EmployeeManagement = () => {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
+              <TableHead>Employee ID</TableHead>
               <TableHead>Role</TableHead>
-              <TableHead>Department</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
@@ -191,19 +269,19 @@ const EmployeeManagement = () => {
           </TableHeader>
           <TableBody>
             {filteredEmployees.map((employee) => (
-              <TableRow key={employee.id}>
+              <TableRow key={employee._id}>
                 <TableCell className="font-medium">{employee.name}</TableCell>
                 <TableCell>{employee.email}</TableCell>
+                <TableCell>{employee.employeeId}</TableCell>
                 <TableCell>
-                  <Badge variant={employee.role === 'Maker' ? 'default' : 'secondary'}>
+                  <Badge variant={employee.role === 'Admin' ? 'default' : 'secondary'}>
                     {employee.role}
                   </Badge>
                 </TableCell>
-                <TableCell>{employee.department}</TableCell>
                 <TableCell>{employee.location}</TableCell>
                 <TableCell>
-                  <Badge variant={employee.status === 'Active' ? 'default' : 'destructive'}>
-                    {employee.status}
+                  <Badge variant={employee.active ? 'default' : 'destructive'}>
+                    {employee.active ? 'Active' : 'Inactive'}
                   </Badge>
                 </TableCell>
                 <TableCell>
