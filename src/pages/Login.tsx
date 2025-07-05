@@ -14,7 +14,7 @@ const Login = () => {
           <div className="mx-auto w-12 h-12 rounded-full eco-gradient flex items-center justify-center">
             <span className="text-white text-xl font-bold">F</span>
           </div>
-          <h1 className="text-2xl font-bold">Fandoro Enterprise {import.meta.env.VITE_APP_ENV !== 'Production' ? ` (${import.meta.env.VITE_APP_ENV})` : ''}</h1>
+          <h1 className="text-2xl font-bold">Fandoro Enterprise </h1>
           <p className="text-muted-foreground">Sustainability Management Platform</p>
         </div>
         <div className="bg-background p-8 rounded-lg border shadow-sm">
