@@ -69,14 +69,14 @@ export const LoginForm: React.FC = () => {
         )}
       </Button>
       
-      <div className="text-center text-sm text-muted-foreground">
+      {import.meta.env.VITE_ENV_NAME !== 'Production' && <div className="text-center text-sm text-muted-foreground">
         <p>Demo Accounts:</p>
         <p className="font-semibold text-primary">fandoro@admin.com / admin123 (Fandoro Super Admin)</p>
         <p>admin@company.com / password (Enterprise Admin)</p>
         <p>unitadmin@company.com / password (Unit Admin)</p>
         <p>manager@company.com / password (Manager)</p>
         <p>employee@company.com / password (Employee)</p>
-      </div>
+      </div>}
     </form>
   );
 };
