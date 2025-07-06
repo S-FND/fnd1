@@ -59,6 +59,13 @@ export const StakeholdersSubmenu: React.FC<StakeholdersSubmenuProps> = ({
           </Link>
         </SidebarMenuSubButton>
       </SidebarMenuSubItem>
+      <SidebarMenuSubItem>
+        <SidebarMenuSubButton asChild isActive={location.pathname === '/stakeholders/login'}>
+          <Link to="/stakeholders/login">
+            <span>Stakeholder Login</span>
+          </Link>
+        </SidebarMenuSubButton>
+      </SidebarMenuSubItem>
     </SidebarSubmenu>
   );
 };

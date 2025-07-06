@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { FeaturesProvider } from '@/context/FeaturesContext';
@@ -43,6 +44,7 @@ import StakeholdersOverviewPage from './features/enterprise-admin/pages/stakehol
 import ManageStakeholdersPage from './features/enterprise-admin/pages/stakeholders/ManageStakeholdersPage';
 import CategoriesPage from './features/enterprise-admin/pages/stakeholders/CategoriesPage';
 import EngagementPlanPage from './features/enterprise-admin/pages/stakeholders/EngagementPlanPage';
+import StakeholderLoginPage from './features/stakeholder/pages/StakeholderLoginPage';
 import ESGManagementPage from './features/enterprise-admin/pages/ESGManagement';
 import TeamManagementPage from './features/enterprise-admin/pages/TeamManagement';
 import CompanyProfilePage from './pages/CompanyProfile';
@@ -85,6 +87,7 @@ function App() {
         <Route path="/stakeholders/manage" element={<ManageStakeholdersPage />} />
         <Route path="/stakeholders/categories" element={<CategoriesPage />} />
         <Route path="/stakeholders/engagement" element={<EngagementPlanPage />} />
+        <Route path="/stakeholders/login" element={<StakeholderLoginPage />} />
         
         <Route path="/units" element={<Units />} />
         <Route path="/team-management" element={<TeamManagementPage />} />
