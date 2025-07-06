@@ -27,6 +27,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
   const [selectedTopicId, setSelectedTopicId] = useState<string>('');
   const [availableMetrics, setAvailableMetrics] = useState<ESGMetricWithTracking[]>([]);
   const [selectedMetrics, setSelectedMetrics] = useState<ESGMetricWithTracking[]>([]);
+  const [savedMetrics, setSavedMetrics] = useState<ESGMetricWithTracking[]>([]);
   const [editingMetric, setEditingMetric] = useState<ESGMetricWithTracking | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -37,7 +38,26 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
     description: '',
     unit: '',
     dataType: 'Numeric' as 'Numeric' | 'Percentage' | 'Text' | 'Boolean',
+    collectionFrequency: 'Monthly' as 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Bi-Annually' | 'Annually',
   });
+
+  // Load saved metrics from localStorage on component mount
+  useEffect(() => {
+    const saved = localStorage.getItem('savedESGMetrics');
+    if (saved) {
+      try {
+        const parsedMetrics = JSON.parse(saved);
+        setSavedMetrics(parsedMetrics);
+      } catch (error) {
+        console.error('Error loading saved metrics:', error);
+      }
+    }
+  }, []);
+
+  // Save metrics to localStorage whenever savedMetrics changes
+  useEffect(() => {
+    localStorage.setItem('savedESGMetrics', JSON.stringify(savedMetrics));
+  }, [savedMetrics]);
 
   // Load metrics when topic changes
   useEffect(() => {
@@ -75,25 +95,31 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
       description: metric.description,
       unit: metric.unit,
       dataType: metric.dataType,
+      collectionFrequency: metric.collectionFrequency,
     });
     setIsEditDialogOpen(true);
   };
 
   const handleSaveEdit = () => {
     if (editingMetric) {
+      const updatedMetric = {
+        ...editingMetric,
+        name: customMetricForm.name,
+        description: customMetricForm.description,
+        unit: customMetricForm.unit,
+        dataType: customMetricForm.dataType,
+        collectionFrequency: customMetricForm.collectionFrequency,
+      };
+
       setSelectedMetrics(metrics =>
-        metrics.map(m =>
-          m.id === editingMetric.id
-            ? {
-                ...m,
-                name: customMetricForm.name,
-                description: customMetricForm.description,
-                unit: customMetricForm.unit,
-                dataType: customMetricForm.dataType,
-              }
-            : m
-        )
+        metrics.map(m => m.id === editingMetric.id ? updatedMetric : m)
       );
+
+      // Update in saved metrics if it exists there
+      setSavedMetrics(metrics =>
+        metrics.map(m => m.id === editingMetric.id ? updatedMetric : m)
+      );
+
       toast.success('Metric updated successfully');
       setIsEditDialogOpen(false);
       setEditingMetric(null);
@@ -122,7 +148,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
         ? 'Environmental' 
         : (selectedTopic.category as 'Social' | 'Governance'),
       dataType: customMetricForm.dataType,
-      collectionFrequency: 'Monthly',
+      collectionFrequency: customMetricForm.collectionFrequency,
       dataPoints: [],
       isSelected: true
     };
@@ -133,12 +159,29 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
     toast.success('Custom metric added successfully');
   };
 
+  const handleSaveConfiguration = () => {
+    if (selectedMetrics.length === 0) {
+      toast.error('Please select at least one metric to save');
+      return;
+    }
+
+    // Add selected metrics to saved metrics, avoiding duplicates
+    const newMetrics = selectedMetrics.filter(
+      selectedMetric => !savedMetrics.find(saved => saved.id === selectedMetric.id)
+    );
+
+    setSavedMetrics(prev => [...prev, ...newMetrics]);
+    toast.success(`${selectedMetrics.length} metrics saved for data entry`);
+    setSelectedMetrics([]);
+  };
+
   const resetCustomMetricForm = () => {
     setCustomMetricForm({
       name: '',
       description: '',
       unit: '',
       dataType: 'Numeric',
+      collectionFrequency: 'Monthly',
     });
   };
 
@@ -176,6 +219,8 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
         selectedTopic={selectedTopic}
         onEditMetric={handleEditMetric}
         onRemoveMetric={handleRemoveMetric}
+        onSaveConfiguration={handleSaveConfiguration}
+        savedMetrics={savedMetrics}
       />
 
       {/* Edit Metric Dialog */}
