@@ -78,7 +78,7 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
       },
       {
         name: "LMS",
-        href: "/lms",
+        href: "https://lms.fandoro.com/",
         icon: GraduationCap,
         featureId: 'lms'
       },
@@ -128,14 +128,14 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
     );
 
     // Add Settings only for admin users
-    if (role === 'admin') {
-      baseItems.push({
-        name: "Settings",
-        href: "/settings",
-        icon: Settings,
-        featureId: 'settings'
-      });
-    }
+    // if (role === 'admin') {
+    //   baseItems.push({
+    //     name: "Settings",
+    //     href: "/settings",
+    //     icon: Settings,
+    //     featureId: 'settings'
+    //   });
+    // }
   }
 
   if (role === 'employee') {

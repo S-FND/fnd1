@@ -10,17 +10,23 @@ import { keyMetrics, founders } from './data/defaultCompanyData';
 interface CompanyDisplayProps {
   data: CompanyFormData;
   onEdit: () => void;
+  isLoading?: boolean;
 }
 
-const CompanyDisplay = ({ data, onEdit }: CompanyDisplayProps) => {
+
+const CompanyDisplay = ({ data, onEdit, isLoading = false }: CompanyDisplayProps) => {
+  if (isLoading) {
+    return <div className="flex justify-center p-8">Loading company data...</div>;
+  }
+
   return (
     <div className="space-y-6">
-      {/* Header Section with Key Company Info */}
-      <Card>
+       {/* Header Section with Key Company Info */}
+       <Card>
         <CardHeader>
           <div className="flex items-start justify-between">
             <div>
-              <CardTitle className="text-3xl">{data.name}</CardTitle>
+              <CardTitle className="text-3xl">{data.legalName}</CardTitle>
               <p className="text-lg text-muted-foreground mt-1">{data.industry}</p>
               <div className="flex items-center gap-4 mt-3">
                 <div className="flex items-center gap-2">
@@ -34,12 +40,12 @@ const CompanyDisplay = ({ data, onEdit }: CompanyDisplayProps) => {
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <Badge variant="outline" className="text-green-600 border-green-600">
+              {/* <Badge variant="outline" className="text-green-600 border-green-600">
                 {keyMetrics.sustainability}
-              </Badge>
-              <Badge variant="outline" className="text-blue-600 border-blue-600">
+              </Badge> */}
+              {/* <Badge variant="outline" className="text-blue-600 border-blue-600">
                 {data.fundingStage}
-              </Badge>
+              </Badge> */}
               <Button onClick={onEdit} size="sm">
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Profile
@@ -47,7 +53,7 @@ const CompanyDisplay = ({ data, onEdit }: CompanyDisplayProps) => {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        {/* <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="flex items-center gap-3">
               <DollarSign className="h-8 w-8 text-green-600" />
@@ -82,7 +88,7 @@ const CompanyDisplay = ({ data, onEdit }: CompanyDisplayProps) => {
               </div>
             </div>
           </div>
-        </CardContent>
+        </CardContent> */}
       </Card>
 
       {/* Office Addresses */}
@@ -122,18 +128,18 @@ const CompanyDisplay = ({ data, onEdit }: CompanyDisplayProps) => {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4">{data.corporateOffice}</p>
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <Badge variant="secondary">Primary Operations Hub</Badge>
-            </div>
-            <p className="text-sm text-muted-foreground mt-2">
+            </div> */}
+            {/* <p className="text-sm text-muted-foreground mt-2">
               Listed on: {data.listedOn}
-            </p>
+            </p> */}
           </CardContent>
         </Card>
       </div>
 
       {/* Founder Profiles */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>Leadership Team</CardTitle>
         </CardHeader>
@@ -148,10 +154,10 @@ const CompanyDisplay = ({ data, onEdit }: CompanyDisplayProps) => {
             ))}
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
 
       {/* Company Timeline & Milestones */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>Company Milestones</CardTitle>
         </CardHeader>
@@ -180,7 +186,7 @@ const CompanyDisplay = ({ data, onEdit }: CompanyDisplayProps) => {
             </div>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 };

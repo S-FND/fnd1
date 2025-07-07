@@ -2,6 +2,7 @@
 import * as z from 'zod';
 
 export const companySchema = z.object({
+  user_id: z.string().optional(),
   name: z.string().min(1, 'Company name is required'),
   legalName: z.string().min(1, 'Legal name is required'),
   cin: z.string().min(1, 'CIN is required'),

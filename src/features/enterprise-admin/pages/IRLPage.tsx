@@ -47,7 +47,7 @@ const IRLPage = () => {
             <TabsTrigger value="compliance">Compliance</TabsTrigger>
             <TabsTrigger value="management">Management</TabsTrigger>
             <TabsTrigger value="itsecurity">IT Security</TabsTrigger>
-            <TabsTrigger value="warehouse">Warehouse</TabsTrigger>
+            {/* <TabsTrigger value="warehouse">Warehouse</TabsTrigger> */}
             <TabsTrigger value="facility">Facility</TabsTrigger>
             <TabsTrigger value="governance">Governance</TabsTrigger>
           </TabsList>
@@ -80,9 +80,9 @@ const IRLPage = () => {
             <IRLITSecurity />
           </TabsContent>
 
-          <TabsContent value="warehouse">
+          {/* <TabsContent value="warehouse">
             <IRLWarehouse />
-          </TabsContent>
+          </TabsContent> */}
 
           <TabsContent value="facility">
             <IRLAdditionalFacility />

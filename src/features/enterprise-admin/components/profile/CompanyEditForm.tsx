@@ -4,7 +4,7 @@ import { UseFormReturn } from 'react-hook-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Save } from 'lucide-react';
+import { X, Save, Loader2 } from 'lucide-react';
 import {
   Form,
   FormControl,
@@ -26,114 +26,126 @@ import {
   employeeStrengthOptions,
   financialYearOptions,
   listedOnOptions,
-  industryOptions
+  industryOptions,
 } from './data/companyOptions';
 
 interface CompanyEditFormProps {
   form: UseFormReturn<CompanyFormData>;
   onSubmit: (data: CompanyFormData) => void;
   onCancel: () => void;
+  isLoading?: boolean;
 }
 
-const CompanyEditForm = ({ form, onSubmit, onCancel }: CompanyEditFormProps) => {
+const CompanyEditForm = ({ form, onSubmit, onCancel, isLoading = false }: CompanyEditFormProps) => {
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-2xl">Edit Company Profile</CardTitle>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={onCancel}>
+            <Button variant="outline" onClick={onCancel} disabled={isLoading}>
               <X className="h-4 w-4 mr-2" />
               Cancel
             </Button>
-            <Button onClick={form.handleSubmit(onSubmit)}>
-              <Save className="h-4 w-4 mr-2" />
-              Save Changes
+            <Button type="submit" form="company-form" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Changes
+                </>
+              )}
             </Button>
           </div>
         </div>
       </CardHeader>
+
       <CardContent>
         <Form {...form}>
-          <form className="space-y-6">
+          <form id="company-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Company Name */}
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Company Name</FormLabel>
+                    <FormLabel htmlFor="name">Company Name</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} id="name" autoComplete="organization" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
+              {/* Legal Name */}
               <FormField
                 control={form.control}
                 name="legalName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Legal Name</FormLabel>
+                    <FormLabel htmlFor="legalName">Legal Name</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} id="legalName" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
+              {/* CIN */}
               <FormField
                 control={form.control}
                 name="cin"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>CIN</FormLabel>
+                    <FormLabel htmlFor="cin">CIN</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} id="cin" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
-              <FormField
+
+<FormField
                 control={form.control}
                 name="founded"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Founded Year</FormLabel>
+                    <FormLabel htmlFor="founded">Founded Year</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} id="founded" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
               <FormField
                 control={form.control}
                 name="incorporationDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Incorporation Date</FormLabel>
+                    <FormLabel htmlFor="incorporationDate">Incorporation Date</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} id="incorporationDate" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
               <FormField
                 control={form.control}
                 name="industry"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Industry</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value ?? ''}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select industry" />
@@ -151,56 +163,52 @@ const CompanyEditForm = ({ form, onSubmit, onCancel }: CompanyEditFormProps) => 
                   </FormItem>
                 )}
               />
-              
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel htmlFor="email">Email</FormLabel>
                     <FormControl>
-                      <Input {...field} type="email" />
+                      <Input {...field} id="email" autoComplete="email" type="email" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
               <FormField
                 control={form.control}
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone</FormLabel>
+                    <FormLabel htmlFor="phone">Phone</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} id="phone" autoComplete="tel" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
               <FormField
                 control={form.control}
                 name="website"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Website</FormLabel>
+                    <FormLabel htmlFor="website">Website</FormLabel>
                     <FormControl>
-                      <Input {...field} type="url" />
+                      <Input {...field} id="website" type="url" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
               <FormField
                 control={form.control}
                 name="financialYear"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Financial Year</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value ?? ''}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select financial year" />
@@ -218,28 +226,26 @@ const CompanyEditForm = ({ form, onSubmit, onCancel }: CompanyEditFormProps) => 
                   </FormItem>
                 )}
               />
-              
               <FormField
                 control={form.control}
                 name="revenue"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Annual Revenue</FormLabel>
+                    <FormLabel htmlFor="revenue">Annual Revenue</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} id="revenue" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
               <FormField
                 control={form.control}
                 name="employeeStrength"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Employee Strength</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value ?? ''}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select employee strength" />
@@ -257,14 +263,13 @@ const CompanyEditForm = ({ form, onSubmit, onCancel }: CompanyEditFormProps) => 
                   </FormItem>
                 )}
               />
-              
               <FormField
                 control={form.control}
                 name="fundingStage"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Funding Stage</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value ?? ''}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select funding stage" />
@@ -282,14 +287,13 @@ const CompanyEditForm = ({ form, onSubmit, onCancel }: CompanyEditFormProps) => 
                   </FormItem>
                 )}
               />
-              
               <FormField
                 control={form.control}
                 name="listedOn"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Listed On</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value ?? ''}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select exchange" />
@@ -308,30 +312,29 @@ const CompanyEditForm = ({ form, onSubmit, onCancel }: CompanyEditFormProps) => 
                 )}
               />
             </div>
-            
+
             <div className="space-y-4">
               <FormField
                 control={form.control}
                 name="registeredOffice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Registered Office Address</FormLabel>
+                    <FormLabel htmlFor="registeredOffice">Registered Office Address</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} id="registeredOffice" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              
               <FormField
                 control={form.control}
                 name="corporateOffice"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Corporate Office Address</FormLabel>
+                    <FormLabel htmlFor="corporateOffice">Corporate Office Address</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} id="corporateOffice" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
