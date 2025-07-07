@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog } from '@/components/ui/dialog';
 import { getMetricsByTopic, getDefaultMetricTracking, ESGMetricWithTracking } from '../../data/esgMetricsData';
@@ -62,12 +63,13 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
   useEffect(() => {
     if (selectedTopicId) {
       const metrics = getMetricsByTopic(selectedTopicId)
-        .map(metric => ({
-          ...getDefaultMetricTracking(metric),
-          collectionFrequency: getDefaultMetricTracking(metric).collectionFrequency === 'Never' 
-            ? 'Monthly' as const 
-            : getDefaultMetricTracking(metric).collectionFrequency
-        }));
+        .map(metric => {
+          const defaultTracking = getDefaultMetricTracking(metric);
+          return {
+            ...defaultTracking,
+            collectionFrequency: 'Monthly' as const // Set a default frequency since 'Never' is no longer valid
+          };
+        });
       setAvailableMetrics(metrics);
     } else {
       setAvailableMetrics([]);
