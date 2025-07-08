@@ -14,7 +14,7 @@ export const Navbar: React.FC = () => {
   const { isOverlayActive, toggleOverlay } = useOverlay();
   
   // Only show overlay toggle for company admin role
-  const isCompanyAdmin = user?.role === 'admin' || user?.role === 'company-admin';
+  const isCompanyAdmin = user?.role === 'admin';
   
   return (
     <header className="border-b sticky top-0 z-40 bg-background">
