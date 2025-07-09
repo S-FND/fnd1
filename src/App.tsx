@@ -52,6 +52,7 @@ import FeatureManagementPage from './pages/FeatureManagement';
 import SupplierAuditsPage from './pages/audit/SupplierAuditsPage';
 import EHSAuditsPage from './pages/audit/EHSAuditsPage';
 import InternalAuditsPage from './pages/audit/InternalAuditsPage';
+import LMSPage from './pages/LMS';
 
 function App() {
   return (
@@ -76,6 +77,7 @@ function App() {
         <Route path="/esg-dd/advanced" element={<AdvancedIRLPage />} />
         <Route path="/ghg-accounting" element={<GHGAccountingPage />} />
         <Route path="/compliance" element={<Compliance />} />
+        <Route path="/lms" element={<LMSPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/reports/brsr" element={<BRSRReport />} />
         <Route path="/reports/gri" element={<GRIReport />} />
