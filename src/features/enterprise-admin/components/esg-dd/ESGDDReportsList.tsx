@@ -53,7 +53,7 @@ export const ESGDDReportsList: React.FC<ESGDDReportsListProps> = ({ reports }) =
                   <ArrowDown className="h-4 w-4 inline ml-1" />
               )}
             </TableHead>
-            <TableHead 
+            {/* <TableHead 
               className="cursor-pointer hover:bg-muted/50"
               onClick={() => requestSort('companyName')}
             >
@@ -63,7 +63,7 @@ export const ESGDDReportsList: React.FC<ESGDDReportsListProps> = ({ reports }) =
                   <ArrowUp className="h-4 w-4 inline ml-1" /> : 
                   <ArrowDown className="h-4 w-4 inline ml-1" />
               )}
-            </TableHead>
+            </TableHead> */}
             <TableHead 
               className="cursor-pointer hover:bg-muted/50"
               onClick={() => requestSort('date')}
@@ -108,7 +108,7 @@ export const ESGDDReportsList: React.FC<ESGDDReportsListProps> = ({ reports }) =
                   </div>
                 )}
               </TableCell>
-              <TableCell>{report.companyName}</TableCell>
+              {/* <TableCell>{report.companyName}</TableCell> */}
               <TableCell>{new Date(report.date).toLocaleDateString()}</TableCell>
               <TableCell>
                 <Badge 

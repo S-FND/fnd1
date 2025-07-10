@@ -139,32 +139,37 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
             return obj;
           }, {});
 
-        const updatedItems = complianceItems.map(item => {
-          const key = item.key;
-          const itemData = filteredResponse[key] || {};
-
-          // Set existing file paths
-          if (itemData.file_path?.length > 0) {
-            setFilePaths(prev => ({
-              ...prev,
-              [key]: itemData.file_path.map(getS3FilePath)
-            }));
-          }
-
-          if (TEXTAREA_KEYS.includes(key) || TEXT_INPUT_KEYS.includes(key)) {
+          const updatedItems = complianceItems.map(item => {
+            const key = item.key;
+            const itemData = filteredResponse[key] || {};
+          
+            // Handle both old and new response formats
+            const status = itemData.isApplicable || itemData.answer || '';
+            const notes = itemData.reason || '';
+            
+            // Set existing file paths (handling both formats)
+            const existingFiles = itemData.file_path || itemData.existing_files || [];
+            if (existingFiles.length > 0) {
+              setFilePaths(prev => ({
+                ...prev,
+                [key]: existingFiles.map(getS3FilePath)
+              }));
+            }
+          
+            if (TEXTAREA_KEYS.includes(key) || TEXT_INPUT_KEYS.includes(key)) {
+              return {
+                ...item,
+                status: response[key] || '',
+                notes: ''
+              };
+            }
+          
             return {
               ...item,
-              status: response[key] || '',
-              notes: ''
+              status,
+              notes
             };
-          }
-
-          return {
-            ...item,
-            status: itemData.isApplicable || '',
-            notes: itemData.reason || ''
-          };
-        });
+          });
 
         setComplianceItems(updatedItems);
 
@@ -190,16 +195,15 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       const key = item.key;
       if (TEXT_INPUT_KEYS.includes(key) || TEXTAREA_KEYS.includes(key)) {
         payload[key] = item.status;
-      } else {
+      }else {
         payload[key] = {
-          isApplicable: item.status,
+          answer: item.status,  // Changed from isApplicable to answer
           reason: item.notes || '',
-          // Send both original and new file info
-          existing_files: filePaths[key]?.map(path => {
-            // Extract just the filename if server expects it
-            return path.split('/').pop(); // or other transformation
-          }) || [],
-          new_files: item.attachment.map(file => file.name)
+          file_path: [
+            ...(filePaths[key]?.map(path => path.replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/ ', '')) || []),
+            ...item.attachment.map(file => file.name)
+          ],
+          fileChange: item.attachment.length > 0  // Add fileChange flag
         };
       }
     });
@@ -211,7 +215,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
     let isValid = true;
-
+  
     complianceItems.forEach(item => {
       const key = item.key;
       if (TEXT_INPUT_KEYS.includes(key) || TEXTAREA_KEYS.includes(key)) {
@@ -224,13 +228,11 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
           newErrors[key] = 'Please select a status';
           isValid = false;
         } else if (item.status === 'yes') {
-          // More robust file checking
-          const hasExistingFiles = filePaths[key]?.some(path =>
-            path && typeof path === 'string' && path.length > 0
+          const hasFiles = (
+            (filePaths[key]?.length > 0) || 
+            (item.attachment.length > 0)
           );
-          const hasNewFiles = item.attachment.length > 0;
-
-          if (!hasExistingFiles && !hasNewFiles) {
+          if (!hasFiles) {
             newErrors[key] = 'File is required when Yes';
             isValid = false;
           }
@@ -240,7 +242,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
         }
       }
     });
-
+  
     setErrors(newErrors);
     return isValid;
   };
