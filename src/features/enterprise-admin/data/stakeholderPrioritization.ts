@@ -2,7 +2,7 @@ import { MaterialTopic } from './frameworkTopics';
 
 // Types for stakeholder prioritization
 export interface Stakeholder {
-  id: string;
+  _id: string;
   name: string;
   organization?: string;
   role?: string;
@@ -21,7 +21,7 @@ export interface StakeholderPrioritization {
 }
 
 export interface StakeholderGroup {
-  id: string;
+  _id: string;
   name: string;
   description?: string;
   topics: string[]; // Array of topic IDs selected for this group
@@ -34,7 +34,7 @@ export interface StakeholderGroup {
 // Mock data for initial stakeholders
 export const initialStakeholders: Stakeholder[] = [
   {
-    id: 'stakeholder-1',
+    _id: 'stakeholder-1',
     name: 'John Smith',
     organization: 'Internal',
     role: 'Chief Sustainability Officer',
@@ -44,7 +44,7 @@ export const initialStakeholders: Stakeholder[] = [
     prioritizations: []
   },
   {
-    id: 'stakeholder-2',
+    _id: 'stakeholder-2',
     name: 'Sarah Johnson',
     organization: 'Internal',
     role: 'Operations Manager',
@@ -54,7 +54,7 @@ export const initialStakeholders: Stakeholder[] = [
     prioritizations: []
   },
   {
-    id: 'stakeholder-3',
+    _id: 'stakeholder-3',
     name: 'Michael Wong',
     organization: 'GreenEarth NGO',
     role: 'Director',
@@ -64,7 +64,7 @@ export const initialStakeholders: Stakeholder[] = [
     prioritizations: []
   },
   {
-    id: 'stakeholder-4',
+    _id: 'stakeholder-4',
     name: 'Lisa García',
     organization: 'Customer Group',
     role: 'Consumer Advocate',
@@ -78,7 +78,7 @@ export const initialStakeholders: Stakeholder[] = [
 // Initial stakeholder groups
 export const initialStakeholderGroups: StakeholderGroup[] = [
   {
-    id: 'group-1',
+    _id: 'group-1',
     name: 'Executive Assessment',
     description: 'Internal executive team assessment of material topics',
     topics: ['ghg_emissions', 'energy_management', 'diversity_inclusion', 'data_security', 'business_ethics'],
@@ -87,7 +87,7 @@ export const initialStakeholderGroups: StakeholderGroup[] = [
     dateCreated: new Date().toISOString()
   },
   {
-    id: 'group-2',
+    _id: 'group-2',
     name: 'External Stakeholder Review',
     description: 'External stakeholder assessment of environmental topics',
     topics: ['ghg_emissions', 'water_management', 'biodiversity', 'waste_management'],
@@ -111,7 +111,7 @@ export const aggregateStakeholderPrioritizations = (
   });
   
   // Filter stakeholders to those in the group
-  const relevantStakeholders = stakeholders.filter(s => stakeholderIds.includes(s.id));
+  const relevantStakeholders = stakeholders.filter(s => stakeholderIds.includes(s._id));
   
   // Sum up the prioritizations
   relevantStakeholders.forEach(stakeholder => {
