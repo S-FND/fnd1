@@ -26,7 +26,7 @@ export default function CompanyInfo() {
 
   const getCompanyInfo = async () => {
     try {
-      const res = await fetch(`http://localhost:3002/company/entity/`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/company/entity/`, {
         method: "GET",
         headers: { 
           "Content-Type": "application/json", 
