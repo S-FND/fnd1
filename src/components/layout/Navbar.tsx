@@ -27,7 +27,7 @@ export const Navbar: React.FC = () => {
         {/* Search and Right Actions */}
         <div className="ml-auto flex items-center gap-4">
           {/* Overlay Toggle - Only for Company Admin */}
-          {isCompanyAdmin && (
+          {/* {isCompanyAdmin && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-md border bg-card">
               <Shield className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">Features</span>
@@ -40,7 +40,7 @@ export const Navbar: React.FC = () => {
                 {isOverlayActive ? 'Inactive' : 'Active'}
               </span>
             </div>
-          )}
+          )} */}
 
           {/* Search */}
           <div className="relative hidden md:block">
