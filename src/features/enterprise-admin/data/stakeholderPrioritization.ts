@@ -21,7 +21,7 @@ export interface StakeholderPrioritization {
 }
 
 export interface StakeholderGroup {
-  id: string;
+  _id: string;
   name: string;
   description?: string;
   topics: string[]; // Array of topic IDs selected for this group
@@ -78,7 +78,7 @@ export const initialStakeholders: Stakeholder[] = [
 // Initial stakeholder groups
 export const initialStakeholderGroups: StakeholderGroup[] = [
   {
-    id: 'group-1',
+    _id: 'group-1',
     name: 'Executive Assessment',
     description: 'Internal executive team assessment of material topics',
     topics: ['ghg_emissions', 'energy_management', 'diversity_inclusion', 'data_security', 'business_ethics'],
@@ -87,7 +87,7 @@ export const initialStakeholderGroups: StakeholderGroup[] = [
     dateCreated: new Date().toISOString()
   },
   {
-    id: 'group-2',
+    _id: 'group-2',
     name: 'External Stakeholder Review',
     description: 'External stakeholder assessment of environmental topics',
     topics: ['ghg_emissions', 'water_management', 'biodiversity', 'waste_management'],

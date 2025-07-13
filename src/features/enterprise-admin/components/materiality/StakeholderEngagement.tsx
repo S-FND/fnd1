@@ -106,7 +106,7 @@ const StakeholderEngagement: React.FC<StakeholderEngagementProps> = ({
       return {
         id: `invite_${Date.now()}_${stakeholderId}`,
         stakeholderId,
-        groupId: selectedGroup.id,
+        groupId: selectedGroup._id,
         email: stakeholder?.email || '',
         status: 'pending' as const,
         inviteCode: tempId,
@@ -145,8 +145,19 @@ const StakeholderEngagement: React.FC<StakeholderEngagementProps> = ({
   };
 
   // Handle creating a new stakeholder group
-  const handleCreateGroup = (newGroup: StakeholderGroup) => {
+  const handleCreateGroup = async (newGroup: StakeholderGroup) => {
     console.log('newGroup',newGroup)
+    let topicStructure=[]
+    newGroup.topics.forEach((t)=>topicStructure.push({
+      metric: null,
+      topic: t,
+      category: null
+    }))
+    newGroup.topics=topicStructure
+    // delete newGroup._id
+    delete newGroup['id']
+    let groupCreateResponse=await httpClient.post('stakeholder-engagement-group',newGroup);
+    console.log('groupCreateResponse',groupCreateResponse)
     setStakeholderGroups([...stakeholderGroups, newGroup]);
     // setShowAddGroupForm(false);
   };
@@ -274,7 +285,7 @@ const StakeholderEngagement: React.FC<StakeholderEngagementProps> = ({
                   </TableHeader>
                   <TableBody>
                     {stakeholderGroups.map(group => (
-                      <TableRow key={group.id}>
+                      <TableRow key={group._id}>
                         <TableCell className="font-medium">{group.name}</TableCell>
                         <TableCell>
                           <Badge variant={
@@ -429,7 +440,7 @@ const StakeholderEngagement: React.FC<StakeholderEngagementProps> = ({
                 <TableBody>
                   {invitations.map(invitation => {
                     const stakeholder = availableStakeholders.find(s => s.id === invitation.stakeholderId);
-                    const group = stakeholderGroups.find(g => g.id === invitation.groupId);
+                    const group = stakeholderGroups.find(g => g._id === invitation.groupId);
                     
                     return (
                       <TableRow key={invitation.id}>
