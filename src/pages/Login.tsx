@@ -2,10 +2,24 @@
 import React, { useState } from 'react';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { Building, User, FileCheck } from 'lucide-react';
+import { useOverlay } from '@/context/OverlayContext';
 
 const Login = () => {
   const [loginType, setLoginType] = useState<string>('company');
+  const { setOverlayForUrl, clearOverlay } = useOverlay();
+  
+  const handleOverlayDemo = () => {
+    // Demo: Set overlay for dashboard page
+    setOverlayForUrl('/dashboard');
+    console.log('Overlay activated for /dashboard page');
+  };
+
+  const handleClearOverlay = () => {
+    clearOverlay();
+    console.log('Overlay cleared');
+  };
   
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 px-4">
@@ -17,6 +31,31 @@ const Login = () => {
           <h1 className="text-2xl font-bold">Fandoro Enterprise</h1>
           <p className="text-muted-foreground">Sustainability Management Platform</p>
         </div>
+        
+        {/* Demo Overlay Controls */}
+        <div className="bg-background p-4 rounded-lg border shadow-sm">
+          <h3 className="text-sm font-medium mb-2">Overlay Demo</h3>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleOverlayDemo}
+            >
+              Activate Overlay for Dashboard
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleClearOverlay}
+            >
+              Clear Overlay
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Demo: Activate overlay for specific pages using URL targeting
+          </p>
+        </div>
+        
         <div className="bg-background p-8 rounded-lg border shadow-sm">
           <div className="space-y-4">
             <Tabs defaultValue="company" onValueChange={setLoginType}>
