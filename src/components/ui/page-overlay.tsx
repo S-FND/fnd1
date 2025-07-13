@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { useOverlay } from '@/context/OverlayContext';
 import { cn } from '@/lib/utils';
 
@@ -8,12 +9,16 @@ interface PageOverlayProps {
 }
 
 export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
-  const { isOverlayActive } = useOverlay();
+  const { isOverlayActive, isUrlOverlayActive } = useOverlay();
+  const location = useLocation();
+  
+  // Check if overlay should be active for current URL or globally
+  const shouldShowOverlay = isOverlayActive && (isUrlOverlayActive(location.pathname) || !useOverlay().activeOverlayUrl);
 
   return (
     <div className="relative">
       {children}
-      {isOverlayActive && (
+      {shouldShowOverlay && (
         <div className={cn(
           "absolute inset-0 z-50",
           "bg-background/80 backdrop-blur-sm",
