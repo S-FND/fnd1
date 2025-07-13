@@ -10,6 +10,7 @@ interface CustomMetricForm {
   description: string;
   unit: string;
   dataType: 'Numeric' | 'Percentage' | 'Text' | 'Boolean';
+  collectionFrequency: 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Bi-Annually' | 'Annually';
 }
 
 interface MaterialTopic {
@@ -87,6 +88,25 @@ const CustomMetricDialog: React.FC<CustomMetricDialogProps> = ({
               <SelectItem value="Percentage">Percentage</SelectItem>
               <SelectItem value="Text">Text</SelectItem>
               <SelectItem value="Boolean">Yes/No</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Collection Frequency</label>
+          <Select 
+            value={customMetricForm.collectionFrequency} 
+            onValueChange={(value: any) => setCustomMetricForm(prev => ({...prev, collectionFrequency: value}))}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Daily">Daily</SelectItem>
+              <SelectItem value="Weekly">Weekly</SelectItem>
+              <SelectItem value="Monthly">Monthly</SelectItem>
+              <SelectItem value="Quarterly">Quarterly</SelectItem>
+              <SelectItem value="Bi-Annually">Bi-Annually</SelectItem>
+              <SelectItem value="Annually">Annually</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -17,7 +17,7 @@ export interface ESGMetricWithTracking extends ESGMetric {
   baselineValue?: string | number | boolean;
   targetDate?: string;
   targetValue?: string | number | boolean;
-  collectionFrequency: 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Bi-Annually' | 'Annually' | 'Never';
+  collectionFrequency: 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Bi-Annually' | 'Annually';
   dataPoints: {
     date: string;
     value: string | number | boolean;

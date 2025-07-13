@@ -1,10 +1,11 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
+import { httpClient } from '@/lib/httpClient';
+import { toast } from 'sonner';
 
 export const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -22,9 +23,21 @@ export const LoginForm: React.FC = () => {
     }
     
     try {
+      // Direct API call using httpClient
+      const response = await httpClient.post('http://localhost:3002/auth/login', {
+        email,
+        password
+      });
+      
+      console.log('Login API response:', response);
+      toast.success('API call successful!');
+      
+      // Continue with existing auth flow
       await login(email, password);
-    } catch (err) {
+    } catch (err: any) {
+      console.error('Login API error:', err);
       setError('Failed to login. Please check your credentials.');
+      toast.error(`API Error: ${err.message || 'Login failed'}`);
     }
   };
 

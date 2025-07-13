@@ -60,13 +60,13 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
     <Tabs value={activeTab} onValueChange={setActiveTab}>
       <div className="flex items-center justify-between">
         <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="matrix">Materiality Matrix</TabsTrigger>
-          <TabsTrigger value="topics">
-            Topics Assessment
+          <TabsTrigger value="assessment">
+            Materiality Assessment
             <Badge variant="secondary" className="ml-2">
               {materialTopics.length}
             </Badge>
           </TabsTrigger>
+          <TabsTrigger value="matrix">Materiality Matrix</TabsTrigger>
           <TabsTrigger value="priority">Priority Analysis</TabsTrigger>
           <TabsTrigger value="methodology">Methodology</TabsTrigger>
         </TabsList>
@@ -86,17 +86,7 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
         </div>
       </div>
 
-      <TabsContent value="matrix" className="space-y-4">
-        <MaterialityMatrix 
-          materialityData={materialityData}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
-          activeFrameworks={activeFrameworks}
-          setActiveFrameworks={setActiveFrameworks}
-        />
-      </TabsContent>
-
-      <TabsContent value="topics" className="space-y-4">
+      <TabsContent value="assessment" className="space-y-4">
         <MaterialTopicsTab 
           materialTopics={materialTopics}
           activeFrameworks={activeFrameworks}
@@ -104,6 +94,16 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
           selectedIndustries={selectedIndustries}
           onUpdateTopics={onUpdateTopics}
           onUpdateSelectedTopics={onUpdateSelectedTopics}
+        />
+      </TabsContent>
+
+      <TabsContent value="matrix" className="space-y-4">
+        <MaterialityMatrix 
+          materialityData={materialityData}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          activeFrameworks={activeFrameworks}
+          setActiveFrameworks={setActiveFrameworks}
         />
       </TabsContent>
 

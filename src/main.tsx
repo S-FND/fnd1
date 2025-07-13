@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import App from './App.tsx'
 import './index.css'
 import { AuthProvider } from './context/AuthContext'
+import { OverlayProvider } from './context/OverlayContext'
 
 // Create a client
 const queryClient = new QueryClient()
@@ -13,7 +14,9 @@ createRoot(document.getElementById("root")!).render(
   <Router>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <App />
+        <OverlayProvider>
+          <App />
+        </OverlayProvider>
       </AuthProvider>
     </QueryClientProvider>
   </Router>

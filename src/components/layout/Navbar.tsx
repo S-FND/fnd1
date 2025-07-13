@@ -1,15 +1,20 @@
 
-
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Bell, HelpCircle, Search, User } from 'lucide-react';
+import { Bell, HelpCircle, Search, User, Shield } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { useOverlay } from '@/context/OverlayContext';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
+  const { isOverlayActive, toggleOverlay } = useOverlay();
+  
+  // Only show overlay toggle for company admin role
+  const isCompanyAdmin = user?.role === 'admin';
   
   return (
     <header className="border-b sticky top-0 z-40 bg-background">
@@ -21,6 +26,22 @@ export const Navbar: React.FC = () => {
 
         {/* Search and Right Actions */}
         <div className="ml-auto flex items-center gap-4">
+          {/* Overlay Toggle - Only for Company Admin */}
+          {isCompanyAdmin && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-md border bg-card">
+              <Shield className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-medium">Features</span>
+              <Switch
+                checked={!isOverlayActive}
+                onCheckedChange={() => toggleOverlay()}
+                className="ml-2"
+              />
+              <span className="text-xs text-muted-foreground">
+                {isOverlayActive ? 'Inactive' : 'Active'}
+              </span>
+            </div>
+          )}
+
           {/* Search */}
           <div className="relative hidden md:block">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -88,4 +109,3 @@ export const Navbar: React.FC = () => {
     </header>
   );
 };
-
