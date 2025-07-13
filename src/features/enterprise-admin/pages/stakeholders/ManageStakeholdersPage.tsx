@@ -15,7 +15,8 @@ const ManageStakeholdersPage = () => {
   }
 
   if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'manager')) {
-    return <Navigate to="/login" />;
+    console.log("user?.role",user?.role)
+    // return <Navigate to="/login" />;
   }
 
   return (

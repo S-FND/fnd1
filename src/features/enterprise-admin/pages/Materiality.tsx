@@ -31,7 +31,7 @@ interface MaterialTopic extends Omit<FrameworkMaterialTopic, 'businessImpact' | 
 const MaterialityPage = () => {
   const { isLoading } = useRouteProtection(['admin', 'manager', 'unit_admin']);
   const { user, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState('matrix');
+  const [activeTab, setActiveTab] = useState('assessment');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [tempSelectedIndustries, setTempSelectedIndustries] = useState<string[]>([]);

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Stakeholder, StakeholderGroup } from '../../data/stakeholderPrioritization';
 import { MaterialTopic } from '../../data/frameworkTopics';
+import { httpClient } from '@/lib/httpClient';
+import { API_ENDPOINTS } from '@/lib/apiEndpoints';
 
 interface StakeholderGroupFormProps {
   stakeholders: Stakeholder[];
@@ -24,6 +26,7 @@ const StakeholderGroupForm: React.FC<StakeholderGroupFormProps> = ({
   onCancel,
   existingGroup
 }) => {
+  console.log('StakeholderGroupForm :: stakeholders ==> ',stakeholders)
   const [formData, setFormData] = useState<{
     name: string;
     description: string;
@@ -52,7 +55,9 @@ const StakeholderGroupForm: React.FC<StakeholderGroupFormProps> = ({
     
     onSave(newGroup);
   };
-  
+  useEffect(()=>{
+    console.log('formData',formData)
+  },[formData])
   const toggleStakeholder = (stakeholderId: string) => {
     setFormData(prev => ({
       ...prev,
@@ -94,6 +99,7 @@ const StakeholderGroupForm: React.FC<StakeholderGroupFormProps> = ({
     },
     {}
   );
+  
   
   return (
     <Card>
@@ -152,21 +158,21 @@ const StakeholderGroupForm: React.FC<StakeholderGroupFormProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                     {typeStakeholders.map(stakeholder => (
                       <div 
-                        key={stakeholder.id} 
+                        key={stakeholder._id} 
                         className={`flex items-center p-2 border rounded-md ${
-                          formData.selectedStakeholders.includes(stakeholder.id) 
+                          formData.selectedStakeholders.includes(stakeholder._id) 
                             ? 'bg-primary/10 border-primary/30' 
                             : ''
                         }`}
                       >
                         <Checkbox
-                          id={`stakeholder-${stakeholder.id}`}
-                          checked={formData.selectedStakeholders.includes(stakeholder.id)}
-                          onCheckedChange={() => toggleStakeholder(stakeholder.id)}
+                          id={`stakeholder-${stakeholder._id}`}
+                          checked={formData.selectedStakeholders.includes(stakeholder._id)}
+                          onCheckedChange={() => toggleStakeholder(stakeholder._id)}
                           className="mr-2"
                         />
                         <label
-                          htmlFor={`stakeholder-${stakeholder.id}`}
+                          htmlFor={`stakeholder-${stakeholder._id}`}
                           className="text-sm cursor-pointer flex flex-col"
                         >
                           <span className="font-medium">{stakeholder.name}</span>

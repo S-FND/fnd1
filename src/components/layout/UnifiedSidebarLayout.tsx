@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Sidebar, SidebarContent, SidebarProvider } from '@/components/ui/sidebar';
+import { PageOverlay } from '@/components/ui/page-overlay';
 import { SidebarHeaderComponent } from './sidebar/SidebarHeader';
 import { SidebarNavigation } from './sidebar/SidebarNavigation';
 import { SidebarAdminSettings } from './sidebar/SidebarAdminSettings';
@@ -25,9 +26,11 @@ export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({
         <div className="flex-1 flex flex-col min-w-0">
           <Navbar />
           <main className="flex-1 p-4 md:p-6 overflow-auto">
-            <div className="max-w-full">
-              {children}
-            </div>
+            <PageOverlay>
+              <div className="max-w-full">
+                {children}
+              </div>
+            </PageOverlay>
           </main>
         </div>
       </div>
