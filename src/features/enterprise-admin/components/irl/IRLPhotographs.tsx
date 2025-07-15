@@ -221,41 +221,34 @@ const IRLPhotographs = () => {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
     let isValid = true;
-
+  
     // Validate office photographs
     officePhotographs.forEach(photo => {
-      if (!photo.status) {
-        newErrors[`${photo.key}-status`] = 'Status is required';
-        isValid = false;
+      // Only validate if status is provided
+      if (photo.status === 'yes') {
+        if (photo.attachment?.length === 0 && photo.file_path?.length === 0) {
+          newErrors[`${photo.key}-files`] = 'At least one attachment is required';
+          isValid = false;
+        }
       }
-      if (photo.status === 'yes' &&
-        photo.attachment.length === 0 &&
-        photo.file_path.length === 0) {
-        newErrors[`${photo.key}-files`] = 'At least one attachment is required';
-        isValid = false;
-      }
-      if (photo.status === 'no' && !photo.notes?.trim()) {
-        newErrors[`${photo.key}-notes`] = 'Reason is required when status is No';
+      else if (photo.status === 'no' && !photo.notes?.trim()) {
+        newErrors[`${photo.key}-notes`] = 'Notes is required when status is No';
         isValid = false;
       }
     });
-
+  
     // Validate product photographs
     productPhotographs.forEach(photo => {
-      if (!photo.status) {
-        newErrors[`${photo.key}-status`] = 'Status is required';
-        isValid = false;
-      }
-      if (photo.status === 'yes' && photo.attachment.length === 0 && photo.file_path.length === 0) {
+      if (photo.status === 'yes' && photo.attachment?.length === 0 && photo.file_path?.length === 0) {
         newErrors[`${photo.key}-files`] = 'Attachment is required';
         isValid = false;
       }
-      if (photo.status === 'no' && !photo.notes?.trim()) {
+      else if (photo.status === 'no' && !photo.notes?.trim()) {
         newErrors[`${photo.key}-notes`] = 'Reason is required when status is No';
         isValid = false;
       }
     });
-
+  
     setErrors(newErrors);
     return isValid;
   };
@@ -263,6 +256,10 @@ const IRLPhotographs = () => {
   const handleSubmit = async (isDraft = false) => {
     if (!entityId) {
       toast.error('Entity ID not found');
+      return;
+    }
+    if (!validateForm()) {
+      toast.error('Please fix the validation errors before submitting');
       return;
     }
 
@@ -386,34 +383,6 @@ const IRLPhotographs = () => {
       </div>
     );
   }
-
-
-  officePhotographs.forEach((photo, index) => {
-    const selectedValues = {
-      [photo.key]: {
-        answer: photo.status || '',
-        reason: photo.notes,
-        file: photo.attachment,
-        file_path: photo.file_path
-      }
-    };
-
-    console.log('Office Photo Selected Values:', selectedValues);
-  });
-
-  productPhotographs.forEach((photo, index) => {
-    const selectedValues = {
-      [photo.key]: {
-        answer: photo.status || '',
-        reason: photo.notes,
-        file: photo.attachment,
-        file_path: photo.file_path
-      }
-    };
-
-    console.log('Product Photo Selected Values:', selectedValues);
-  });
-
   return (
     <Card className="max-w-6xl mx-auto">
       <CardHeader>
