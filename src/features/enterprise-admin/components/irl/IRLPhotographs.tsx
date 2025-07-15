@@ -7,23 +7,24 @@ import {
   CardContent
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 import {
   fetchHoPhotographs,
   updateHoPhotographs,
   fetchProductPhotographs,
   updateProductPhotographs
 } from '../../services/companyApi';
-import { toast } from 'sonner';
-import { Upload, X } from 'lucide-react';
+import TableRowQuestion from './utils/TableRowQuestion';
 
 interface OfficePhotograph {
   id: number;
   description: string;
   status: string;
-  officeAttachment: File[];
-  warehouseAttachment: File[];
+  attachment: File[];
+  file_path: string[];
+  key: string;
+  notes?: string;
 }
 
 interface ProductPhotograph {
@@ -31,489 +32,559 @@ interface ProductPhotograph {
   description: string;
   status: string;
   attachment: File[];
+  file_path: string[];
+  key: string;
+  notes?: string;
 }
 
+const initialOfficePhotographs: OfficePhotograph[] = [
+  {
+    id: 1,
+    description: 'Electrical main panel inside the office',
+    status: '',
+    attachment: [],
+    file_path: [],
+    key: 'electrical_main_panel',
+    notes: ''
+  },
+  {
+    id: 2,
+    description: 'Pantry',
+    status: '',
+    attachment: [],
+    file_path: [],
+    key: 'pantry',
+    notes: ''
+  },
+  {
+    id: 3,
+    description: 'Working areas occupied by the Company',
+    status: '',
+    attachment: [],
+    file_path: [],
+    key: 'working_areas_occupied',
+    notes: ''
+  },
+  {
+    id: 4,
+    description: 'Emergency exits, emergency signages, warning signages',
+    status: '',
+    attachment: [],
+    file_path: [],
+    key: 'emergency_exits',
+    notes: ''
+  },
+  {
+    id: 5,
+    description: 'General overall office pictures',
+    status: '',
+    attachment: [],
+    file_path: [],
+    key: 'overall_office_pictures',
+    notes: ''
+  },
+  {
+    id: 6,
+    description: 'Fire extinguishers and smoke detectors locations',
+    status: '',
+    attachment: [],
+    file_path: [],
+    key: 'fire_extinguishers_within_office',
+    notes: ''
+  }
+];
+
+const initialProductPhotographs: ProductPhotograph[] = [
+  {
+    id: 1,
+    description: 'Product labeling',
+    status: '',
+    attachment: [],
+    file_path: [],
+    key: 'product_labeling',
+    notes: ''
+  },
+  {
+    id: 2,
+    description: 'Screenshot of the app',
+    status: '',
+    attachment: [],
+    file_path: [],
+    key: 'app_screenshot',
+    notes: ''
+  },
+  {
+    id: 3,
+    description: 'Dashboard screenshot',
+    status: '',
+    attachment: [],
+    file_path: [],
+    key: 'dashboard_screenshot',
+    notes: ''
+  },
+  {
+    id: 4,
+    description: 'Product packaging',
+    status: '',
+    attachment: [],
+    file_path: [],
+    key: 'product_packing',
+    notes: ''
+  }
+];
+
 const IRLPhotographs = () => {
-  const [officePhotographs, setOfficePhotographs] = useState<OfficePhotograph[]>([
-    { id: 1, description: 'Electrical main panel inside the office', status: '', officeAttachment: [], warehouseAttachment: [] },
-    { id: 2, description: 'Pantry', status: '', officeAttachment: [], warehouseAttachment: [] },
-    { id: 3, description: 'Working areas occupied by the Company', status: '', officeAttachment: [], warehouseAttachment: [] },
-    { id: 4, description: 'Emergency exits, emergency signages, warning signages', status: '', officeAttachment: [], warehouseAttachment: [] },
-    { id: 5, description: 'General overall office pictures', status: '', officeAttachment: [], warehouseAttachment: [] },
-    { id: 6, description: 'Fire extinguishers and smoke detectors locations', status: '', officeAttachment: [], warehouseAttachment: [] }
-  ]);
-
-  const [productPhotographs, setProductPhotographs] = useState<ProductPhotograph[]>([
-    { id: 1, description: 'Product labeling', status: '', attachment: [] },
-    { id: 2, description: 'Screenshot of the app', status: '', attachment: [] },
-    { id: 3, description: 'Dashboard screenshot', status: '', attachment: [] },
-    { id: 4, description: 'Product packaging', status: '', attachment: [] }
-  ]);
-
+  const [officePhotographs, setOfficePhotographs] = useState<OfficePhotograph[]>(initialOfficePhotographs);
+  const [productPhotographs, setProductPhotographs] = useState<ProductPhotograph[]>(initialProductPhotographs);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [filePaths, setFilePaths] = useState<{
-    office: Record<string, { office: string[]; warehouse: string[] }>;
-    product: Record<string, string[]>;
-  }>({
-    office: {},
-    product: {}
-  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const getS3FilePath = (file_path: string) =>
     `https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/${file_path}`;
 
-  // Load data on mount
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        const user = JSON.parse(localStorage.getItem('fandoro-user') || '{}');
-        const entityId = user?.entityId;
-    
-        if (!entityId) throw new Error('Entity ID not found');
-    
-        const hoData: any = await fetchHoPhotographs(entityId);
-        const prodData: any = await fetchProductPhotographs(entityId);
-    
-        // Map HO Photographs (Head Office)
-        const hoPhotosMapped = officePhotographs.map(photo => {
-          const key = photo.description.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-          const data = hoData[key] || {};
-          
-          // Store file paths for existing attachments
-          if (data.file_path) {
-            setFilePaths(prev => ({
-              ...prev,
-              office: {
-                ...prev.office,
-                [photo.description]: {
-                  office: data.file_path?.map(getS3FilePath) || [],
-                  warehouse: data.warehouse_file_path?.map(getS3FilePath) || []
-                }
-              }
-            }));
-          }
-          
-          return {
-            ...photo,
-            status: data.isApplicable || '',
-            officeAttachment: [],
-            warehouseAttachment: []
-          };
-        });
-    
-        // Map Product Photographs
-        const prodPhotosMapped = productPhotographs.map(photo => {
-          const key = photo.description.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-          const data = prodData[key] || {};
-          
-          // Store file paths for existing attachments
-          if (data.file_path) {
-            setFilePaths(prev => ({
-              ...prev,
-              product: {
-                ...prev.product,
-                [photo.description]: data.file_path.map(getS3FilePath)
-              }
-            }));
-          }
-          
-          return {
-            ...photo,
-            status: data.isApplicable || '',
-            attachment: []
-          };
-        });
-    
-        setOfficePhotographs(hoPhotosMapped);
-        setProductPhotographs(prodPhotosMapped);
-    
-      } catch (err) {
-        console.error('Failed to load photographs:', err);
-        setError('Failed to load photograph data');
-        toast.error('Failed to load photograph data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
-
-  // Render attachment cell for office photos
-  const renderOfficeAttachmentCell = (photo: OfficePhotograph, type: 'office' | 'warehouse') => {
-    const files = type === 'office' ? photo.officeAttachment : photo.warehouseAttachment;
-    const existingFiles = filePaths.office[photo.description]?.[type] || [];
-    const inputId = `file-upload-${photo.id}-${type}`;
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files) {
-        const newFiles = Array.from(e.target.files);
-        setOfficePhotographs(prev =>
-          prev.map(p =>
-            p.id === photo.id
-              ? {
-                  ...p,
-                  [type === 'office' ? 'officeAttachment' : 'warehouseAttachment']: [
-                    ...p[type === 'office' ? 'officeAttachment' : 'warehouseAttachment'],
-                    ...newFiles
-                  ]
-                }
-              : p
-          )
-        );
-      }
-    };
-
-    const handleRemoveFile = (index: number) => {
-      setOfficePhotographs(prev =>
-        prev.map(p =>
-          p.id === photo.id
-            ? {
-                ...p,
-                [type === 'office' ? 'officeAttachment' : 'warehouseAttachment']:
-                  p[type === 'office' ? 'officeAttachment' : 'warehouseAttachment'].filter((_, i) => i !== index)
-              }
-            : p
-        )
-      );
-    };
-
-    return (
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Input
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-            id={inputId}
-          />
-          <label
-            htmlFor={inputId}
-            className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
-          >
-            <Upload className="h-4 w-4" />
-            Upload Files
-          </label>
-        </div>
-
-        {/* Existing files from server */}
-        {existingFiles.map((fileUrl, i) => (
-          <div key={`existing-${i}`} className="flex items-center justify-between bg-gray-50 p-2 rounded text-sm">
-            <a
-              href={fileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="truncate flex-1 underline text-blue-600 hover:text-blue-800"
-            >
-              View File {i + 1}
-            </a>
-          </div>
-        ))}
-
-        {/* Newly uploaded files */}
-        {files.map((file, fileIndex) => (
-          <div key={fileIndex} className="flex items-center justify-between bg-gray-50 p-2 rounded text-sm">
-            <span className="truncate flex-1">{file.name}</span>
-            <button
-              type="button"
-              onClick={() => handleRemoveFile(fileIndex)}
-              className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  // Render attachment cell for product photos
-  const renderProductAttachmentCell = (photo: ProductPhotograph) => {
-    const existingFiles = filePaths.product[photo.description] || [];
-    const inputId = `file-upload-${photo.id}`;
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files) {
-        const newFiles = Array.from(e.target.files);
-        setProductPhotographs(prev =>
-          prev.map(p =>
-            p.id === photo.id
-              ? { ...p, attachment: [...p.attachment, ...newFiles] }
-              : p
-          )
-        );
-      }
-    };
-
-    const handleRemoveFile = (index: number) => {
-      setProductPhotographs(prev =>
-        prev.map(p =>
-          p.id === photo.id
-            ? { ...p, attachment: p.attachment.filter((_, i) => i !== index) }
-            : p
-        )
-      );
-    };
-
-    return (
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Input
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-            id={inputId}
-          />
-          <label
-            htmlFor={inputId}
-            className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
-          >
-            <Upload className="h-4 w-4" />
-            Upload Files
-          </label>
-        </div>
-
-        {/* Existing files from server */}
-        {existingFiles.map((fileUrl, i) => (
-          <div key={`existing-${i}`} className="flex items-center justify-between bg-gray-50 p-2 rounded text-sm">
-            <a
-              href={fileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="truncate flex-1 underline text-blue-600 hover:text-blue-800"
-            >
-              View File {i + 1}
-            </a>
-          </div>
-        ))}
-
-        {/* Newly uploaded files */}
-        {photo.attachment.map((file, fileIndex) => (
-          <div key={fileIndex} className="flex items-center justify-between bg-gray-50 p-2 rounded text-sm">
-            <span className="truncate flex-1">{file.name}</span>
-            <button
-              type="button"
-              onClick={() => handleRemoveFile(fileIndex)}
-              className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  // Handlers for status changes
-  const handleOfficeStatusChange = (id: number, status: string) => {
-    setOfficePhotographs(prev =>
-      prev.map(photo => (photo.id === id ? { ...photo, status } : photo))
-    );
-  };
-
-  const handleProductStatusChange = (id: number, status: string) => {
-    setProductPhotographs(prev =>
-      prev.map(photo => (photo.id === id ? { ...photo, status } : photo))
-    );
-  };
-
-  // Save as draft
-  const handleSave = async () => {
-    setIsLoading(true);
+  const getUserEntityId = (): string | null => {
     try {
-      const user = JSON.parse(localStorage.getItem('fandoro-user') || '{}');
-      const entityId = user?.entityId;
+      const user = localStorage.getItem('fandoro-user');
+      return user ? JSON.parse(user)?.entityId || null : null;
+    } catch (error) {
+      console.error("Error parsing user data:", error);
+      return null;
+    }
+  };
 
-      if (!entityId) throw new Error('Entity ID not found');
+  const entityId = getUserEntityId();
+
+  const loadData = async () => {
+    if (!entityId) {
+      setError('Entity ID not found in localStorage');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const [hoData, prodData] = await Promise.all([
+        fetchHoPhotographs(entityId),
+        fetchProductPhotographs(entityId)
+      ]);
+
+      // Process office photographs
+      const updatedOfficePhotos = initialOfficePhotographs.map(photo => {
+        const data = hoData[photo.key] || {};
+        return {
+          ...photo,
+          status: data.isApplicable === undefined ? '' : data.isApplicable,
+          // file_path: (data.file_path || []).map(getS3FilePath),
+          file_path: Array.isArray(data.file_path)
+            ? data.file_path.map(getS3FilePath)
+            : data.file_path
+              ? [getS3FilePath(data.file_path)]
+              : [],
+          notes: data.reason || ''
+        };
+      });
+
+      // Process product photographs
+      const updatedProductPhotos = initialProductPhotographs.map(photo => {
+        const data = prodData[photo.key] || {};
+        return {
+          ...photo,
+          status: data.isApplicable === undefined ? '' : data.isApplicable,
+          // file_path: (data.file_path || []).map(getS3FilePath),
+          file_path: Array.isArray(data.file_path)
+            ? data.file_path.map(getS3FilePath)
+            : data.file_path
+              ? [getS3FilePath(data.file_path)]
+              : [],
+          notes: data.reason || ''
+        };
+      });
+
+      setOfficePhotographs(updatedOfficePhotos);
+      setProductPhotographs(updatedProductPhotos);
+      setError(null);
+    } catch (err) {
+      console.error('Error loading photographs:', err);
+      setError('Failed to load photograph data');
+      toast.error('Failed to load photograph data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, [entityId]);
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    let isValid = true;
+
+    // Validate office photographs
+    officePhotographs.forEach(photo => {
+      if (!photo.status) {
+        newErrors[`${photo.key}-status`] = 'Status is required';
+        isValid = false;
+      }
+      if (photo.status === 'yes' &&
+        photo.attachment.length === 0 &&
+        photo.file_path.length === 0) {
+        newErrors[`${photo.key}-files`] = 'At least one attachment is required';
+        isValid = false;
+      }
+      if (photo.status === 'no' && !photo.notes?.trim()) {
+        newErrors[`${photo.key}-notes`] = 'Reason is required when status is No';
+        isValid = false;
+      }
+    });
+
+    // Validate product photographs
+    productPhotographs.forEach(photo => {
+      if (!photo.status) {
+        newErrors[`${photo.key}-status`] = 'Status is required';
+        isValid = false;
+      }
+      if (photo.status === 'yes' && photo.attachment.length === 0 && photo.file_path.length === 0) {
+        newErrors[`${photo.key}-files`] = 'Attachment is required';
+        isValid = false;
+      }
+      if (photo.status === 'no' && !photo.notes?.trim()) {
+        newErrors[`${photo.key}-notes`] = 'Reason is required when status is No';
+        isValid = false;
+      }
+    });
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSubmit = async (isDraft = false) => {
+    if (!entityId) {
+      toast.error('Entity ID not found');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Prepare office photos payload
+      const hoPayload = {
+        entityId,
+        isDraft,
+      };
+
+      officePhotographs.forEach(photo => {
+        hoPayload[photo.key] = {
+          answer: photo.status,
+          reason: photo.status === 'no' ? photo.notes : '',
+          file_path: photo.file_path.map(path =>
+            path.replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/', '')
+          ),
+          fileChange: photo.attachment?.length > 0
+        };
+      });
 
       const hoFormData = new FormData();
-      hoFormData.append('entityId', entityId);
+      hoFormData.append('data', JSON.stringify(hoPayload));
 
-      officePhotographs.forEach((photo, idx) => {
-        hoFormData.append(`photographs[${idx}][description]`, photo.description);
-        hoFormData.append(`photographs[${idx}][status]`, photo.status);
-        photo.officeAttachment.forEach(file => {
-          hoFormData.append(`photographs[${idx}][officeAttachment]`, file);
-        });
-        photo.warehouseAttachment.forEach(file => {
-          hoFormData.append(`photographs[${idx}][warehouseAttachment]`, file);
-        });
+      // Add office attachments to form data
+      officePhotographs.forEach(photo => {
+        if (photo.attachment?.length > 0) {
+          photo.attachment.forEach(file => {
+            hoFormData.append(`${photo.key}_file`, file);
+          });
+        }
+      });
+
+      // Prepare product photos payload (unchanged)
+      const prodPayload: Record<string, any> = {
+        entityId,
+        isDraft
+      };
+
+      productPhotographs.forEach(photo => {
+        prodPayload[photo.key] = {
+          answer: photo.status,
+          reason: photo.status === 'no' ? photo.notes : '',
+          file_path: photo.file_path.map(path =>
+            path.replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/', '')
+          ),
+          fileChange: photo.attachment?.length > 0
+        };
       });
 
       const prodFormData = new FormData();
-      prodFormData.append('entityId', entityId);
+      prodFormData.append('data', JSON.stringify(prodPayload));
 
-      productPhotographs.forEach((photo, idx) => {
-        prodFormData.append(`photographs[${idx}][description]`, photo.description);
-        prodFormData.append(`photographs[${idx}][status]`, photo.status);
-        photo.attachment.forEach(file => {
-          prodFormData.append(`photographs[${idx}][attachment]`, file);
-        });
+      // Add product attachments to form data (unchanged)
+      productPhotographs.forEach(photo => {
+        if (photo.attachment?.length > 0) {
+          photo.attachment.forEach(file => {
+            prodFormData.append(`${photo.key}_file`, file);
+          });
+        }
       });
 
+      // Submit both forms
       await Promise.all([
         updateHoPhotographs(hoFormData),
         updateProductPhotographs(prodFormData)
       ]);
-      toast.success('Draft saved successfully!');
+
+      toast.success(isDraft ? 'Draft saved successfully!' : 'Photographs submitted successfully!');
+      await loadData();
     } catch (err) {
-      console.error('Error saving photographs:', err);
-      setError('Failed to save photographs');
-      toast.error('Failed to save photographs');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Submit final form
-  const handleSubmit = async () => {
-    setIsLoading(true);
-    try {
-      const user = JSON.parse(localStorage.getItem('fandoro-user') || '{}');
-      const entityId = user?.entityId;
-
-      if (!entityId) throw new Error('Entity ID not found in user data');
-
-      const hoFormData = new FormData();
-      hoFormData.append('entityId', entityId);
-
-      officePhotographs.forEach((photo, idx) => {
-        hoFormData.append(`photographs[${idx}][description]`, photo.description);
-        hoFormData.append(`photographs[${idx}][status]`, photo.status);
-        photo.officeAttachment.forEach(file => {
-          hoFormData.append(`photographs[${idx}][officeAttachment]`, file, file.name);
-        });
-        photo.warehouseAttachment.forEach(file => {
-          hoFormData.append(`photographs[${idx}][warehouseAttachment]`, file, file.name);
-        });
-      });
-
-      const prodFormData = new FormData();
-      prodFormData.append('entityId', entityId);
-
-      productPhotographs.forEach((photo, idx) => {
-        prodFormData.append(`photographs[${idx}][description]`, photo.description);
-        prodFormData.append(`photographs[${idx}][status]`, photo.status);
-        photo.attachment.forEach(file => {
-          prodFormData.append(`photographs[${idx}][attachment]`, file, file.name);
-        });
-      });
-
-      await Promise.all([updateHoPhotographs(hoFormData), updateProductPhotographs(prodFormData)]);
-      toast.success('Photographs submitted successfully!');
-    } catch (err) {
-      console.error('Error submitting photographs:', err);
-      setError(err instanceof Error ? err.message : 'Failed to submit photographs');
+      console.error('Submission error:', err);
       toast.error('Failed to submit photographs. Please try again.');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
+  const handleOfficePhotographChange = (
+    id: number,
+    field: keyof OfficePhotograph,
+    value: any
+  ) => {
+    setOfficePhotographs(prev =>
+      prev.map(photo =>
+        photo.id === id
+          ? {
+            ...photo,
+            [field]: value,
+            ...(field === 'status' && value === 'no' ? { attachment: [] } : {})
+          }
+          : photo
+      )
+    );
+  };
+
+  const handleProductPhotographChange = (
+    id: number,
+    field: keyof ProductPhotograph,
+    value: any
+  ) => {
+    setProductPhotographs(prev =>
+      prev.map(photo =>
+        photo.id === id
+          ? {
+            ...photo,
+            [field]: value,
+            ...(field === 'status' && value === 'no' ? { attachment: [] } : {})
+          }
+          : photo
+      )
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading photographs data...</span>
+      </div>
+    );
+  }
+
+
+  officePhotographs.forEach((photo, index) => {
+    const selectedValues = {
+      [photo.key]: {
+        answer: photo.status || '',
+        reason: photo.notes,
+        file: photo.attachment,
+        file_path: photo.file_path
+      }
+    };
+
+    console.log('Office Photo Selected Values:', selectedValues);
+  });
+
+  productPhotographs.forEach((photo, index) => {
+    const selectedValues = {
+      [photo.key]: {
+        answer: photo.status || '',
+        reason: photo.notes,
+        file: photo.attachment,
+        file_path: photo.file_path
+      }
+    };
+
+    console.log('Product Photo Selected Values:', selectedValues);
+  });
+
   return (
-    <Card>
+    <Card className="max-w-6xl mx-auto">
       <CardHeader>
         <CardTitle>Photographs</CardTitle>
-        <CardDescription>Upload required photographs for head office and products</CardDescription>
+        <CardDescription>
+          Upload required photographs for office and products
+        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-8">
-        {/* Head Office Photographs */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Head Office Photographs</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="border border-gray-300 p-3 text-left">S. No.</th>
-                  <th className="border border-gray-300 p-3 text-left">Description</th>
-                  <th className="border border-gray-300 p-3 text-center">Status (Yes/No)</th>
-                  <th className="border border-gray-300 p-3 text-center">Office Attachment</th>
-                  {/* <th className="border border-gray-300 p-3 text-center">Warehouse Attachment</th> */}
-                </tr>
-              </thead>
-              <tbody>
-                {officePhotographs.map((photo, index) => (
-                  <tr key={photo.id}>
-                    <td className="border border-gray-300 p-3 text-center">{index + 1}</td>
-                    <td className="border border-gray-300 p-3">{photo.description}</td>
-                    <td className="border border-gray-300 p-3">
-                      <Select value={photo.status} onValueChange={(value) => handleOfficeStatusChange(photo.id, value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="yes">Yes</SelectItem>
-                          <SelectItem value="no">No</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </td>
-                    <td className="border border-gray-300 p-3">
-                      {renderOfficeAttachmentCell(photo, 'office')}
-                    </td>
-                    {/* <td className="border border-gray-300 p-3">
-                      {renderOfficeAttachmentCell(photo, 'warehouse')}
-                    </td> */}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+      <CardContent className="space-y-6">
+        {error ? (
+          <p className="text-red-500 font-medium text-sm text-center bg-red-50 p-3 rounded-md">
+            {error}
+          </p>
+        ) : (
+          <>
+            {/* Office Photographs */}
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold">Office Photographs</h3>
+              <div className="overflow-x-auto rounded-lg border">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="p-3 text-left text-sm font-semibold text-gray-900">S. No.</th>
+                      <th className="p-3 text-left text-sm font-semibold text-gray-900">Description</th>
+                      <th className="p-3 text-left text-sm font-semibold text-gray-900">Status</th>
+                      <th className="p-3 text-left text-sm font-semibold text-gray-900">Attachment</th>
+                      <th className="p-3 text-left text-sm font-semibold text-gray-900">Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {officePhotographs.map((photo, index) => (
+                      <TableRowQuestion
+                        key={photo.id}
+                        op={{
+                          ...photo,
+                          name: photo.description,
+                          attachment: photo.attachment
+                        }}
+                        index={index}
+                        fieldError={
+                          errors[`${photo.key}-status`] ||
+                          errors[`${photo.key}-files`] ||
+                          errors[`${photo.key}-notes`]
+                        }
+                        selectedValues={{
+                          [photo.key]: {
+                            answer: photo.status || '',
+                            reason: photo.notes,
+                            file: photo.attachment,
+                            file_path: photo.file_path
+                          }
+                        }}
+                        setSelectedValues={(updater) => {
+                          const newValue = updater({
+                            [photo.key]: {
+                              answer: photo.status || '',
+                              reason: photo.notes,
+                              file: photo.attachment,
+                              file_path: photo.file_path
+                            }
+                          });
+                          handleOfficePhotographChange(photo.id, 'status', newValue[photo.key].answer);
+                          handleOfficePhotographChange(photo.id, 'notes', newValue[photo.key].reason);
+                          handleOfficePhotographChange(photo.id, 'attachment', newValue[photo.key].file);
+                        }}
+                        errors={errors}
+                        setErrors={setErrors}
+                        operationNameToKeyMap={{ [photo.description]: photo.key }}
+                        existingFiles={photo.file_path}
+                        setOperations={() => { }}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
-        {/* Product Photographs */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Product Photographs (as applicable)</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="border border-gray-300 p-3 text-left">S. No.</th>
-                  <th className="border border-gray-300 p-3 text-left">Description</th>
-                  <th className="border border-gray-300 p-3 text-center">Status (Yes/No)</th>
-                  <th className="border border-gray-300 p-3 text-center">Attachment</th>
-                </tr>
-              </thead>
-              <tbody>
-                {productPhotographs.map((photo, index) => (
-                  <tr key={photo.id}>
-                    <td className="border border-gray-300 p-3 text-center">{index + 1}</td>
-                    <td className="border border-gray-300 p-3">{photo.description}</td>
-                    <td className="border border-gray-300 p-3">
-                      <Select value={photo.status} onValueChange={(value) => handleProductStatusChange(photo.id, value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="yes">Yes</SelectItem>
-                          <SelectItem value="no">No</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </td>
-                    <td className="border border-gray-300 p-3">
-                      {renderProductAttachmentCell(photo)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+            {/* Product Photographs */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Product Photographs</h3>
+              <div className="overflow-x-auto rounded-lg border">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="p-3 text-left text-sm font-semibold text-gray-900">S. No.</th>
+                      <th className="p-3 text-left text-sm font-semibold text-gray-900">Description</th>
+                      <th className="p-3 text-left text-sm font-semibold text-gray-900">Status</th>
+                      <th className="p-3 text-left text-sm font-semibold text-gray-900">Attachment</th>
+                      <th className="p-3 text-left text-sm font-semibold text-gray-900">Notes</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {productPhotographs.map((photo, index) => (
+                      <TableRowQuestion
+                        key={photo.id}
+                        op={{
+                          ...photo,
+                          name: photo.description,
+                          attachment: photo.attachment
+                        }}
+                        index={index}
+                        fieldError={errors[`${photo.key}-status`] ||
+                          errors[`${photo.key}-files`] ||
+                          errors[`${photo.key}-notes`]}
+                        selectedValues={{
+                          [photo.key]: {
+                            answer: photo.status,
+                            reason: photo.notes,
+                            file: photo.attachment,
+                            file_path: photo.file_path
+                          }
+                        }}
+                        setSelectedValues={(updater) => {
+                          const newValue = updater({
+                            [photo.key]: {
+                              answer: photo.status || '',
+                              reason: photo.notes,
+                              file: photo.attachment,
+                              file_path: photo.file_path
+                            }
+                          });
+                          handleProductPhotographChange(photo.id, 'status', newValue[photo.key].answer);
+                          handleProductPhotographChange(photo.id, 'notes', newValue[photo.key].reason);
+                          handleProductPhotographChange(photo.id, 'attachment', newValue[photo.key].file);
+                        }}
+                        errors={errors}
+                        setErrors={setErrors}
+                        operationNameToKeyMap={{ [photo.description]: photo.key }}
+                        existingFiles={photo.file_path}
+                        setOperations={() => { }}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-4 pt-6">
-          <Button onClick={handleSave} variant="outline" disabled={isLoading} className="flex-1">
-            Save as Draft
-          </Button>
-          <Button onClick={handleSubmit} disabled={isLoading} className="flex-1">
-            Submit
-          </Button>
-        </div>
+            {/* Action Buttons */}
+            <div className="flex gap-4 pt-6">
+              <Button
+                onClick={() => handleSubmit(true)}
+                variant="outline"
+                disabled={isSubmitting}
+                className="flex-1 bg-gray-100 hover:bg-gray-200"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save as Draft'
+                )}
+              </Button>
+              <Button
+                onClick={() => handleSubmit(false)}
+                disabled={isSubmitting}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit'
+                )}
+              </Button>
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );
