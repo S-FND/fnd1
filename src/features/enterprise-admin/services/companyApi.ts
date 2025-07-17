@@ -88,7 +88,8 @@ export const fetchCompanyData = async (): Promise<CompanyFormData> => {
 // Update company data and transform it
 export const updateCompanyData = async (formData: any) => {
   try {
-    const httpMethod = entityId ? "put" : "post";
+    const gst = formData?.gst;
+    const httpMethod = gst ? "put" : "post";
     const endpoint = `${API_URL}/company/entity`;
 
     const response = await axios({
