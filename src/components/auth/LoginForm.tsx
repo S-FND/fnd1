@@ -6,7 +6,9 @@ import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { httpClient } from '@/lib/httpClient';
 import { toast } from 'sonner';
-
+interface LoginFormProps {
+  onForgotPassword?: () => void; // Make it optional if needed
+}
 export const LoginForm: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

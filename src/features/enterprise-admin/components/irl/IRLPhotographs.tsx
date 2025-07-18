@@ -206,9 +206,9 @@ const IRLPhotographs = () => {
       setProductPhotographs(updatedProductPhotos);
       // setError(null);
     } catch (err) {
-      console.error('Error loading photographs:', err);
+      // console.error('Error loading photographs:', err);
       // setError('Failed to load photograph data');
-      toast.error('Failed to load photograph data');
+      // toast.error('Failed to load photograph data');
     } finally {
       setIsLoading(false);
     }
