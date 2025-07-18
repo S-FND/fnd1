@@ -242,7 +242,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
         }
       }
     });
-  
+    console.log('object',newErrors);
     setErrors(newErrors);
     return isValid;
   };
@@ -254,10 +254,10 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       return;
     }
 
-    if (!validateForm()) {
-      toast.error('Please fix the validation errors.');
-      return;
-    }
+    // if (!validateForm()) {
+    //   toast.error('Please fix the validation errors.');
+    //   return;
+    // }
 
     setIsLoading(true);
 
