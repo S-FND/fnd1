@@ -68,6 +68,7 @@ const IRLCompanyInformation = () => {
             ...prev,
             legalEntityName: data.legal_name || '',
             companyName: data.company_name || '',
+            // user_id: data.user_id._id || '',
             user_id: data.user_id._id || '',
             emailId: data.email || '',
             contactNumber: data.contact_number || '',
