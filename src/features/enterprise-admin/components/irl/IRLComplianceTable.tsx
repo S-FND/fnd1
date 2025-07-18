@@ -174,9 +174,9 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
         setComplianceItems(updatedItems);
 
       } catch (err) {
-        console.error(`Error loading ${title} data:`, err);
+        // console.error(`Error loading ${title} data:`, err);
         // setError(`Failed to load ${title} data`);
-        toast.error(`Failed to load ${title} data`);
+        // toast.error(`Failed to load ${title} data`);
       } finally {
         setIsLoading(false);
       }
