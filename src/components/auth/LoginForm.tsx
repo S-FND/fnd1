@@ -44,7 +44,11 @@ export const LoginForm: React.FC = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-sm">
       <div className="space-y-2">
+      <div className="flex justify-between">
         <Label htmlFor="email">Email</Label>
+        {/* You can leave the right side empty if there's nothing like "Forgot password" */}
+        <span></span>
+      </div>
         <Input
           id="email"
           type="email"
