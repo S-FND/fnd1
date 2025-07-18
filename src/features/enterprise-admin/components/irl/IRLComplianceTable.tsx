@@ -254,6 +254,11 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       return;
     }
 
+    if (!validateForm()) {
+      toast.error('Please fix the validation errors.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {

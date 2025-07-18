@@ -38,11 +38,16 @@ const EditableCompanyProfile = () => {
     loadData();
   }, []);
 
+  const user:any = localStorage.getItem('fandoro-user');
+  const userString = JSON.parse(user)
   const onSubmit = async (data: CompanyFormData) => {
-    console.log('Submitting Form Data:', data); // Debugging log
+    const submissionData = {
+      ...data,
+      user_id: userString._id // Set _id as user_id
+    };
     try {
       setIsLoading(true);
-      const updatedData = await updateProfileData(data);
+      const updatedData = await updateProfileData(submissionData);
       const response = await fetchProfileData();
       setApiData(response);
       form.reset(response); // Reset form with updated data

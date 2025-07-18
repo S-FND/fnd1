@@ -27,10 +27,18 @@ const Login = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 px-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center space-y-2">
-          <div className="mx-auto w-12 h-12 rounded-full eco-gradient flex items-center justify-center">
+          {/* <div className="mx-auto w-12 h-12 rounded-full eco-gradient flex items-center justify-center">
             <span className="text-white text-xl font-bold">F</span>
+          </div> */}
+          <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center overflow-hidden">
+            <img
+              src="/logo/logo_no_text_500x500.png"
+              alt="Logo"
+              className="w-full h-full object-cover"
+            />
           </div>
-          <h1 className="text-2xl font-bold">Fandoro Enterprise </h1>
+
+          <h1 className="text-2xl font-bold">Fandoro </h1>
           <p className="text-muted-foreground">Sustainability Management Platform</p>
         </div>
         
@@ -125,7 +133,7 @@ const Login = () => {
           </div>
         </div>
         <p className="text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} Fandoro. All rights reserved.
+          © {new Date().getFullYear()} Fandoro Technologies. All rights reserved.
         </p>
       </div>
     </div>
