@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 interface LoginFormProps {
   onForgotPassword?: () => void; // Make it optional if needed
 }
-export const LoginForm: React.FC = () => {
+export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -63,9 +63,19 @@ export const LoginForm: React.FC = () => {
       <div className="space-y-2">
         <div className="flex justify-between">
           <Label htmlFor="password">Password</Label>
-          <a href="#" className="text-xs text-primary hover:underline">
+          {/* <a href="#" className="text-xs text-primary hover:underline">
             Forgot password?
-          </a>
+          </a> */}
+          {onForgotPassword && (
+            <Button 
+              variant="link" 
+              type="button" 
+              onClick={onForgotPassword}
+              className="px-0 text-xs text-primary hover:underline h-auto"
+            >
+              Forgot password?
+            </Button>
+          )}
         </div>
         <Input
           id="password"
