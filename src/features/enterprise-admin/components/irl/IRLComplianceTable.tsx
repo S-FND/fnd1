@@ -254,7 +254,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       return;
     }
 
-    if (!isDraft && !validateForm()) {
+    if (!validateForm()) {
       toast.error('Please fix the validation errors.');
       return;
     }
