@@ -86,8 +86,8 @@ const IRLBusinessOperations = () => {
       setOperations(updatedOps);
     } catch (err) {
       console.error('Error loading business operations:', err);
-      setError('Failed to load business operations');
-      toast.error('Failed to load business operations');
+      // setError('Failed to load business operations');
+      // toast.error('Failed to load business operations');
     } finally {
       setIsLoading(false);
     }

@@ -6,8 +6,10 @@ import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { httpClient } from '@/lib/httpClient';
 import { toast } from 'sonner';
-
-export const LoginForm: React.FC = () => {
+interface LoginFormProps {
+  onForgotPassword?: () => void; // Make it optional if needed
+}
+export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -44,7 +46,11 @@ export const LoginForm: React.FC = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-sm">
       <div className="space-y-2">
+      <div className="flex justify-between">
         <Label htmlFor="email">Email</Label>
+        {/* You can leave the right side empty if there's nothing like "Forgot password" */}
+        <span></span>
+      </div>
         <Input
           id="email"
           type="email"
@@ -57,9 +63,19 @@ export const LoginForm: React.FC = () => {
       <div className="space-y-2">
         <div className="flex justify-between">
           <Label htmlFor="password">Password</Label>
-          <a href="#" className="text-xs text-primary hover:underline">
+          {/* <a href="#" className="text-xs text-primary hover:underline">
             Forgot password?
-          </a>
+          </a> */}
+          {onForgotPassword && (
+            <Button 
+              variant="link" 
+              type="button" 
+              onClick={onForgotPassword}
+              className="px-0 text-xs text-primary hover:underline h-auto"
+            >
+              Forgot password?
+            </Button>
+          )}
         </div>
         <Input
           id="password"

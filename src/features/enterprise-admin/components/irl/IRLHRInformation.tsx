@@ -155,8 +155,8 @@ const IRLHRInformation = () => {
         }
       } catch (err) {
         console.error('Error loading HR data:', err);
-        setError('Failed to load HR data');
-        toast.error('Failed to load HR data');
+        // setError('Failed to load HR data');
+        // toast.error('Failed to load HR data');
       } finally {
         setIsLoading(false);
       }

@@ -68,7 +68,8 @@ const IRLCompanyInformation = () => {
             ...prev,
             legalEntityName: data.legal_name || '',
             companyName: data.company_name || '',
-            user_id: data.user_id || '',
+            // user_id: data.user_id || '',
+            user_id: data.user_id._id || '',
             emailId: data.email || '',
             contactNumber: data.contact_number || '',
             incorporationDate: data.incorporation_date || '',
@@ -189,11 +190,11 @@ const IRLCompanyInformation = () => {
 
   const handleSubmit = async () => {
     // Basic validation
-    if (!formData.legalEntityName || !formData.emailId) {
-      setError('Please fill in all required fields');
-      toast.error('Please fill in all required fields');
-      return;
-    }
+    // if (!formData.legalEntityName || !formData.emailId) {
+    //   setError('Please fill in all required fields');
+    //   toast.error('Please fill in all required fields');
+    //   return;
+    // }
 
     setIsLoading(true);
     setError(null);

@@ -174,9 +174,9 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
         setComplianceItems(updatedItems);
 
       } catch (err) {
-        console.error(`Error loading ${title} data:`, err);
+        // console.error(`Error loading ${title} data:`, err);
         // setError(`Failed to load ${title} data`);
-        toast.error(`Failed to load ${title} data`);
+        // toast.error(`Failed to load ${title} data`);
       } finally {
         setIsLoading(false);
       }
@@ -242,7 +242,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
         }
       }
     });
-  
+    console.log('object',newErrors);
     setErrors(newErrors);
     return isValid;
   };
@@ -253,6 +253,11 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       toast.error('Entity ID not found');
       return;
     }
+
+    // if (!validateForm()) {
+    //   toast.error('Please fix the validation errors.');
+    //   return;
+    // }
 
     setIsLoading(true);
 
