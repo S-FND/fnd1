@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,24 +12,67 @@ import { useFeatureValidation } from '@/hooks/useFeatureValidation';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { features, getFeaturesByCategory } from '@/data/features';
-import { FeatureId } from '@/types/features';
+import { Feature, FeatureId } from '@/types/features';
 import { toast } from 'sonner';
 import { AlertTriangle, CheckCircle, Info, Lock } from 'lucide-react';
+import { httpClient } from '@/lib/httpClient';
+
+type CategorizedFeatures = {
+  core: Feature[];
+  operations: Feature[];
+  reporting: Feature[];
+  management: Feature[];
+};
 
 const FeatureManagementPage = () => {
   const { isLoading } = useRouteProtection(['admin']);
   const { user, isAuthenticated } = useAuth();
   const { companyFeatures, isFeatureActive, updateFeatures } = useFeatures();
   const { validateFeatureSelection, autoFixFeatureSelection, getAvailableFeatures } = useFeatureValidation();
-  
+
   const [pendingFeatures, setPendingFeatures] = useState<FeatureId[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
+  const [pageAccessData, setPageAccessData] = useState([])
 
   React.useEffect(() => {
     if (companyFeatures) {
       setPendingFeatures(companyFeatures.activeFeatures);
     }
   }, [companyFeatures]);
+
+  const getPageAccess = async () => {
+    try {
+      let pageAccessResponse = await httpClient.get('company/settings/access');
+      console.log('pageAccessResponse', pageAccessResponse)
+      if (pageAccessResponse['status'] == 200) {
+        let pageAccess = pageAccessResponse['data']['data']['data'];
+        console.log('pageAccessData', pageAccessData)
+        setPageAccessData(pageAccess)
+      }
+    } catch (error) {
+
+    }
+  }
+  const [validation,setValidation]=useState(null);
+  const [availableFeatures,setAvailableFeatures]=useState(null);
+  const [categorizedFeatures,setCategorizedFeatures]=useState<CategorizedFeatures | null>(null)
+  useEffect(() => {
+    const validationData = validateFeatureSelection(pendingFeatures);
+    setValidation(validationData)
+    const availableFeaturesData = getAvailableFeatures(pendingFeatures);
+    setAvailableFeatures(availableFeaturesData)
+    const categorizedFeaturesData = {
+      core: getFeaturesByCategory('core',pageAccessData),
+      operations: getFeaturesByCategory('operations',pageAccessData),
+      reporting: getFeaturesByCategory('reporting',pageAccessData),
+      management: getFeaturesByCategory('management',pageAccessData)
+    };
+    setCategorizedFeatures(categorizedFeaturesData)
+  }, [pageAccessData])
+
+  useEffect(() => {
+    getPageAccess()
+  }, [])
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -41,13 +84,13 @@ const FeatureManagementPage = () => {
 
   const handleFeatureToggle = (featureId: FeatureId, enabled: boolean) => {
     let newFeatures: FeatureId[];
-    
+
     if (enabled) {
       newFeatures = [...pendingFeatures, featureId];
     } else {
       newFeatures = pendingFeatures.filter(f => f !== featureId);
     }
-    
+
     // Auto-fix dependencies
     const fixedFeatures = autoFixFeatureSelection(newFeatures);
     setPendingFeatures(fixedFeatures);
@@ -56,12 +99,12 @@ const FeatureManagementPage = () => {
 
   const handleSaveChanges = async () => {
     const validation = validateFeatureSelection(pendingFeatures);
-    
+
     if (!validation.isValid) {
       toast.error('Please resolve validation errors before saving');
       return;
     }
-    
+
     try {
       await updateFeatures(pendingFeatures);
       setHasChanges(false);
@@ -78,14 +121,9 @@ const FeatureManagementPage = () => {
     }
   };
 
-  const validation = validateFeatureSelection(pendingFeatures);
-  const availableFeatures = getAvailableFeatures(pendingFeatures);
-  const categorizedFeatures = {
-    core: getFeaturesByCategory('core'),
-    operations: getFeaturesByCategory('operations'),
-    reporting: getFeaturesByCategory('reporting'),
-    management: getFeaturesByCategory('management')
-  };
+
+
+
 
   return (
     <UnifiedSidebarLayout>
@@ -97,7 +135,7 @@ const FeatureManagementPage = () => {
           </p>
         </div>
 
-        {!validation.isValid && (
+        {validation && !validation.isValid && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
@@ -111,7 +149,7 @@ const FeatureManagementPage = () => {
           </Alert>
         )}
 
-        {validation.warnings.length > 0 && (
+        {validation && validation.warnings.length > 0 && (
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
@@ -125,7 +163,7 @@ const FeatureManagementPage = () => {
           </Alert>
         )}
 
-        {Object.entries(categorizedFeatures).map(([category, categoryFeatures]) => (
+        {categorizedFeatures && Object.entries(categorizedFeatures).map(([category, categoryFeatures]) => (
           <Card key={category}>
             <CardHeader>
               <CardTitle className="capitalize">{category} Features</CardTitle>
@@ -138,12 +176,12 @@ const FeatureManagementPage = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {categoryFeatures.map((feature) => {
+                {categoryFeatures?.map((feature) => {
                   const isPending = pendingFeatures.includes(feature.id);
                   const isCurrentlyActive = isFeatureActive(feature.id);
                   const isAvailable = availableFeatures.includes(feature.id);
                   const activationDate = companyFeatures?.activationDates[feature.id];
-                  
+                  console.log('categoryFeatures',categoryFeatures)
                   return (
                     <div key={feature.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="space-y-1">
@@ -166,27 +204,33 @@ const FeatureManagementPage = () => {
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">{feature.description}</p>
-                        
+
                         {feature.dependencies.length > 0 && (
                           <div className="text-xs text-muted-foreground">
-                            Requires: {feature.dependencies.map(dep => 
+                            Requires: {feature.dependencies.map(dep =>
                               features.find(f => f.id === dep)?.name
                             ).join(', ')}
                           </div>
                         )}
-                        
+
                         {activationDate && (
                           <div className="text-xs text-muted-foreground">
                             Activated: {new Date(activationDate).toLocaleDateString()}
                           </div>
                         )}
                       </div>
-                      
                       <Switch
+                        checked={feature.accessGranted}
+                        onCheckedChange={(enabled) => handleFeatureToggle(feature.id, enabled)}
+                        disabled={!feature.accessGranted}
+                      />
+
+                      {/* <Switch
                         checked={isPending}
                         onCheckedChange={(enabled) => handleFeatureToggle(feature.id, enabled)}
-                        disabled={feature.isDefault || (!isAvailable && !isPending)}
-                      />
+                        disabled={feature.accessGranted}
+                      /> */}
+                      {/* disabled={feature.isDefault || (!isAvailable && !isPending)} */}
                     </div>
                   );
                 })}
