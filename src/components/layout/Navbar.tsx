@@ -59,7 +59,7 @@ export const Navbar: React.FC = () => {
             <DropdownMenuContent align="end" className="w-80 z-20">
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <div className="max-h-[300px] overflow-auto">
+              {/* <div className="max-h-[300px] overflow-auto">
                 <div className="p-3 hover:bg-muted">
                   <p className="text-sm font-medium">BRSR Report Due Soon</p>
                   <p className="text-xs text-muted-foreground">3 days remaining for submission</p>
@@ -68,7 +68,7 @@ export const Navbar: React.FC = () => {
                   <p className="text-sm font-medium">EHS Training Update</p>
                   <p className="text-xs text-muted-foreground">New chemical safety module available</p>
                 </div>
-              </div>
+              </div> */}
             </DropdownMenuContent>
           </DropdownMenu>
           

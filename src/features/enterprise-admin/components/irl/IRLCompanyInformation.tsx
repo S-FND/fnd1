@@ -12,7 +12,7 @@ import OutsourcedServicesSection from './OutsourcedServicesSection';
 import { CompanyFormData, OfficeSpace, OutsourcedService, LocationDetails } from './types';
 import { toast } from 'sonner';
 import { fetchCompanyData, updateCompanyData } from '../../services/companyApi';
-
+import { Loader2 } from 'lucide-react';
 const IRLCompanyInformation = () => {
   const [formData, setFormData] = useState<CompanyFormData>({
     legalEntityName: '',
@@ -56,12 +56,29 @@ const IRLCompanyInformation = () => {
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-
+  const getUserEntityId = () => {
+    try {
+      const user = localStorage.getItem('fandoro-user');
+      if (user) {
+        const parsedUser = JSON.parse(user);
+        return parsedUser?.entityId || null;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error parsing user data:", error);
+      return null;
+    }
+  };
+  const entityId = getUserEntityId();
   useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true);
+        if (!entityId) {
+          setError('Please complete your company profile in the Administration section before submitting IRL details.');
+          setIsLoading(false);
+          return;
+        }
         const data: any = await fetchCompanyData();
         if (data) {
           setFormData(prev => ({
@@ -69,7 +86,7 @@ const IRLCompanyInformation = () => {
             legalEntityName: data.legal_name || '',
             companyName: data.company_name || '',
             // user_id: data.user_id || '',
-            user_id: data.user_id._id || '',
+            user_id: data.user_id?._id || '',
             emailId: data.email || '',
             contactNumber: data.contact_number || '',
             incorporationDate: data.incorporation_date || '',
@@ -110,8 +127,8 @@ const IRLCompanyInformation = () => {
         }
       } catch (error) {
         console.error('Error fetching company data:', error);
-        setError('Failed to load company data');
-        toast.error('Failed to load company data');
+        // setError('Failed to load company data');
+        // toast.error('Failed to load company data');
       } finally {
         setIsLoading(false);
       }
@@ -236,6 +253,17 @@ const IRLCompanyInformation = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+      {isLoading ? (
+          <div className="flex justify-center items-center py-4">
+            <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
+            <span className="ml-2">Loading Hr operations data...</span>
+          </div>
+        ) : error ? (
+          <p className="text-blue-500 font-medium text-sm text-center bg-blue-50 p-3 rounded-md">
+            {error}
+          </p>
+        ) : (
+          <>
         <ESGDDRequiredFields formData={formData} setFormData={setFormData} />
 
         <BasicCompanyFields formData={formData} setFormData={setFormData} />
@@ -366,6 +394,8 @@ const IRLCompanyInformation = () => {
             Submit
           </Button>
         </div>
+        </>
+        )};
       </CardContent>
     </Card>
   );
