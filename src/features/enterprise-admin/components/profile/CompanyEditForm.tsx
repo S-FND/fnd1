@@ -170,7 +170,7 @@ const CompanyEditForm = ({ form, onSubmit, onCancel, isLoading = false }: Compan
                   <FormItem>
                     <FormLabel htmlFor="email">Email</FormLabel>
                     <FormControl>
-                      <Input {...field} id="email" autoComplete="email" type="email" />
+                      <Input {...field} id="email" autoComplete="email" type="email" readOnly/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

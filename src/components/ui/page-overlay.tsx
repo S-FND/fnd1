@@ -17,7 +17,7 @@ export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
   const userEmail = user?.email;
 
   useEffect(() => {
-    const exemptEmails = ['shekhar.sharma@eggoz.in','sample@abclogistics.com'];
+    const exemptEmails = ['shekhar.sharma@eggoz.in','sample@abclogistics.com','rajatkumar2257@gmail.com','suman1@test.com'];
 
     if (exemptEmails.includes(userEmail)) {
       setShouldShowOverlay(false);
