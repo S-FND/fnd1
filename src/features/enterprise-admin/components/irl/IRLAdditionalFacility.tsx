@@ -123,7 +123,7 @@ const facilityItems = [
 const IRLAdditionalFacility = () => {
   return (
     <IRLComplianceTable
-      title="Additional (Facility Level)"
+      title="Facility Information"
       description="Facility Level Compliance - Office, Plant, Warehouse, Distribution Centre"
       items={facilityItems}
       type="default"

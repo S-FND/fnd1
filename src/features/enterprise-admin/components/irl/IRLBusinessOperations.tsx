@@ -64,7 +64,7 @@ const IRLBusinessOperations = () => {
 
   const loadData = async () => {
     if (!entityId) {
-      setError('Entity ID not found in localStorage');
+      setError('Please complete your company profile in the Administration section before submitting IRL details.');
       setIsLoading(false);
       return;
     }
@@ -125,15 +125,16 @@ const IRLBusinessOperations = () => {
       const key = operationNameToKeyMap[op.name];
       const field = mergedSelectedValues[key];;
 
-      if (!field?.answer) {
-        console.log('field',field);
-        newErrors[key] = 'Please select a status';
-        isValid = false;
-      } else if (field.answer === 'yes' && !field.file?.length && !filePaths[key].length) {
-        newErrors[key] = 'File is required when Yes';
+      // if (!field?.answer) {
+      //   console.log('field',field);
+      //   newErrors[key] = 'Please select a status';
+      //   isValid = false;
+      // } else  
+      if (field.answer === 'yes' && !field.file?.length && !filePaths[key].length) {
+        newErrors[key] = 'Please upload the document.';
         isValid = false;
       } else if (field.answer === 'no' && !field.reason?.trim()) {
-        newErrors[key] = 'Reason is required when No';
+        newErrors[key] = 'Please provide the reason.';
         isValid = false;
       }
     });
@@ -234,7 +235,7 @@ const IRLBusinessOperations = () => {
             <span className="ml-2">Loading business operations data...</span>
           </div>
         ) : error ? (
-          <p className="text-red-500 font-medium text-sm text-center bg-red-50 p-3 rounded-md">
+          <p className="text-blue-500 font-medium text-sm text-center bg-blue-50 p-3 rounded-md">
             {error}
           </p>
         ) : (
@@ -277,7 +278,7 @@ const IRLBusinessOperations = () => {
             </div>
 
             <div className="flex gap-4 pt-6">
-              <Button onClick={handleSave} variant="outline" disabled={isLoading} className="flex-1 bg-gray-100 hover:bg-gray-200">
+              <Button onClick={handleSave} variant="outline" disabled={isLoading} className="flex-1">
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -287,7 +288,7 @@ const IRLBusinessOperations = () => {
                   'Save as Draft'
                 )}
               </Button>
-              <Button onClick={handleFinalSubmit} disabled={isLoading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+              <Button onClick={handleFinalSubmit} disabled={isLoading} className="flex-1">
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

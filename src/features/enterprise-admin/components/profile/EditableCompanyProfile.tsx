@@ -7,27 +7,55 @@ import { defaultCompanyData } from './data/defaultCompanyData';
 import CompanyEditForm from './CompanyEditForm';
 import CompanyDisplay from './CompanyDisplay';
 import { fetchProfileData, updateProfileData } from '../../services/companyApi';
+import { defaultPermissions } from '@/config/permissions'; // Make sure to import this
 
 const EditableCompanyProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [apiData, setApiData] = useState<CompanyFormData | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null); // Add user state
 
   const form = useForm<CompanyFormData>({
     resolver: zodResolver(companySchema),
     defaultValues: defaultCompanyData,
   });
 
+  // Load user data from localStorage on component mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem("fandoro-user");
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      setCurrentUser(user);
+      
+      // Set default companyId if needed (similar to your auth provider)
+      if ((user.role === 'admin') && !user.companyId) {
+        user.companyId = user._id;
+        localStorage.setItem("fandoro-user", JSON.stringify(user));
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true);
-        const data = await fetchProfileData();
-        setApiData(data);
-        form.reset(data); // Populate form with fetched data
+        const data :any = await fetchProfileData();
+        
+        if (data) {
+          // Update user data in localStorage if user info exists in response
+          if (data) {
+            const rolePermissions = defaultPermissions[data.role] || {};
+            localStorage.setItem("fandoro-user", JSON.stringify(data));
+            localStorage.setItem("fandoro-token", data.token || '');
+            localStorage.setItem("fandoro-permissions", JSON.stringify(rolePermissions));
+            setCurrentUser(data);
+          }
+          
+          setApiData(data);
+          form.reset(data);
+        }
       } catch (error) {
-        toast.error('Failed to load company data');
-        // Fallback to default data
+        // toast.error('Failed to load company data');
         setApiData(defaultCompanyData);
         form.reset(defaultCompanyData);
       } finally {
@@ -38,30 +66,41 @@ const EditableCompanyProfile = () => {
     loadData();
   }, []);
 
-  const user:any = localStorage.getItem('fandoro-user');
-  const userString = JSON.parse(user)
   const onSubmit = async (data: CompanyFormData) => {
-    const submissionData = {
-      ...data,
-      user_id: userString._id // Set _id as user_id
-    };
+    if (!currentUser) {
+      toast.error('User information not available');
+      return;
+    }
+
     try {
       setIsLoading(true);
+      const submissionData = {
+        ...data,
+        user_id: currentUser._id // Use the currentUser state
+      };
+      
       const updatedData = await updateProfileData(submissionData);
       const response = await fetchProfileData();
+      
+      // Update localStorage if needed
+      if (response) {
+        localStorage.setItem("fandoro-user", JSON.stringify(response));
+      }
+      
       setApiData(response);
-      form.reset(response); // Reset form with updated data
-      toast.success('user_id' in data ? 'Company profile updated successfully' : 'Company profile created successfully');
+      form.reset(response);
+      toast.success('Company profile updated successfully');
       setIsEditing(false);
     } catch (error: any) {
-      toast.error(error.message || 'Failed to update/create company profile');
+      toast.error(error.message || 'Failed to update company profile');
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ... rest of your component remains the same ...
   const handleCancel = () => {
-    form.reset(apiData); // Reset form to last known state
+    form.reset(apiData);
     setIsEditing(false);
   };
 

@@ -112,10 +112,10 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
     }
   };
 
-  useEffect(() => {
+  
     const loadData = async () => {
       if (!entityId) {
-        setError('Entity ID not found in localStorage');
+        setError('Please complete your company profile in the Administration section before submitting IRL details.');
         setIsLoading(false);
         return;
       }
@@ -182,6 +182,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       }
     };
 
+  useEffect(() => {
     loadData();
   }, [entityId]);
 
@@ -218,31 +219,25 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   
     complianceItems.forEach(item => {
       const key = item.key;
-      if (TEXT_INPUT_KEYS.includes(key) || TEXTAREA_KEYS.includes(key)) {
-        if (!item.status.trim()) {
-          newErrors[key] = 'This field is required';
-          isValid = false;
-        }
-      } else {
-        if (!item.status) {
-          newErrors[key] = 'Please select a status';
-          isValid = false;
-        } else if (item.status === 'yes') {
+        // if (!item.status) {
+        //   newErrors[key] = 'Please select a status';
+        //   isValid = false;
+        // } else
+         if (item.status === 'yes') {
           const hasFiles = (
             (filePaths[key]?.length > 0) || 
             (item.attachment.length > 0)
           );
           if (!hasFiles) {
-            newErrors[key] = 'File is required when Yes';
+            newErrors[key] = 'Please upload the document.';
             isValid = false;
           }
         } else if (item.status === 'no' && !item.notes.trim()) {
-          newErrors[key] = 'Reason is required when No';
+          newErrors[key] = 'Please provide the reason.';
           isValid = false;
         }
-      }
     });
-    console.log('object',newErrors);
+    // console.log('object',newErrors);
     setErrors(newErrors);
     return isValid;
   };
@@ -254,10 +249,10 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       return;
     }
 
-    // if (!validateForm()) {
-    //   toast.error('Please fix the validation errors.');
-    //   return;
-    // }
+    if (!validateForm()) {
+      toast.error('Please fix the validation errors.');
+      return;
+    }
 
     setIsLoading(true);
 
@@ -279,27 +274,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
 
       const { update } = getAPIFunctions();
       await update(formData);
-
-      // // Clear attachments and reset form state without reloading
-      // setComplianceItems(prevItems =>
-      //   prevItems.map(item => ({
-      //     ...item,
-      //     attachment: [],
-      //     // Keep the status/notes as they were submitted
-      //   }))
-      // );
-
-      // setFilePaths(prev => {
-      //   // Update file paths for items that had attachments
-      //   const newPaths = { ...prev };
-      //   complianceItems.forEach(item => {
-      //     if (item.attachment.length > 0) {
-      //       // This assumes your backend updates file paths - adjust as needed
-      //       newPaths[item.key] = item.attachment.map(file => URL.createObjectURL(file));
-      //     }
-      //   });
-      //   return newPaths;
-      // });
+      loadData();
       toast.success(isDraft ? 'Draft saved successfully!' : 'Form submitted successfully!');
     } catch (err) {
       console.error('Submission failed:', err);
@@ -364,7 +339,9 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
           />
           <label
             htmlFor={`file-upload-${item.id}`}
-            className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50"
+            className={`flex items-center gap-2 px-3 py-2 text-sm border rounded-md cursor-pointer hover:bg-gray-50 ${
+              error?.includes('upload') ? 'border-red-500' : 'border-gray-300'
+            }`}
           >
             <Upload className="h-4 w-4" />
             Upload Files
@@ -399,7 +376,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
           </div>
         ))}
 
-        {error && error.includes('File') && (
+        {error && error.includes('upload') && (
           <p className="text-xs text-red-500">{error}</p>
         )}
       </div>
@@ -411,12 +388,17 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
     const error = errors[key];
 
     return (
+      <div className="space-y-2">
       <Textarea
         value={item.notes}
         onChange={(e) => handleNotesChange(item.id, e.target.value)}
         placeholder="Enter notes..."
-        className="min-h-[80px]"
+        className={`min-h-[80px] ${error?.includes('reason') ? 'border-red-500' : ''}`}
       />
+      {error && error.includes('reason') && (
+        <p className="text-xs text-red-500">{error}</p>
+      )}
+    </div>
     );
   };
 
@@ -433,7 +415,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
             <span className="ml-2">Loading {title} data...</span>
           </div>
         ) : error ? (
-          <p className="text-red-500 font-medium text-sm text-center bg-red-50 p-3 rounded-md">
+          <p className="text-blue-500 font-medium text-sm text-center bg-blue-50 p-3 rounded-md">
             {error}
           </p>
         ) : (
@@ -517,7 +499,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
             </div>
 
             <div className="flex gap-4 pt-6">
-              <Button onClick={handleSave} variant="outline" disabled={isLoading} className="flex-1 bg-gray-100 hover:bg-gray-200">
+              <Button onClick={handleSave} variant="outline" disabled={isLoading} className="flex-1">
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -527,7 +509,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
                   'Save as Draft'
                 )}
               </Button>
-              <Button onClick={handleFinalSubmit} disabled={isLoading} className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+              <Button onClick={handleFinalSubmit} disabled={isLoading} className="flex-1">
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
