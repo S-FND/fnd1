@@ -74,7 +74,7 @@ const ESGCapPage = () => {
         toast.error("Failed to load ESG CAP data");
       }
     } catch (error) {
-      toast.error("An error occurred while loading data");
+      // toast.error("An error occurred while loading data");
       console.error(error);
     } finally {
       setLoading(false);

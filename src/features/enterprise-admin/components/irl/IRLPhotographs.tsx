@@ -158,7 +158,7 @@ const IRLPhotographs = () => {
 
   const loadData = async () => {
     if (!entityId) {
-      setError('Entity ID not found in localStorage');
+      setError('Please complete your company profile in the Administration section before submitting IRL details.');
       setIsLoading(false);
       return;
     }
@@ -206,9 +206,9 @@ const IRLPhotographs = () => {
       setProductPhotographs(updatedProductPhotos);
       // setError(null);
     } catch (err) {
-      console.error('Error loading photographs:', err);
+      // console.error('Error loading photographs:', err);
       // setError('Failed to load photograph data');
-      toast.error('Failed to load photograph data');
+      // toast.error('Failed to load photograph data');
     } finally {
       setIsLoading(false);
     }
@@ -226,13 +226,15 @@ const IRLPhotographs = () => {
     officePhotographs.forEach(photo => {
       // Only validate if status is provided
       if (photo.status === 'yes') {
-        if (photo.attachment?.length === 0 && photo.file_path?.length === 0) {
-          newErrors[`${photo.key}-files`] = 'At least one attachment is required';
+        const hasExistingFiles = Array.isArray(photo.file_path) && photo.file_path.length > 0;
+        const hasNewFiles = Array.isArray(photo.attachment) && photo.attachment.length > 0;
+        if (!hasExistingFiles && !hasNewFiles) {
+          newErrors[`${photo.key}-files`] = 'Please upload the document.';
           isValid = false;
         }
       }
       else if (photo.status === 'no' && !photo.notes?.trim()) {
-        newErrors[`${photo.key}-notes`] = 'Notes is required when status is No';
+        newErrors[`${photo.key}-notes`] = 'Please provide the reason.';
         isValid = false;
       }
     });
@@ -240,11 +242,11 @@ const IRLPhotographs = () => {
     // Validate product photographs
     productPhotographs.forEach(photo => {
       if (photo.status === 'yes' && photo.attachment?.length === 0 && photo.file_path?.length === 0) {
-        newErrors[`${photo.key}-files`] = 'Attachment is required';
+        newErrors[`${photo.key}-files`] = 'Please upload the document.';
         isValid = false;
       }
       else if (photo.status === 'no' && !photo.notes?.trim()) {
-        newErrors[`${photo.key}-notes`] = 'Reason is required when status is No';
+        newErrors[`${photo.key}-notes`] = 'Please provide the reason.';
         isValid = false;
       }
     });
@@ -393,7 +395,7 @@ const IRLPhotographs = () => {
       </CardHeader>
       <CardContent className="space-y-6">
         {error ? (
-          <p className="text-red-500 font-medium text-sm text-center bg-red-50 p-3 rounded-md">
+          <p className="text-blue-500 font-medium text-sm text-center bg-blue-50 p-3 rounded-md">
             {error}
           </p>
         ) : (
@@ -526,7 +528,7 @@ const IRLPhotographs = () => {
                 onClick={() => handleSubmit(true)}
                 variant="outline"
                 disabled={isSubmitting}
-                className="flex-1 bg-gray-100 hover:bg-gray-200"
+                className="flex-1"
               >
                 {isSubmitting ? (
                   <>
@@ -540,7 +542,7 @@ const IRLPhotographs = () => {
               <Button
                 onClick={() => handleSubmit(false)}
                 disabled={isSubmitting}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                className="flex-1"
               >
                 {isSubmitting ? (
                   <>
