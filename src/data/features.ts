@@ -180,9 +180,7 @@ export const getDefaultFeatures = (): FeatureId[] => {
 export const getFeaturesByCategory = (category: Feature['category'],pageAccessData): Feature[] => {
   let filteredFeature= features.filter(feature => feature.category === category);
   return filteredFeature.map((f)=>{
-    console.log('f.secondaryId',f.secondaryId)
     let pageAccessFilter=pageAccessData.filter((access)=> f.secondaryId == access.feature)[0]
-    console.log('pageAccessFilter',pageAccessFilter)
     return {...f,accessGranted:pageAccessFilter?pageAccessFilter.enabled:false}
   })
 };

@@ -16,6 +16,7 @@ import { Feature, FeatureId } from '@/types/features';
 import { toast } from 'sonner';
 import { AlertTriangle, CheckCircle, Info, Lock } from 'lucide-react';
 import { httpClient } from '@/lib/httpClient';
+import { useOverlay } from '@/context/OverlayContext';
 
 type CategorizedFeatures = {
   core: Feature[];
@@ -25,6 +26,7 @@ type CategorizedFeatures = {
 };
 
 const FeatureManagementPage = () => {
+  const { isOverlayActive, isUrlOverlayActive,setPageList } = useOverlay();
   const { isLoading } = useRouteProtection(['admin']);
   const { user, isAuthenticated } = useAuth();
   const { companyFeatures, isFeatureActive, updateFeatures } = useFeatures();
@@ -57,6 +59,7 @@ const FeatureManagementPage = () => {
   const [availableFeatures,setAvailableFeatures]=useState(null);
   const [categorizedFeatures,setCategorizedFeatures]=useState<CategorizedFeatures | null>(null)
   useEffect(() => {
+    // setPageList(pageAccessData)
     const validationData = validateFeatureSelection(pendingFeatures);
     setValidation(validationData)
     const availableFeaturesData = getAvailableFeatures(pendingFeatures);
@@ -181,7 +184,6 @@ const FeatureManagementPage = () => {
                   const isCurrentlyActive = isFeatureActive(feature.id);
                   const isAvailable = availableFeatures.includes(feature.id);
                   const activationDate = companyFeatures?.activationDates[feature.id];
-                  console.log('categoryFeatures',categoryFeatures)
                   return (
                     <div key={feature.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="space-y-1">
