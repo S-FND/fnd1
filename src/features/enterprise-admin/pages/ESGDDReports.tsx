@@ -38,29 +38,39 @@ const ESGDDReportsPage = () => {
   const entityId = getUserEntityId();
 
   useEffect(() => {
-    if (entityId) {
-      const currentDate = new Date();
-      const currentYear = currentDate.getFullYear();
-      const aprilFirstCurrentYear = new Date(currentYear, 3, 1); // April 1st of the current year
-
-      // Check if the current date is before April 1st of the current year
-      const financialYear =
-        currentDate < aprilFirstCurrentYear
-          ? `${currentYear - 1}-${currentYear.toString().slice(-2)}`
-          : `${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
-
-      setFinancialYear(financialYear);
-
-      const fetchData = async () => {
+    if (!entityId) return;
+  
+    // Calculate financial year
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const aprilFirstCurrentYear = new Date(currentYear, 3, 1); // April 1st of current year
+    const financialYear = currentDate < aprilFirstCurrentYear
+      ? `${currentYear - 1}-${currentYear.toString().slice(-2)}`
+      : `${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
+    
+    setFinancialYear(financialYear);
+  
+    const fetchData = async () => {
+      try {
         setLoading(true);
-        const data = await fetchEsgDDReport(entityId);
-        if (data?.data) {
-          setPaths(data.data);
+        const { data, error } = await fetchEsgDDReport(entityId);
+        
+        if (error) {
+          console.error('Failed to fetch ESG report:', error);
+          setPaths({}); // Explicitly set empty object on error
+          return;
         }
+  
+        setPaths(data || {}); // Handle empty/undefined data
+      } catch (err) {
+        console.error('Unexpected error:', err);
+        setPaths({}); // Ensure empty state on failure
+      } finally {
         setLoading(false);
-      };
-      fetchData();
-    }
+      }
+    };
+  
+    fetchData();
   }, [entityId]);
 
   if (authLoading || loading) {
@@ -73,9 +83,12 @@ const ESGDDReportsPage = () => {
 
   // Transform the API data to match the expected report format
   const transformReports = (reports) => {
-    if (!reports) return [];
+    console.log('reports',reports);
+    if (!reports || (typeof reports === 'object' && Object.keys(reports).length === 0)) {
+      return [];
+    }
     
-    return reports.map((report, index) => ({
+    return reports?.map((report, index) => ({
       id: report._id,
       title: report.file_path?.split("/")?.reverse()?.[0] || `Report ${index + 1}`,
       type: 'manual', // Assuming all are manual for now

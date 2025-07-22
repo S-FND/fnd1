@@ -100,7 +100,7 @@ const TableRowQuestion = ({
       );
     }
   };
-
+console.log('fieldError',fieldError);
   return (
     <tr key={op.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
       <td className="whitespace-nowrap p-3 text-sm text-center text-gray-500">{index + 1}</td>
@@ -117,14 +117,16 @@ const TableRowQuestion = ({
           <option value="yes">Yes</option>
           <option value="no">No</option>
         </select>
-        {fieldError && fieldError.includes('status') && (
+        {fieldError && fieldError.includes('Please') && (
           <p className="mt-1 text-xs text-red-500">{fieldError}</p>
         )}
       </td>
 
       {/* Attachment */}
       <td className="whitespace-nowrap p-3 text-sm text-gray-500">
-        <div className="space-y-2">
+        <div  className={`space-y-2 border rounded p-2 ${
+            fieldError?.includes('upload') ? 'border-red-500' : 'border-gray-200'
+          }`}>
           <input
             type="file"
             accept=".ppt,.pptx,.pdf,.png,.jpg,.jpeg"
@@ -144,7 +146,7 @@ const TableRowQuestion = ({
               rel="noopener noreferrer"
               className="text-xs underline text-blue-600 hover:text-blue-800 block"
             >
-              View Existing File {i + 1}
+              View File {i + 1}
             </a>
             {/* <button 
                 type="button"
@@ -155,10 +157,10 @@ const TableRowQuestion = ({
               </button> */}
             </div>
           ))}
-          {fieldError && fieldError.includes('File') && (
+          {fieldError && fieldError.includes('upload') && (
             <p className="text-xs text-red-500">{fieldError}</p>
           )}
-          <p className="text-xs text-gray-500">Max 50MB</p>
+          {/* <p className="text-xs text-gray-500">Max 50MB</p> */}
         </div>
       </td>
 
@@ -168,9 +170,9 @@ const TableRowQuestion = ({
           value={field.reason || ""}
           onChange={handleNotesChange}
           placeholder="Enter notes..."
-          className="w-full p-2 border rounded min-h-[80px]"
+          className={`w-full p-2 border rounded min-h-[80px] ${fieldError?.includes('reason') ? 'border-red-500' : ''}`}
         />
-        {fieldError && fieldError.includes('Reason') && (
+        {fieldError && fieldError.includes('reason') && (
           <p className="text-xs text-red-500 mt-1">{fieldError}</p>
         )}
       </td>

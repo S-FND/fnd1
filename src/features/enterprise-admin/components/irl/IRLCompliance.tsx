@@ -19,19 +19,19 @@ const complianceItems = [
     key: "ewaste_return_annual",
     name: "Annual returns of E-Waste to State Pollution Control Board in Form-3",
   }, {
-    key: "agreement_e_waste_disposal",// assign
+    key: "Agreement_e_waste_disposal",// assign
     name: "Agreement with authorized vendor for e-waste disposal (if any)",
   }, {
     key: "ewaste_vendor_authorization",// assign
     name: "Copy of authorization of the vendor to whom e-waste is disposed",
   }, {
-    key: "sale_e_waste",// assign
+    key: "Sale_e_waste",// assign
     name: "E-waste sale records (if any)",
   }, {
     key: "epr_authorisation",
     name: "EPR Authorisation from CPCB (if any)",
   }, {
-    key: "epr_registration",// assign
+    key: "Epr_registration",// assign
     name: "EPR Registration as brandowner/ producer under E-waste/Plastic Rules",
   }, {
     key: "records_of_disposal_used_battery",
@@ -49,16 +49,16 @@ const complianceItems = [
     key: "group_personal_accident_policy_services_agencies",
     name: "Group Personal Accident Policy of the manpower supply agencies/ professional services agencies (if any)",
   }, {
-    key: "registration_ESIC_EPFO",// assign
+    key: "Registration_ESIC_EPFO",// assign
     name: "Registration under ESIC and EPFO",
   }, {
     key: "company_employees_salary_sheet",
     name: "For Company Employees - salary sheet, ESI & EPF payment challans for previous 3 months",
   }, {
-    key: "professional_Services_Agencies",// assign
+    key: "Professional_Services_Agencies",// assign
     name: "For Professional Services Agencies - ESI & EPF payment challans, salary sheet for previous 3 months",
   }, {
-    key: "company_contract_labors_salary_sheet",// assign
+    key: "Company_contract_labors_salary_sheet",// assign
     name: "For Contract labors - Salary sheet, OT Pay sheet, ESI and PF payment challans for previous 3 months",
   }, {
     key: "Payment_of_statutory_bonus",// assign
@@ -70,7 +70,7 @@ const complianceItems = [
     key: "posh_awareness_sessions",// assign
     name: "POSH Awareness sessions records",
   }, {
-    key: "sexual_harassment",// assign
+    key: "Sexual_harassment",// assign
     name: "Record on investigation of complaints related to sexual harassment (if any)",
   }, {
     key: "posh_annual_returns",
@@ -79,10 +79,10 @@ const complianceItems = [
     key: "records_maternity_benefits",
     name: "Records of maternity benefits provided",
   }, {
-    key: "gratuity_liability",// assign
+    key: "Gratuity_liability",// assign
     name: "Insurance policy for gratuity liability (if any)",
   }, {
-    key: "gratuity_paid",// assign
+    key: "Gratuity_paid",// assign
     name: "Records of gratuity paid",
   }, {
     key: "maternity_benefits_annual_returns",
@@ -103,7 +103,7 @@ const complianceItems = [
     key: "FSSAI_license",// assign
     name: "FSSAI license for cafeteria/canteen (if any)",
   }, {
-    key: "maintenance_air_conditioning",// assign
+    key: "Maintenance_air_conditioning",// assign
     name: "Records for refilling of any refrigerant for maintenance of air conditioning / HVAC system"
   }
 ];
