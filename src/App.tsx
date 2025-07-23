@@ -66,8 +66,8 @@ function App() {
       />
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<Index />} />
-        <Route path="/login" element={<Login />} />
+        {/* <Route path="/" element={<Index />} /> */}
+        <Route path="/" element={<Login />} />
         
         {/* Company / Enterprise Admin Routes */}
         <Route path="/enhanced-dashboard" element={<EnhancedDashboard />} />
