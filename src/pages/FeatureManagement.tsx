@@ -28,7 +28,7 @@ type CategorizedFeatures = {
 const FeatureManagementPage = () => {
   const { isOverlayActive, isUrlOverlayActive,setPageList } = useOverlay();
   const { isLoading } = useRouteProtection(['admin']);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const { companyFeatures, isFeatureActive, updateFeatures } = useFeatures();
   const { validateFeatureSelection, autoFixFeatureSelection, getAvailableFeatures } = useFeatureValidation();
 
@@ -81,8 +81,9 @@ const FeatureManagementPage = () => {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isAuthenticated || user?.role !== 'admin') {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus() || user?.role !== 'admin') {
+    debugger;
+    return <Navigate to="/" />;
   }
 
   const handleFeatureToggle = (featureId: FeatureId, enabled: boolean) => {

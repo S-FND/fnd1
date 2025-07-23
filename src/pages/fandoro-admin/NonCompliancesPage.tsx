@@ -26,7 +26,7 @@ const NonCompliancesPage = () => {
   }
 
   if (!isFandoroAdmin()) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/" />;
   }
 
   return (

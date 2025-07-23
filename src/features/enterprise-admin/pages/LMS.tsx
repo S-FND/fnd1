@@ -47,7 +47,7 @@ const LMSPage = () => {
   }
 
   if (!isEnterpriseAdmin()) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/" />;
   }
 
   return (

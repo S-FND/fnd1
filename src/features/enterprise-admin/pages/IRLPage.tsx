@@ -18,14 +18,14 @@ import IRLGovernance from '../components/irl/IRLGovernance';
 
 const IRLPage = () => {
   const { isLoading } = useRouteProtection(['admin', 'manager']);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'manager')) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus() || (user?.role !== 'admin' && user?.role !== 'manager')) {
+    return <Navigate to="/" />;
   }
 
   return (

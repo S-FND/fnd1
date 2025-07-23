@@ -6,10 +6,10 @@ import { SupplierLayout } from '@/components/layout/SupplierLayout';
 import SupplierDashboard from '@/components/supplier/SupplierDashboard';
 
 const SupplierDashboardPage = () => {
-  const { user, isAuthenticated, isSupplier } = useAuth();
+  const { user, isAuthenticated, isSupplier,isAuthenticatedStatus } = useAuth();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus()) {
+    return <Navigate to="/" />;
   }
 
   if (!isSupplier()) {

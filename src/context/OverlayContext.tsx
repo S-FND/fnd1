@@ -58,6 +58,25 @@ export const OverlayProvider: React.FC<OverlayProviderProps> = ({ children }) =>
     return isOverlayActive && activeOverlayUrl === url;
   };
 
+  const getPageAccess = async () => {
+    try {
+      console.log("Calling from Overlay cintext")
+      let pageAccessResponse = await httpClient.get('company/settings/access');
+      if (pageAccessResponse['status'] == 200) {
+        let pageAccess = pageAccessResponse['data']['data']['data'];
+        setPageActiveList(pageAccess)
+      }
+    } catch (error) {
+
+    }
+  }
+
+  useEffect(()=>{
+    if (!pageActiveList) {
+      getPageAccess();
+    }
+  },[pageActiveList])
+
   useEffect(()=>{
     console.log('pageActiveList',pageActiveList)
   },[pageActiveList])

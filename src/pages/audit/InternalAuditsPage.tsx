@@ -11,11 +11,11 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Download, Plus, Building2, FileText, Users, TrendingUp } from 'lucide-react';
 
 const InternalAuditsPage = () => {
-  const { isAuthenticated, isCompanyUser } = useAuth();
+  const { isAuthenticated, isCompanyUser,isAuthenticatedStatus } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus()) {
+    return <Navigate to="/" />;
   }
 
   if (!isCompanyUser()) {

@@ -10,14 +10,14 @@ import { ArrowUp, ArrowDown, LineChart, Award, Activity } from 'lucide-react';
 
 const EnhancedEmployeeDashboard = () => {
   const { isLoading } = useRouteProtection(['employee']);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isAuthenticated || user?.role !== 'employee') {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus() || user?.role !== 'employee') {
+    return <Navigate to="/" />;
   }
 
   return (

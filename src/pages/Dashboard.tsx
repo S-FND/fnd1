@@ -8,15 +8,15 @@ import { useFeatures } from '@/context/FeaturesContext';
 import { Navigate } from 'react-router-dom';
 
 const Dashboard = () => {
-  const { user, isAuthenticated, isCompanyUser, isEmployeeUser, isLoading } = useAuth();
+  const { user, isAuthenticated, isCompanyUser, isEmployeeUser, isLoading,isAuthenticatedStatus } = useAuth();
   const { isLoading: featuresLoading } = useFeatures();
 
   if (isLoading || featuresLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus()) {
+    return <Navigate to="/" />;
   }
 
   return (

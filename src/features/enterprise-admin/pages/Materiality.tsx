@@ -30,7 +30,7 @@ interface MaterialTopic extends Omit<FrameworkMaterialTopic, 'businessImpact' | 
 
 const MaterialityPage = () => {
   const { isLoading } = useRouteProtection(['admin', 'manager', 'unit_admin']);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const [activeTab, setActiveTab] = useState('assessment');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
@@ -168,8 +168,8 @@ const MaterialityPage = () => {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus()) {
+    return <Navigate to="/" />;
   }
 
   const handleIndustryChange = (industryId: string, checked: boolean) => {

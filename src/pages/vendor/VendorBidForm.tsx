@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 const VendorBidForm = () => {
-  const { isAuthenticated, user, isVendor } = useAuth();
+  const { isAuthenticated, user, isVendor,isAuthenticatedStatus } = useAuth();
   const navigate = useNavigate();
   const { trainingId } = useParams<{ trainingId: string }>();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,8 +33,8 @@ const VendorBidForm = () => {
     enabled: !!trainingId
   });
 
-  if (!isAuthenticated || !isVendor() || !trainingId) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus() || !isVendor() || !trainingId) {
+    return <Navigate to="/" />;
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
