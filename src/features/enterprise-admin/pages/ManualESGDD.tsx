@@ -18,7 +18,7 @@ import { ArrowLeft, Upload, Download, Plus } from 'lucide-react';
 
 const ManualESGDDPage = () => {
   const { isLoading } = useRouteProtection(['admin', 'unit_admin']);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploadForm, setUploadForm] = useState({
     title: '',
@@ -37,8 +37,8 @@ const ManualESGDDPage = () => {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'unit_admin')) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus() || (user?.role !== 'admin' && user?.role !== 'unit_admin')) {
+    return <Navigate to="/" />;
   }
 
   const handleUploadChange = (e: React.ChangeEvent<HTMLInputElement>) => {

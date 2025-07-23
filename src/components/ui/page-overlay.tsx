@@ -11,32 +11,36 @@ interface PageOverlayProps {
 
 export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
   const { isOverlayActive, isUrlOverlayActive ,getPageAccessList,setPageList} = useOverlay();
-  const [shouldShowOverlay, setShouldShowOverlay] = useState(false)
+  const [shouldShowOverlay, setShouldShowOverlay] = useState(true)
   const location = useLocation();
 
   const user = JSON.parse(localStorage.getItem('fandoro-user') || '{}');
   const userEmail = user?.email;
   const [pageActiveList,setPageActiveList]=useState();
 
-  const getPageAccess = async () => {
-    try {
-      let pageAccessResponse = await httpClient.get('company/settings/access');
-      if (pageAccessResponse['status'] == 200) {
-        let pageAccess = pageAccessResponse['data']['data']['data'];
-        setPageActiveList(pageAccess)
-      }
-    } catch (error) {
+  let pageListAccess=getPageAccessList()
 
-    }
-  }
+  console.log("From Page-overlay : pageListAccess => ",pageListAccess)
 
-  useEffect(()=>{
-    getPageAccess()
-  },[])
+  // const getPageAccess = async () => {
+  //   try {
+  //     let pageAccessResponse = await httpClient.get('company/settings/access');
+  //     if (pageAccessResponse['status'] == 200) {
+  //       let pageAccess = pageAccessResponse['data']['data']['data'];
+  //       setPageActiveList(pageAccess)
+  //     }
+  //   } catch (error) {
+
+  //   }
+  // }
+
+  // useEffect(()=>{
+  //   getPageAccess()
+  // },[])
 
   useEffect(() => {
     const exemptEmails = ['shekhar.sharma@eggoz.in','sample@abclogistics.com'];
-    if (!pageActiveList || !Array.isArray(pageActiveList)) return;
+    if (!pageListAccess || !Array.isArray(pageListAccess)) return;
     // if (exemptEmails.includes(userEmail)) {
     //   setShouldShowOverlay(false);
     // } else {
@@ -51,12 +55,12 @@ export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
     //     setShouldShowOverlay(false)
     //   }
     // }
-    let pageAccessData:{feature:string;url:string;enabled:boolean}[]=pageActiveList;
+    let pageAccessData:{feature:string;url:string;enabled:boolean}[]=pageListAccess;
     for(let i=0;i<pageAccessData.length;i++){
-      // console.log('pageAccessData',pageAccessData[i]['url'].split('/'))
-      // console.log(`location.pathname.split('/')`,location.pathname.split('/'))
+      console.log('pageAccessData',pageAccessData[i]['url'].split('/'))
+      console.log(`location.pathname.split('/')`,location.pathname.split('/'))
       if(location.pathname.split('/').includes(pageAccessData[i]['url'].split('/')[1])){
-        // console.log("Overlay",pageAccessData[i]['enabled'])
+        console.log("Overlay",pageAccessData[i]['enabled'])
         setShouldShowOverlay(!pageAccessData[i]['enabled'])
         break;
       }
@@ -66,7 +70,7 @@ export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
     }
     
     // console.log('getPageAccessList',)
-  }, [location.pathname,pageActiveList])
+  }, [location.pathname])
   // Check if overlay should be active for current URL or globally
   // const shouldShowOverlay = isOverlayActive && (isUrlOverlayActive(location.pathname) || !useOverlay().activeOverlayUrl);
   console.log('shouldShowOverlay', shouldShowOverlay)

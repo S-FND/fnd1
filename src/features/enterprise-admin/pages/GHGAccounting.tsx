@@ -16,15 +16,15 @@ import { companyInfo } from '../components/ghg/summary/mockData';
 
 const GHGAccountingPage = () => {
   const { isLoading } = useRouteProtection(['admin', 'unit_admin']);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const [activeTab, setActiveTab] = useState("summary");
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'unit_admin')) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus() || (user?.role !== 'admin' && user?.role !== 'unit_admin')) {
+    return <Navigate to="/" />;
   }
 
   const isUnitAdmin = user?.role === 'unit_admin';

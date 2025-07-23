@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 
 const ESGDDPage = () => {
   const { isLoading } = useRouteProtection(['admin', 'manager']);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const navigate = useNavigate();
   const [showNewESGDD, setShowNewESGDD] = useState(false);
   const [selectedType, setSelectedType] = useState<'manual' | 'automated'>('manual');
@@ -22,8 +22,8 @@ const ESGDDPage = () => {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'manager')) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus() || (user?.role !== 'admin' && user?.role !== 'manager')) {
+    return <Navigate to="/" />;
   }
 
   const handleNewESGDD = () => {

@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { fetchVendorProfile } from '@/data';
 
 const VendorProfile = () => {
-  const { isAuthenticated, user, isVendor } = useAuth();
+  const { isAuthenticated, user, isVendor,isAuthenticatedStatus } = useAuth();
   const vendorId = user?.vendorInfo?.id;
   
   const { data: vendorProfile, isLoading } = useQuery({
@@ -21,8 +21,8 @@ const VendorProfile = () => {
     enabled: !!vendorId
   });
 
-  if (!isAuthenticated || !isVendor()) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus() || !isVendor()) {
+    return <Navigate to="/" />;
   }
 
   return (

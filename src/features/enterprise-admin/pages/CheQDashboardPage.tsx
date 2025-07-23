@@ -16,14 +16,14 @@ import { companyInfo } from '../data/cheq-mock-data';
 
 const CheQDashboardPage = () => {
   const { isLoading } = useRouteProtection(['admin']);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isAuthenticated || user?.role !== 'admin') {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus() || user?.role !== 'admin') {
+    return <Navigate to="/" />;
   }
 
   return (
