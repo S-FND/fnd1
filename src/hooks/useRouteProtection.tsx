@@ -24,7 +24,7 @@ export function useRouteProtection(requiredRole?: string | string[]) {
         } else if (user?.role === 'vendor') {
           navigate('/vendor/dashboard');
         } else {
-          navigate('/dashboard');
+          navigate('/login');
         }
       }
     }
