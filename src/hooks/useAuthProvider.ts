@@ -54,11 +54,7 @@ export const useAuthProvider = () => {
       setToken(token);
       setPermissions(rolePermissions);
       localStorage.setItem("fandoro-user", JSON.stringify(user));
-      if (typeof token === 'string' && token) {
-        localStorage.setItem("fandoro-token", token);
-        const savedToken = localStorage.getItem("fandoro-token");
-        console.log('savedToken',savedToken);
-      }
+      localStorage.setItem("fandoro-token", token);
       localStorage.setItem("fandoro-permissions", JSON.stringify(rolePermissions));
       
       toast.success("Login successful!");
@@ -114,12 +110,6 @@ export const useAuthProvider = () => {
     toast.info("You have been logged out");
     navigate("/login");
   };
-
-  useEffect(() => {
-    console.log("Token in effect:", token);
-    console.log("User in effect:", user);
-  }, [token, user]);
-  
 
   const isCompanyUser = () => user?.role === "admin" || user?.role === "manager" || user?.role === "unit_admin";
   const isEmployeeUser = () => user?.role === "employee";
