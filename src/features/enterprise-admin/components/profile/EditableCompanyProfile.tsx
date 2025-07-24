@@ -41,13 +41,10 @@ const EditableCompanyProfile = () => {
         setIsLoading(true);
         const data :any = await fetchProfileData();
         if (data) {
-          // Update user data in localStorage if user info exists in response
-          if (data) {
-            const rolePermissions = defaultPermissions[data.role] || {};
-            localStorage.setItem("fandoro-user", JSON.stringify(data));
-            setCurrentUser(data);
-          }
-          
+          const storedUser = JSON.parse(localStorage.getItem("fandoro-user") || "{}");
+          storedUser.entityId = data.entityId;
+          localStorage.setItem("fandoro-user", JSON.stringify(storedUser));
+          setCurrentUser(storedUser);
           setApiData(data);
           form.reset(data);
         }
