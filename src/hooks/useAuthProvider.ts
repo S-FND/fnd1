@@ -84,6 +84,8 @@ export const useAuthProvider = () => {
         navigate("/fandoro-admin/dashboard");
         break;
       case "admin":
+        navigate(from || "/company"); 
+        break;
       case "manager":
         // Redirect admin and manager to settings by default
         console.log("Redirecting to Settings or ",from)
