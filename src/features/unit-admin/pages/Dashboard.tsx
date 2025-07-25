@@ -8,15 +8,15 @@ import { useRouteProtection } from '@/hooks/useRouteProtection';
 
 const UnitAdminDashboardPage = () => {
   const { isLoading } = useRouteProtection(['unit_admin']);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const currentUnit = user?.units?.find(unit => unit.id === user.unitId);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isAuthenticated || user?.role !== 'unit_admin') {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus() || user?.role !== 'unit_admin') {
+    return <Navigate to="/" />;
   }
 
   return (

@@ -6,10 +6,10 @@ import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 
 const CompliancePage = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated,isAuthenticatedStatus } = useAuth();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus()) {
+    return <Navigate to="/" />;
   }
 
   return (

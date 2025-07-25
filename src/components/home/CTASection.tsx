@@ -5,12 +5,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 
 const CTASection = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user,isAuthenticatedStatus } = useAuth();
   const navigate = useNavigate();
   
   const handleGetStarted = () => {
-    if (!isAuthenticated) {
-      navigate('/login');
+    if (!isAuthenticatedStatus()) {
+      navigate('/');
     } else {
       // Redirect based on user role
       switch(user?.role) {

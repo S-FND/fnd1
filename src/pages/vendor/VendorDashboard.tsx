@@ -8,7 +8,7 @@ import { fetchVendorTrainings, fetchTrainingBids } from '@/data';
 import { CalendarRange, FileText, Calendar, Users } from 'lucide-react';
 
 const VendorDashboard = () => {
-  const { isAuthenticated, user, isVendor } = useAuth();
+  const { isAuthenticated, user, isVendor,isAuthenticatedStatus } = useAuth();
   const vendorId = user?.vendorInfo?.id;
   
   const { data: trainings } = useQuery({
@@ -23,8 +23,8 @@ const VendorDashboard = () => {
     enabled: !!vendorId
   });
 
-  if (!isAuthenticated || !isVendor()) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus() || !isVendor()) {
+    return <Navigate to="/" />;
   }
 
   const openTrainingsCount = trainings?.filter(t => t.bidOpen).length || 0;

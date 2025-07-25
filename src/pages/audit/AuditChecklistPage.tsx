@@ -8,10 +8,10 @@ import AuditSupplierSharing from '@/components/audit/AuditSupplierSharing';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const AuditChecklistPage = () => {
-  const { isAuthenticated, isCompanyUser } = useAuth();
+  const { isAuthenticated, isCompanyUser,isAuthenticatedStatus } = useAuth();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus()) {
+    return <Navigate to="/" />;
   }
 
   if (!isCompanyUser()) {

@@ -37,7 +37,7 @@ interface ESGCapData {
 
 const ESGCapPage = () => {
   const { isLoading: authLoading } = useRouteProtection(['admin', 'unit_admin']);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const [loading, setLoading] = useState(false);
   const [esgCap, setEsgCap] = useState<ESGCapData | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -155,8 +155,8 @@ const ESGCapPage = () => {
     );
   }
 
-  if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'unit_admin')) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus() || (user?.role !== 'admin' && user?.role !== 'unit_admin')) {
+    return <Navigate to="/" />;
   }
 
   return (

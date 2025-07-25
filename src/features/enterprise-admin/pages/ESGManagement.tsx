@@ -25,7 +25,7 @@ interface MaterialTopic {
 
 const ESGManagementPage = () => {
   const { isLoading } = useRouteProtection(['admin', 'manager', 'unit_admin']);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const [prioritizedTopics, setPrioritizedTopics] = useState<MaterialTopic[]>([]);
 
   // In a real application, you would fetch this data from an API
@@ -42,8 +42,8 @@ const ESGManagementPage = () => {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus()) {
+    return <Navigate to="/" />;
   }
 
   // Mock completion data

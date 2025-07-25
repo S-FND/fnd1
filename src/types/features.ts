@@ -23,6 +23,8 @@ export interface Feature {
   dependencies: FeatureId[];
   dependents: FeatureId[];
   category: 'core' | 'operations' | 'reporting' | 'management';
+  accessGranted:boolean;
+  secondaryId:string;
 }
 
 export interface CompanyFeatures {

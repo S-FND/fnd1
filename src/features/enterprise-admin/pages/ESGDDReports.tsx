@@ -16,7 +16,7 @@ const getS3FilePath = (file_path) =>
 
 const ESGDDReportsPage = () => {
   const { isLoading: authLoading } = useRouteProtection(['admin', 'manager']);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const [loading, setLoading] = useState(false);
   const [paths, setPaths] = useState(null);
   const [financialYear, setFinancialYear] = useState("");
@@ -77,8 +77,8 @@ const ESGDDReportsPage = () => {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 /></div>;
   }
 
-  if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'manager')) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus() || (user?.role !== 'admin' && user?.role !== 'manager')) {
+    return <Navigate to="/" />;
   }
 
   // Transform the API data to match the expected report format

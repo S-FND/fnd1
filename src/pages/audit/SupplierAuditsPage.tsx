@@ -6,10 +6,10 @@ import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import AuditDashboard from '@/components/audit/AuditDashboard';
 
 const SupplierAuditsPage = () => {
-  const { isAuthenticated, isCompanyUser } = useAuth();
+  const { isAuthenticated, isCompanyUser,isAuthenticatedStatus } = useAuth();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus()) {
+    return <Navigate to="/" />;
   }
 
   if (!isCompanyUser()) {

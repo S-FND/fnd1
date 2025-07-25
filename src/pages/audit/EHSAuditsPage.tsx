@@ -11,11 +11,11 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Download, Plus, Calendar, Shield, AlertTriangle, CheckCircle } from 'lucide-react';
 
 const EHSAuditsPage = () => {
-  const { isAuthenticated, isCompanyUser } = useAuth();
+  const { isAuthenticated, isCompanyUser,isAuthenticatedStatus } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus()) {
+    return <Navigate to="/" />;
   }
 
   if (!isCompanyUser()) {

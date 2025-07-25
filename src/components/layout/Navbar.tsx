@@ -101,7 +101,7 @@ export const Navbar: React.FC = () => {
             </DropdownMenu>
           ) : (
             <Button variant="default" asChild>
-              <Link to="/login">Log In</Link>
+              <Link to="/">Log In</Link>
             </Button>
           )}
         </div>
