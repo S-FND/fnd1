@@ -46,7 +46,7 @@ const EditableCompanyProfile = () => {
           if (data) {
             const rolePermissions = defaultPermissions[data.role] || {};
             localStorage.setItem("fandoro-user", JSON.stringify(data));
-            localStorage.setItem("fandoro-token", data.token || '');
+            // localStorage.setItem("fandoro-token", data.token || '');
             localStorage.setItem("fandoro-permissions", JSON.stringify(rolePermissions));
             setCurrentUser(data);
           }

@@ -22,15 +22,12 @@ export const useAuthProvider = () => {
     if (storedUser) setUser(JSON.parse(storedUser));
     if (storedPermissions) setPermissions(JSON.parse(storedPermissions));
     if (storedToken) setToken(storedToken);
-    // if(storedUser && storedToken){
-    //   isAuthenticated=true
-    // }
     setIsLoading(false);
   }, []);
   
-  useEffect(()=>{
-    console.log("User is here not null",user)
-  },[user])
+  // useEffect(()=>{
+  //   console.log("User is here not null",user)
+  // },[user])
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -107,6 +104,7 @@ export const useAuthProvider = () => {
   };
 
   const logout = () => {
+    // alert("Log out")
     setUser(null);
     setToken(null);
     setPermissions({});
@@ -136,11 +134,14 @@ export const useAuthProvider = () => {
     return Boolean(permissions[feature].write);
   };
 
-  const isAuthenticatedStatus=()=>{
-    const storedUser = localStorage.getItem("fandoro-user");
+  const isAuthenticatedStatus=(roles:string[])=>{
+    const storedUser:User = JSON.parse(localStorage.getItem("fandoro-user"));
     const storedPermissions = localStorage.getItem("fandoro-permissions");
     const storedToken = localStorage.getItem("fandoro-token");
+    // console.log('storedUser',storedUser)
+    // console.log('storedUser role',storedUser.role)
     if(storedUser && storedToken ){
+      setIsLoading(false)
       return true;
     }
     else{
@@ -150,6 +151,7 @@ export const useAuthProvider = () => {
 
   useEffect(()=>{
     setUser(JSON.parse(localStorage.getItem("fandoro-user")))
+    setIsLoading(false)
   },[])
 
   return {

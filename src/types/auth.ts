@@ -64,5 +64,5 @@ export interface AuthContextType {
   isEnterpriseAdmin: () => boolean;
   hasReadAccess: (feature: string) => boolean;
   hasWriteAccess: (feature: string) => boolean;
-  isAuthenticatedStatus : () => boolean;
+  isAuthenticatedStatus : (roles?:string[]) => boolean;
 }
