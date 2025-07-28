@@ -78,7 +78,7 @@ export const useAuthProvider = () => {
       case "admin":
       case "manager":
         // Redirect admin and manager to settings by default
-        navigate(from || "/settings");
+        navigate(from || "/company");
         break;
       case "unit_admin":
         navigate(from || "/unit-admin/dashboard");
