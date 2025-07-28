@@ -23,21 +23,12 @@ export const LoginForm: React.FC = () => {
     }
     
     try {
-      // Direct API call using httpClient
-      const response = await httpClient.post('http://localhost:3002/auth/login', {
-        email,
-        password
-      });
-      
-      console.log('Login API response:', response);
-      toast.success('API call successful!');
-      
-      // Continue with existing auth flow
+      // For demo purposes, skip API call and use mock authentication
       await login(email, password);
     } catch (err: any) {
-      console.error('Login API error:', err);
+      console.error('Login error:', err);
       setError('Failed to login. Please check your credentials.');
-      toast.error(`API Error: ${err.message || 'Login failed'}`);
+      toast.error('Login failed. Please try again.');
     }
   };
 

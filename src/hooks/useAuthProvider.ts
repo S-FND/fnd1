@@ -43,7 +43,14 @@ export const useAuthProvider = () => {
         companyId: '1',
         locationId: '1',
         unitId: mockRole === 'unit_admin' ? '1' : undefined,
-        units: mockRole === 'unit_admin' ? [{ id: '1', name: 'Unit 1', location: 'Location 1', city: 'City 1' }] : undefined
+        units: mockRole === 'unit_admin' ? [{ id: '1', name: 'Unit 1', location: 'Location 1', city: 'City 1' }] : undefined,
+        supplierInfo: mockRole === 'supplier' ? {
+          id: '1',
+          name: email.includes('eco') ? 'EcoPackaging Solutions Ltd' : 'GreenTech Manufacturing',
+          category: email.includes('eco') ? 'Sustainable Packaging' : 'Green Technology',
+          contactPerson: email.split('@')[0],
+          auditStatus: 'pending'
+        } : undefined
       };
       
       const mockToken = 'mock-token-' + Date.now();
