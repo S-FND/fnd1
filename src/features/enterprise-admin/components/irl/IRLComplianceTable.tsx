@@ -86,7 +86,6 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   };
 
   const entityId = getUserEntityId();
-
   // Get the appropriate API functions based on the title
   const getAPIFunctions = () => {
     switch (title.toLowerCase()) {
@@ -96,14 +95,14 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
         return {
           fetch: fetchManagementData, update: updateManagementData
         };
-      case 'it security':
+      case 'it security & data privacy':
         return {
           fetch: fetchITSecurityData, update: updateITSecurityData
         };
       case 'governance':
       return { fetch: fetchGovernanceData, update: updateGovernanceData
        };
-      case 'additional (facility level)':
+      case 'facility information':
         return {
           fetch: fetchFacilityData, update: updateFacilityData
         };
@@ -167,7 +166,8 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
             return {
               ...item,
               status,
-              notes
+              notes,
+              attachment: []
             };
           });
 
@@ -274,7 +274,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
 
       const { update } = getAPIFunctions();
       await update(formData);
-      loadData();
+      await loadData();
       toast.success(isDraft ? 'Draft saved successfully!' : 'Form submitted successfully!');
     } catch (err) {
       console.error('Submission failed:', err);

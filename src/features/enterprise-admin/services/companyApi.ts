@@ -452,7 +452,7 @@ export const fetchGovernanceData = async (
   try {
     const baseUrl = "/document/governance"; // Base path known by the client
     const url = `${API_URL}${baseUrl}/${entityId}`;
-    console.log('url',url);
+    
     const response = await axios.get(url, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("fandoro-token")}`,
