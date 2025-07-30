@@ -9,7 +9,12 @@ export interface ESGMetric {
   framework: string;
   relatedTopic: string;
   category: 'Environmental' | 'Social' | 'Governance';
-  dataType: 'Numeric' | 'Percentage' | 'Text' | 'Boolean';
+  dataType: 'Numeric' | 'Percentage' | 'Text' | 'Boolean' | 'Dropdown' | 'Radio' | 'Table';
+  inputFormat?: {
+    options?: string[]; // For dropdown and radio
+    tableColumns?: string[]; // For table format
+    tableRows?: number; // For table format
+  };
 }
 
 export interface ESGMetricWithTracking extends ESGMetric {

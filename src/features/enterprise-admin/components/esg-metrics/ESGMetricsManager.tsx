@@ -37,8 +37,13 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
     name: '',
     description: '',
     unit: '',
-    dataType: 'Numeric' as 'Numeric' | 'Percentage' | 'Text' | 'Boolean',
+    dataType: 'Numeric' as 'Numeric' | 'Percentage' | 'Text' | 'Boolean' | 'Dropdown' | 'Radio' | 'Table',
     collectionFrequency: 'Monthly' as 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Bi-Annually' | 'Annually',
+    inputFormat: {
+      options: [] as string[],
+      tableColumns: [] as string[],
+      tableRows: 1,
+    },
   });
 
   // Load saved metrics from localStorage on component mount
@@ -102,6 +107,11 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
       unit: metric.unit,
       dataType: metric.dataType,
       collectionFrequency: metric.collectionFrequency,
+      inputFormat: {
+        options: metric.inputFormat?.options || [],
+        tableColumns: metric.inputFormat?.tableColumns || [],
+        tableRows: metric.inputFormat?.tableRows || 1,
+      },
     });
     setIsEditDialogOpen(true);
   };
@@ -114,6 +124,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
         description: customMetricForm.description,
         unit: customMetricForm.unit,
         dataType: customMetricForm.dataType,
+        inputFormat: customMetricForm.inputFormat,
         collectionFrequency: customMetricForm.collectionFrequency,
       };
 
@@ -154,6 +165,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
         ? 'Environmental' 
         : (selectedTopic.category as 'Social' | 'Governance'),
       dataType: customMetricForm.dataType,
+      inputFormat: customMetricForm.inputFormat,
       collectionFrequency: customMetricForm.collectionFrequency,
       dataPoints: [],
       isSelected: true
@@ -188,6 +200,11 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
       unit: '',
       dataType: 'Numeric',
       collectionFrequency: 'Monthly',
+      inputFormat: {
+        options: [],
+        tableColumns: [],
+        tableRows: 1,
+      },
     });
   };
 

@@ -3,14 +3,22 @@ import React from 'react';
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Plus, X } from 'lucide-react';
 
 interface CustomMetricForm {
   name: string;
   description: string;
   unit: string;
-  dataType: 'Numeric' | 'Percentage' | 'Text' | 'Boolean';
+  dataType: 'Numeric' | 'Percentage' | 'Text' | 'Boolean' | 'Dropdown' | 'Radio' | 'Table';
   collectionFrequency: 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Bi-Annually' | 'Annually';
+  inputFormat: {
+    options: string[];
+    tableColumns: string[];
+    tableRows: number;
+  };
 }
 
 interface MaterialTopic {
@@ -41,8 +49,70 @@ const CustomMetricDialog: React.FC<CustomMetricDialogProps> = ({
   onSave,
   onCancel
 }) => {
+  const addOption = () => {
+    setCustomMetricForm(prev => ({
+      ...prev,
+      inputFormat: {
+        ...prev.inputFormat,
+        options: [...prev.inputFormat.options, '']
+      }
+    }));
+  };
+
+  const removeOption = (index: number) => {
+    setCustomMetricForm(prev => ({
+      ...prev,
+      inputFormat: {
+        ...prev.inputFormat,
+        options: prev.inputFormat.options.filter((_, i) => i !== index)
+      }
+    }));
+  };
+
+  const updateOption = (index: number, value: string) => {
+    setCustomMetricForm(prev => ({
+      ...prev,
+      inputFormat: {
+        ...prev.inputFormat,
+        options: prev.inputFormat.options.map((option, i) => i === index ? value : option)
+      }
+    }));
+  };
+
+  const addTableColumn = () => {
+    setCustomMetricForm(prev => ({
+      ...prev,
+      inputFormat: {
+        ...prev.inputFormat,
+        tableColumns: [...prev.inputFormat.tableColumns, '']
+      }
+    }));
+  };
+
+  const removeTableColumn = (index: number) => {
+    setCustomMetricForm(prev => ({
+      ...prev,
+      inputFormat: {
+        ...prev.inputFormat,
+        tableColumns: prev.inputFormat.tableColumns.filter((_, i) => i !== index)
+      }
+    }));
+  };
+
+  const updateTableColumn = (index: number, value: string) => {
+    setCustomMetricForm(prev => ({
+      ...prev,
+      inputFormat: {
+        ...prev.inputFormat,
+        tableColumns: prev.inputFormat.tableColumns.map((column, i) => i === index ? value : column)
+      }
+    }));
+  };
+
+  const showInputFormatConfig = ['Dropdown', 'Radio', 'Table'].includes(customMetricForm.dataType);
+
   return (
-    <DialogContent>
+    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle>{isEdit ? 'Edit Metric' : 'Add Custom Metric'}</DialogTitle>
         <DialogDescription>
@@ -60,10 +130,11 @@ const CustomMetricDialog: React.FC<CustomMetricDialogProps> = ({
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">Description</label>
-          <Input 
+          <Textarea 
             value={customMetricForm.description} 
             onChange={(e) => setCustomMetricForm(prev => ({...prev, description: e.target.value}))} 
             placeholder="Describe the metric"
+            rows={3}
           />
         </div>
         <div>
@@ -88,6 +159,9 @@ const CustomMetricDialog: React.FC<CustomMetricDialogProps> = ({
               <SelectItem value="Percentage">Percentage</SelectItem>
               <SelectItem value="Text">Text</SelectItem>
               <SelectItem value="Boolean">Yes/No</SelectItem>
+              <SelectItem value="Dropdown">Dropdown</SelectItem>
+              <SelectItem value="Radio">Radio Buttons</SelectItem>
+              <SelectItem value="Table">Table</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -110,6 +184,105 @@ const CustomMetricDialog: React.FC<CustomMetricDialogProps> = ({
             </SelectContent>
           </Select>
         </div>
+        
+        {/* Input Format Configuration */}
+        {showInputFormatConfig && (
+          <div className="space-y-4 p-4 border rounded-lg bg-gray-50">
+            <h4 className="font-medium text-sm">Input Format Configuration</h4>
+            
+            {(customMetricForm.dataType === 'Dropdown' || customMetricForm.dataType === 'Radio') && (
+              <div>
+                <label className="block text-sm font-medium mb-2">Options</label>
+                <div className="space-y-2">
+                  {customMetricForm.inputFormat.options.map((option, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        value={option}
+                        onChange={(e) => updateOption(index, e.target.value)}
+                        placeholder={`Option ${index + 1}`}
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeOption(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addOption}
+                    className="w-full"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Option
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {customMetricForm.dataType === 'Table' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Table Columns</label>
+                  <div className="space-y-2">
+                    {customMetricForm.inputFormat.tableColumns.map((column, index) => (
+                      <div key={index} className="flex gap-2">
+                        <Input
+                          value={column}
+                          onChange={(e) => updateTableColumn(index, e.target.value)}
+                          placeholder={`Column ${index + 1}`}
+                          className="flex-1"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeTableColumn(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addTableColumn}
+                      className="w-full"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Column
+                    </Button>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium mb-1">Number of Rows</label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={customMetricForm.inputFormat.tableRows}
+                    onChange={(e) => setCustomMetricForm(prev => ({
+                      ...prev,
+                      inputFormat: {
+                        ...prev.inputFormat,
+                        tableRows: parseInt(e.target.value) || 1
+                      }
+                    }))}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onCancel}>
             Cancel
