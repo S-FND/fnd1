@@ -7,6 +7,7 @@ import TopicSelector from './TopicSelector';
 import MetricsSelector from './MetricsSelector';
 import SelectedMetricsList from './SelectedMetricsList';
 import CustomMetricDialog from './CustomMetricDialog';
+import ExcelUpload from './ExcelUpload';
 
 interface MaterialTopic {
   id: string;
@@ -212,6 +213,15 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
 
   return (
     <div className="space-y-6">
+      <ExcelUpload 
+        onMetricsImported={(metrics) => {
+          setSavedMetrics(prev => [...prev, ...metrics]);
+          toast.success(`${metrics.length} metrics imported and saved`);
+        }}
+        onDataImported={() => {}} // Data import handled in MetricsDataEntry
+        materialTopics={materialTopics}
+      />
+      
       <TopicSelector
         materialTopics={materialTopics}
         selectedTopicId={selectedTopicId}
