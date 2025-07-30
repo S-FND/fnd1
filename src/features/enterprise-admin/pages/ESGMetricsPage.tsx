@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { defaultMaterialTopics } from '../data/materiality';
 import ESGMetricsManager from '../components/esg-metrics/ESGMetricsManager';
 import MetricsDataEntry from '../components/esg-metrics/MetricsDataEntry';
+import ESGDashboard from '../components/esg-metrics/ESGDashboard';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 
@@ -22,7 +23,7 @@ interface MaterialTopic {
 
 const ESGMetricsPage: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('configuration');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const [finalizedTopics, setFinalizedTopics] = useState<MaterialTopic[]>([]);
 
   // Load finalized topics from materiality assessment
@@ -109,9 +110,14 @@ const ESGMetricsPage: React.FC = () => {
       
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
           <TabsTrigger value="configuration">Metrics Configuration</TabsTrigger>
           <TabsTrigger value="data-entry">Data Entry</TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="dashboard" className="space-y-6 mt-4">
+          <ESGDashboard materialTopics={finalizedTopics} />
+        </TabsContent>
         
         <TabsContent value="configuration" className="space-y-6 mt-4">
           <ESGMetricsManager materialTopics={finalizedTopics} />
