@@ -17,6 +17,8 @@ import {
 import IndustrySelection from '../components/materiality/IndustrySelection';
 import MaterialityTabs from '../components/materiality/MaterialityTabs';
 import StakeholderEngagement from '../components/materiality/StakeholderEngagement';
+import FinalizationMethodSelector from '../components/materiality/FinalizationMethodSelector';
+import InternalFinalization from '../components/materiality/InternalFinalization';
 
 // Define a union type for allowed frameworks
 type Framework = 'SASB' | 'GRI' | 'Custom';
@@ -38,6 +40,11 @@ const MaterialityPage = () => {
   const [materialTopics, setMaterialTopics] = useState<MaterialTopic[]>([]);
   const [selectedTopicsForEngagement, setSelectedTopicsForEngagement] = useState<MaterialTopic[]>([]);
   const [activeFrameworks, setActiveFrameworks] = useState<Framework[]>(['SASB', 'GRI', 'Custom']);
+  
+  // Finalization flow state
+  const [finalizationStep, setFinalizationStep] = useState<'method' | 'internal' | 'stakeholder' | 'completed'>('method');
+  const [finalizationMethod, setFinalizationMethod] = useState<'internal' | 'stakeholder' | null>(null);
+  const [finalizedTopics, setFinalizedTopics] = useState<MaterialTopic[]>([]);
   
   // Update tempSelectedIndustries when selectedIndustries changes
   useEffect(() => {
@@ -217,7 +224,40 @@ const MaterialityPage = () => {
     });
     
     setMaterialTopics(updatedMaterialTopics);
-    toast.info('Updated materiality assessment with stakeholder input');
+    setFinalizedTopics(updatedTopics);
+    setFinalizationStep('completed');
+    
+    // Save finalized topics to localStorage for ESG Metrics page
+    localStorage.setItem('finalizedMaterialTopics', JSON.stringify(updatedTopics));
+    
+    toast.info('Material topics finalized with stakeholder input');
+  };
+
+  // Handle finalization method selection
+  const handleFinalizationMethodSelect = (method: 'internal' | 'stakeholder') => {
+    setFinalizationMethod(method);
+    if (method === 'internal') {
+      setFinalizationStep('internal');
+    } else {
+      setFinalizationStep('stakeholder');
+    }
+  };
+
+  // Handle internal finalization
+  const handleInternalFinalization = (selectedTopics: MaterialTopic[]) => {
+    setFinalizedTopics(selectedTopics);
+    setFinalizationStep('completed');
+    
+    // Save finalized topics to localStorage for ESG Metrics page
+    localStorage.setItem('finalizedMaterialTopics', JSON.stringify(selectedTopics));
+    
+    toast.success('Material topics finalized internally');
+  };
+
+  // Handle back to method selection
+  const handleBackToMethodSelection = () => {
+    setFinalizationStep('method');
+    setFinalizationMethod(null);
   };
 
   return (
@@ -254,11 +294,46 @@ const MaterialityPage = () => {
           onUpdateSelectedTopics={handleUpdateSelectedTopics}
         />
         
-        <StakeholderEngagement
-          selectedIndustries={selectedIndustries}
-          materialTopics={selectedTopicsForEngagement.length > 0 ? selectedTopicsForEngagement : materialTopics}
-          onUpdatePrioritization={handleUpdatePrioritization}
-        />
+        {/* Finalization Flow */}
+        {finalizationStep === 'method' && (
+          <FinalizationMethodSelector 
+            onSelectMethod={handleFinalizationMethodSelect}
+          />
+        )}
+        
+        {finalizationStep === 'internal' && (
+          <InternalFinalization
+            materialTopics={selectedTopicsForEngagement.length > 0 ? selectedTopicsForEngagement : materialTopics}
+            onFinalize={handleInternalFinalization}
+            onBack={handleBackToMethodSelection}
+          />
+        )}
+        
+        {finalizationStep === 'stakeholder' && (
+          <StakeholderEngagement
+            selectedIndustries={selectedIndustries}
+            materialTopics={selectedTopicsForEngagement.length > 0 ? selectedTopicsForEngagement : materialTopics}
+            onUpdatePrioritization={handleUpdatePrioritization}
+          />
+        )}
+        
+        {finalizationStep === 'completed' && finalizedTopics.length > 0 && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-green-800 mb-2">Material Topics Finalized!</h3>
+            <p className="text-green-700 mb-4">
+              {finalizedTopics.length} material topics have been finalized using the {finalizationMethod} method. 
+              You can now configure ESG metrics for these topics in the ESG Management section.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setFinalizationStep('method')}
+                className="px-4 py-2 text-sm bg-white border border-green-300 text-green-700 rounded-md hover:bg-green-50"
+              >
+                Start New Assessment
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </UnifiedSidebarLayout>
   );

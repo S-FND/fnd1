@@ -2,9 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { defaultMaterialTopics } from '../data/materiality';
 import ESGMetricsManager from '../components/esg-metrics/ESGMetricsManager';
 import MetricsDataEntry from '../components/esg-metrics/MetricsDataEntry';
+import { useNavigate } from 'react-router-dom';
+import { ArrowRight } from 'lucide-react';
 
 interface MaterialTopic {
   id: string;
@@ -18,17 +21,29 @@ interface MaterialTopic {
 }
 
 const ESGMetricsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('configuration');
   const [finalizedTopics, setFinalizedTopics] = useState<MaterialTopic[]>([]);
 
-  // In a real application, you would fetch finalized topics from materiality assessment
+  // Load finalized topics from materiality assessment
   useEffect(() => {
-    // Simulate loading finalized material topics with high priority
-    const highPriorityTopics = defaultMaterialTopics.filter(
-      topic => topic.businessImpact >= 7.0 && topic.sustainabilityImpact >= 7.0
-    );
-    
-    setFinalizedTopics(highPriorityTopics);
+    const savedTopics = localStorage.getItem('finalizedMaterialTopics');
+    if (savedTopics) {
+      try {
+        const topics = JSON.parse(savedTopics);
+        setFinalizedTopics(topics);
+      } catch (error) {
+        console.error('Error loading finalized topics:', error);
+        // Fallback to high priority topics from default data
+        const highPriorityTopics = defaultMaterialTopics.filter(
+          topic => topic.businessImpact >= 7.0 && topic.sustainabilityImpact >= 7.0
+        );
+        setFinalizedTopics(highPriorityTopics);
+      }
+    } else {
+      // No finalized topics found, show message to complete materiality assessment
+      setFinalizedTopics([]);
+    }
   }, []);
 
   return (
@@ -74,10 +89,19 @@ const ESGMetricsPage: React.FC = () => {
           </div>
           
           {finalizedTopics.length === 0 && (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">
-                No finalized material topics found. Please complete your materiality assessment first.
-              </p>
+            <div className="text-center py-12">
+              <div className="max-w-md mx-auto">
+                <h3 className="text-lg font-medium text-muted-foreground mb-2">
+                  No Material Topics Finalized
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  Complete your materiality assessment to identify and finalize material topics before configuring ESG metrics.
+                </p>
+                <Button onClick={() => navigate('/materiality')}>
+                  Go to Materiality Assessment
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
