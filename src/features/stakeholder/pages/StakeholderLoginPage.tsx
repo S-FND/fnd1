@@ -8,39 +8,49 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { MaterialTopic, sasbTopics, griTopics } from '../../enterprise-admin/data/frameworkTopics';
+import { StakeholderPrioritization, Stakeholder, initialStakeholders } from '../../enterprise-admin/data/stakeholderPrioritization';
 import StakeholderMaterialityDashboard from './StakeholderMaterialityDashboard';
 import StakeholderResultsView from './StakeholderResultsView';
 
-// Mock stakeholder session data
+// Helper functions for localStorage
+const getStoredStakeholders = (): Stakeholder[] => {
+  const stored = localStorage.getItem('stakeholders');
+  return stored ? JSON.parse(stored) : initialStakeholders;
+};
+
+const saveStakeholders = (stakeholders: Stakeholder[]) => {
+  localStorage.setItem('stakeholders', JSON.stringify(stakeholders));
+};
+
+const getStakeholderByEmail = (email: string): Stakeholder | null => {
+  const stakeholders = getStoredStakeholders();
+  return stakeholders.find(s => s.email === email) || null;
+};
+
+// Mock stakeholder session data - maps emails to their assigned topics
 const mockStakeholderSessions = {
   'john@company.com': {
-    stakeholderName: 'John Smith',
     groupName: 'Executive Assessment',
     topics: [
       ...sasbTopics.slice(0, 4),
       ...griTopics.slice(0, 3)
     ] as MaterialTopic[],
-    hasSubmitted: false,
     canViewResults: true
   },
   'sarah@company.com': {
-    stakeholderName: 'Sarah Johnson',
     groupName: 'Management Review',
     topics: [
       ...sasbTopics.slice(0, 3),
       ...griTopics.slice(0, 4)
     ] as MaterialTopic[],
-    hasSubmitted: true,
     canViewResults: true
   },
   'demo@stakeholder.com': {
-    stakeholderName: 'Demo Stakeholder',
     groupName: 'Demo Assessment',
     topics: [
       ...sasbTopics.slice(0, 5),
       ...griTopics.slice(0, 2)
     ] as MaterialTopic[],
-    hasSubmitted: false,
     canViewResults: false
   }
 };
@@ -64,14 +74,26 @@ const StakeholderLoginPage: React.FC = () => {
     setIsLoading(true);
     
     try {
-      // Simulate authentication
-      const sessionData = mockStakeholderSessions[email as keyof typeof mockStakeholderSessions];
+      // Get stakeholder data from stored stakeholders
+      const stakeholder = getStakeholderByEmail(email);
+      const sessionConfig = mockStakeholderSessions[email as keyof typeof mockStakeholderSessions];
       
-      if (sessionData && password === 'stakeholder123') {
-        setStakeholderData(sessionData);
+      if (stakeholder && sessionConfig && password === 'stakeholder123') {
+        const hasSubmitted = stakeholder.prioritizations.length > 0;
+        
+        const stakeholderData = {
+          stakeholder,
+          stakeholderName: stakeholder.name,
+          groupName: sessionConfig.groupName,
+          topics: sessionConfig.topics,
+          hasSubmitted,
+          canViewResults: sessionConfig.canViewResults
+        };
+        
+        setStakeholderData(stakeholderData);
         setIsAuthenticated(true);
-        setCurrentView(sessionData.hasSubmitted ? 'results' : 'assessment');
-        toast.success(`Welcome, ${sessionData.stakeholderName}!`);
+        setCurrentView(hasSubmitted ? 'results' : 'assessment');
+        toast.success(`Welcome, ${stakeholder.name}!`);
       } else {
         toast.error('Invalid credentials. Please check your email and password.');
       }
@@ -83,17 +105,66 @@ const StakeholderLoginPage: React.FC = () => {
   };
 
   const handleSavePrioritizations = (prioritizations: any[]) => {
-    console.log('Saving prioritizations:', prioritizations);
+    if (!stakeholderData?.stakeholder) return;
+    
+    // Convert prioritizations to the proper format
+    const stakeholderPrioritizations: StakeholderPrioritization[] = prioritizations.map(p => ({
+      topicId: p.topicId,
+      businessImpact: p.businessImpact,
+      sustainabilityImpact: p.sustainabilityImpact,
+      comments: p.comments || '',
+      dateSubmitted: new Date().toISOString()
+    }));
+
+    // Update the stakeholder data
+    const stakeholders = getStoredStakeholders();
+    const updatedStakeholders = stakeholders.map(s => 
+      s.id === stakeholderData.stakeholder.id 
+        ? { ...s, prioritizations: stakeholderPrioritizations }
+        : s
+    );
+    
+    saveStakeholders(updatedStakeholders);
+    
+    // Update local state to reflect the save (but not submitted yet)
+    setStakeholderData({
+      ...stakeholderData,
+      stakeholder: { ...stakeholderData.stakeholder, prioritizations: stakeholderPrioritizations }
+    });
+    
     toast.success('Your prioritizations have been saved as draft!');
   };
 
   const handleSubmitPrioritizations = (prioritizations: any[]) => {
-    console.log('Submitting prioritizations:', prioritizations);
+    if (!stakeholderData?.stakeholder) return;
+    
+    // Convert prioritizations to the proper format  
+    const stakeholderPrioritizations: StakeholderPrioritization[] = prioritizations.map(p => ({
+      topicId: p.topicId,
+      businessImpact: p.businessImpact,
+      sustainabilityImpact: p.sustainabilityImpact,
+      comments: p.comments || '',
+      dateSubmitted: new Date().toISOString()
+    }));
+
+    // Update the stakeholder data in localStorage
+    const stakeholders = getStoredStakeholders();
+    const updatedStakeholders = stakeholders.map(s => 
+      s.id === stakeholderData.stakeholder.id 
+        ? { ...s, prioritizations: stakeholderPrioritizations }
+        : s
+    );
+    
+    saveStakeholders(updatedStakeholders);
+    
+    // Update local state to reflect submission
     setStakeholderData({
       ...stakeholderData,
+      stakeholder: { ...stakeholderData.stakeholder, prioritizations: stakeholderPrioritizations },
       hasSubmitted: true,
       canViewResults: true
     });
+    
     setCurrentView('results');
     toast.success('Your prioritizations have been submitted successfully!');
   };
@@ -230,6 +301,7 @@ const StakeholderLoginPage: React.FC = () => {
             topics={stakeholderData.topics}
             onSavePrioritizations={handleSavePrioritizations}
             onSubmitPrioritizations={handleSubmitPrioritizations}
+            existingPrioritizations={stakeholderData.stakeholder?.prioritizations || []}
             hasSubmitted={stakeholderData.hasSubmitted}
           />
         ) : (
