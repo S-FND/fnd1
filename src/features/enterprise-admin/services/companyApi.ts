@@ -483,3 +483,38 @@ export const updateGovernanceData = async (formData: FormData) => {
     throw error;
   }
 };
+
+// Add this to your companyApi.ts file
+export const deleteFile = async (payload: { filesToDelete: string[] }, type: string) => {
+  try {
+    const endpointMap = {
+      bo: "/document/bo",
+      lc: "/document/lc",
+      ms: "/document/ms",
+      it: "/document/it",
+      governance: "/document/governance",
+      ho_photograph: "/document/ho_photograph",
+      photographs_products: "/document/product_photograph",
+      facility: "/company/facilities"
+    };
+
+    const endpoint = endpointMap[type];
+    if (!endpoint) {
+      throw new Error("Invalid document type provided");
+    }
+
+    const token = localStorage.getItem("fandoro-token");
+    const response = await axios.delete(`${API_URL}${endpoint}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      data: payload
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting file:", error);
+    throw error;
+  }
+};
