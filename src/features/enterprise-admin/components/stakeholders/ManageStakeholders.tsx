@@ -21,10 +21,11 @@ import { useForm } from 'react-hook-form';
 import { useApiGet, useApiPost } from '@/hooks/useApi';
 import { API_ENDPOINTS } from '@/lib/apiEndpoints';
 import { toast } from 'sonner';
+import { httpClient } from '@/lib/httpClient';
 
 const ManageStakeholders: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [stakeholders, setStakeholders] = useState<Stakeholder[]>(sampleStakeholders as Stakeholder[]);
+  const [stakeholders, setStakeholders] = useState<Stakeholder[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // API hooks for demonstration
@@ -38,18 +39,14 @@ const ManageStakeholders: React.FC = () => {
 
   const handleFetchStakeholders = async () => {
     try {
-      await fetchStakeholders(API_ENDPOINTS.STAKEHOLDERS.LIST, {
-        onSuccess: (data) => {
-          console.log('Stakeholders fetched successfully:', data);
-          toast.success('Stakeholders data refreshed');
-          // In a real scenario, you would set the fetched data
-          // setStakeholders(data);
-        },
-        onError: (error) => {
-          console.log('Using local data due to API error:', error.message);
-          toast.info('Using local stakeholder data');
+      let stakeHolderList=await httpClient.get(API_ENDPOINTS.STAKEHOLDERS.LIST)
+      console.log('stakeHolderList',stakeHolderList)
+      if(stakeHolderList.status == 200){
+        if (stakeHolderList?.data && Array.isArray(stakeHolderList.data)) {
+          const data: Stakeholder[] = stakeHolderList.data;
+          setStakeholders(data);
         }
-      });
+      }
     } catch (error) {
       // Error already handled by interceptors, using local data
       console.log('Fallback to local data');
@@ -84,48 +81,23 @@ const ManageStakeholders: React.FC = () => {
 
   const onSubmit = async (data: StakeholderFormData) => {
     try {
-      await createStakeholder(API_ENDPOINTS.STAKEHOLDERS.CREATE, data, {
-        onSuccess: (createdStakeholder) => {
-          console.log('Stakeholder created:', createdStakeholder);
-          toast.success('Stakeholder created successfully');
-          
-          // Add to local state (in real app, this would be the API response)
-          const newStakeholder: Stakeholder = {
-            id: `${stakeholders.length + 1}`,
-            ...data,
-            lastContact: new Date()
-          };
-          setStakeholders([...stakeholders, newStakeholder]);
-          
-          setIsDialogOpen(false);
-          form.reset();
-        },
-        onError: (error) => {
-          console.error('Failed to create stakeholder:', error);
-          // Still add locally for demo purposes
-          const newStakeholder: Stakeholder = {
-            id: `${stakeholders.length + 1}`,
-            ...data,
-            lastContact: new Date()
-          };
-          setStakeholders([...stakeholders, newStakeholder]);
-          setIsDialogOpen(false);
-          form.reset();
-          toast.info('Added stakeholder locally (API not available)');
-        }
-      });
+      console.log('data',data)
+      let createStakeHolder=await httpClient.post(API_ENDPOINTS.STAKEHOLDERS.CREATE,data)
+      console.log('createStakeHolder',createStakeHolder)
     } catch (error) {
       // Fallback to local addition
-      const newStakeholder: Stakeholder = {
-        id: `${stakeholders.length + 1}`,
-        ...data,
-        lastContact: new Date()
-      };
-      setStakeholders([...stakeholders, newStakeholder]);
-      setIsDialogOpen(false);
-      form.reset();
+      // const newStakeholder: Stakeholder = {
+      //   id: `${stakeholders.length + 1}`,
+      //   ...data,
+      //   lastContact: new Date()
+      // };
+      // setStakeholders([...stakeholders, newStakeholder]);
+      // setIsDialogOpen(false);
+      // form.reset();
     }
   };
+
+  
 
   return (
     <div className="space-y-6">
@@ -201,7 +173,7 @@ const ManageStakeholders: React.FC = () => {
                             </FormControl>
                             <SelectContent>
                               {defaultStakeholderSubcategories.map((category) => (
-                                <SelectItem key={category.id} value={category.id}>
+                                <SelectItem key={category.id} value={`${category.id}|${category.category}`}>
                                   {category.name} ({category.category === 'internal' ? 'Internal' : 'External'})
                                 </SelectItem>
                               ))}
@@ -396,7 +368,7 @@ const ManageStakeholders: React.FC = () => {
                 ) : (
                   filteredStakeholders.map((stakeholder) => {
                     const subcategory = defaultStakeholderSubcategories.find(
-                      sc => sc.id === stakeholder.subcategoryId
+                      sc => sc.id === stakeholder.subcategoryId.split('|')[0]
                     );
                     return (
                       <TableRow key={stakeholder.id}>

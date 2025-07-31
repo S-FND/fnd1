@@ -55,10 +55,17 @@ import SupplierAuditsPage from './pages/audit/SupplierAuditsPage';
 import EHSAuditsPage from './pages/audit/EHSAuditsPage';
 import InternalAuditsPage from './pages/audit/InternalAuditsPage';
 import LMSPage from './pages/LMS';
+import { Toaster } from 'sonner';
 
 function App() {
   return (
     <FeaturesProvider>
+      <Toaster 
+        position="bottom-right" 
+        richColors 
+        duration={3000} 
+        closeButton // ✅ Enables the X/close icon
+      />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Index />} />

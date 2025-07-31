@@ -27,44 +27,38 @@ export const useAuthProvider = () => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Bypass actual authentication call and create a mock user based on email
-      // This is temporary and will be replaced with real authentication later
-      const mockRole = email.includes('admin') ? 'admin' : 
-                      email.includes('supplier') ? 'supplier' :
-                      email.includes('vendor') ? 'vendor' :
-                      email.includes('unit') ? 'unit_admin' :
-                      email.includes('manager') ? 'manager' : 'employee';
+      const res = await fetch(import.meta.env.VITE_API_URL+"/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
       
-      const mockUser: User = {
-        id: '1',
-        name: email.split('@')[0],
-        email: email,
-        role: mockRole as any,
-        companyId: '1',
-        locationId: '1',
-        unitId: mockRole === 'unit_admin' ? '1' : undefined,
-        units: mockRole === 'unit_admin' ? [{ id: '1', name: 'Unit 1', location: 'Location 1', city: 'City 1' }] : undefined,
-        supplierInfo: mockRole === 'supplier' ? {
-          id: '1',
-          name: email.includes('eco') ? 'EcoPackaging Solutions Ltd' : 'GreenTech Manufacturing',
-          category: email.includes('eco') ? 'Sustainable Packaging' : 'Green Technology',
-          contactPerson: email.split('@')[0],
-          auditStatus: 'pending'
-        } : undefined
-      };
-      
-      const mockToken = 'mock-token-' + Date.now();
-      const rolePermissions = defaultPermissions[mockRole] || {};
-      
-      setUser(mockUser);
-      setToken(mockToken);
+      const data = await res.json();
+      if (!res.ok || !data.status || !data.user) {
+        toast.error(data.message || "Invalid credentials");
+        setIsLoading(false);
+        return;
+      }
+      const { user, token } = data;
+
+      // 👇 Assign _id to companyId if role is company-type and companyId is missing
+      if (
+        (user.role === 'admin') &&
+        !user.companyId
+      ) {
+        user.companyId = user._id;
+      }
+
+      const rolePermissions = defaultPermissions[user.role] || {};
+      setUser(user);
+      setToken(token);
       setPermissions(rolePermissions);
-      localStorage.setItem("fandoro-user", JSON.stringify(mockUser));
-      localStorage.setItem("fandoro-token", mockToken);
+      localStorage.setItem("fandoro-user", JSON.stringify(user));
+      localStorage.setItem("fandoro-token", token);
       localStorage.setItem("fandoro-permissions", JSON.stringify(rolePermissions));
       
       toast.success("Login successful!");
-      redirectBasedOnRole(mockRole);
+      redirectBasedOnRole(user.role);
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Login failed. Please try again.");
@@ -78,10 +72,13 @@ export const useAuthProvider = () => {
     const from = location.state?.from;
     
     switch(role) {
+      case "fandoro_admin":
+        navigate("/fandoro-admin/dashboard");
+        break;
       case "admin":
       case "manager":
         // Redirect admin and manager to settings by default
-        navigate(from || "/settings");
+        navigate(from || "/company");
         break;
       case "unit_admin":
         navigate(from || "/unit-admin/dashboard");
@@ -104,6 +101,7 @@ export const useAuthProvider = () => {
     setUser(null);
     setToken(null);
     setPermissions({});
+    localStorage.clear();
     localStorage.removeItem("fandoro-user");
     localStorage.removeItem("fandoro-token");
     localStorage.removeItem("fandoro-permissions");
@@ -116,7 +114,7 @@ export const useAuthProvider = () => {
   const isUnitAdmin = () => user?.role === "unit_admin";
   const isSupplier = () => user?.role === "supplier";
   const isVendor = () => user?.role === "vendor";
-  const isFandoroAdmin = () => false; // Always return false since this role is removed
+  const isFandoroAdmin = () => user?.role === "fandoro_admin";
   const isEnterpriseAdmin = () => user?.role === "admin";
 
   const hasReadAccess = (feature: string) => {
