@@ -39,7 +39,7 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
             <SelectValue placeholder="Select a material topic or skip to manage custom metrics" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">
+            <SelectItem value="all-topics">
               <div className="font-medium">Manage Custom Metrics (All Topics)</div>
             </SelectItem>
             {materialTopics.map(topic => (
