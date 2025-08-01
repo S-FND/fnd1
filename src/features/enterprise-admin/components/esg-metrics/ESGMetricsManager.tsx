@@ -1,6 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Dialog } from '@/components/ui/dialog';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import { getMetricsByTopic, getDefaultMetricTracking, ESGMetricWithTracking } from '../../data/esgMetricsData';
 import { toast } from 'sonner';
 import TopicSelector from './TopicSelector';
@@ -32,6 +35,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
   const [editingMetric, setEditingMetric] = useState<ESGMetricWithTracking | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [customMetrics, setCustomMetrics] = useState<ESGMetricWithTracking[]>([]);
   
   // Custom metric form state
   const [customMetricForm, setCustomMetricForm] = useState({
@@ -47,7 +51,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
     },
   });
 
-  // Load saved metrics from localStorage on component mount
+  // Load saved metrics and custom metrics from localStorage on component mount
   useEffect(() => {
     const saved = localStorage.getItem('savedESGMetrics');
     if (saved) {
@@ -56,6 +60,16 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
         setSavedMetrics(parsedMetrics);
       } catch (error) {
         console.error('Error loading saved metrics:', error);
+      }
+    }
+
+    const savedCustomMetrics = localStorage.getItem('customESGMetrics');
+    if (savedCustomMetrics) {
+      try {
+        const customData = JSON.parse(savedCustomMetrics);
+        setCustomMetrics(customData);
+      } catch (error) {
+        console.error('Error loading custom metrics:', error);
       }
     }
   }, []);
@@ -68,7 +82,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
   // Load metrics when topic changes
   useEffect(() => {
     if (selectedTopicId) {
-      const metrics = getMetricsByTopic(selectedTopicId)
+      const topicMetrics = getMetricsByTopic(selectedTopicId)
         .map(metric => {
           const defaultTracking = getDefaultMetricTracking(metric);
           return {
@@ -76,11 +90,13 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
             collectionFrequency: 'Monthly' as const // Set a default frequency since 'Never' is no longer valid
           };
         });
-      setAvailableMetrics(metrics);
+      // Combine topic-specific metrics with custom metrics
+      setAvailableMetrics([...topicMetrics, ...customMetrics]);
     } else {
-      setAvailableMetrics([]);
+      // If no topic selected, show all custom metrics as available
+      setAvailableMetrics(customMetrics);
     }
-  }, [selectedTopicId]);
+  }, [selectedTopicId, customMetrics]);
 
   const handleSelectTopic = (topicId: string) => {
     setSelectedTopicId(topicId);
@@ -146,13 +162,21 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
   };
 
   const handleAddCustomMetric = () => {
-    if (!customMetricForm.name.trim() || !selectedTopicId) {
-      toast.error('Please enter a metric name and select a topic');
+    if (!customMetricForm.name.trim()) {
+      toast.error('Please enter a metric name');
       return;
     }
 
-    const selectedTopic = materialTopics.find(topic => topic.id === selectedTopicId);
-    if (!selectedTopic) return;
+    // Determine category based on selected topic or default
+    let category: 'Environmental' | 'Social' | 'Governance' = 'Environmental';
+    if (selectedTopicId) {
+      const selectedTopic = materialTopics.find(topic => topic.id === selectedTopicId);
+      if (selectedTopic) {
+        category = selectedTopic.category === 'Environment' 
+          ? 'Environmental' 
+          : (selectedTopic.category as 'Social' | 'Governance');
+      }
+    }
 
     const customMetric: ESGMetricWithTracking = {
       id: `custom_${Date.now()}`,
@@ -161,10 +185,8 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
       unit: customMetricForm.unit || 'N/A',
       source: 'Custom',
       framework: 'Custom',
-      relatedTopic: selectedTopicId,
-      category: selectedTopic.category === 'Environment' 
-        ? 'Environmental' 
-        : (selectedTopic.category as 'Social' | 'Governance'),
+      relatedTopic: selectedTopicId || 'all',
+      category,
       dataType: customMetricForm.dataType,
       inputFormat: customMetricForm.inputFormat,
       collectionFrequency: customMetricForm.collectionFrequency,
@@ -172,10 +194,16 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
       isSelected: true
     };
 
+    // Add to custom metrics list and save to localStorage
+    const updatedCustomMetrics = [...customMetrics, customMetric];
+    setCustomMetrics(updatedCustomMetrics);
+    localStorage.setItem('customESGMetrics', JSON.stringify(updatedCustomMetrics));
+
+    // Add to selected metrics
     setSelectedMetrics([...selectedMetrics, customMetric]);
     setIsAddDialogOpen(false);
     resetCustomMetricForm();
-    toast.success('Custom metric added successfully');
+    toast.success('Custom metric added and available for all topics');
   };
 
   const handleSaveConfiguration = () => {
@@ -228,33 +256,61 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
         onSelectTopic={handleSelectTopic}
       />
 
-      <MetricsSelector
-        selectedTopic={selectedTopic}
-        availableMetrics={availableMetrics}
-        selectedMetrics={selectedMetrics}
-        onAddMetric={handleAddMetric}
-        onOpenCustomDialog={() => setIsAddDialogOpen(true)}
-        isAddDialogOpen={isAddDialogOpen}
-        setIsAddDialogOpen={setIsAddDialogOpen}
-      >
-        <CustomMetricDialog
-          isEdit={false}
-          selectedTopic={selectedTopic}
-          customMetricForm={customMetricForm}
-          setCustomMetricForm={setCustomMetricForm}
-          onSave={handleAddCustomMetric}
-          onCancel={() => setIsAddDialogOpen(false)}
-        />
-      </MetricsSelector>
+      {/* Always show metrics section - either topic-specific or all custom metrics */}
+      <div className="space-y-6">
+        {!selectedTopicId && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Custom Metrics Management</CardTitle>
+              <CardDescription>
+                Add and manage custom ESG metrics that can be used across all material topics
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-muted-foreground">
+                  {customMetrics.length} custom metrics available
+                </p>
+                <Button 
+                  onClick={() => setIsAddDialogOpen(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Custom Metric
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-      <SelectedMetricsList
-        selectedMetrics={selectedMetrics}
-        selectedTopic={selectedTopic}
-        onEditMetric={handleEditMetric}
-        onRemoveMetric={handleRemoveMetric}
-        onSaveConfiguration={handleSaveConfiguration}
-        savedMetrics={savedMetrics}
-      />
+        <MetricsSelector
+          selectedTopic={selectedTopic}
+          availableMetrics={availableMetrics}
+          selectedMetrics={selectedMetrics}
+          onAddMetric={handleAddMetric}
+          onOpenCustomDialog={() => setIsAddDialogOpen(true)}
+          isAddDialogOpen={isAddDialogOpen}
+          setIsAddDialogOpen={setIsAddDialogOpen}
+        >
+          <CustomMetricDialog
+            isEdit={false}
+            selectedTopic={selectedTopic}
+            customMetricForm={customMetricForm}
+            setCustomMetricForm={setCustomMetricForm}
+            onSave={handleAddCustomMetric}
+            onCancel={() => setIsAddDialogOpen(false)}
+          />
+        </MetricsSelector>
+
+        <SelectedMetricsList
+          selectedMetrics={selectedMetrics}
+          selectedTopic={selectedTopic}
+          onEditMetric={handleEditMetric}
+          onRemoveMetric={handleRemoveMetric}
+          onSaveConfiguration={handleSaveConfiguration}
+          savedMetrics={savedMetrics}
+        />
+      </div>
 
       {/* Edit Metric Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
