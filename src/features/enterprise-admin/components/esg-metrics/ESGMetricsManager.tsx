@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { getMetricsByTopic, getDefaultMetricTracking, ESGMetricWithTracking } from '../../data/esgMetricsData';
+import { getIRISMetricsByTopic, isStandardMaterialTopic, IRISMetric } from '../../data/irisMetricsDatabase';
 import { toast } from 'sonner';
 import TopicSelector from './TopicSelector';
 import MetricsSelector from './MetricsSelector';
@@ -81,19 +82,53 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
 
   // Load metrics when topic changes
   useEffect(() => {
-    if (selectedTopicId) {
-      const topicMetrics = getMetricsByTopic(selectedTopicId)
-        .map(metric => {
-          const defaultTracking = getDefaultMetricTracking(metric);
-          return {
-            ...defaultTracking,
-            collectionFrequency: 'Monthly' as const // Set a default frequency since 'Never' is no longer valid
-          };
-        });
-      // Combine topic-specific metrics with custom metrics
-      setAvailableMetrics([...topicMetrics, ...customMetrics]);
+    if (selectedTopicId && selectedTopicId !== 'all-topics') {
+      // Check if this is a standard material topic with IRIS+ metrics
+      if (isStandardMaterialTopic(selectedTopicId)) {
+        // Get IRIS+ metrics for this topic
+        const irisMetrics = getIRISMetricsByTopic(selectedTopicId);
+        const convertedIrisMetrics: ESGMetricWithTracking[] = irisMetrics.map(metric => ({
+          id: metric.id,
+          name: metric.name,
+          description: metric.description,
+          unit: metric.unit,
+          source: 'IRIS+',
+          framework: metric.framework,
+          relatedTopic: selectedTopicId,
+          category: metric.category,
+          dataType: metric.dataType,
+          inputFormat: {},
+          collectionFrequency: metric.collectionFrequency,
+          dataPoints: [],
+          isSelected: false
+        }));
+        
+        // Also get any existing topic-specific metrics
+        const topicMetrics = getMetricsByTopic(selectedTopicId)
+          .map(metric => {
+            const defaultTracking = getDefaultMetricTracking(metric);
+            return {
+              ...defaultTracking,
+              collectionFrequency: 'Monthly' as const
+            };
+          });
+        
+        // Combine IRIS+ metrics, topic-specific metrics, and custom metrics
+        setAvailableMetrics([...convertedIrisMetrics, ...topicMetrics, ...customMetrics]);
+      } else {
+        // For custom topics or topics without IRIS+ metrics, use existing logic
+        const topicMetrics = getMetricsByTopic(selectedTopicId)
+          .map(metric => {
+            const defaultTracking = getDefaultMetricTracking(metric);
+            return {
+              ...defaultTracking,
+              collectionFrequency: 'Monthly' as const
+            };
+          });
+        setAvailableMetrics([...topicMetrics, ...customMetrics]);
+      }
     } else {
-      // If no topic selected, show all custom metrics as available
+      // If no topic selected or "all-topics" selected, show all custom metrics as available
       setAvailableMetrics(customMetrics);
     }
   }, [selectedTopicId, customMetrics]);

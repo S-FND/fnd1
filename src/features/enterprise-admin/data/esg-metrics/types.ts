@@ -5,7 +5,7 @@ export interface ESGMetric {
   name: string;
   description: string;
   unit: string;
-  source: 'GIIN' | 'GRI' | 'Custom';
+  source: 'GIIN' | 'GRI' | 'Custom' | 'IRIS+';
   framework: string;
   relatedTopic: string;
   category: 'Environmental' | 'Social' | 'Governance';
