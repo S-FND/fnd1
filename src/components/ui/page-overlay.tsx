@@ -102,7 +102,7 @@ export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
       {children}
       {shouldShowOverlay && (
         <div className={cn(
-          "absolute inset-0 z-50",
+          "absolute inset-0 z-30 top-16",
           "bg-background/80 backdrop-blur-sm",
           "flex items-center justify-center",
           "border-2 border-dashed border-muted-foreground/50"

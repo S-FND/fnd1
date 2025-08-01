@@ -37,9 +37,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword }) => {
       // Continue with existing auth flow
       await login(email, password);
     } catch (err: any) {
-      console.error('Login API error:', err);
+      console.error('Login error:', err);
       setError('Failed to login. Please check your credentials.');
-      toast.error(`API Error: ${err.message || 'Login failed'}`);
+      toast.error('Login failed. Please try again.');
     }
   };
 
