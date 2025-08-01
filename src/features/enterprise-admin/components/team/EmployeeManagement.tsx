@@ -147,6 +147,17 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }) => {
   //   }
   // };
 
+  const filteredEmployees = employees.filter((employee) => {
+    const matchesSearch =
+      employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      employee.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = filterRole === 'all' || employee.accessUrls?.includes(filterRole);
+    const loc = employee.selectedLocation || 'Unassigned';
+    const matchesLocation = filterLocation === 'all' || loc === filterLocation;
+
+    return matchesSearch && matchesRole && matchesLocation;
+  });
+
   const handleAddEmployee = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
