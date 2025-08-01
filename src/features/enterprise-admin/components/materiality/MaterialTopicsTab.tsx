@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -36,15 +36,27 @@ interface MaterialTopicsTabProps {
   selectedIndustries: string[];
   onUpdateTopics?: (topics: MaterialTopic[]) => void;
   onUpdateSelectedTopics?: (selectedTopics: MaterialTopic[]) => void;
+  selectedMaterialTopics:{
+    id:string;
+    industry:string;
+    topic:string;
+    esg:string;
+    businessImpact:string;
+    sustainabilityImpact:string;
+    framework:string;
+    description:string;
+    selected?:boolean;
+  }[]
 }
 
-const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({ 
+const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
   materialTopics,
   activeFrameworks = ['SASB', 'GRI', 'Custom'],
   setActiveFrameworks,
   selectedIndustries = [],
   onUpdateTopics,
-  onUpdateSelectedTopics
+  onUpdateSelectedTopics,
+  selectedMaterialTopics
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [classificationView, setClassificationView] = useState<'all' | 'risks' | 'opportunities'>('all');
@@ -52,29 +64,49 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [topicsWithSelection, setTopicsWithSelection] = useState<MaterialTopic[]>([]);
+  const [seggregatedTopic, setSeggregatedTopic] = useState(null)
+  const [materialTopicsParsed,setMaterialTopicsParsed]=useState()
 
   // Get all available topics based on selected industries and frameworks
-  React.useEffect(() => {
-    if (selectedIndustries.length > 0) {
-      const availableTopics = getCombinedTopics(selectedIndustries, activeFrameworks).map(topic => ({
-        ...topic,
-        businessImpact: topic.businessImpact ?? 5,
-        sustainabilityImpact: topic.sustainabilityImpact ?? 5,
-        color: topic.color ?? getCategoryColor(topic.category),
-        selected: materialTopics.some(mt => mt.id === topic.id)
-      }));
-      
-      // Add any custom topics that might not be in the framework topics
-      const customTopics = materialTopics.filter(mt => 
-        mt.framework === 'Custom' && !availableTopics.some(at => at.id === mt.id)
-      ).map(ct => ({ ...ct, selected: true }));
-      
-      setTopicsWithSelection([...availableTopics, ...customTopics]);
-    } else {
-      // If no industries selected, show current material topics
-      setTopicsWithSelection(materialTopics.map(topic => ({ ...topic, selected: true })));
-    }
-  }, [selectedIndustries, activeFrameworks, materialTopics]);
+  // React.useEffect(() => {
+  //   if (selectedIndustries.length > 0) {
+  //     const availableTopics = getCombinedTopics(selectedIndustries, activeFrameworks).map(topic => ({
+  //       ...topic,
+  //       businessImpact: topic.businessImpact ?? 5,
+  //       sustainabilityImpact: topic.sustainabilityImpact ?? 5,
+  //       color: topic.color ?? getCategoryColor(topic.category),
+  //       selected: materialTopics.some(mt => mt.id === topic.id)
+  //     }));
+
+  //     // Add any custom topics that might not be in the framework topics
+  //     const customTopics = materialTopics.filter(mt =>
+  //       mt.framework === 'Custom' && !availableTopics.some(at => at.id === mt.id)
+  //     ).map(ct => ({ ...ct, selected: true }));
+
+  //     setTopicsWithSelection([...availableTopics, ...customTopics]);
+  //   } else {
+  //     // If no industries selected, show current material topics
+  //     setTopicsWithSelection(materialTopics.map(topic => ({ ...topic, selected: true })));
+  //   }
+  // }, [selectedIndustries, activeFrameworks, materialTopics]);
+
+  useEffect(() => {
+    let reducedTopics=selectedMaterialTopics.reduce((a, c) => {
+      if(Object.keys(a).includes(c['esg']) ){
+        a[c['esg']].push({...c,selected:false})
+      }
+      else{
+        a[c['esg']]=[{...c,selected:false}]
+      }
+      return a
+    }, {})
+    console.log('reducedTopics',reducedTopics)
+    setSeggregatedTopic(reducedTopics)
+  }, [selectedMaterialTopics])
+
+  useEffect(()=>{
+    console.log('seggregatedTopic',seggregatedTopic)
+  },[seggregatedTopic])
 
   // Helper function to get color for a category
   const getCategoryColor = (category: string): string => {
@@ -88,18 +120,18 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
 
   // Filter topics by search term and active frameworks
   const filteredTopics = topicsWithSelection.filter(topic => {
-    const matchesSearch = !searchTerm || 
+    const matchesSearch = !searchTerm ||
       topic.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       topic.description.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesFramework = !topic.framework || 
+
+    const matchesFramework = !topic.framework ||
       activeFrameworks.includes(topic.framework as Framework);
-    
-    const matchesClassification = 
+
+    const matchesClassification =
       classificationView === 'all' ||
       (classificationView === 'risks' && (topic.isRisk || topic.businessImpact < 5)) ||
       (classificationView === 'opportunities' && (!topic.isRisk || topic.businessImpact >= 5));
-    
+
     return matchesSearch && matchesFramework && matchesClassification;
   });
 
@@ -110,6 +142,40 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
   });
 
   const handleTopicSelection = (topicId: string, selected: boolean) => {
+    console.log('topicId',topicId)
+    selectedMaterialTopics=selectedMaterialTopics.map((mt)=>{
+      console.log('selected',mt.selected)
+      if(mt.id == topicId){
+        return {...mt,selected:!mt.selected}
+      }
+      else{
+        return {...mt,selected:mt.selected || false}
+      }
+    })
+    let tempSeggregatedTopic={...seggregatedTopic}
+    Object.keys(tempSeggregatedTopic).forEach((esg)=>{
+      tempSeggregatedTopic[esg].forEach((t,index)=>{
+        if(t.id == topicId){
+          tempSeggregatedTopic[esg][index]={...t,selected:!t.selected}
+        }
+        // else{
+        //   return {...t,selected:t.selected || false}
+        // }
+      })
+    })
+    console.log('tempSeggregatedTopic =============>',tempSeggregatedTopic)
+    console.log('selectedMaterialTopics =============>',selectedMaterialTopics)
+    // let reducedTopics=selectedMaterialTopics.reduce((a, c) => {
+    //   if(Object.keys(a).includes(c['esg']) ){
+    //     a[c['esg']].push({...c})
+    //   }
+    //   else{
+    //     a[c['esg']]=[{...c}]
+    //   }
+    //   return a
+    // }, {})
+    console.log('seggregatedTopic',seggregatedTopic)
+    // setSeggregatedTopic(reducedTopics)
     const updatedTopics = topicsWithSelection.map(topic =>
       topic.id === topicId ? { ...topic, selected } : topic
     );
@@ -117,6 +183,15 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
   };
 
   const handleSaveSelectedTopics = () => {
+    let selectedTopicsMateriality=[]
+    Object.keys(seggregatedTopic).forEach((esg)=>{
+      seggregatedTopic[esg].forEach((t,index)=>{
+        if(t.selected){
+          selectedTopicsMateriality.push(t)
+        }
+      })
+    })
+    console.log('selectedTopicsMateriality',selectedTopicsMateriality)
     const selectedTopics = topicsWithSelection.filter(topic => topic.selected);
     if (onUpdateSelectedTopics) {
       onUpdateSelectedTopics(selectedTopics);
@@ -133,11 +208,12 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
   };
 
   const handleSaveTopic = (updatedTopic: MaterialTopic) => {
-    const updatedTopics = topicsWithSelection.map(topic => 
+    
+    const updatedTopics = topicsWithSelection.map(topic =>
       topic.id === updatedTopic.id ? updatedTopic : topic
     );
     setTopicsWithSelection(updatedTopics);
-    
+
     if (onUpdateTopics) {
       const selectedTopics = updatedTopics.filter(topic => topic.selected);
       onUpdateTopics(selectedTopics);
@@ -149,7 +225,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
     const topicWithSelection = { ...newTopic, selected: true };
     const updatedTopics = [...topicsWithSelection, topicWithSelection];
     setTopicsWithSelection(updatedTopics);
-    
+
     if (onUpdateTopics) {
       const selectedTopics = updatedTopics.filter(topic => topic.selected);
       onUpdateTopics(selectedTopics);
@@ -160,7 +236,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
   const handleDeleteTopic = (topicId: string) => {
     const updatedTopics = topicsWithSelection.filter(topic => topic.id !== topicId);
     setTopicsWithSelection(updatedTopics);
-    
+
     if (onUpdateTopics) {
       const selectedTopics = updatedTopics.filter(topic => topic.selected);
       onUpdateTopics(selectedTopics);
@@ -175,6 +251,10 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
   const selectedCount = topicsWithSelection.filter(topic => topic.selected).length;
   const totalCount = topicsWithSelection.length;
 
+  useEffect(() => {
+    console.log('topicsWithSelection', topicsWithSelection)
+  }, [topicsWithSelection])
+
   return (
     <Card>
       <CardHeader>
@@ -184,7 +264,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
             <CardDescription>
               Select relevant ESG topics for stakeholder engagement and materiality assessment
             </CardDescription>
-            
+
             {selectedIndustries.length > 0 && (
               <div className="mt-3">
                 <div className="text-sm font-medium mb-2">Selected Industries:</div>
@@ -212,7 +292,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
             </Button>
           </div>
         </div>
-        
+
         <TopicsFilters
           searchTerm={searchTerm}
           onSearchChange={setSearchTerm}
@@ -228,23 +308,23 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
         </div>
 
         <TopicClassificationTabs onValueChange={setClassificationView}>
-          <div className="space-y-6">
+         {seggregatedTopic && <div className="space-y-6">
             {['Environment', 'Social', 'Governance'].map(category => (
               <div key={category}>
                 <h3 className="text-lg font-semibold mb-3 flex items-center">
                   <div
                     className="w-3 h-3 rounded-full mr-2"
-                    style={{ 
-                      backgroundColor: category === 'Environment' ? '#22c55e' : 
-                                     category === 'Social' ? '#60a5fa' : '#f59e0b'
+                    style={{
+                      backgroundColor: category === 'Environment' ? '#22c55e' :
+                        category === 'Social' ? '#60a5fa' : '#f59e0b'
                     }}
                   />
-                  {category} Topics ({topicsByCategory[category]?.length || 0})
+                  {category} Topics ({seggregatedTopic[category]?.length || 0})
                 </h3>
-                
+
                 <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                  {topicsByCategory[category]?.map((topic) => (
-                    <Card key={topic.id} className="border-l-4" style={{ borderLeftColor: topic.color }}>
+                  {seggregatedTopic[category]?.map((topic) => (
+                    <Card key={topic.topic} className="border-l-4" style={{ borderLeftColor: getCategoryColor(category) }}>
                       <CardContent className="pt-4">
                         <div className="flex items-start justify-between mb-2">
                           <Checkbox
@@ -268,17 +348,17 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
                             )}
                           </div>
                         </div>
-                        
+
                         <label
                           htmlFor={`topic-${topic.id}`}
                           className="cursor-pointer block"
                         >
-                          <h4 className="font-medium text-sm mb-1">{topic.name}</h4>
+                          <h4 className="font-medium text-sm mb-1">{topic.topic}</h4>
                           <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                            {topic.description}
+                            {topic.description.name}
                           </p>
                         </label>
-                        
+
                         <div className="grid grid-cols-2 gap-2 text-xs">
                           <div>
                             <div className="text-muted-foreground">Business Impact</div>
@@ -295,14 +375,14 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
                 </div>
               </div>
             ))}
-          </div>
+          </div>}
         </TopicClassificationTabs>
 
         {filteredTopics.length === 0 && (
           <div className="py-12 text-center">
             <h4 className="text-lg font-medium">No topics found</h4>
             <p className="text-muted-foreground mt-1">
-              {selectedIndustries.length === 0 
+              {selectedIndustries.length === 0
                 ? "Please select industries to see recommended topics"
                 : "Try adjusting your search or framework filters"
               }

@@ -96,7 +96,7 @@ function App() {
         <Route path="/stakeholders/manage" element={<ManageStakeholdersPage />} />
         <Route path="/stakeholders/categories" element={<CategoriesPage />} />
         <Route path="/stakeholders/engagement" element={<EngagementPlanPage />} />
-        <Route path="/stakeholders/login" element={<StakeholderLoginPage />} />
+        <Route path="/stakeholders/dashboard" element={<StakeholderLoginPage />} />
         
         <Route path="/units" element={<Units />} />
         <Route path="/team-management" element={<TeamManagementPage />} />

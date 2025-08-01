@@ -17,6 +17,7 @@ import {
 import IndustrySelection from '../components/materiality/IndustrySelection';
 import MaterialityTabs from '../components/materiality/MaterialityTabs';
 import StakeholderEngagement from '../components/materiality/StakeholderEngagement';
+import industryList from "../data/industryBychatgtp.json";
 
 // Define a union type for allowed frameworks
 type Framework = 'SASB' | 'GRI' | 'Custom';
@@ -38,11 +39,42 @@ const MaterialityPage = () => {
   const [materialTopics, setMaterialTopics] = useState<MaterialTopic[]>([]);
   const [selectedTopicsForEngagement, setSelectedTopicsForEngagement] = useState<MaterialTopic[]>([]);
   const [activeFrameworks, setActiveFrameworks] = useState<Framework[]>(['SASB', 'GRI', 'Custom']);
-  
+  const [industriesWithDetails, setIndustriesWithDetails] = useState([]);
+  const [selectedMaterialTopics, setSelectedMaterialTopics] = useState([]);
+  console.log("industryList",industryList)
+  const [industries, setIndustries] = useState([]);
   // Update tempSelectedIndustries when selectedIndustries changes
   useEffect(() => {
     setTempSelectedIndustries([...selectedIndustries]);
   }, [selectedIndustries]);
+  let esgMappedIndustry=industryList.map((industry)=>{
+    
+    return {...industry,topics:industry?.topics?.map((t)=>{
+      if(t.chatgtpAnalysis && (t.chatgtpAnalysis.esg_pillar || t.chatgtpAnalysis.business_impact || t.chatgtpAnalysis.sustainability_impact)){
+        return {
+          ...t,
+          esg:t.chatgtpAnalysis.esg_pillar.primary.match('Environment')?'Environment':t.chatgtpAnalysis.esg_pillar.primary.match('Social')?'Social':t.chatgtpAnalysis.esg_pillar.primary.match('Governance')?'Governance':'',
+          businessImpact:t.chatgtpAnalysis.business_impact.severity,
+          sustainabilityImpact:t.chatgtpAnalysis.sustainability_impact.severity
+        }
+      }
+      else{
+        return {...t}
+      }
+    })}
+  })
+  useEffect(() => {
+    setIndustries(
+      industryList
+        .map((val) => ({ value: val.name, label: val.name }))
+        .sort((a, b) => a.label.localeCompare(b.label))
+    );
+    setIndustriesWithDetails(esgMappedIndustry)
+  }, []);
+
+  useEffect(()=>{
+    console.log('industriesWithDetails',industriesWithDetails)
+  },[industriesWithDetails])
   
   // Initialize with some default topics
   useEffect(() => {
@@ -180,6 +212,33 @@ const MaterialityPage = () => {
     }
   };
 
+  useEffect(()=>{
+    console.log('tempSelectedIndustries',tempSelectedIndustries)
+    let selectedIndustryDetails=[]
+    tempSelectedIndustries.forEach((t)=>{
+      let filteredIndustry=industriesWithDetails.filter((i)=> i.name == t)
+      selectedIndustryDetails=[...selectedIndustryDetails,...filteredIndustry]
+    })
+    // console.log('selectedIndustryDetails',selectedIndustryDetails)
+    let selectedIndustryTopic=selectedIndustryDetails.reduce((a,c,pIndex)=>{
+      a= [...a,...(c.topics.map((t,index)=>{
+        return {
+          id:`${pIndex}-${index}`,
+          industry:c.name,
+          topic:t.name,
+          esg:t.esg,
+          businessImpact:t.businessImpact,
+          sustainabilityImpact:t.sustainabilityImpact,
+          framework:'SASB',
+          description:t.metrics[0]?t.metrics[0]:''
+        }
+      }))]
+      return a;
+    },[])
+    setSelectedMaterialTopics(selectedIndustryTopic)
+    console.log('selectedIndustryTopic',selectedIndustryTopic)
+  },[tempSelectedIndustries])
+
   const materialityData = generateMatrixData(materialTopics);
   const filteredTopics = selectedCategory === 'All' 
     ? materialTopics 
@@ -235,6 +294,7 @@ const MaterialityPage = () => {
           onIndustryChange={handleIndustryChange}
           onClearSelection={() => setTempSelectedIndustries([])}
           onUpdateMatrix={updateMatrixData}
+          industries={industries}
         />
         
         <MaterialityTabs 
@@ -252,6 +312,7 @@ const MaterialityPage = () => {
           setActiveFrameworks={setActiveFrameworks}
           onUpdateTopics={handleUpdateTopics}
           onUpdateSelectedTopics={handleUpdateSelectedTopics}
+          selectedMaterialTopics={selectedMaterialTopics}
         />
         
         <StakeholderEngagement

@@ -19,7 +19,8 @@ export const SidebarSubmenu: React.FC<SidebarSubmenuProps> = ({
   isExpanded,
   isActive,
   onToggle,
-  children
+  children,
+  ...rest
 }) => {
   return (
     <React.Fragment>

@@ -98,6 +98,8 @@ export const useAuthProvider = () => {
       case "vendor":
         navigate(from || "/vendor/dashboard");
         break;
+      case "StakeHolder":
+        navigate("/stakeholders/dashboard")
       default:
         navigate(from || "/settings");
     }

@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { useOverlay } from '@/context/OverlayContext';
 import { cn } from '@/lib/utils';
 import { httpClient } from '@/lib/httpClient';
+import { User } from '@/types/auth';
 
 interface PageOverlayProps {
   children: React.ReactNode;
@@ -14,7 +15,7 @@ export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
   const [shouldShowOverlay, setShouldShowOverlay] = useState(true)
   const location = useLocation();
 
-  const user = JSON.parse(localStorage.getItem('fandoro-user') || '{}');
+  const user:User = JSON.parse(localStorage.getItem('fandoro-user') || '{}');
   const userEmail = user?.email;
   const [pageActiveList,setPageActiveList]=useState();
 
@@ -36,12 +37,24 @@ export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
     }
   }
 
+  // useEffect(()=>{
+  //   if(!pageListAccess){
+  //     getPageAccess()
+  //   }
+    
+  // },[pageListAccess])
+
   useEffect(()=>{
-    if(!pageListAccess){
-      getPageAccess()
+    if(['StakeHolder','employee'].includes(user.role)){
+      setShouldShowOverlay(false)
+    }
+    else{
+      if(!pageListAccess){
+        getPageAccess()
+      }
     }
     
-  },[pageListAccess])
+  },[user])
 
   useEffect(() => {
     const exemptEmails = ['shekhar.sharma@eggoz.in','sample@abclogistics.com'];
@@ -66,7 +79,7 @@ export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
     //   }
     // }
     let pageAccessData:{feature:string;url:string;enabled:boolean}[]=featurePageListAccess;
-    for(let i=0;i<pageAccessData.length;i++){
+    for(let i=0;i<pageAccessData?.length;i++){
       // console.log('pageAccessData',pageAccessData[i]['url'].split('/'))
       // console.log(`location.pathname.split('/')`,location.pathname.split('/'))
       if(location.pathname.split('/').includes(pageAccessData[i]['url'].split('/')[1])){

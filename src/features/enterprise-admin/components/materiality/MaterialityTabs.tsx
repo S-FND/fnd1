@@ -38,6 +38,16 @@ interface MaterialityTabsProps {
   setActiveFrameworks: (frameworks: Framework[]) => void;
   onUpdateTopics?: (topics: MaterialTopic[]) => void;
   onUpdateSelectedTopics?: (topics: MaterialTopic[]) => void;
+  selectedMaterialTopics:{
+    id:string;
+    industry:string;
+    topic:string;
+    esg:string;
+    businessImpact:string;
+    sustainabilityImpact:string;
+    framework:string;
+    description:string;
+  }[]
 }
 
 const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
@@ -54,7 +64,7 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
   activeFrameworks,
   setActiveFrameworks,
   onUpdateTopics,
-  onUpdateSelectedTopics
+  onUpdateSelectedTopics,selectedMaterialTopics
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -94,6 +104,7 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
           selectedIndustries={selectedIndustries}
           onUpdateTopics={onUpdateTopics}
           onUpdateSelectedTopics={onUpdateSelectedTopics}
+          selectedMaterialTopics={selectedMaterialTopics}
         />
       </TabsContent>
 
