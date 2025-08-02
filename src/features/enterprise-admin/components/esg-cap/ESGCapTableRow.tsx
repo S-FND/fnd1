@@ -11,9 +11,10 @@ import { ESGCapRowActions } from './ESGCapRowActions';
 interface ESGCapTableRowProps {
   item: ESGCapItem;
   index: number;
+  onUpdate?: (updatedItem: ESGCapItem) => void;
 }
 
-export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index }) => {
+export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onUpdate }) => {
   return (
     <TableRow>
       <TableCell className="text-center font-medium">{index + 1}</TableCell>
@@ -44,7 +45,7 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index }) =
         <StatusBadge status={item.status} />
       </TableCell>
       <TableCell className="text-right">
-        <ESGCapRowActions />
+        <ESGCapRowActions item={item} onUpdate={onUpdate || (() => {})} />
       </TableCell>
       <TableCell className="text-muted-foreground text-sm">
         {item.status === 'completed' ? 'Completed on time' : 

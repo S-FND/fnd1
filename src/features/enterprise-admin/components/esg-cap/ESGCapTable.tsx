@@ -11,12 +11,14 @@ interface ESGCapTableProps {
   sortedItems: ESGCapItem[];
   sortConfig: { key: keyof ESGCapItem; direction: 'asc' | 'desc' } | null;
   requestSort: (key: keyof ESGCapItem) => void;
+  onItemUpdate?: (updatedItem: ESGCapItem) => void;
 }
 
 export const ESGCapTable: React.FC<ESGCapTableProps> = ({ 
   sortedItems, 
   sortConfig, 
-  requestSort 
+  requestSort,
+  onItemUpdate 
 }) => {
   return (
     <div className="space-y-6">
@@ -31,7 +33,8 @@ export const ESGCapTable: React.FC<ESGCapTableProps> = ({
               <ESGCapTableRow 
                 key={item.id} 
                 item={item} 
-                index={index} 
+                index={index}
+                onUpdate={onItemUpdate}
               />
             ))}
             
