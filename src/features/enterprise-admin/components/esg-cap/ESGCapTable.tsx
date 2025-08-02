@@ -22,25 +22,27 @@ export const ESGCapTable: React.FC<ESGCapTableProps> = ({
 }) => {
   return (
     <div className="space-y-6">
-      <div className="rounded-md border overflow-hidden">
-        <Table>
-          <ESGCapTableHeader 
-            sortConfig={sortConfig} 
-            requestSort={requestSort} 
-          />
-          <TableBody>
-            {sortedItems.map((item, index) => (
-              <ESGCapTableRow 
-                key={item.id} 
-                item={item} 
-                index={index}
-                onUpdate={onItemUpdate}
-              />
-            ))}
-            
-            {sortedItems.length === 0 && <ESGCapEmptyState />}
-          </TableBody>
-        </Table>
+      <div className="border rounded-md overflow-auto">
+        <div className="min-w-[1200px]">
+          <Table>
+            <ESGCapTableHeader 
+              sortConfig={sortConfig} 
+              requestSort={requestSort} 
+            />
+            <TableBody>
+              {sortedItems.map((item, index) => (
+                <ESGCapTableRow 
+                  key={item.id} 
+                  item={item} 
+                  index={index}
+                  onUpdate={onItemUpdate}
+                />
+              ))}
+              
+              {sortedItems.length === 0 && <ESGCapEmptyState />}
+            </TableBody>
+          </Table>
+        </div>
       </div>
       
       {sortedItems.length > 0 && <ESGCapScoring items={sortedItems} />}
