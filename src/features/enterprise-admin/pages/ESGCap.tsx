@@ -96,7 +96,13 @@ const ESGCapPage = () => {
                 setCategoryFilter={setCategoryFilter}
               />
               
-              <div className="flex justify-end gap-2 my-4">
+              <ESGCapTable 
+                sortedItems={sortedItems} 
+                sortConfig={sortConfig} 
+                requestSort={requestSort} 
+              />
+              
+              <div className="flex justify-end gap-2 mt-4">
                 <Button variant="outline">
                   Request CAP Change
                 </Button>
@@ -104,12 +110,6 @@ const ESGCapPage = () => {
                   Accept CAP
                 </Button>
               </div>
-              
-              <ESGCapTable 
-                sortedItems={sortedItems} 
-                sortConfig={sortConfig} 
-                requestSort={requestSort} 
-              />
             </CardContent>
           </Card>
         </div>
