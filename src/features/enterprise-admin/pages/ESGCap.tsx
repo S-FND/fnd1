@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { mockESGCapItems, mockESGDDReports } from '../data/esgDD';
 import { ESGCapItem } from '../types/esgDD';
@@ -94,6 +95,15 @@ const ESGCapPage = () => {
                 categoryFilter={categoryFilter}
                 setCategoryFilter={setCategoryFilter}
               />
+              
+              <div className="flex justify-end gap-2 my-4">
+                <Button variant="outline">
+                  Request CAP Change
+                </Button>
+                <Button>
+                  Accept CAP
+                </Button>
+              </div>
               
               <ESGCapTable 
                 sortedItems={sortedItems} 

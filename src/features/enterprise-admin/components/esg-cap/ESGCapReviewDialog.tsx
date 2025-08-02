@@ -260,21 +260,9 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
             <Button variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            {!isAccepted && (
-              <>
-                <Button variant="outline" onClick={handleRequestChange}>
-                  Request CAP Change
-                </Button>
-                <Button onClick={handleAcceptCAP}>
-                  Accept CAP
-                </Button>
-              </>
-            )}
-            {isAccepted && (
-              <Button onClick={handleSave}>
-                Save Changes
-              </Button>
-            )}
+            <Button onClick={handleSave}>
+              Save Changes
+            </Button>
           </div>
         </div>
       </DialogContent>
