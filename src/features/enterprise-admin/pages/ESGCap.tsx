@@ -79,30 +79,34 @@ const ESGCapPage = () => {
             </p>
           </div>
           
-          <Card>
-            <CardHeader>
+          <Card className="h-[calc(100vh-12rem)] flex flex-col">
+            <CardHeader className="flex-shrink-0">
               <CardTitle>ESG CAP Items</CardTitle>
               <CardDescription>
                 Manage and track all ESG corrective action items across assessments.
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <ESGCapFilters 
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                statusFilter={statusFilter}
-                setStatusFilter={setStatusFilter}
-                categoryFilter={categoryFilter}
-                setCategoryFilter={setCategoryFilter}
-              />
+            <CardContent className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-shrink-0 mb-4">
+                <ESGCapFilters 
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  statusFilter={statusFilter}
+                  setStatusFilter={setStatusFilter}
+                  categoryFilter={categoryFilter}
+                  setCategoryFilter={setCategoryFilter}
+                />
+              </div>
               
-              <ESGCapTable 
-                sortedItems={sortedItems} 
-                sortConfig={sortConfig} 
-                requestSort={requestSort} 
-              />
+              <div className="flex-1 overflow-y-auto">
+                <ESGCapTable 
+                  sortedItems={sortedItems} 
+                  sortConfig={sortConfig} 
+                  requestSort={requestSort} 
+                />
+              </div>
               
-              <div className="flex justify-end gap-2 mt-4">
+              <div className="flex justify-end gap-2 mt-4 flex-shrink-0">
                 <Button variant="outline">
                   Request CAP Change
                 </Button>
