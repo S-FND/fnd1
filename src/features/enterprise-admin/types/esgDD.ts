@@ -17,7 +17,7 @@ export type ESGCategory = 'environmental' | 'social' | 'governance';
 
 export type ESGDDReportType = 'manual' | 'automated' | 'uploaded';
 
-export type ESGCapStatus = 'pending' | 'in_progress' | 'completed';
+export type ESGCapStatus = 'in_review' | 'accepted' | 'pending' | 'in_progress' | 'completed' | 'delayed';
 
 export type ESGCapPriority = 'high' | 'medium' | 'low';
 
@@ -49,6 +49,8 @@ export interface ESGCapItem {
   assignedTo?: string;
   dealCondition: ESGCapDealCondition;
   createdAt: string;
+  actualCompletionDate?: string;
+  acceptedAt?: string;
 }
 
 export interface RegulatoryRequirement {
