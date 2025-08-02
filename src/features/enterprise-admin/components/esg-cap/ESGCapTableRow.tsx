@@ -4,6 +4,7 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { ESGCapItem } from '../../types/esgDD';
 import { StatusBadge } from './StatusBadge';
 import { CategoryBadge } from './CategoryBadge';
+import { PriorityBadge } from './PriorityBadge';
 import { Badge } from '@/components/ui/badge';
 import { ESGCapRowActions } from './ESGCapRowActions';
 
@@ -21,6 +22,9 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index }) =
       </TableCell>
       <TableCell>
         <CategoryBadge category={item.category} />
+      </TableCell>
+      <TableCell>
+        <PriorityBadge priority={item.priority} />
       </TableCell>
       <TableCell>{item.description}</TableCell>
       <TableCell>{item.assignedTo || 'Not assigned'}</TableCell>
