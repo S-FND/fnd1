@@ -168,6 +168,28 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
     setIsEditDialogOpen(true);
   };
 
+  const handleEditSavedMetric = (metric: ESGMetricWithTracking) => {
+    setEditingMetric(metric);
+    setCustomMetricForm({
+      name: metric.name,
+      description: metric.description,
+      unit: metric.unit,
+      dataType: metric.dataType,
+      collectionFrequency: metric.collectionFrequency,
+      inputFormat: {
+        options: metric.inputFormat?.options || [],
+        tableColumns: metric.inputFormat?.tableColumns || [],
+        tableRows: metric.inputFormat?.tableRows || 1,
+      },
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteSavedMetric = (metricId: string) => {
+    setSavedMetrics(metrics => metrics.filter(m => m.id !== metricId));
+    toast.success('Metric deleted successfully');
+  };
+
   const handleSaveEdit = () => {
     if (editingMetric) {
       const updatedMetric = {
@@ -188,6 +210,15 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
       setSavedMetrics(metrics =>
         metrics.map(m => m.id === editingMetric.id ? updatedMetric : m)
       );
+
+      // Update in custom metrics if it's a custom metric
+      if (editingMetric.source === 'Custom') {
+        const updatedCustomMetrics = customMetrics.map(m => 
+          m.id === editingMetric.id ? updatedMetric : m
+        );
+        setCustomMetrics(updatedCustomMetrics);
+        localStorage.setItem('customESGMetrics', JSON.stringify(updatedCustomMetrics));
+      }
 
       toast.success('Metric updated successfully');
       setIsEditDialogOpen(false);
@@ -344,6 +375,8 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
           onRemoveMetric={handleRemoveMetric}
           onSaveConfiguration={handleSaveConfiguration}
           savedMetrics={savedMetrics}
+          onEditSavedMetric={handleEditSavedMetric}
+          onDeleteSavedMetric={handleDeleteSavedMetric}
         />
       </div>
 
