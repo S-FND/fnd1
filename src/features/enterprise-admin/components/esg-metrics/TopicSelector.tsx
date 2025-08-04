@@ -29,14 +29,19 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
     <Card>
       <CardHeader>
         <CardTitle>Select Material Topic</CardTitle>
-        <CardDescription>Choose a material topic to view recommended GIIN IRIS+ metrics</CardDescription>
+        <CardDescription>
+          Choose a material topic to view recommended metrics, or skip to manage custom metrics for all topics
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Select value={selectedTopicId} onValueChange={onSelectTopic}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a material topic from your materiality assessment" />
+            <SelectValue placeholder="Select a material topic or skip to manage custom metrics" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="all-topics">
+              <div className="font-medium">Manage Custom Metrics (All Topics)</div>
+            </SelectItem>
             {materialTopics.map(topic => (
               <SelectItem key={topic.id} value={topic.id}>
                 <div className="flex items-center gap-2">

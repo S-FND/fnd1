@@ -115,15 +115,27 @@ const MaterialityPage = () => {
 
   // Initialize with some default topics
   useEffect(() => {
+    // Load custom topics from localStorage
+    const savedCustomTopics = localStorage.getItem('customMaterialTopics');
+    let customTopics: MaterialTopic[] = [];
+    
+    if (savedCustomTopics) {
+      try {
+        customTopics = JSON.parse(savedCustomTopics);
+      } catch (error) {
+        console.error('Error loading custom topics:', error);
+      }
+    }
+
     // If no industries selected, use a mix of common topics
     if (selectedIndustries.length === 0) {
       const commonSasbTopics = sasbTopics.slice(0, 6).map(ensureRequiredProps);
       const commonGriTopics = griTopics.slice(0, 6).map(ensureRequiredProps);
-      setMaterialTopics([...commonSasbTopics, ...commonGriTopics]);
+      setMaterialTopics([...commonSasbTopics, ...commonGriTopics, ...customTopics]);
     } else {
-      // Otherwise, get topics for selected industries
+      // Otherwise, get topics for selected industries plus custom topics
       const topics = getCombinedTopics(selectedIndustries, activeFrameworks).map(ensureRequiredProps);
-      setMaterialTopics(topics);
+      setMaterialTopics([...topics, ...customTopics]);
     }
   }, [selectedIndustries, activeFrameworks]);
 
@@ -234,6 +246,10 @@ const MaterialityPage = () => {
   // Handle updating topics from the MaterialTopicsTab
   const handleUpdateTopics = (updatedTopics: MaterialTopic[]) => {
     setMaterialTopics(updatedTopics);
+    
+    // Save custom topics to localStorage
+    const customTopics = updatedTopics.filter(topic => topic.framework === 'Custom');
+    localStorage.setItem('customMaterialTopics', JSON.stringify(customTopics));
   };
 
   // Handle updating selected topics for stakeholder engagement

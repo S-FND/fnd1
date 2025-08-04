@@ -42,14 +42,28 @@ const MetricsSelector: React.FC<MetricsSelectorProps> = ({
 }) => {
   if (!selectedTopic) return null;
 
+  const irisMetrics = availableMetrics.filter(metric => metric.source === 'IRIS+');
+  const otherMetrics = availableMetrics.filter(metric => metric.source !== 'IRIS+');
+  const hasIrisMetrics = irisMetrics.length > 0;
+
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Recommended GIIN IRIS+ Metrics</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              {hasIrisMetrics ? 'IRIS+ Recommended Metrics' : 'Available Metrics'}
+              {hasIrisMetrics && (
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                  IRIS+ Database
+                </Badge>
+              )}
+            </CardTitle>
             <CardDescription>
-              Metrics recommended for: <strong>{selectedTopic.name}</strong>
+              {hasIrisMetrics 
+                ? `Recommended metrics from IRIS+ database for ${selectedTopic.name}. These are industry-standard metrics for this material topic.`
+                : `Available metrics for ${selectedTopic.name}`
+              }
               <a 
                 href="https://iris.thegiin.org/metrics/" 
                 target="_blank" 
@@ -86,7 +100,16 @@ const MetricsSelector: React.FC<MetricsSelectorProps> = ({
             <TableBody>
               {availableMetrics.map(metric => (
                 <TableRow key={metric.id}>
-                  <TableCell className="font-medium">{metric.name}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {metric.name}
+                      {metric.source === 'IRIS+' && (
+                        <Badge variant="secondary" className="text-xs bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                          IRIS+
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-sm">{metric.description}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{metric.unit}</TableCell>
                   <TableCell>
