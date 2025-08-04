@@ -6,11 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { httpClient } from '@/lib/httpClient';
 
 interface MaterialTopic {
   id: string;
   name: string;
-  category: string;
+  esg: string;
   businessImpact: number;
   sustainabilityImpact: number;
   color: string;
@@ -33,18 +34,27 @@ const CreateTopicDialog: React.FC<CreateTopicDialogProps> = ({ isOpen, onClose, 
     sustainabilityImpact: 5
   });
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (formData.name && formData.description && formData.category) {
       const newTopic: MaterialTopic = {
         id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         name: formData.name,
         description: formData.description,
-        category: formData.category,
+        esg: formData.category,
         businessImpact: formData.businessImpact,
         sustainabilityImpact: formData.sustainabilityImpact,
         framework: 'Custom',
         color: getCategoryColor(formData.category)
       };
+      try {
+        let updateResponse=await httpClient.post("materiality/v1",{
+          entityId:JSON.parse(localStorage.getItem('fandoro-user')).entityId,
+          customTopics:[newTopic]
+        })
+        console.log('updateResponse',updateResponse)
+      } catch (error) {
+        console.log("error :: updateMatrixData => ", error)
+      }
       onCreate(newTopic);
       setFormData({
         name: '',

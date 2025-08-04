@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 interface MaterialTopic {
   id: string;
   name: string;
-  category: string;
+  esg: string;
   businessImpact: number;
   sustainabilityImpact: number;
   color: string;
@@ -35,15 +35,15 @@ const EditTopicDialog: React.FC<EditTopicDialogProps> = ({ topic, isOpen, onClos
   }, [topic]);
 
   const handleSave = () => {
-    if (topic && formData.name && formData.description && formData.category) {
+    if (topic && formData.name && formData.description && formData.esg) {
       const updatedTopic: MaterialTopic = {
         ...topic,
         name: formData.name,
         description: formData.description,
-        category: formData.category,
+        esg: formData.esg,
         businessImpact: formData.businessImpact || topic.businessImpact,
         sustainabilityImpact: formData.sustainabilityImpact || topic.sustainabilityImpact,
-        color: getCategoryColor(formData.category)
+        color: getCategoryColor(formData.esg)
       };
       onSave(updatedTopic);
       onClose();
@@ -81,7 +81,7 @@ const EditTopicDialog: React.FC<EditTopicDialogProps> = ({ topic, isOpen, onClos
           </div>
           <div className="grid gap-2">
             <Label htmlFor="category">Category</Label>
-            <Select value={formData.category || ''} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+            <Select value={formData.esg || ''} onValueChange={(value) => setFormData({ ...formData, esg: value })}>
               <SelectTrigger>
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>

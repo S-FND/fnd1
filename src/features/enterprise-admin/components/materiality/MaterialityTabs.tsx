@@ -14,7 +14,7 @@ type Framework = 'SASB' | 'GRI' | 'Custom';
 interface MaterialTopic {
   id: string;
   name: string;
-  category: string;
+  esg: string;
   businessImpact: number;
   sustainabilityImpact: number;
   color: string;
@@ -47,7 +47,9 @@ interface MaterialityTabsProps {
     sustainabilityImpact:string;
     framework:string;
     description:string;
-  }[]
+  }[];
+  customTopics:MaterialTopic[];
+  getMaterialityData:() => {};
 }
 
 const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
@@ -64,8 +66,12 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
   activeFrameworks,
   setActiveFrameworks,
   onUpdateTopics,
-  onUpdateSelectedTopics,selectedMaterialTopics
+  onUpdateSelectedTopics,selectedMaterialTopics,customTopics,getMaterialityData
 }) => {
+  // setTimeout(()=>{
+  //   getMaterialityData()
+  // },4000)
+
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
       <div className="flex items-center justify-between">
@@ -105,6 +111,8 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
           onUpdateTopics={onUpdateTopics}
           onUpdateSelectedTopics={onUpdateSelectedTopics}
           selectedMaterialTopics={selectedMaterialTopics}
+          customTopics={customTopics}
+          getMaterialityData={getMaterialityData}
         />
       </TabsContent>
 

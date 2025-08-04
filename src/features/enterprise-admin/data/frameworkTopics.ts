@@ -4,7 +4,7 @@
 export interface MaterialTopic {
   id: string;
   name: string;
-  category: string;
+  esg: string;
   businessImpact?: number;
   sustainabilityImpact?: number;
   color?: string;
@@ -19,7 +19,7 @@ export const sasbTopics: MaterialTopic[] = [
   {
     id: 'ghg_emissions',
     name: 'GHG Emissions',
-    category: 'Environment',
+    esg: 'Environment',
     description: 'Management of direct and indirect emissions of greenhouse gases',
     framework: 'SASB',
     industryRelevance: ['energy', 'manufacturing', 'logistics', 'automotive', 'chemicals', 'mining', 'aerospace']
@@ -27,7 +27,7 @@ export const sasbTopics: MaterialTopic[] = [
   {
     id: 'air_quality',
     name: 'Air Quality',
-    category: 'Environment',
+    esg: 'Environment',
     description: 'Management of air emissions from operations',
     framework: 'SASB',
     industryRelevance: ['manufacturing', 'energy', 'chemicals', 'mining', 'automotive']
@@ -35,7 +35,7 @@ export const sasbTopics: MaterialTopic[] = [
   {
     id: 'energy_management',
     name: 'Energy Management',
-    category: 'Environment',
+    esg: 'Environment',
     description: 'Management of energy consumption and efficiency',
     framework: 'SASB',
     industryRelevance: ['technology', 'manufacturing', 'real_estate', 'retail', 'hospitality', 'logistics']
@@ -43,7 +43,7 @@ export const sasbTopics: MaterialTopic[] = [
   {
     id: 'water_management',
     name: 'Water & Wastewater Management',
-    category: 'Environment',
+    esg: 'Environment',
     description: 'Management of water withdrawal, consumption, and discharge',
     framework: 'SASB',
     industryRelevance: ['manufacturing', 'agriculture', 'food_beverage', 'chemicals', 'hospitality']
@@ -51,7 +51,7 @@ export const sasbTopics: MaterialTopic[] = [
   {
     id: 'waste_management',
     name: 'Waste & Hazardous Materials Management',
-    category: 'Environment',
+    esg: 'Environment',
     description: 'Management of solid waste and hazardous materials',
     framework: 'SASB',
     industryRelevance: ['healthcare', 'manufacturing', 'chemicals', 'retail', 'hospitality']
@@ -61,7 +61,7 @@ export const sasbTopics: MaterialTopic[] = [
   {
     id: 'human_rights',
     name: 'Human Rights & Community Relations',
-    category: 'Social',
+    esg: 'Social',
     description: 'Management of relationships with communities affected by activities',
     framework: 'SASB',
     industryRelevance: ['mining', 'energy', 'manufacturing', 'agriculture']
@@ -69,7 +69,7 @@ export const sasbTopics: MaterialTopic[] = [
   {
     id: 'customer_privacy',
     name: 'Customer Privacy',
-    category: 'Social',
+    esg: 'Social',
     description: 'Management of customer privacy and data security',
     framework: 'SASB',
     industryRelevance: ['technology', 'finance', 'healthcare', 'telecommunications', 'retail']
@@ -77,7 +77,7 @@ export const sasbTopics: MaterialTopic[] = [
   {
     id: 'data_security',
     name: 'Data Security',
-    category: 'Governance',
+    esg: 'Governance',
     description: 'Management of risks related to collection, retention, and use of sensitive data',
     framework: 'SASB',
     industryRelevance: ['technology', 'finance', 'healthcare', 'telecommunications', 'retail']
@@ -85,7 +85,7 @@ export const sasbTopics: MaterialTopic[] = [
   {
     id: 'access_affordability',
     name: 'Access & Affordability',
-    category: 'Social',
+    esg: 'Social',
     description: 'Management of access to and affordability of products and services',
     framework: 'SASB',
     industryRelevance: ['healthcare', 'finance', 'telecommunications', 'education', 'pharmaceuticals']
@@ -95,7 +95,7 @@ export const sasbTopics: MaterialTopic[] = [
   {
     id: 'labor_practices',
     name: 'Labor Practices',
-    category: 'Social',
+    esg: 'Social',
     description: 'Management of labor relations and practices',
     framework: 'SASB',
     industryRelevance: ['manufacturing', 'retail', 'logistics', 'hospitality', 'agriculture']
@@ -103,7 +103,7 @@ export const sasbTopics: MaterialTopic[] = [
   {
     id: 'employee_health_safety',
     name: 'Employee Health & Safety',
-    category: 'Social',
+    esg: 'Social',
     description: 'Management of workplace health and safety',
     framework: 'SASB',
     industryRelevance: ['manufacturing', 'energy', 'mining', 'construction', 'logistics', 'healthcare']
@@ -111,7 +111,7 @@ export const sasbTopics: MaterialTopic[] = [
   {
     id: 'diversity_inclusion',
     name: 'Diversity & Inclusion',
-    category: 'Social',
+    esg: 'Social',
     description: 'Management of diversity and inclusion in the workforce',
     framework: 'SASB',
     industryRelevance: ['technology', 'finance', 'media', 'education', 'healthcare', 'professional_services']
@@ -121,7 +121,7 @@ export const sasbTopics: MaterialTopic[] = [
   {
     id: 'product_design',
     name: 'Product Design & Lifecycle Management',
-    category: 'Environment',
+    esg: 'Environment',
     description: 'Management of environmental and social impacts of products',
     framework: 'SASB',
     industryRelevance: ['manufacturing', 'technology', 'automotive', 'chemicals', 'consumer_goods']
@@ -129,7 +129,7 @@ export const sasbTopics: MaterialTopic[] = [
   {
     id: 'business_resilience',
     name: 'Business Model Resilience',
-    category: 'Governance',
+    esg: 'Governance',
     description: 'Management of business model resilience to environmental and social risks',
     framework: 'SASB',
     industryRelevance: ['finance', 'energy', 'manufacturing', 'real_estate', 'technology']
@@ -137,7 +137,7 @@ export const sasbTopics: MaterialTopic[] = [
   {
     id: 'supply_chain',
     name: 'Supply Chain Management',
-    category: 'Governance',
+    esg: 'Governance',
     description: 'Management of environmental and social risks in the supply chain',
     framework: 'SASB',
     industryRelevance: ['retail', 'manufacturing', 'technology', 'automotive', 'apparel']
@@ -147,7 +147,7 @@ export const sasbTopics: MaterialTopic[] = [
   {
     id: 'business_ethics',
     name: 'Business Ethics',
-    category: 'Governance',
+    esg: 'Governance',
     description: 'Management of ethical considerations in business operations',
     framework: 'SASB',
     industryRelevance: ['finance', 'pharmaceuticals', 'healthcare', 'energy', 'defense']
@@ -155,7 +155,7 @@ export const sasbTopics: MaterialTopic[] = [
   {
     id: 'competitive_behavior',
     name: 'Competitive Behavior',
-    category: 'Governance',
+    esg: 'Governance',
     description: 'Management of anti-competitive practices',
     framework: 'SASB',
     industryRelevance: ['technology', 'telecommunications', 'finance', 'pharmaceuticals', 'media']
@@ -163,7 +163,7 @@ export const sasbTopics: MaterialTopic[] = [
   {
     id: 'regulatory_compliance',
     name: 'Regulatory Compliance',
-    category: 'Governance',
+    esg: 'Governance',
     description: 'Management of compliance with laws and regulations',
     framework: 'SASB',
     industryRelevance: ['finance', 'healthcare', 'energy', 'pharmaceuticals', 'chemicals']
@@ -171,7 +171,7 @@ export const sasbTopics: MaterialTopic[] = [
   {
     id: 'systemic_risk',
     name: 'Systemic Risk Management',
-    category: 'Governance',
+    esg: 'Governance',
     description: 'Management of systemic risks resulting from operations',
     framework: 'SASB',
     industryRelevance: ['finance', 'energy', 'technology', 'healthcare']
@@ -184,7 +184,7 @@ export const griTopics: MaterialTopic[] = [
   {
     id: 'economic_performance',
     name: 'Economic Performance',
-    category: 'Governance',
+    esg: 'Governance',
     description: 'Direct economic value generated and distributed',
     framework: 'GRI',
     industryRelevance: ['finance', 'energy', 'manufacturing', 'technology', 'telecommunications', 'mining']
@@ -192,7 +192,7 @@ export const griTopics: MaterialTopic[] = [
   {
     id: 'market_presence',
     name: 'Market Presence',
-    category: 'Governance',
+    esg: 'Governance',
     description: 'Ratios of standard entry level wage compared to local minimum wage',
     framework: 'GRI',
     industryRelevance: ['retail', 'hospitality', 'manufacturing', 'mining']
@@ -200,7 +200,7 @@ export const griTopics: MaterialTopic[] = [
   {
     id: 'procurement_practices',
     name: 'Procurement Practices',
-    category: 'Governance',
+    esg: 'Governance',
     description: 'Proportion of spending on local suppliers',
     framework: 'GRI',
     industryRelevance: ['manufacturing', 'retail', 'hospitality', 'energy']
@@ -208,7 +208,7 @@ export const griTopics: MaterialTopic[] = [
   {
     id: 'anti_corruption',
     name: 'Anti-corruption',
-    category: 'Governance',
+    esg: 'Governance',
     description: 'Operations assessed for risks related to corruption',
     framework: 'GRI',
     industryRelevance: ['finance', 'energy', 'construction', 'defense', 'pharmaceuticals']
@@ -218,7 +218,7 @@ export const griTopics: MaterialTopic[] = [
   {
     id: 'materials',
     name: 'Materials',
-    category: 'Environment',
+    esg: 'Environment',
     description: 'Materials used by weight or volume',
     framework: 'GRI',
     industryRelevance: ['manufacturing', 'construction', 'chemicals', 'automotive', 'consumer_goods']
@@ -226,7 +226,7 @@ export const griTopics: MaterialTopic[] = [
   {
     id: 'biodiversity',
     name: 'Biodiversity',
-    category: 'Environment',
+    esg: 'Environment',
     description: 'Operational sites in or adjacent to protected areas',
     framework: 'GRI',
     industryRelevance: ['energy', 'mining', 'agriculture', 'forestry', 'construction']
@@ -234,7 +234,7 @@ export const griTopics: MaterialTopic[] = [
   {
     id: 'emissions',
     name: 'Emissions',
-    category: 'Environment',
+    esg: 'Environment',
     description: 'Direct and indirect greenhouse gas emissions',
     framework: 'GRI',
     industryRelevance: ['energy', 'manufacturing', 'logistics', 'aviation', 'automotive']
@@ -242,7 +242,7 @@ export const griTopics: MaterialTopic[] = [
   {
     id: 'effluents_waste',
     name: 'Effluents and Waste',
-    category: 'Environment',
+    esg: 'Environment',
     description: 'Water discharge by quality and destination',
     framework: 'GRI',
     industryRelevance: ['manufacturing', 'chemicals', 'mining', 'energy', 'food_beverage']
@@ -252,7 +252,7 @@ export const griTopics: MaterialTopic[] = [
   {
     id: 'employment',
     name: 'Employment',
-    category: 'Social',
+    esg: 'Social',
     description: 'New employee hires and employee turnover',
     framework: 'GRI',
     industryRelevance: ['all']
@@ -260,7 +260,7 @@ export const griTopics: MaterialTopic[] = [
   {
     id: 'labor_management',
     name: 'Labor/Management Relations',
-    category: 'Social',
+    esg: 'Social',
     description: 'Minimum notice periods regarding operational changes',
     framework: 'GRI',
     industryRelevance: ['manufacturing', 'logistics', 'mining', 'energy']
@@ -268,7 +268,7 @@ export const griTopics: MaterialTopic[] = [
   {
     id: 'training_education',
     name: 'Training and Education',
-    category: 'Social',
+    esg: 'Social',
     description: 'Average hours of training per year per employee',
     framework: 'GRI',
     industryRelevance: ['technology', 'finance', 'healthcare', 'education', 'professional_services']
@@ -276,7 +276,7 @@ export const griTopics: MaterialTopic[] = [
   {
     id: 'non_discrimination',
     name: 'Non-discrimination',
-    category: 'Social',
+    esg: 'Social',
     description: 'Incidents of discrimination and corrective actions taken',
     framework: 'GRI',
     industryRelevance: ['all']
@@ -284,7 +284,7 @@ export const griTopics: MaterialTopic[] = [
   {
     id: 'child_labor',
     name: 'Child Labor',
-    category: 'Social',
+    esg: 'Social',
     description: 'Operations and suppliers at risk for incidents of child labor',
     framework: 'GRI',
     industryRelevance: ['manufacturing', 'agriculture', 'mining', 'retail', 'apparel']
@@ -292,7 +292,7 @@ export const griTopics: MaterialTopic[] = [
   {
     id: 'forced_labor',
     name: 'Forced or Compulsory Labor',
-    category: 'Social',
+    esg: 'Social',
     description: 'Operations and suppliers at risk for incidents of forced or compulsory labor',
     framework: 'GRI',
     industryRelevance: ['manufacturing', 'agriculture', 'mining', 'logistics', 'construction']
@@ -300,7 +300,7 @@ export const griTopics: MaterialTopic[] = [
   {
     id: 'local_communities',
     name: 'Local Communities',
-    category: 'Social',
+    esg: 'Social',
     description: 'Operations with local community engagement, impact assessments, and development programs',
     framework: 'GRI',
     industryRelevance: ['mining', 'energy', 'construction', 'manufacturing']
@@ -308,7 +308,7 @@ export const griTopics: MaterialTopic[] = [
   {
     id: 'customer_health_safety',
     name: 'Customer Health and Safety',
-    category: 'Social',
+    esg: 'Social',
     description: 'Assessment of the health and safety impacts of product and service categories',
     framework: 'GRI',
     industryRelevance: ['healthcare', 'pharmaceuticals', 'food_beverage', 'consumer_goods', 'automotive']
@@ -316,7 +316,7 @@ export const griTopics: MaterialTopic[] = [
   {
     id: 'marketing_labeling',
     name: 'Marketing and Labeling',
-    category: 'Social',
+    esg: 'Social',
     description: 'Requirements for product and service information and labeling',
     framework: 'GRI',
     industryRelevance: ['food_beverage', 'pharmaceuticals', 'consumer_goods', 'chemicals']
@@ -424,7 +424,7 @@ export const calculateInitialImpacts = (topic: MaterialTopic): { businessImpact:
   };
   
   const base = baseValues[topic.framework];
-  const modifier = categoryModifiers[topic.category as keyof typeof categoryModifiers];
+  const modifier = categoryModifiers[topic.esg as keyof typeof categoryModifiers];
   
   // Add some randomness to make the matrix more interesting
   const randomVariation = () => (Math.random() - 0.5) * 2;
@@ -446,12 +446,12 @@ export const generateMatrixData = (topics: MaterialTopic[]): any[] => {
       y: impacts.sustainabilityImpact,
       z: 100,
       name: topic.name,
-      category: topic.category,
+      category: topic.esg,
       framework: topic.framework,
       description: topic.description,
       businessImpact: impacts.businessImpact,
       sustainabilityImpact: impacts.sustainabilityImpact,
-      color: topicColors[topic.category as keyof typeof topicColors]
+      color: topicColors[topic.esg as keyof typeof topicColors]
     };
   });
 };

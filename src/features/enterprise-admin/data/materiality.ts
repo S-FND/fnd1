@@ -28,7 +28,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'climate', 
       name: 'Climate Change',
-      category: 'Environment',
+      esg: 'Environment',
       businessImpact: 8.5, 
       sustainabilityImpact: 9.2,
       color: '#22c55e',
@@ -37,7 +37,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'energy', 
       name: 'Energy Management',
-      category: 'Environment',
+      esg: 'Environment',
       businessImpact: 7.8, 
       sustainabilityImpact: 8.5,
       color: '#22c55e',
@@ -46,7 +46,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'emissions', 
       name: 'Transport Emissions',
-      category: 'Environment',
+      esg: 'Environment',
       businessImpact: 9.0, 
       sustainabilityImpact: 9.5,
       color: '#22c55e',
@@ -55,7 +55,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'labor', 
       name: 'Labor Practices',
-      category: 'Social',
+      esg: 'Social',
       businessImpact: 8.0, 
       sustainabilityImpact: 7.5,
       color: '#60a5fa',
@@ -64,7 +64,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'safety', 
       name: 'Transport Safety',
-      category: 'Social',
+      esg: 'Social',
       businessImpact: 8.8, 
       sustainabilityImpact: 7.0,
       color: '#60a5fa',
@@ -73,7 +73,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'ethics', 
       name: 'Business Ethics',
-      category: 'Governance',
+      esg: 'Governance',
       businessImpact: 8.2, 
       sustainabilityImpact: 7.5,
       color: '#f59e0b',
@@ -82,7 +82,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'supplierConduct', 
       name: 'Supplier Conduct',
-      category: 'Governance',
+      esg: 'Governance',
       businessImpact: 7.6, 
       sustainabilityImpact: 7.8,
       color: '#f59e0b',
@@ -93,7 +93,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'resource', 
       name: 'Resource Efficiency',
-      category: 'Environment',
+      esg: 'Environment',
       businessImpact: 9.0, 
       sustainabilityImpact: 8.8,
       color: '#22c55e',
@@ -102,7 +102,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'waste', 
       name: 'Waste Management',
-      category: 'Environment',
+      esg: 'Environment',
       businessImpact: 8.2, 
       sustainabilityImpact: 8.5,
       color: '#22c55e',
@@ -111,7 +111,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'labor_rights', 
       name: 'Labor Rights',
-      category: 'Social',
+      esg: 'Social',
       businessImpact: 7.8, 
       sustainabilityImpact: 8.0,
       color: '#60a5fa',
@@ -120,7 +120,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'product_safety', 
       name: 'Product Safety',
-      category: 'Social',
+      esg: 'Social',
       businessImpact: 9.2, 
       sustainabilityImpact: 8.0,
       color: '#60a5fa',
@@ -129,7 +129,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'supply_chain', 
       name: 'Supply Chain Transparency',
-      category: 'Governance',
+      esg: 'Governance',
       businessImpact: 7.5, 
       sustainabilityImpact: 8.2,
       color: '#f59e0b',
@@ -140,7 +140,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'dataPrivacy', 
       name: 'Data Privacy & Security',
-      category: 'Governance',
+      esg: 'Governance',
       businessImpact: 9.5, 
       sustainabilityImpact: 8.5,
       color: '#f59e0b',
@@ -149,7 +149,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'digital_ethics', 
       name: 'Digital Ethics & AI',
-      category: 'Governance',
+      esg: 'Governance',
       businessImpact: 8.8, 
       sustainabilityImpact: 8.0,
       color: '#f59e0b',
@@ -158,7 +158,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'e_waste', 
       name: 'E-Waste Management',
-      category: 'Environment',
+      esg: 'Environment',
       businessImpact: 7.0, 
       sustainabilityImpact: 8.5,
       color: '#22c55e',
@@ -167,7 +167,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'inclusion', 
       name: 'Digital Inclusion',
-      category: 'Social',
+      esg: 'Social',
       businessImpact: 7.5, 
       sustainabilityImpact: 8.0,
       color: '#60a5fa',
@@ -176,7 +176,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'diversity', 
       name: 'Workplace Diversity',
-      category: 'Social',
+      esg: 'Social',
       businessImpact: 8.5, 
       sustainabilityImpact: 7.0,
       color: '#60a5fa',
@@ -187,7 +187,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'responsible_investing', 
       name: 'Responsible Investing',
-      category: 'Governance',
+      esg: 'Governance',
       businessImpact: 8.5, 
       sustainabilityImpact: 9.0,
       color: '#f59e0b',
@@ -196,7 +196,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'financial_inclusion', 
       name: 'Financial Inclusion',
-      category: 'Social',
+      esg: 'Social',
       businessImpact: 7.8, 
       sustainabilityImpact: 8.5,
       color: '#60a5fa',
@@ -205,7 +205,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'green_finance', 
       name: 'Green Finance',
-      category: 'Environment',
+      esg: 'Environment',
       businessImpact: 8.0, 
       sustainabilityImpact: 9.2,
       color: '#22c55e',
@@ -214,7 +214,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'compliance', 
       name: 'Regulatory Compliance',
-      category: 'Governance',
+      esg: 'Governance',
       businessImpact: 9.5, 
       sustainabilityImpact: 7.5,
       color: '#f59e0b',
@@ -225,7 +225,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'patient_privacy', 
       name: 'Patient Privacy',
-      category: 'Governance',
+      esg: 'Governance',
       businessImpact: 9.5, 
       sustainabilityImpact: 8.0,
       color: '#f59e0b',
@@ -234,7 +234,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'healthcare_access', 
       name: 'Healthcare Access',
-      category: 'Social',
+      esg: 'Social',
       businessImpact: 8.5, 
       sustainabilityImpact: 9.0,
       color: '#60a5fa',
@@ -243,7 +243,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'medical_waste', 
       name: 'Medical Waste',
-      category: 'Environment',
+      esg: 'Environment',
       businessImpact: 7.5, 
       sustainabilityImpact: 8.5,
       color: '#22c55e',
@@ -252,7 +252,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'drug_pricing', 
       name: 'Drug Pricing & Access',
-      category: 'Social',
+      esg: 'Social',
       businessImpact: 9.0, 
       sustainabilityImpact: 8.8,
       color: '#60a5fa',
@@ -263,7 +263,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'sustainable_sourcing', 
       name: 'Sustainable Sourcing',
-      category: 'Environment',
+      esg: 'Environment',
       businessImpact: 8.5, 
       sustainabilityImpact: 9.0,
       color: '#22c55e',
@@ -272,7 +272,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'packaging', 
       name: 'Packaging & Waste',
-      category: 'Environment',
+      esg: 'Environment',
       businessImpact: 8.0, 
       sustainabilityImpact: 8.8,
       color: '#22c55e',
@@ -281,7 +281,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'labor_conditions', 
       name: 'Labor Conditions',
-      category: 'Social',
+      esg: 'Social',
       businessImpact: 8.2, 
       sustainabilityImpact: 8.5,
       color: '#60a5fa',
@@ -290,7 +290,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'consumer_health', 
       name: 'Consumer Health & Safety',
-      category: 'Social',
+      esg: 'Social',
       businessImpact: 9.0, 
       sustainabilityImpact: 8.0,
       color: '#60a5fa',
@@ -301,7 +301,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'climate_transition', 
       name: 'Climate Transition',
-      category: 'Environment',
+      esg: 'Environment',
       businessImpact: 9.5, 
       sustainabilityImpact: 9.8,
       color: '#22c55e',
@@ -310,7 +310,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'water_mgmt', 
       name: 'Water Management',
-      category: 'Environment',
+      esg: 'Environment',
       businessImpact: 8.0, 
       sustainabilityImpact: 9.0,
       color: '#22c55e',
@@ -319,7 +319,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'biodiversity', 
       name: 'Biodiversity Impact',
-      category: 'Environment',
+      esg: 'Environment',
       businessImpact: 7.5, 
       sustainabilityImpact: 9.2,
       color: '#22c55e',
@@ -328,7 +328,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'community_relations', 
       name: 'Community Relations',
-      category: 'Social',
+      esg: 'Social',
       businessImpact: 8.2, 
       sustainabilityImpact: 8.0,
       color: '#60a5fa',
@@ -337,7 +337,7 @@ export const materialTopicsByIndustry = {
     { 
       id: 'operational_safety', 
       name: 'Operational Safety',
-      category: 'Social',
+      esg: 'Social',
       businessImpact: 9.0, 
       sustainabilityImpact: 8.5,
       color: '#60a5fa',
@@ -351,7 +351,7 @@ export const defaultMaterialTopics = [
   { 
     id: 'climate', 
     name: 'Climate Change',
-    category: 'Environment',
+    esg: 'Environment',
     businessImpact: 8.5, 
     sustainabilityImpact: 9.2,
     color: '#22c55e',
@@ -360,7 +360,7 @@ export const defaultMaterialTopics = [
   { 
     id: 'energy', 
     name: 'Energy Management',
-    category: 'Environment',
+    esg: 'Environment',
     businessImpact: 7.8, 
     sustainabilityImpact: 8.5,
     color: '#22c55e',
@@ -369,7 +369,7 @@ export const defaultMaterialTopics = [
   { 
     id: 'water', 
     name: 'Water Management',
-    category: 'Environment',
+    esg: 'Environment',
     businessImpact: 6.5, 
     sustainabilityImpact: 8.0,
     color: '#22c55e',
@@ -378,7 +378,7 @@ export const defaultMaterialTopics = [
   { 
     id: 'waste', 
     name: 'Waste Management',
-    category: 'Environment',
+    esg: 'Environment',
     businessImpact: 6.0, 
     sustainabilityImpact: 7.5,
     color: '#22c55e',
@@ -387,7 +387,7 @@ export const defaultMaterialTopics = [
   { 
     id: 'biodiversity', 
     name: 'Biodiversity',
-    category: 'Environment',
+    esg: 'Environment',
     businessImpact: 4.5, 
     sustainabilityImpact: 7.0,
     color: '#22c55e',
@@ -396,7 +396,7 @@ export const defaultMaterialTopics = [
   { 
     id: 'diversity', 
     name: 'Diversity & Inclusion',
-    category: 'Social',
+    esg: 'Social',
     businessImpact: 7.5, 
     sustainabilityImpact: 6.5,
     color: '#60a5fa',
@@ -405,7 +405,7 @@ export const defaultMaterialTopics = [
   { 
     id: 'laborRights', 
     name: 'Labor Rights',
-    category: 'Social',
+    esg: 'Social',
     businessImpact: 8.0, 
     sustainabilityImpact: 7.8,
     color: '#60a5fa',
@@ -414,7 +414,7 @@ export const defaultMaterialTopics = [
   { 
     id: 'communityEngagement', 
     name: 'Community Engagement',
-    category: 'Social',
+    esg: 'Social',
     businessImpact: 5.5, 
     sustainabilityImpact: 6.0,
     color: '#60a5fa',
@@ -423,7 +423,7 @@ export const defaultMaterialTopics = [
   { 
     id: 'employeeWellbeing', 
     name: 'Employee Wellbeing',
-    category: 'Social',
+    esg: 'Social',
     businessImpact: 7.0, 
     sustainabilityImpact: 5.5,
     color: '#60a5fa',
@@ -432,7 +432,7 @@ export const defaultMaterialTopics = [
   { 
     id: 'ethics', 
     name: 'Business Ethics',
-    category: 'Governance',
+    esg: 'Governance',
     businessImpact: 9.0, 
     sustainabilityImpact: 7.5,
     color: '#f59e0b',
@@ -441,7 +441,7 @@ export const defaultMaterialTopics = [
   { 
     id: 'transparency', 
     name: 'Transparency',
-    category: 'Governance',
+    esg: 'Governance',
     businessImpact: 8.2, 
     sustainabilityImpact: 7.0,
     color: '#f59e0b',
@@ -450,7 +450,7 @@ export const defaultMaterialTopics = [
   { 
     id: 'dataPrivacy', 
     name: 'Data Privacy & Security',
-    category: 'Governance',
+    esg: 'Governance',
     businessImpact: 8.8, 
     sustainabilityImpact: 6.0,
     color: '#f59e0b',
@@ -459,7 +459,7 @@ export const defaultMaterialTopics = [
   { 
     id: 'supplierConduct', 
     name: 'Supplier Conduct',
-    category: 'Governance',
+    esg: 'Governance',
     businessImpact: 7.2, 
     sustainabilityImpact: 7.8,
     color: '#f59e0b',

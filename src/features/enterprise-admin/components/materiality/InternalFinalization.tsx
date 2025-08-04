@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 interface MaterialTopic {
   id: string;
   name: string;
-  category: string;
+  esg: string;
   businessImpact: number;
   sustainabilityImpact: number;
   color: string;
@@ -123,7 +123,7 @@ const InternalFinalization: React.FC<InternalFinalizationProps> = ({
                           color: topic.color, 
                           borderColor: topic.color 
                         }}>
-                          {topic.category}
+                          {topic.esg}
                         </Badge>
                         {topic.framework && (
                           <Badge variant="outline" className="text-xs ml-1">
