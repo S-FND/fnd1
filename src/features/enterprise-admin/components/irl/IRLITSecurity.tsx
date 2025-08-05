@@ -43,7 +43,7 @@ const itSecurityItems = [
 const IRLITSecurity = () => {
   return (
     <IRLComplianceTable
-      title="IT Security & Data Privacy "
+      title="IT Security & Data Privacy"
       description="Upload required documents and records on IT Security & Data Privacy Compliance"
       items={itSecurityItems}
       type="it-security"

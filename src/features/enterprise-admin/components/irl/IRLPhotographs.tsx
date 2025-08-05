@@ -13,7 +13,7 @@ import {
   fetchHoPhotographs,
   updateHoPhotographs,
   fetchProductPhotographs,
-  updateProductPhotographs
+  updateProductPhotographs,deleteFile
 } from '../../services/companyApi';
 import TableRowQuestion from './utils/TableRowQuestion';
 
@@ -217,6 +217,68 @@ const IRLPhotographs = () => {
   useEffect(() => {
     loadData();
   }, [entityId]);
+
+  const handleDeleteOfficeFile = async (photoId: number, fileIndex: number, fileUrl: string) => {
+    try {
+      setIsSubmitting(true);
+      const filePath = fileUrl.replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/', '');
+      
+      const payload = {
+        filesToDelete: [filePath]
+      };
+  
+      await deleteFile(payload, 'ho_photograph');
+  
+      setOfficePhotographs(prev => 
+        prev.map(photo => 
+          photo.id === photoId
+            ? {
+                ...photo,
+                file_path: photo.file_path.filter((_, index) => index !== fileIndex)
+              }
+            : photo
+        )
+      );
+  
+      toast.success('File deleted successfully');
+    } catch (err) {
+      console.error('Error deleting file:', err);
+      toast.error('Failed to delete file');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleDeleteProductFile = async (photoId: number, fileIndex: number, fileUrl: string) => {
+    try {
+      setIsSubmitting(true);
+      const filePath = fileUrl.replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/', '');
+      
+      const payload = {
+        filesToDelete: [filePath]
+      };
+  
+      await deleteFile(payload, 'photographs_products');
+  
+      setProductPhotographs(prev => 
+        prev.map(photo => 
+          photo.id === photoId
+            ? {
+                ...photo,
+                file_path: photo.file_path.filter((_, index) => index !== fileIndex)
+              }
+            : photo
+        )
+      );
+  
+      toast.success('File deleted successfully');
+    } catch (err) {
+      console.error('Error deleting file:', err);
+      toast.error('Failed to delete file');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -455,6 +517,7 @@ const IRLPhotographs = () => {
                         operationNameToKeyMap={{ [photo.description]: photo.key }}
                         existingFiles={photo.file_path}
                         setOperations={() => { }}
+                        onDeleteFile={(fileIndex, fileUrl) => handleDeleteOfficeFile(photo.id, fileIndex, fileUrl)}
                       />
                     ))}
                   </tbody>
@@ -515,6 +578,7 @@ const IRLPhotographs = () => {
                         operationNameToKeyMap={{ [photo.description]: photo.key }}
                         existingFiles={photo.file_path}
                         setOperations={() => { }}
+                        onDeleteFile={(fileIndex, fileUrl) => handleDeleteProductFile(photo.id, fileIndex, fileUrl)}
                       />
                     ))}
                   </tbody>
