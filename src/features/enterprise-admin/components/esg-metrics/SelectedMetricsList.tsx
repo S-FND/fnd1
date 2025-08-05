@@ -74,7 +74,7 @@ const SelectedMetricsList: React.FC<SelectedMetricsListProps> = ({
           <CardContent>
             <div className="grid gap-4">
               {selectedMetrics.map((metric) => (
-                <div key={metric.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div key={metric.code} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <h4 className="font-medium">{metric.name}</h4>
@@ -100,7 +100,7 @@ const SelectedMetricsList: React.FC<SelectedMetricsListProps> = ({
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => onRemoveMetric(metric.id)}
+                      onClick={() => onRemoveMetric(metric.code)}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -156,7 +156,7 @@ const SelectedMetricsList: React.FC<SelectedMetricsListProps> = ({
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={() => onDeleteSavedMetric(metric.id)}
+                        onClick={() => onDeleteSavedMetric(metric.code)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

@@ -26,34 +26,26 @@ const ESGMetricsPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [finalizedTopics, setFinalizedTopics] = useState<MaterialTopic[]>([]);
+  const [finalMetrics,setFinalMetrics]=useState();
+  const [customMetrics,setCustomMetrics]=useState()
 
   const getMaterialityData = async () => {
     try {
       let materilityDataResponse = await httpClient.get(`materiality/${JSON.parse(localStorage.getItem('fandoro-user')).entityId}`)
       if (materilityDataResponse['status'] == 200) {
         if (materilityDataResponse['data']) {
-          if (materilityDataResponse['data']['industry']) {
-            console.log("materialityData['data']['industry']", materilityDataResponse['data']['industry'])
+          if(materilityDataResponse['data']['finalTopics']){
+            setFinalizedTopics(materilityDataResponse['data']['finalTopics'])
+          }
+          if (materilityDataResponse['data']['finalMetrics']) {
+            console.log("materialityData['data']['finalMetrics']", materilityDataResponse['data']['finalMetrics'])
             // setSelectedIndustries(materilityDataResponse['data']['industry'])
             // setTempSelectedIndustries(materilityDataResponse['data']['industry'])
+            setFinalMetrics(materilityDataResponse['data']['finalMetrics'])
           }
-          if (materilityDataResponse['data']['customTopics']) {
+          if (materilityDataResponse['data']['customMetrics']) {
             // setSavedCustomTopics(materilityDataResponse['data']['customTopics'])
-          }
-          if (materilityDataResponse['data']['finalizingMethod']) {
-            // setFinalizationMethod(materilityDataResponse['data']['finalizingMethod'])
-            // setFinalizationStep(materilityDataResponse['data']['finalizingMethod'])
-          }
-
-          if (materilityDataResponse['data']['selectedTopics']) {
-            // setSelectedMaterialTopics(materilityDataResponse['data']['selectedTopics'])
-            // setSelectedTopicsForEngagement(materilityDataResponse['data']['selectedTopics'])
-          }
-
-          if (materilityDataResponse['data']['finalTopics'] && materilityDataResponse['data']['finalTopics'].length > 0) {
-            // setSelectedMaterialTopics(materilityDataResponse['data']['finalTopics'])
-            // setSelectedTopicsForEngagement(materilityDataResponse['data']['selectedTopics'])
-            setFinalizedTopics(materilityDataResponse['data']['finalTopics'])
+            setCustomMetrics(materilityDataResponse['data']['customMetrics'])
           }
         }
       }
@@ -84,6 +76,10 @@ const ESGMetricsPage: React.FC = () => {
     // }
     getMaterialityData()
   }, []);
+
+  useEffect(()=>{
+    console.log("ESGMetricsPage :: selectedMetrics =====> ",customMetrics)
+  },[customMetrics])
 
   return (
     <div className="space-y-6">
@@ -158,7 +154,7 @@ const ESGMetricsPage: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="configuration" className="space-y-6 mt-4">
-          <ESGMetricsManager materialTopics={finalizedTopics} />
+          <ESGMetricsManager materialTopics={finalizedTopics} finalMetricsList={finalMetrics} customMetricsList={customMetrics} />
         </TabsContent>
         
         <TabsContent value="data-entry" className="space-y-6 mt-4">

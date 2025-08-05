@@ -71,7 +71,7 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
   // setTimeout(()=>{
   //   getMaterialityData()
   // },4000)
-
+  console.log(`selectedMaterialTopics ========> `,selectedMaterialTopics)
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
       <div className="flex items-center justify-between">

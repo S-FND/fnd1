@@ -34,6 +34,7 @@ interface MetricDataEntry {
   topicId: string;
   dataType: string;
   financialYear: string;
+  industry?:string
 }
 
 interface MetricsDataEntryProps {
@@ -82,12 +83,13 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
   }, [dataEntries]);
 
   const handleSubmitData = () => {
+    console.log("handleSubmitData :: Entry")
     if (!selectedMetric || !entryValue || !entryDate) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    const metric = configuredMetrics.find(m => m.id === selectedMetric);
+    const metric = configuredMetrics.find(m => m.code === selectedMetric);
     if (!metric) return;
 
     const newEntry: MetricDataEntry = {
@@ -98,11 +100,12 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
       frequency: metric.collectionFrequency,
       value: entryValue,
       date: entryDate,
-      topicId: metric.relatedTopic,
+      topicId: metric.topic,
       dataType: metric.dataType,
-      financialYear: selectedFinancialYear
+      financialYear: selectedFinancialYear,
+      industry:metric.industry?metric.industry:''
     };
-
+    console.log("handleSubmitData :: newEntry => ",newEntry)
     setDataEntries(prev => [newEntry, ...prev]);
     
     // Reset form
@@ -205,7 +208,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
                     </SelectTrigger>
                     <SelectContent>
                       {configuredMetrics.map(metric => (
-                        <SelectItem key={metric.id} value={metric.id}>
+                        <SelectItem key={metric.code} value={metric.code}>
                           <div className="flex flex-col">
                             <span>{metric.name}</span>
                             <span className="text-xs text-muted-foreground">
@@ -232,7 +235,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
               {selectedMetric && (
                 <div className="p-4 border rounded-lg">
                   <FlexibleDataInput
-                    metric={configuredMetrics.find(m => m.id === selectedMetric)!}
+                    metric={configuredMetrics.find(m => m.code === selectedMetric)!}
                     value={entryValue}
                     onChange={setEntryValue}
                   />
@@ -300,7 +303,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
                           frequency: metric.collectionFrequency,
                           value,
                           date: currentDate,
-                          topicId: metric.relatedTopic,
+                          topicId: metric.topic,
                           dataType: metric.dataType,
                           financialYear: selectedFinancialYear
                         };

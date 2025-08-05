@@ -55,7 +55,7 @@ const MaterialityPage = () => {
 
   // Update tempSelectedIndustries when selectedIndustries changes
   useEffect(() => {
-    console.log("selectedIndustries", selectedIndustries)
+    // console.log("selectedIndustries", selectedIndustries)
     setTempSelectedIndustries([...selectedIndustries]);
   }, [selectedIndustries]);
   let esgMappedIndustry = industryList.map((industry) => {
@@ -96,6 +96,7 @@ const MaterialityPage = () => {
           }
 
           if (materilityDataResponse['data']['selectedTopics']) {
+            console.log(`materilityDataResponse['data']['selectedTopics'] ====`,materilityDataResponse['data']['selectedTopics'])
             setSelectedMaterialTopics(materilityDataResponse['data']['selectedTopics'])
             setSelectedTopicsForEngagement(materilityDataResponse['data']['selectedTopics'])
           }
@@ -254,13 +255,13 @@ const MaterialityPage = () => {
     // // Get combined topics from selected industries
     // const topics = getCombinedTopics(tempSelectedIndustries, activeFrameworks).map(ensureRequiredProps);
     // setMaterialTopics(topics);
-    console.log('tempSelectedIndustries', tempSelectedIndustries)
+    // console.log('tempSelectedIndustries', tempSelectedIndustries)
     try {
       let updateResponse = await httpClient.post("materiality/v1", {
         entityId: JSON.parse(localStorage.getItem('fandoro-user')).entityId,
         industry: tempSelectedIndustries
       })
-      console.log('updateResponse', updateResponse)
+      // console.log('updateResponse', updateResponse)
     } catch (error) {
       console.log("error :: updateMatrixData => ", error)
     }
@@ -299,7 +300,7 @@ const MaterialityPage = () => {
   };
 
   useEffect(() => {
-    console.log('tempSelectedIndustries', tempSelectedIndustries)
+    // console.log('tempSelectedIndustries', tempSelectedIndustries)
     let selectedIndustryDetails = []
     tempSelectedIndustries.forEach((t) => {
       let filteredIndustry = industriesWithDetails.filter((i) => i.name == t)
@@ -308,6 +309,10 @@ const MaterialityPage = () => {
     // console.log('selectedIndustryDetails',selectedIndustryDetails)
     let selectedIndustryTopic = selectedIndustryDetails.reduce((a, c, pIndex) => {
       a = [...a, ...(c.topics.map((t, index) => {
+        //&& st.industry == c.name
+        let selected=selectedMaterialTopics.filter((st)=> st.topic == t.name  && st.selected)
+        console.log(`ttttttttttttttttttttttttt ====`,t.name ,c.name)
+        console.log(`ttttttttttttttttttttttttt ====`,selected)
         return {
           id: `${pIndex}-${index}`,
           industry: c.name,
@@ -316,13 +321,15 @@ const MaterialityPage = () => {
           businessImpact: t.businessImpact,
           sustainabilityImpact: t.sustainabilityImpact,
           framework: 'SASB',
-          description: t.metrics[0] ? t.metrics[0] : ''
+          description: t.metrics[0] ? t.metrics[0] : '',
+          selected:selected && selected[0]?true:false
         }
       }))]
       return a;
     }, [])
+    console.log("Settign selectedMaterialTopics again",selectedIndustryTopic)
     setSelectedMaterialTopics(selectedIndustryTopic)
-    console.log('selectedIndustryTopic', selectedIndustryTopic)
+    // console.log('selectedIndustryTopic', selectedIndustryTopic)
   }, [tempSelectedIndustries])
 
   const materialityData = generateMatrixData(materialTopics);
@@ -415,6 +422,10 @@ const MaterialityPage = () => {
     setFinalizationStep('method');
     setFinalizationMethod(null);
   };
+
+  useEffect(()=>{
+    console.log(`selectedMaterialTopics ========:: =======`,selectedMaterialTopics)
+  },[selectedMaterialTopics])
 
   return (
     <UnifiedSidebarLayout>

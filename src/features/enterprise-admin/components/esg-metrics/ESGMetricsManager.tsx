@@ -12,6 +12,8 @@ import MetricsSelector from './MetricsSelector';
 import SelectedMetricsList from './SelectedMetricsList';
 import CustomMetricDialog from './CustomMetricDialog';
 import ExcelUpload from './ExcelUpload';
+import industryList from "../../data/industryBychatgtp.json";
+import { httpClient } from '@/lib/httpClient';
 
 interface MaterialTopic {
   id: string;
@@ -22,13 +24,23 @@ interface MaterialTopic {
   color: string;
   description: string;
   framework?: string;
+  industry?: string;
 }
+
+interface Metric  {
+  name: string;
+  category: string;
+  unit: string;
+  code: string;
+};
 
 interface ESGMetricsManagerProps {
   materialTopics: MaterialTopic[];
+  finalMetricsList: ESGMetricWithTracking[],
+  customMetricsList: ESGMetricWithTracking[]
 }
 
-const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics }) => {
+const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, finalMetricsList, customMetricsList }) => {
   const [selectedTopicId, setSelectedTopicId] = useState<string>('');
   const [availableMetrics, setAvailableMetrics] = useState<ESGMetricWithTracking[]>([]);
   const [selectedMetrics, setSelectedMetrics] = useState<ESGMetricWithTracking[]>([]);
@@ -37,7 +49,9 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [customMetrics, setCustomMetrics] = useState<ESGMetricWithTracking[]>([]);
-  
+
+  const [standardMetrics, setStandardMetrics] = useState<ESGMetricWithTracking[]>([]);
+
   // Custom metric form state
   const [customMetricForm, setCustomMetricForm] = useState({
     name: '',
@@ -52,81 +66,169 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
     },
   });
 
+
+
+  // const getMaterialityData = async () => {
+  //   try {
+  //     let materilityDataResponse = await httpClient.get(`materiality/${JSON.parse(localStorage.getItem('fandoro-user')).entityId}`)
+  //     if (materilityDataResponse['status'] == 200) {
+  //       if (materilityDataResponse['data']) {
+  //         if (materilityDataResponse['data']['industry']) {
+  //           console.log("materialityData['data']['industry']", materilityDataResponse['data']['industry'])
+  //           // setSelectedIndustries(materilityDataResponse['data']['industry'])
+  //           // setTempSelectedIndustries(materilityDataResponse['data']['industry'])
+  //         }
+  //         if (materilityDataResponse['data']['customTopics']) {
+  //           // setSavedCustomTopics(materilityDataResponse['data']['customTopics'])
+  //         }
+  //         if (materilityDataResponse['data']['finalizingMethod']) {
+  //           // setFinalizationMethod(materilityDataResponse['data']['finalizingMethod'])
+  //           // setFinalizationStep(materilityDataResponse['data']['finalizingMethod'])
+  //         }
+
+  //         if (materilityDataResponse['data']['selectedTopics']) {
+  //           // setSelectedMaterialTopics(materilityDataResponse['data']['selectedTopics'])
+  //           // setSelectedTopicsForEngagement(materilityDataResponse['data']['selectedTopics'])
+  //         }
+
+  //         if (materilityDataResponse['data']['finalTopics'] && materilityDataResponse['data']['finalTopics'].length > 0) {
+  //           // setSelectedMaterialTopics(materilityDataResponse['data']['finalTopics'])
+  //           // setSelectedTopicsForEngagement(materilityDataResponse['data']['selectedTopics'])
+  //           if (materilityDataResponse['data']['selectedTopics']) {
+  //             let finalMetricsSelected=materilityDataResponse['data']['selectedTopics'].map((t)=>{
+  //               let filteredData=materilityDataResponse['data']['finalTopics'].filter((f)=> (t.topic == f.topic) && t.industry == f.industry)
+
+  //               return {...t,finalized:(filteredData && filteredData.length>0)?true:false}
+  //             })
+  //             console.log(`materilityDataResponse['data']['selectedTopics']`,finalMetricsSelected)
+  //             // setSelectedMaterialTopics(finalMetricsSelected)
+  //             // setSelectedTopicsForEngagement(finalMetricsSelected)
+  //           }
+  //         }
+  //       }
+  //     }
+  //     console.log('materilityDataResponse', materilityDataResponse)
+  //   } catch (error) {
+  //     console.log("error :: getMaterialityData => ", error)
+  //   }
+  // }
+
   // Load saved metrics and custom metrics from localStorage on component mount
   useEffect(() => {
-    const saved = localStorage.getItem('savedESGMetrics');
-    if (saved) {
-      try {
-        const parsedMetrics = JSON.parse(saved);
-        setSavedMetrics(parsedMetrics);
-      } catch (error) {
-        console.error('Error loading saved metrics:', error);
-      }
-    }
+    // const saved = localStorage.getItem('savedESGMetrics');
+    // if (saved) {
+    //   try {
+    //     const parsedMetrics = JSON.parse(saved);
+    //     setSavedMetrics(parsedMetrics);
+    //   } catch (error) {
+    //     console.error('Error loading saved metrics:', error);
+    //   }
+    // }
 
-    const savedCustomMetrics = localStorage.getItem('customESGMetrics');
-    if (savedCustomMetrics) {
-      try {
-        const customData = JSON.parse(savedCustomMetrics);
-        setCustomMetrics(customData);
-      } catch (error) {
-        console.error('Error loading custom metrics:', error);
-      }
-    }
-  }, []);
+    // const savedCustomMetrics = localStorage.getItem('customESGMetrics');
+    // if (savedCustomMetrics) {
+    //   try {
+    //     const customData = JSON.parse(savedCustomMetrics);
+    //     setCustomMetrics(customData);
+    //   } catch (error) {
+    //     console.error('Error loading custom metrics:', error);
+    //   }
+    // }
+    const remainingMetrics = [...customMetricsList,...standardMetrics].filter(
+      metric => !finalMetricsList.some(toRemove => toRemove.code === metric.code)
+    );
+    console.log('remainingMetrics', remainingMetrics)
+    // setSelectedMetrics(remainingMetrics);
+    setSavedMetrics(finalMetricsList)
+  }, [customMetricsList, finalMetricsList,standardMetrics]);
+
+  function getMetricsByIndustryAndTopic(
+    data: any[],
+    industryName: string,
+    topicName: string
+  ): ESGMetricWithTracking[] {
+    const industry = data.find(industry => industry.name === industryName);
+    if (!industry) return [];
+
+    const topic = industry.topics.find(topic => topic.name === topicName);
+    if (!topic) return [];
+
+    return topic.metrics.map((m) => { return { ...m, industry: industryName, topic: topicName } });
+  }
+
+  useEffect(() => {
+    let preExistMetric = materialTopics.reduce((a, c) => {
+      a = a.concat(...getMetricsByIndustryAndTopic(industryList, c.industry, c.topic))
+      return a
+    }, [])
+    // setSelectedMetrics(preExistMetric)
+    setStandardMetrics(preExistMetric)
+    // setAvailableMetrics(preExistMetric)
+  }, [materialTopics, industryList])
 
   // Save metrics to localStorage whenever savedMetrics changes
   useEffect(() => {
-    localStorage.setItem('savedESGMetrics', JSON.stringify(savedMetrics));
+    // localStorage.setItem('savedESGMetrics', JSON.stringify(savedMetrics));
   }, [savedMetrics]);
+
+  useEffect(() => {
+    console.log(`selectedMetrics => `, selectedMetrics)
+  }, [selectedMetrics]);
 
   // Load metrics when topic changes
   useEffect(() => {
     if (selectedTopicId && selectedTopicId !== 'all-topics') {
+      console.log(`selectedTopicId ===> `,selectedTopicId)
       // Check if this is a standard material topic with IRIS+ metrics
-      if (isStandardMaterialTopic(selectedTopicId)) {
-        // Get IRIS+ metrics for this topic
-        const irisMetrics = getIRISMetricsByTopic(selectedTopicId);
-        const convertedIrisMetrics: ESGMetricWithTracking[] = irisMetrics.map(metric => ({
-          id: metric.id,
-          name: metric.name,
-          description: metric.description,
-          unit: metric.unit,
-          source: 'IRIS+',
-          framework: metric.framework,
-          relatedTopic: selectedTopicId,
-          category: metric.category,
-          dataType: metric.dataType,
-          inputFormat: {},
-          collectionFrequency: metric.collectionFrequency,
-          dataPoints: [],
-          isSelected: false
-        }));
-        
-        // Also get any existing topic-specific metrics
-        const topicMetrics = getMetricsByTopic(selectedTopicId)
-          .map(metric => {
-            const defaultTracking = getDefaultMetricTracking(metric);
-            return {
-              ...defaultTracking,
-              collectionFrequency: 'Monthly' as const
-            };
-          });
-        
-        // Combine IRIS+ metrics, topic-specific metrics, and custom metrics
-        setAvailableMetrics([...convertedIrisMetrics, ...topicMetrics, ...customMetrics]);
-      } else {
-        // For custom topics or topics without IRIS+ metrics, use existing logic
-        const topicMetrics = getMetricsByTopic(selectedTopicId)
-          .map(metric => {
-            const defaultTracking = getDefaultMetricTracking(metric);
-            return {
-              ...defaultTracking,
-              collectionFrequency: 'Monthly' as const
-            };
-          });
-        setAvailableMetrics([...topicMetrics, ...customMetrics]);
-      }
+      // if (isStandardMaterialTopic(selectedTopicId)) {
+      //   // Get IRIS+ metrics for this topic
+      //   const irisMetrics = getIRISMetricsByTopic(selectedTopicId);
+      //   const convertedIrisMetrics: ESGMetricWithTracking[] = irisMetrics.map(metric => ({
+      //     id: metric.id,
+      //     name: metric.name,
+      //     description: metric.description,
+      //     unit: metric.unit,
+      //     code: metric.id,
+      //     source: 'IRIS+',
+      //     framework: metric.framework,
+      //     topic: selectedTopicId,
+      //     category: metric.category,
+      //     dataType: metric.dataType,
+      //     inputFormat: {},
+      //     collectionFrequency: metric.collectionFrequency,
+      //     dataPoints: [],
+      //     isSelected: false
+      //   }));
+
+      //   // Also get any existing topic-specific metrics
+      //   const topicMetrics = getMetricsByTopic(selectedTopicId)
+      //     .map(metric => {
+      //       const defaultTracking = getDefaultMetricTracking(metric);
+      //       return {
+      //         ...defaultTracking,
+      //         collectionFrequency: 'Monthly' as const
+      //       };
+      //     });
+
+      //   // Combine IRIS+ metrics, topic-specific metrics, and custom metrics
+      //   setAvailableMetrics([...convertedIrisMetrics, ...topicMetrics, ...customMetrics]);
+      // } else {
+      //   // For custom topics or topics without IRIS+ metrics, use existing logic
+      //   const topicMetrics = getMetricsByTopic(selectedTopicId)
+      //     .map(metric => {
+      //       const defaultTracking = getDefaultMetricTracking(metric);
+      //       return {
+      //         ...defaultTracking,
+      //         collectionFrequency: 'Monthly' as const
+      //       };
+      //     });
+      //   setAvailableMetrics([...topicMetrics, ...customMetrics]);
+      // }
+      let topicData=materialTopics.filter((m)=>m.id == selectedTopicId);
+      let saveCustomMetric=[...customMetricsList].filter((cm)=> cm.topic == topicData[0].topic && cm.industry == topicData[0].industry)
+      
+      let metricData=getMetricsByIndustryAndTopic(industryList,topicData[0].industry,topicData[0].topic)
+      setAvailableMetrics([...metricData,...customMetrics,...saveCustomMetric])
     } else {
       // If no topic selected or "all-topics" selected, show all custom metrics as available
       setAvailableMetrics(customMetrics);
@@ -134,24 +236,26 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
   }, [selectedTopicId, customMetrics]);
 
   const handleSelectTopic = (topicId: string) => {
+    console.log("handleSelectTopic :: setSelectedMetrics",)
     setSelectedTopicId(topicId);
     setSelectedMetrics([]);
   };
 
   const handleAddMetric = (metricId: string) => {
-    const metric = availableMetrics.find(m => m.id === metricId);
-    if (metric && !selectedMetrics.find(sm => sm.id === metricId)) {
+    const metric = availableMetrics.find(m => m.code === metricId);
+    if (metric && !selectedMetrics.find(sm => sm.code === metricId)) {
       setSelectedMetrics([...selectedMetrics, { ...metric, isSelected: true }]);
       toast.success('Metric added to your selection');
     }
   };
 
   const handleRemoveMetric = (metricId: string) => {
-    setSelectedMetrics(selectedMetrics.filter(m => m.id !== metricId));
+    setSelectedMetrics(selectedMetrics.filter(m => m.code !== metricId));
     toast.success('Metric removed from selection');
   };
 
   const handleEditMetric = (metric: ESGMetricWithTracking) => {
+    console.log(`handleEditMetric :: handleEditMetric :: metric => `, metric)
     setEditingMetric(metric);
     setCustomMetricForm({
       name: metric.name,
@@ -191,6 +295,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
   };
 
   const handleSaveEdit = () => {
+    console.log(`handleSaveEdit :: handleSaveEdit `)
     if (editingMetric) {
       const updatedMetric = {
         ...editingMetric,
@@ -201,9 +306,10 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
         inputFormat: customMetricForm.inputFormat,
         collectionFrequency: customMetricForm.collectionFrequency,
       };
-
+      console.log(`handleSaveEdit :: updatedMetric :: updatedMetric => `, updatedMetric)
+      console.log(`handleSaveEdit :: updatedMetric :: selectedMetrics => `, selectedMetrics)
       setSelectedMetrics(metrics =>
-        metrics.map(m => m.id === editingMetric.id ? updatedMetric : m)
+        metrics.map(m => m.code === editingMetric.code ? updatedMetric : m)
       );
 
       // Update in saved metrics if it exists there
@@ -213,11 +319,11 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
 
       // Update in custom metrics if it's a custom metric
       if (editingMetric.source === 'Custom') {
-        const updatedCustomMetrics = customMetrics.map(m => 
+        const updatedCustomMetrics = customMetrics.map(m =>
           m.id === editingMetric.id ? updatedMetric : m
         );
         setCustomMetrics(updatedCustomMetrics);
-        localStorage.setItem('customESGMetrics', JSON.stringify(updatedCustomMetrics));
+        // localStorage.setItem('customESGMetrics', JSON.stringify(updatedCustomMetrics));
       }
 
       toast.success('Metric updated successfully');
@@ -227,31 +333,34 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
     }
   };
 
-  const handleAddCustomMetric = () => {
+  const handleAddCustomMetric = async () => {
     if (!customMetricForm.name.trim()) {
       toast.error('Please enter a metric name');
       return;
     }
-
+    console.log("handleAddCustomMetric :: Entry")
     // Determine category based on selected topic or default
     let category: 'Environmental' | 'Social' | 'Governance' = 'Environmental';
+    let selectedTopic=null;
     if (selectedTopicId) {
-      const selectedTopic = materialTopics.find(topic => topic.id === selectedTopicId);
+       selectedTopic= materialTopics.find(topic => topic.id === selectedTopicId);
       if (selectedTopic) {
-        category = selectedTopic.esg === 'Environment' 
-          ? 'Environmental' 
+        category = selectedTopic.esg === 'Environment'
+          ? 'Environmental'
           : (selectedTopic.esg as 'Social' | 'Governance');
       }
     }
 
     const customMetric: ESGMetricWithTracking = {
       id: `custom_${Date.now()}`,
+      code: `custom_${Date.now()}`,
       name: customMetricForm.name,
       description: customMetricForm.description || 'Custom metric',
       unit: customMetricForm.unit || 'N/A',
       source: 'Custom',
       framework: 'Custom',
-      relatedTopic: selectedTopicId || 'all',
+      topic:   selectedTopic ? selectedTopic.topic : 'all',
+      industry: selectedTopic ? selectedTopic.industry : 'all',
       category,
       dataType: customMetricForm.dataType,
       inputFormat: customMetricForm.inputFormat,
@@ -263,28 +372,52 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
     // Add to custom metrics list and save to localStorage
     const updatedCustomMetrics = [...customMetrics, customMetric];
     setCustomMetrics(updatedCustomMetrics);
-    localStorage.setItem('customESGMetrics', JSON.stringify(updatedCustomMetrics));
+    // localStorage.setItem('customESGMetrics', JSON.stringify(updatedCustomMetrics));
 
     // Add to selected metrics
-    setSelectedMetrics([...selectedMetrics, customMetric]);
-    setIsAddDialogOpen(false);
-    resetCustomMetricForm();
-    toast.success('Custom metric added and available for all topics');
+    let updatedSelectedMetrics = [...selectedMetrics, customMetric]
+
+    try {
+      let updateResponse = await httpClient.post("materiality/v1", {
+        entityId: JSON.parse(localStorage.getItem('fandoro-user')).entityId,
+        customMetrics: updatedCustomMetrics
+      })
+      console.log('updateResponse', updateResponse)
+      setSelectedMetrics(updatedSelectedMetrics);
+      setIsAddDialogOpen(false);
+      resetCustomMetricForm();
+      toast.success('Custom metric added and available for all topics');
+    } catch (error) {
+      console.log("error :: updateMatrixData => ", error)
+    }
+
   };
 
-  const handleSaveConfiguration = () => {
+  const handleSaveConfiguration = async () => {
     if (selectedMetrics.length === 0) {
       toast.error('Please select at least one metric to save');
       return;
     }
 
-    // Add selected metrics to saved metrics, avoiding duplicates
-    const newMetrics = selectedMetrics.filter(
-      selectedMetric => !savedMetrics.find(saved => saved.id === selectedMetric.id)
-    );
+    // // Add selected metrics to saved metrics, avoiding duplicates
+    // const newMetrics = selectedMetrics.filter(
+    //   selectedMetric => !savedMetrics.find(saved => saved.id === selectedMetric.id)
+    // );
 
-    setSavedMetrics(prev => [...prev, ...newMetrics]);
-    toast.success(`${selectedMetrics.length} metrics saved for data entry`);
+    // setSavedMetrics(prev => [...prev, ...newMetrics]);
+    // toast.success(`${selectedMetrics.length} metrics saved for data entry`);
+
+    try {
+      let final = [...selectedMetrics, ...finalMetricsList].filter((m) => m.dataType && m.inputFormat)
+      let updateResponse = await httpClient.post("materiality/v1", {
+        entityId: JSON.parse(localStorage.getItem('fandoro-user')).entityId,
+        finalMetrics: final,
+        selectedMetrics: [...selectedMetrics, ...finalMetricsList]
+      })
+      console.log('updateResponse', updateResponse)
+    } catch (error) {
+      console.log("error :: updateMatrixData => ", error)
+    }
     setSelectedMetrics([]);
   };
 
@@ -307,15 +440,15 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
 
   return (
     <div className="space-y-6">
-      <ExcelUpload 
+      <ExcelUpload
         onMetricsImported={(metrics) => {
           setSavedMetrics(prev => [...prev, ...metrics]);
           toast.success(`${metrics.length} metrics imported and saved`);
         }}
-        onDataImported={() => {}} // Data import handled in MetricsDataEntry
+        onDataImported={() => { }} // Data import handled in MetricsDataEntry
         materialTopics={materialTopics}
       />
-      
+
       <TopicSelector
         materialTopics={materialTopics}
         selectedTopicId={selectedTopicId}
@@ -337,7 +470,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
                 <p className="text-sm text-muted-foreground">
                   {customMetrics.length} custom metrics available
                 </p>
-                <Button 
+                <Button
                   onClick={() => setIsAddDialogOpen(true)}
                   className="flex items-center gap-2"
                 >

@@ -5,9 +5,10 @@ export interface ESGMetric {
   name: string;
   description: string;
   unit: string;
+  code:string;
   source: 'GIIN' | 'GRI' | 'Custom' | 'IRIS+';
   framework: string;
-  relatedTopic: string;
+  topic: string;
   category: 'Environmental' | 'Social' | 'Governance';
   dataType: 'Numeric' | 'Percentage' | 'Text' | 'Boolean' | 'Dropdown' | 'Radio' | 'Table';
   inputFormat?: {
@@ -15,6 +16,7 @@ export interface ESGMetric {
     tableColumns?: string[]; // For table format
     tableRows?: number; // For table format
   };
+  industry?:string;
 }
 
 export interface ESGMetricWithTracking extends ESGMetric {
