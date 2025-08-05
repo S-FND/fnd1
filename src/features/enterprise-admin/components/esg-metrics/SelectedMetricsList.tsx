@@ -24,6 +24,8 @@ interface SelectedMetricsListProps {
   onRemoveMetric: (metricId: string) => void;
   onSaveConfiguration?: () => void;
   savedMetrics?: ESGMetricWithTracking[];
+  onEditSavedMetric?: (metric: ESGMetricWithTracking) => void;
+  onDeleteSavedMetric?: (metricId: string) => void;
 }
 
 const SelectedMetricsList: React.FC<SelectedMetricsListProps> = ({
@@ -32,7 +34,9 @@ const SelectedMetricsList: React.FC<SelectedMetricsListProps> = ({
   onEditMetric,
   onRemoveMetric,
   onSaveConfiguration,
-  savedMetrics = []
+  savedMetrics = [],
+  onEditSavedMetric,
+  onDeleteSavedMetric
 }) => {
   const getFrequencyColor = (frequency: string) => {
     switch (frequency) {
@@ -138,7 +142,27 @@ const SelectedMetricsList: React.FC<SelectedMetricsListProps> = ({
                       <span>Type: {metric.dataType}</span>
                     </div>
                   </div>
-                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <div className="flex gap-2">
+                    {onEditSavedMetric && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => onEditSavedMetric(metric)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {onDeleteSavedMetric && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => onDeleteSavedMetric(metric.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  </div>
                 </div>
               ))}
             </div>
