@@ -15,8 +15,8 @@ import ExcelUpload from './ExcelUpload';
 
 interface MaterialTopic {
   id: string;
-  name: string;
-  category: string;
+  topic: string;
+  esg: string;
   businessImpact: number;
   sustainabilityImpact: number;
   color: string;
@@ -207,9 +207,9 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
     if (selectedTopicId) {
       const selectedTopic = materialTopics.find(topic => topic.id === selectedTopicId);
       if (selectedTopic) {
-        category = selectedTopic.category === 'Environment' 
+        category = selectedTopic.esg === 'Environment' 
           ? 'Environmental' 
-          : (selectedTopic.category as 'Social' | 'Governance');
+          : (selectedTopic.esg as 'Social' | 'Governance');
       }
     }
 

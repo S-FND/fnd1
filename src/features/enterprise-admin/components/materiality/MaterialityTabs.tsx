@@ -13,7 +13,7 @@ type Framework = 'SASB' | 'GRI' | 'Custom';
 
 interface MaterialTopic {
   id: string;
-  name: string;
+  topic: string;
   esg: string;
   businessImpact: number;
   sustainabilityImpact: number;

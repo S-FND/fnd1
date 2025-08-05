@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -8,13 +8,14 @@ import { toast } from 'sonner';
 
 interface MaterialTopic {
   id: string;
-  name: string;
+  topic: string;
   esg: string;
   businessImpact: number;
   sustainabilityImpact: number;
   color: string;
   description: string;
   framework?: string;
+  finalized?:boolean;
 }
 
 interface InternalFinalizationProps {
@@ -29,7 +30,7 @@ const InternalFinalization: React.FC<InternalFinalizationProps> = ({
   onBack
 }) => {
   const [selectedTopicIds, setSelectedTopicIds] = useState<string[]>([]);
-
+  console.log('materialTopics',materialTopics)
   const handleTopicToggle = (topicId: string, checked: boolean) => {
     if (checked) {
       setSelectedTopicIds(prev => [...prev, topicId]);
@@ -41,6 +42,10 @@ const InternalFinalization: React.FC<InternalFinalizationProps> = ({
   const handleSelectAll = () => {
     setSelectedTopicIds(materialTopics.map(topic => topic.id));
   };
+
+  useEffect(()=>{
+    setSelectedTopicIds(materialTopics.filter((m)=> m.finalized).map((f)=> f.id))
+  },[materialTopics])
 
   const handleClearAll = () => {
     setSelectedTopicIds([]);
@@ -55,6 +60,8 @@ const InternalFinalization: React.FC<InternalFinalizationProps> = ({
     const selectedTopics = materialTopics.filter(topic => 
       selectedTopicIds.includes(topic.id)
     );
+
+
     
     onFinalize(selectedTopics);
     toast.success(`${selectedTopics.length} material topics finalized successfully`);
@@ -85,7 +92,7 @@ const InternalFinalization: React.FC<InternalFinalizationProps> = ({
         </div>
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {topics.map((topic) => {
-            const isSelected = selectedTopicIds.includes(topic.id);
+            const isSelected = selectedTopicIds.includes(topic.id) || topic.finalized;
             return (
               <Card 
                 key={topic.id} 
@@ -103,9 +110,9 @@ const InternalFinalization: React.FC<InternalFinalizationProps> = ({
                       onClick={(e) => e.stopPropagation()}
                     />
                     <div className="flex-1">
-                      <h4 className="font-medium text-sm">{topic.name}</h4>
+                      <h4 className="font-medium text-sm">{topic.topic}</h4>
                       <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                        {topic.description}
+                        {/* {topic.description} */}
                       </p>
                       <div className="grid grid-cols-2 gap-2 mt-3 text-xs">
                         <div>

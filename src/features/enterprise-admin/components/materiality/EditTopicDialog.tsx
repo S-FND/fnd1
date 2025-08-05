@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 
 interface MaterialTopic {
   id: string;
-  name: string;
+  topic: string;
   esg: string;
   businessImpact: number;
   sustainabilityImpact: number;
@@ -35,10 +35,10 @@ const EditTopicDialog: React.FC<EditTopicDialogProps> = ({ topic, isOpen, onClos
   }, [topic]);
 
   const handleSave = () => {
-    if (topic && formData.name && formData.description && formData.esg) {
+    if (topic && formData.topic && formData.description && formData.esg) {
       const updatedTopic: MaterialTopic = {
         ...topic,
-        name: formData.name,
+        topic: formData.topic,
         description: formData.description,
         esg: formData.esg,
         businessImpact: formData.businessImpact || topic.businessImpact,
@@ -75,8 +75,8 @@ const EditTopicDialog: React.FC<EditTopicDialogProps> = ({ topic, isOpen, onClos
             <Label htmlFor="name">Name</Label>
             <Input
               id="name"
-              value={formData.name || ''}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              value={formData.topic || ''}
+              onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
             />
           </div>
           <div className="grid gap-2">

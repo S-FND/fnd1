@@ -10,8 +10,8 @@ import { Plus, ExternalLink } from 'lucide-react';
 
 interface MaterialTopic {
   id: string;
-  name: string;
-  category: string;
+  topic: string;
+  esg: string;
   businessImpact: number;
   sustainabilityImpact: number;
   color: string;
@@ -61,8 +61,8 @@ const MetricsSelector: React.FC<MetricsSelectorProps> = ({
             </CardTitle>
             <CardDescription>
               {hasIrisMetrics 
-                ? `Recommended metrics from IRIS+ database for ${selectedTopic.name}. These are industry-standard metrics for this material topic.`
-                : `Available metrics for ${selectedTopic.name}`
+                ? `Recommended metrics from IRIS+ database for ${selectedTopic.topic}. These are industry-standard metrics for this material topic.`
+                : `Available metrics for ${selectedTopic.topic}`
               }
               <a 
                 href="https://iris.thegiin.org/metrics/" 

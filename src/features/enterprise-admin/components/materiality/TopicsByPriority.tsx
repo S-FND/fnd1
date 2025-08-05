@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 
 interface MaterialTopic {
   id: string;
-  name: string;
+  topic: string;
   esg: string;
   businessImpact: number;
   sustainabilityImpact: number;
@@ -39,7 +39,7 @@ const TopicsByPriority: React.FC<TopicsByPriorityProps> = ({
             <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
               {highPriorityTopics.map(topic => (
                 <div key={topic.id} className="border rounded-md p-3">
-                  <div className="font-medium">{topic.name}</div>
+                  <div className="font-medium">{topic.topic}</div>
                   <div className="text-sm text-muted-foreground mt-1">{topic.description}</div>
                   <div className="flex items-center gap-2 text-sm mt-2">
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: topic.color }}></div>
@@ -58,7 +58,7 @@ const TopicsByPriority: React.FC<TopicsByPriorityProps> = ({
             <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
               {mediumPriorityTopics.map(topic => (
                 <div key={topic.id} className="border rounded-md p-3">
-                  <div className="font-medium">{topic.name}</div>
+                  <div className="font-medium">{topic.topic}</div>
                   <div className="text-sm text-muted-foreground mt-1">{topic.description}</div>
                   <div className="flex items-center gap-2 text-sm mt-2">
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: topic.color }}></div>
@@ -77,7 +77,7 @@ const TopicsByPriority: React.FC<TopicsByPriorityProps> = ({
             <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
               {lowPriorityTopics.map(topic => (
                 <div key={topic.id} className="border rounded-md p-3">
-                  <div className="font-medium">{topic.name}</div>
+                  <div className="font-medium">{topic.topic}</div>
                   <div className="text-sm text-muted-foreground mt-1">{topic.description}</div>
                   <div className="flex items-center gap-2 text-sm mt-2">
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: topic.color }}></div>

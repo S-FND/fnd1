@@ -4,7 +4,7 @@ import TopicCard from './TopicCard';
 
 interface MaterialTopic {
   id: string;
-  name: string;
+  topic: string;
   category: string;
   businessImpact: number;
   sustainabilityImpact: number;

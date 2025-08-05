@@ -10,7 +10,7 @@ import { httpClient } from '@/lib/httpClient';
 
 interface MaterialTopic {
   id: string;
-  name: string;
+  topic: string;
   esg: string;
   businessImpact: number;
   sustainabilityImpact: number;
@@ -38,7 +38,7 @@ const CreateTopicDialog: React.FC<CreateTopicDialogProps> = ({ isOpen, onClose, 
     if (formData.name && formData.description && formData.category) {
       const newTopic: MaterialTopic = {
         id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        name: formData.name,
+        topic: formData.name,
         description: formData.description,
         esg: formData.category,
         businessImpact: formData.businessImpact,

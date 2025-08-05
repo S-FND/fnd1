@@ -9,11 +9,12 @@ import MetricsDataEntry from '../components/esg-metrics/MetricsDataEntry';
 import ESGDashboard from '../components/esg-metrics/ESGDashboard';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
+import { httpClient } from '@/lib/httpClient';
 
 interface MaterialTopic {
   id: string;
-  name: string;
-  category: string;
+  topic: string;
+  esg: string;
   businessImpact: number;
   sustainabilityImpact: number;
   color: string;
@@ -26,25 +27,62 @@ const ESGMetricsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [finalizedTopics, setFinalizedTopics] = useState<MaterialTopic[]>([]);
 
+  const getMaterialityData = async () => {
+    try {
+      let materilityDataResponse = await httpClient.get(`materiality/${JSON.parse(localStorage.getItem('fandoro-user')).entityId}`)
+      if (materilityDataResponse['status'] == 200) {
+        if (materilityDataResponse['data']) {
+          if (materilityDataResponse['data']['industry']) {
+            console.log("materialityData['data']['industry']", materilityDataResponse['data']['industry'])
+            // setSelectedIndustries(materilityDataResponse['data']['industry'])
+            // setTempSelectedIndustries(materilityDataResponse['data']['industry'])
+          }
+          if (materilityDataResponse['data']['customTopics']) {
+            // setSavedCustomTopics(materilityDataResponse['data']['customTopics'])
+          }
+          if (materilityDataResponse['data']['finalizingMethod']) {
+            // setFinalizationMethod(materilityDataResponse['data']['finalizingMethod'])
+            // setFinalizationStep(materilityDataResponse['data']['finalizingMethod'])
+          }
+
+          if (materilityDataResponse['data']['selectedTopics']) {
+            // setSelectedMaterialTopics(materilityDataResponse['data']['selectedTopics'])
+            // setSelectedTopicsForEngagement(materilityDataResponse['data']['selectedTopics'])
+          }
+
+          if (materilityDataResponse['data']['finalTopics'] && materilityDataResponse['data']['finalTopics'].length > 0) {
+            // setSelectedMaterialTopics(materilityDataResponse['data']['finalTopics'])
+            // setSelectedTopicsForEngagement(materilityDataResponse['data']['selectedTopics'])
+            setFinalizedTopics(materilityDataResponse['data']['finalTopics'])
+          }
+        }
+      }
+      console.log('materilityDataResponse', materilityDataResponse)
+    } catch (error) {
+      console.log("error :: getMaterialityData => ", error)
+    }
+  }
+
   // Load finalized topics from materiality assessment
   useEffect(() => {
-    const savedTopics = localStorage.getItem('finalizedMaterialTopics');
-    if (savedTopics) {
-      try {
-        const topics = JSON.parse(savedTopics);
-        setFinalizedTopics(topics);
-      } catch (error) {
-        console.error('Error loading finalized topics:', error);
-        // Fallback to high priority topics from default data
-        const highPriorityTopics = defaultMaterialTopics.filter(
-          topic => topic.businessImpact >= 7.0 && topic.sustainabilityImpact >= 7.0
-        );
-        setFinalizedTopics(highPriorityTopics);
-      }
-    } else {
-      // No finalized topics found, show message to complete materiality assessment
-      setFinalizedTopics([]);
-    }
+    // const savedTopics = localStorage.getItem('finalizedMaterialTopics');
+    // if (savedTopics) {
+    //   try {
+    //     const topics = JSON.parse(savedTopics);
+    //     setFinalizedTopics(topics);
+    //   } catch (error) {
+    //     console.error('Error loading finalized topics:', error);
+    //     // Fallback to high priority topics from default data
+    //     const highPriorityTopics = defaultMaterialTopics.filter(
+    //       topic => topic.businessImpact >= 7.0 && topic.sustainabilityImpact >= 7.0
+    //     );
+    //     setFinalizedTopics(highPriorityTopics);
+    //   }
+    // } else {
+    //   // No finalized topics found, show message to complete materiality assessment
+    //   setFinalizedTopics([]);
+    // }
+    getMaterialityData()
   }, []);
 
   return (
@@ -72,8 +110,8 @@ const ESGMetricsPage: React.FC = () => {
                 style={{ borderLeftColor: topic.color }}
               >
                 <div className="flex-1">
-                  <h4 className="font-medium text-sm">{topic.name}</h4>
-                  <p className="text-xs text-muted-foreground">{topic.category}</p>
+                  <h4 className="font-medium text-sm">{topic.topic}</h4>
+                  <p className="text-xs text-muted-foreground">{topic.esg}</p>
                   <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
                     <div>
                       <span className="text-muted-foreground">Business Impact:</span>

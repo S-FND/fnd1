@@ -27,7 +27,7 @@ export const materialTopicsByIndustry = {
   logistics: [
     { 
       id: 'climate', 
-      name: 'Climate Change',
+      topic: 'Climate Change',
       esg: 'Environment',
       businessImpact: 8.5, 
       sustainabilityImpact: 9.2,
@@ -36,7 +36,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'energy', 
-      name: 'Energy Management',
+      topic: 'Energy Management',
       esg: 'Environment',
       businessImpact: 7.8, 
       sustainabilityImpact: 8.5,
@@ -45,7 +45,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'emissions', 
-      name: 'Transport Emissions',
+      topic: 'Transport Emissions',
       esg: 'Environment',
       businessImpact: 9.0, 
       sustainabilityImpact: 9.5,
@@ -54,7 +54,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'labor', 
-      name: 'Labor Practices',
+      topic: 'Labor Practices',
       esg: 'Social',
       businessImpact: 8.0, 
       sustainabilityImpact: 7.5,
@@ -63,7 +63,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'safety', 
-      name: 'Transport Safety',
+      topic: 'Transport Safety',
       esg: 'Social',
       businessImpact: 8.8, 
       sustainabilityImpact: 7.0,
@@ -72,7 +72,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'ethics', 
-      name: 'Business Ethics',
+      topic: 'Business Ethics',
       esg: 'Governance',
       businessImpact: 8.2, 
       sustainabilityImpact: 7.5,
@@ -81,7 +81,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'supplierConduct', 
-      name: 'Supplier Conduct',
+      topic: 'Supplier Conduct',
       esg: 'Governance',
       businessImpact: 7.6, 
       sustainabilityImpact: 7.8,
@@ -92,7 +92,7 @@ export const materialTopicsByIndustry = {
   manufacturing: [
     { 
       id: 'resource', 
-      name: 'Resource Efficiency',
+      topic: 'Resource Efficiency',
       esg: 'Environment',
       businessImpact: 9.0, 
       sustainabilityImpact: 8.8,
@@ -101,7 +101,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'waste', 
-      name: 'Waste Management',
+      topic: 'Waste Management',
       esg: 'Environment',
       businessImpact: 8.2, 
       sustainabilityImpact: 8.5,
@@ -110,7 +110,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'labor_rights', 
-      name: 'Labor Rights',
+      topic: 'Labor Rights',
       esg: 'Social',
       businessImpact: 7.8, 
       sustainabilityImpact: 8.0,
@@ -119,7 +119,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'product_safety', 
-      name: 'Product Safety',
+      topic: 'Product Safety',
       esg: 'Social',
       businessImpact: 9.2, 
       sustainabilityImpact: 8.0,
@@ -128,7 +128,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'supply_chain', 
-      name: 'Supply Chain Transparency',
+      topic: 'Supply Chain Transparency',
       esg: 'Governance',
       businessImpact: 7.5, 
       sustainabilityImpact: 8.2,
@@ -139,7 +139,7 @@ export const materialTopicsByIndustry = {
   technology: [
     { 
       id: 'dataPrivacy', 
-      name: 'Data Privacy & Security',
+      topic: 'Data Privacy & Security',
       esg: 'Governance',
       businessImpact: 9.5, 
       sustainabilityImpact: 8.5,
@@ -148,7 +148,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'digital_ethics', 
-      name: 'Digital Ethics & AI',
+      topic: 'Digital Ethics & AI',
       esg: 'Governance',
       businessImpact: 8.8, 
       sustainabilityImpact: 8.0,
@@ -157,7 +157,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'e_waste', 
-      name: 'E-Waste Management',
+      topic: 'E-Waste Management',
       esg: 'Environment',
       businessImpact: 7.0, 
       sustainabilityImpact: 8.5,
@@ -166,7 +166,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'inclusion', 
-      name: 'Digital Inclusion',
+      topic: 'Digital Inclusion',
       esg: 'Social',
       businessImpact: 7.5, 
       sustainabilityImpact: 8.0,
@@ -175,7 +175,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'diversity', 
-      name: 'Workplace Diversity',
+      topic: 'Workplace Diversity',
       esg: 'Social',
       businessImpact: 8.5, 
       sustainabilityImpact: 7.0,
@@ -186,7 +186,7 @@ export const materialTopicsByIndustry = {
   finance: [
     { 
       id: 'responsible_investing', 
-      name: 'Responsible Investing',
+      topic: 'Responsible Investing',
       esg: 'Governance',
       businessImpact: 8.5, 
       sustainabilityImpact: 9.0,
@@ -195,7 +195,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'financial_inclusion', 
-      name: 'Financial Inclusion',
+      topic: 'Financial Inclusion',
       esg: 'Social',
       businessImpact: 7.8, 
       sustainabilityImpact: 8.5,
@@ -204,7 +204,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'green_finance', 
-      name: 'Green Finance',
+      topic: 'Green Finance',
       esg: 'Environment',
       businessImpact: 8.0, 
       sustainabilityImpact: 9.2,
@@ -213,7 +213,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'compliance', 
-      name: 'Regulatory Compliance',
+      topic: 'Regulatory Compliance',
       esg: 'Governance',
       businessImpact: 9.5, 
       sustainabilityImpact: 7.5,
@@ -224,7 +224,7 @@ export const materialTopicsByIndustry = {
   healthcare: [
     { 
       id: 'patient_privacy', 
-      name: 'Patient Privacy',
+      topic: 'Patient Privacy',
       esg: 'Governance',
       businessImpact: 9.5, 
       sustainabilityImpact: 8.0,
@@ -233,7 +233,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'healthcare_access', 
-      name: 'Healthcare Access',
+      topic: 'Healthcare Access',
       esg: 'Social',
       businessImpact: 8.5, 
       sustainabilityImpact: 9.0,
@@ -242,7 +242,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'medical_waste', 
-      name: 'Medical Waste',
+      topic: 'Medical Waste',
       esg: 'Environment',
       businessImpact: 7.5, 
       sustainabilityImpact: 8.5,
@@ -251,7 +251,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'drug_pricing', 
-      name: 'Drug Pricing & Access',
+      topic: 'Drug Pricing & Access',
       esg: 'Social',
       businessImpact: 9.0, 
       sustainabilityImpact: 8.8,
@@ -262,7 +262,7 @@ export const materialTopicsByIndustry = {
   retail: [
     { 
       id: 'sustainable_sourcing', 
-      name: 'Sustainable Sourcing',
+      topic: 'Sustainable Sourcing',
       esg: 'Environment',
       businessImpact: 8.5, 
       sustainabilityImpact: 9.0,
@@ -271,7 +271,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'packaging', 
-      name: 'Packaging & Waste',
+      topic: 'Packaging & Waste',
       esg: 'Environment',
       businessImpact: 8.0, 
       sustainabilityImpact: 8.8,
@@ -280,7 +280,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'labor_conditions', 
-      name: 'Labor Conditions',
+      topic: 'Labor Conditions',
       esg: 'Social',
       businessImpact: 8.2, 
       sustainabilityImpact: 8.5,
@@ -289,7 +289,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'consumer_health', 
-      name: 'Consumer Health & Safety',
+      topic: 'Consumer Health & Safety',
       esg: 'Social',
       businessImpact: 9.0, 
       sustainabilityImpact: 8.0,
@@ -300,7 +300,7 @@ export const materialTopicsByIndustry = {
   energy: [
     { 
       id: 'climate_transition', 
-      name: 'Climate Transition',
+      topic: 'Climate Transition',
       esg: 'Environment',
       businessImpact: 9.5, 
       sustainabilityImpact: 9.8,
@@ -309,7 +309,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'water_mgmt', 
-      name: 'Water Management',
+      topic: 'Water Management',
       esg: 'Environment',
       businessImpact: 8.0, 
       sustainabilityImpact: 9.0,
@@ -318,7 +318,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'biodiversity', 
-      name: 'Biodiversity Impact',
+      topic: 'Biodiversity Impact',
       esg: 'Environment',
       businessImpact: 7.5, 
       sustainabilityImpact: 9.2,
@@ -327,7 +327,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'community_relations', 
-      name: 'Community Relations',
+      topic: 'Community Relations',
       esg: 'Social',
       businessImpact: 8.2, 
       sustainabilityImpact: 8.0,
@@ -336,7 +336,7 @@ export const materialTopicsByIndustry = {
     },
     { 
       id: 'operational_safety', 
-      name: 'Operational Safety',
+      topic: 'Operational Safety',
       esg: 'Social',
       businessImpact: 9.0, 
       sustainabilityImpact: 8.5,
@@ -350,7 +350,7 @@ export const materialTopicsByIndustry = {
 export const defaultMaterialTopics = [
   { 
     id: 'climate', 
-    name: 'Climate Change',
+    topic: 'Climate Change',
     esg: 'Environment',
     businessImpact: 8.5, 
     sustainabilityImpact: 9.2,
@@ -359,7 +359,7 @@ export const defaultMaterialTopics = [
   },
   { 
     id: 'energy', 
-    name: 'Energy Management',
+    topic: 'Energy Management',
     esg: 'Environment',
     businessImpact: 7.8, 
     sustainabilityImpact: 8.5,
@@ -368,7 +368,7 @@ export const defaultMaterialTopics = [
   },
   { 
     id: 'water', 
-    name: 'Water Management',
+    topic: 'Water Management',
     esg: 'Environment',
     businessImpact: 6.5, 
     sustainabilityImpact: 8.0,
@@ -377,7 +377,7 @@ export const defaultMaterialTopics = [
   },
   { 
     id: 'waste', 
-    name: 'Waste Management',
+    topic: 'Waste Management',
     esg: 'Environment',
     businessImpact: 6.0, 
     sustainabilityImpact: 7.5,
@@ -386,7 +386,7 @@ export const defaultMaterialTopics = [
   },
   { 
     id: 'biodiversity', 
-    name: 'Biodiversity',
+    topic: 'Biodiversity',
     esg: 'Environment',
     businessImpact: 4.5, 
     sustainabilityImpact: 7.0,
@@ -395,7 +395,7 @@ export const defaultMaterialTopics = [
   },
   { 
     id: 'diversity', 
-    name: 'Diversity & Inclusion',
+    topic: 'Diversity & Inclusion',
     esg: 'Social',
     businessImpact: 7.5, 
     sustainabilityImpact: 6.5,
@@ -404,7 +404,7 @@ export const defaultMaterialTopics = [
   },
   { 
     id: 'laborRights', 
-    name: 'Labor Rights',
+    topic: 'Labor Rights',
     esg: 'Social',
     businessImpact: 8.0, 
     sustainabilityImpact: 7.8,
@@ -413,7 +413,7 @@ export const defaultMaterialTopics = [
   },
   { 
     id: 'communityEngagement', 
-    name: 'Community Engagement',
+    topic: 'Community Engagement',
     esg: 'Social',
     businessImpact: 5.5, 
     sustainabilityImpact: 6.0,
@@ -422,7 +422,7 @@ export const defaultMaterialTopics = [
   },
   { 
     id: 'employeeWellbeing', 
-    name: 'Employee Wellbeing',
+    topic: 'Employee Wellbeing',
     esg: 'Social',
     businessImpact: 7.0, 
     sustainabilityImpact: 5.5,
@@ -431,7 +431,7 @@ export const defaultMaterialTopics = [
   },
   { 
     id: 'ethics', 
-    name: 'Business Ethics',
+    topic: 'Business Ethics',
     esg: 'Governance',
     businessImpact: 9.0, 
     sustainabilityImpact: 7.5,
@@ -440,7 +440,7 @@ export const defaultMaterialTopics = [
   },
   { 
     id: 'transparency', 
-    name: 'Transparency',
+    topic: 'Transparency',
     esg: 'Governance',
     businessImpact: 8.2, 
     sustainabilityImpact: 7.0,
@@ -449,7 +449,7 @@ export const defaultMaterialTopics = [
   },
   { 
     id: 'dataPrivacy', 
-    name: 'Data Privacy & Security',
+    topic: 'Data Privacy & Security',
     esg: 'Governance',
     businessImpact: 8.8, 
     sustainabilityImpact: 6.0,
@@ -458,7 +458,7 @@ export const defaultMaterialTopics = [
   },
   { 
     id: 'supplierConduct', 
-    name: 'Supplier Conduct',
+    topic: 'Supplier Conduct',
     esg: 'Governance',
     businessImpact: 7.2, 
     sustainabilityImpact: 7.8,

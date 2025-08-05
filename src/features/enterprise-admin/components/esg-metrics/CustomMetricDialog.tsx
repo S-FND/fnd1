@@ -23,8 +23,8 @@ interface CustomMetricForm {
 
 interface MaterialTopic {
   id: string;
-  name: string;
-  category: string;
+  topic: string;
+  esg: string;
   businessImpact: number;
   sustainabilityImpact: number;
   color: string;
@@ -116,7 +116,7 @@ const CustomMetricDialog: React.FC<CustomMetricDialogProps> = ({
       <DialogHeader>
         <DialogTitle>{isEdit ? 'Edit Metric' : 'Add Custom Metric'}</DialogTitle>
         <DialogDescription>
-          {isEdit ? 'Modify the metric details' : `Create a custom metric for ${selectedTopic?.name}`}
+          {isEdit ? 'Modify the metric details' : `Create a custom metric for ${selectedTopic?.topic}`}
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-4">

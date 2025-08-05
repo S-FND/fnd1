@@ -14,8 +14,8 @@ import FlexibleDataInput from './FlexibleDataInput';
 
 interface MaterialTopic {
   id: string;
-  name: string;
-  category: string;
+  topic: string;
+  esg: string;
   businessImpact: number;
   sustainabilityImpact: number;
   color: string;

@@ -8,8 +8,8 @@ import { ESGMetricWithTracking } from '../../data/esgMetricsData';
 
 interface MaterialTopic {
   id: string;
-  name: string;
-  category: string;
+  topic: string;
+  esg: string;
   businessImpact: number;
   sustainabilityImpact: number;
   color: string;
@@ -56,7 +56,7 @@ const SelectedMetricsList: React.FC<SelectedMetricsListProps> = ({
               <div>
                 <CardTitle>Selected Metrics ({selectedMetrics.length})</CardTitle>
                 <CardDescription>
-                  {selectedTopic ? `Metrics for ${selectedTopic.name}` : 'Selected metrics for configuration'}
+                  {selectedTopic ? `Metrics for ${selectedTopic.topic}` : 'Selected metrics for configuration'}
                 </CardDescription>
               </div>
               {onSaveConfiguration && (

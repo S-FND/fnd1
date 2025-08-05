@@ -19,7 +19,7 @@ type Framework = 'SASB' | 'GRI' | 'Custom';
 
 interface MaterialTopic {
   id: string;
-  name: string;
+  topic: string;
   esg: string;
   businessImpact: number;
   sustainabilityImpact: number;
@@ -141,7 +141,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
   // Filter topics by search term and active frameworks
   const filteredTopics = topicsWithSelection.filter(topic => {
     const matchesSearch = !searchTerm ||
-      topic.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      topic.topic.toLowerCase().includes(searchTerm.toLowerCase()) ||
       topic.description.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesFramework = !topic.framework ||
@@ -301,7 +301,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
 
     if (seggregatedTopic[newTopic.esg]) {
       let updatedTopics={...seggregatedTopic}
-      updatedTopics[newTopic.esg]=[...seggregatedTopic[newTopic.esg],{ ...newTopic, selected: true,description:{name:newTopic.description}, esg: newTopic.esg, topic: newTopic.name }]
+      updatedTopics[newTopic.esg]=[...seggregatedTopic[newTopic.esg],{ ...newTopic, selected: true,description:{name:newTopic.description}, esg: newTopic.esg, topic: newTopic.topic }]
       // [...seggregatedTopic[newTopic.esg],{ ...newTopic, selected: true,description:{name:newTopic.description}, esg: newTopic.esg, topic: newTopic.name }]
       setSeggregatedTopic(updatedTopics)
       setfilteredSeggregatedTopic(updatedTopics)
@@ -309,7 +309,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
     }
     else {
       let updatedTopics = { ...seggregatedTopic }
-      updatedTopics[newTopic.esg] = [{ ...newTopic, selected: true,description:{name:newTopic.description}, esg: newTopic.esg, topic: newTopic.name }]
+      updatedTopics[newTopic.esg] = [{ ...newTopic, selected: true,description:{name:newTopic.description}, esg: newTopic.esg, topic: newTopic.topic }]
       console.log('updatedTopics', updatedTopics)
       setSeggregatedTopic(updatedTopics)
       setfilteredSeggregatedTopic(updatedTopics)
@@ -469,7 +469,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
           </div>}
         </TopicClassificationTabs>
 
-        {filteredTopics.length === 0 && (
+        {Object.keys(filteredSeggregatedTopic).length === 0 && (
           <div className="py-12 text-center">
             <h4 className="text-lg font-medium">No topics found</h4>
             <p className="text-muted-foreground mt-1">

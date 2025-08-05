@@ -5,8 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 interface MaterialTopic {
   id: string;
-  name: string;
-  category: string;
+  topic: string;
+  esg: string;
   businessImpact: number;
   sustainabilityImpact: number;
   color: string;
@@ -50,8 +50,8 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
                     style={{ backgroundColor: topic.color }}
                   />
                   <div>
-                    <div className="font-medium">{topic.name}</div>
-                    <div className="text-xs text-muted-foreground">{topic.category}</div>
+                    <div className="font-medium">{topic.topic}</div>
+                    <div className="text-xs text-muted-foreground">{topic.esg}</div>
                   </div>
                 </div>
               </SelectItem>

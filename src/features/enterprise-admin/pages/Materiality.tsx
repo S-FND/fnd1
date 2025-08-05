@@ -90,6 +90,30 @@ const MaterialityPage = () => {
           if (materilityDataResponse['data']['customTopics']) {
             setSavedCustomTopics(materilityDataResponse['data']['customTopics'])
           }
+          if (materilityDataResponse['data']['finalizingMethod']) {
+            setFinalizationMethod(materilityDataResponse['data']['finalizingMethod'])
+            setFinalizationStep(materilityDataResponse['data']['finalizingMethod'])
+          }
+
+          if (materilityDataResponse['data']['selectedTopics']) {
+            setSelectedMaterialTopics(materilityDataResponse['data']['selectedTopics'])
+            setSelectedTopicsForEngagement(materilityDataResponse['data']['selectedTopics'])
+          }
+
+          if (materilityDataResponse['data']['finalTopics'] && materilityDataResponse['data']['finalTopics'].length > 0) {
+            // setSelectedMaterialTopics(materilityDataResponse['data']['finalTopics'])
+            // setSelectedTopicsForEngagement(materilityDataResponse['data']['selectedTopics'])
+            if (materilityDataResponse['data']['selectedTopics']) {
+              let finalMetricsSelected=materilityDataResponse['data']['selectedTopics'].map((t)=>{
+                let filteredData=materilityDataResponse['data']['finalTopics'].filter((f)=> (t.topic == f.topic) && t.industry == f.industry)
+                
+                return {...t,finalized:(filteredData && filteredData.length>0)?true:false}
+              })
+              console.log(`materilityDataResponse['data']['selectedTopics']`,finalMetricsSelected)
+              setSelectedMaterialTopics(finalMetricsSelected)
+              setSelectedTopicsForEngagement(finalMetricsSelected)
+            }
+          }
         }
       }
       console.log('materilityDataResponse', materilityDataResponse)
@@ -118,7 +142,7 @@ const MaterialityPage = () => {
     // Load custom topics from localStorage
     const savedCustomTopics = localStorage.getItem('customMaterialTopics');
     let customTopics: MaterialTopic[] = [];
-    
+
     if (savedCustomTopics) {
       try {
         customTopics = JSON.parse(savedCustomTopics);
@@ -246,7 +270,7 @@ const MaterialityPage = () => {
   // Handle updating topics from the MaterialTopicsTab
   const handleUpdateTopics = (updatedTopics: MaterialTopic[]) => {
     setMaterialTopics(updatedTopics);
-    
+
     // Save custom topics to localStorage
     const customTopics = updatedTopics.filter(topic => topic.framework === 'Custom');
     localStorage.setItem('customMaterialTopics', JSON.stringify(customTopics));
@@ -348,22 +372,40 @@ const MaterialityPage = () => {
   };
 
   // Handle finalization method selection
-  const handleFinalizationMethodSelect = (method: 'internal' | 'stakeholder') => {
+  const handleFinalizationMethodSelect = async (method: 'internal' | 'stakeholder') => {
     setFinalizationMethod(method);
     if (method === 'internal') {
       setFinalizationStep('internal');
     } else {
       setFinalizationStep('stakeholder');
     }
+    try {
+      let updateResponse = await httpClient.post("materiality/v1", {
+        entityId: JSON.parse(localStorage.getItem('fandoro-user')).entityId,
+        finalizingMethod: method
+      })
+      console.log('updateResponse', updateResponse)
+    } catch (error) {
+      console.log("error :: handleFinalizationMethodSelect => ", error)
+    }
   };
 
   // Handle internal finalization
-  const handleInternalFinalization = (selectedTopics: MaterialTopic[]) => {
+  const handleInternalFinalization = async (selectedTopics: MaterialTopic[]) => {
     setFinalizedTopics(selectedTopics);
     setFinalizationStep('completed');
 
     // Save finalized topics to localStorage for ESG Metrics page
-    localStorage.setItem('finalizedMaterialTopics', JSON.stringify(selectedTopics));
+    // localStorage.setItem('finalizedMaterialTopics', JSON.stringify(selectedTopics));
+    try {
+      let updateResponse = await httpClient.post("materiality/v1", {
+        entityId: JSON.parse(localStorage.getItem('fandoro-user')).entityId,
+        finalTopics: selectedTopics
+      })
+      console.log('updateResponse', updateResponse)
+    } catch (error) {
+      console.log("error :: handleInternalFinalization => ", error)
+    }
 
     toast.success('Material topics finalized internally');
   };
