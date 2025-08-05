@@ -29,6 +29,17 @@ export const ESGCapTableHeader: React.FC<ESGCapTableHeaderProps> = ({
           )}
         </TableHead>
         <TableHead>Category</TableHead>
+        <TableHead 
+          className="cursor-pointer hover:bg-muted/50"
+          onClick={() => requestSort('priority')}
+        >
+          Priority
+          {sortConfig?.key === 'priority' && (
+            sortConfig.direction === 'asc' ? 
+              <ArrowUp className="h-4 w-4 inline ml-1" /> : 
+              <ArrowDown className="h-4 w-4 inline ml-1" />
+          )}
+        </TableHead>
         <TableHead>Measures and/or Corrective Actions</TableHead>
         <TableHead>Resource & Responsibility</TableHead>
         <TableHead>Expected Deliverable</TableHead>

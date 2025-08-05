@@ -14,8 +14,8 @@ import { defaultMaterialTopics } from '../data/materiality';
 
 interface MaterialTopic {
   id: string;
-  name: string;
-  category: string;
+  topic: string;
+  esg: string;
   businessImpact: number;
   sustainabilityImpact: number;
   color: string;
@@ -167,8 +167,8 @@ const ESGManagementPage = () => {
                   style={{ borderLeftColor: topic.color }}
                 >
                   <div className="flex-1">
-                    <h4 className="font-medium text-sm">{topic.name}</h4>
-                    <p className="text-xs text-muted-foreground">{topic.category}</p>
+                    <h4 className="font-medium text-sm">{topic.topic}</h4>
+                    <p className="text-xs text-muted-foreground">{topic.esg}</p>
                   </div>
                 </div>
               ))}

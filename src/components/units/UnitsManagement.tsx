@@ -69,7 +69,9 @@ const UnitsManagement: React.FC = () => {
     status: 'active'
   });
 
+  const [editUnit, setEditUnit] = useState<Unit | null>(null);
   const [isAddingUnit, setIsAddingUnit] = useState(false);
+  const [isEditingUnit, setIsEditingUnit] = useState(false);
 
   const handleAddUnit = () => {
     if (!newUnit.name || !newUnit.location || !newUnit.city || !newUnit.adminName || !newUnit.adminEmail) {
@@ -101,6 +103,23 @@ const UnitsManagement: React.FC = () => {
     });
     setIsAddingUnit(false);
     toast.success("Unit added successfully");
+  };
+
+  const handleEditUnit = (unit: Unit) => {
+    setEditUnit(unit);
+    setIsEditingUnit(true);
+  };
+
+  const handleUpdateUnit = () => {
+    if (!editUnit?.name || !editUnit?.location || !editUnit?.city || !editUnit?.adminName || !editUnit?.adminEmail) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+
+    setUnits(units.map(unit => unit.id === editUnit.id ? editUnit : unit));
+    setEditUnit(null);
+    setIsEditingUnit(false);
+    toast.success("Unit updated successfully");
   };
 
   const handleDeleteUnit = (id: string) => {
@@ -203,6 +222,92 @@ const UnitsManagement: React.FC = () => {
         </Dialog>
       </div>
 
+      {/* Edit Unit Dialog */}
+      <Dialog open={isEditingUnit} onOpenChange={setIsEditingUnit}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Unit</DialogTitle>
+            <DialogDescription>
+              Update the unit details below.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-name" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="edit-name"
+                value={editUnit?.name || ''}
+                onChange={(e) => setEditUnit(editUnit ? {...editUnit, name: e.target.value} : null)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-location" className="text-right">
+                Location
+              </Label>
+              <Input
+                id="edit-location"
+                value={editUnit?.location || ''}
+                onChange={(e) => setEditUnit(editUnit ? {...editUnit, location: e.target.value} : null)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-city" className="text-right">
+                City
+              </Label>
+              <Input
+                id="edit-city"
+                value={editUnit?.city || ''}
+                onChange={(e) => setEditUnit(editUnit ? {...editUnit, city: e.target.value} : null)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-admin-name" className="text-right">
+                Admin Name
+              </Label>
+              <Input
+                id="edit-admin-name"
+                value={editUnit?.adminName || ''}
+                onChange={(e) => setEditUnit(editUnit ? {...editUnit, adminName: e.target.value} : null)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-admin-email" className="text-right">
+                Admin Email
+              </Label>
+              <Input
+                id="edit-admin-email"
+                type="email"
+                value={editUnit?.adminEmail || ''}
+                onChange={(e) => setEditUnit(editUnit ? {...editUnit, adminEmail: e.target.value} : null)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-employee-count" className="text-right">
+                Employees
+              </Label>
+              <Input
+                id="edit-employee-count"
+                type="number"
+                value={editUnit?.employeeCount || ''}
+                onChange={(e) => setEditUnit(editUnit ? {...editUnit, employeeCount: parseInt(e.target.value)} : null)}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditingUnit(false)}>Cancel</Button>
+            <Button onClick={handleUpdateUnit}>Update Unit</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Card>
         <CardContent className="pt-6">
           <Table>
@@ -247,7 +352,7 @@ const UnitsManagement: React.FC = () => {
                       <Button variant="ghost" size="icon">
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" onClick={() => handleEditUnit(unit)}>
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button variant="ghost" size="icon" onClick={() => handleDeleteUnit(unit.id)}>

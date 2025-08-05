@@ -84,6 +84,10 @@ const ManageStakeholders: React.FC = () => {
       console.log('data',data)
       let createStakeHolder=await httpClient.post(API_ENDPOINTS.STAKEHOLDERS.CREATE,data)
       console.log('createStakeHolder',createStakeHolder)
+      if(createStakeHolder['data']['status']){
+        setIsDialogOpen(false);
+        handleFetchStakeholders();
+      }
     } catch (error) {
       // Fallback to local addition
       // const newStakeholder: Stakeholder = {

@@ -1,7 +1,6 @@
-// TableRowQuestion.jsx
-
 import React from 'react';
 import { produce } from 'immer';
+import { X } from 'lucide-react';
 
 const TableRowQuestion = ({
   op,
@@ -12,7 +11,7 @@ const TableRowQuestion = ({
   errors,
   setErrors,
   operationNameToKeyMap,
-  existingFiles,
+  existingFiles = [],
   setOperations,
   onDeleteFile
 }) => {
@@ -27,7 +26,6 @@ const TableRowQuestion = ({
       })
     );
   
-    // Update operations state in parent
     setOperations(
       produce((draft) => {
         const item = draft.find((item) => item.name === op.name);
@@ -73,7 +71,6 @@ const TableRowQuestion = ({
       })
     );
   
-    // Also update operations.notes
     setOperations(
       produce((draft) => {
         const item = draft.find((item) => item.name === op.name);
@@ -84,34 +81,18 @@ const TableRowQuestion = ({
     );
   };
 
-  const handleDeleteFile = (fileIndex, isExistingFile = false) => {
-    if (isExistingFile) {
-      // For existing files (from server)
-      if (onDeleteFile) {
-        onDeleteFile(key, fileIndex);
-      }
-    } else {
-      // For newly selected files (not yet uploaded)
-      setSelectedValues(
-        produce((draft) => {
-          draft[key].file = draft[key].file.filter((_, idx) => idx !== fileIndex);
-          draft[key].fileChange = true;
-        })
-      );
-    }
-  };
-console.log('fieldError',fieldError);
   return (
     <tr key={op.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
       <td className="whitespace-nowrap p-3 text-sm text-center text-gray-500">{index + 1}</td>
       <td className="whitespace-nowrap p-3 text-sm font-medium text-gray-900">{op.name}</td>
 
       {/* Status */}
-      <td className="whitespace-nowrap p-3 text-sm text-gray-500">
+      <td className="whitespace-nowrap p-1 text-sm text-gray-500">
         <select
           value={field.answer || ""}
           onChange={(e) => handleStatusChange(e.target.value)}
-          className="w-[180px] border rounded px-3 py-2"
+          className="w-[80px] border rounded px-2 py-2 py-1.5"
+          // className="w-full max-w-[120px] border rounded px-2 py-1.5 text-xs"
         >
           <option value="">Select status</option>
           <option value="yes">Yes</option>
@@ -123,24 +104,21 @@ console.log('fieldError',fieldError);
       </td>
 
       {/* Attachment */}
-      <td className="whitespace-nowrap p-3 text-sm text-gray-500">
-        <div  className={`space-y-2 border rounded p-2 ${
+      <td className="whitespace-nowrap p-3 text-sx text-gray-500 min-w-[220px]">
+        <div className={`space-y-1 rounded p-0.5 text-[11px] ${
             fieldError?.includes('upload') ? 'border-red-500' : 'border-gray-200'
           }`}>
           <input
             type="file"
             accept=".ppt,.pptx,.pdf,.png,.jpg,.jpeg"
             onChange={handleFileChange}
+            className="text-xs"
           />
-          {field.file?.map((file, idx) => (
-            <p key={idx} className="text-xs text-muted-foreground">
-              Selected: {file.name}
-            </p>
-          ))}
+          
+          {/* New files */}
           {existingFiles.map((fileUrl, i) => (
             <div key={`existing-${i}`} className="flex items-center gap-2">
             <a
-              key={i}
               href={fileUrl}
               target="_blank"
               rel="noopener noreferrer"
@@ -148,24 +126,23 @@ console.log('fieldError',fieldError);
             >
               View File {i + 1}
             </a>
-            {/* <button 
-                type="button"
-                onClick={() => handleDeleteFile(i, true)}
-                className="text-xs text-red-500 hover:text-red-700"
-              >
-                ×
-              </button> */}
+              <button
+                  type="button"
+                  onClick={() => onDeleteFile(i, fileUrl)}
+                  className="text-red-500 hover:text-red-700 p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
             </div>
           ))}
           {fieldError && fieldError.includes('upload') && (
             <p className="text-xs text-red-500">{fieldError}</p>
           )}
-          {/* <p className="text-xs text-gray-500">Max 50MB</p> */}
         </div>
       </td>
 
       {/* Notes */}
-      <td className="p-3 text-sm text-gray-500">
+      <td className="p-1 text-sm text-gray-500">
         <textarea
           value={field.reason || ""}
           onChange={handleNotesChange}

@@ -1,29 +1,28 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal } from 'lucide-react';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu";
+import { ESGCapItem } from '../../types/esgDD';
+import { ESGCapReviewDialog } from './ESGCapReviewDialog';
 
-export const ESGCapRowActions: React.FC = () => {
+interface ESGCapRowActionsProps {
+  item: ESGCapItem;
+  onUpdate: (updatedItem: ESGCapItem) => void;
+}
+
+export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpdate }) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <MoreHorizontal className="h-4 w-4" />
-          <span className="sr-only">Actions</span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem>View details</DropdownMenuItem>
-        <DropdownMenuItem>Edit</DropdownMenuItem>
-        <DropdownMenuItem>Update status</DropdownMenuItem>
-        <DropdownMenuItem>Assign responsibility</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <Button variant="outline" size="sm" onClick={() => setIsDialogOpen(true)}>
+        Review
+      </Button>
+      <ESGCapReviewDialog 
+        item={item}
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        onUpdate={onUpdate}
+      />
+    </>
   );
 };

@@ -13,13 +13,15 @@ interface IndustrySelectionProps {
   onIndustryChange: (industryId: string, checked: boolean) => void;
   onClearSelection: () => void;
   onUpdateMatrix: () => void;
+  industries:{value:string;label:string;}[]
 }
 
 const IndustrySelection: React.FC<IndustrySelectionProps> = ({
   selectedIndustries,
   onIndustryChange,
   onClearSelection,
-  onUpdateMatrix
+  onUpdateMatrix,
+  industries
 }) => {
   const handleSelectIndustry = (industryId: string) => {
     if (!selectedIndustries.includes(industryId)) {
@@ -32,7 +34,7 @@ const IndustrySelection: React.FC<IndustrySelectionProps> = ({
   };
 
   const availableIndustries = industries.filter(
-    industry => !selectedIndustries.includes(industry.id)
+    industry => !selectedIndustries.includes(industry.value)
   );
 
   return (
@@ -52,9 +54,9 @@ const IndustrySelection: React.FC<IndustrySelectionProps> = ({
                 <SelectValue placeholder="Select an industry to add..." />
               </SelectTrigger>
               <SelectContent>
-                {availableIndustries.map((industry) => (
-                  <SelectItem key={industry.id} value={industry.id}>
-                    {industry.name}
+                {industries.map((industry) => (
+                  <SelectItem key={industry.value} value={industry.value}>
+                    {industry.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -68,14 +70,14 @@ const IndustrySelection: React.FC<IndustrySelectionProps> = ({
               </label>
               <div className="flex flex-wrap gap-2">
                 {selectedIndustries.map((industryId) => {
-                  const industry = industries.find(i => i.id === industryId);
+                  const industry = industries.find(i => i.value === industryId);
                   return (
                     <Badge 
                       key={industryId} 
                       variant="secondary" 
                       className="flex items-center gap-1 px-3 py-1"
                     >
-                      {industry?.name || industryId}
+                      {industry?.label || industryId}
                       <Button
                         variant="ghost"
                         size="sm"

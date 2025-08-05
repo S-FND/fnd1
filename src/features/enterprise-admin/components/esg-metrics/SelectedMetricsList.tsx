@@ -8,8 +8,8 @@ import { ESGMetricWithTracking } from '../../data/esgMetricsData';
 
 interface MaterialTopic {
   id: string;
-  name: string;
-  category: string;
+  topic: string;
+  esg: string;
   businessImpact: number;
   sustainabilityImpact: number;
   color: string;
@@ -24,6 +24,8 @@ interface SelectedMetricsListProps {
   onRemoveMetric: (metricId: string) => void;
   onSaveConfiguration?: () => void;
   savedMetrics?: ESGMetricWithTracking[];
+  onEditSavedMetric?: (metric: ESGMetricWithTracking) => void;
+  onDeleteSavedMetric?: (metricId: string) => void;
 }
 
 const SelectedMetricsList: React.FC<SelectedMetricsListProps> = ({
@@ -32,7 +34,9 @@ const SelectedMetricsList: React.FC<SelectedMetricsListProps> = ({
   onEditMetric,
   onRemoveMetric,
   onSaveConfiguration,
-  savedMetrics = []
+  savedMetrics = [],
+  onEditSavedMetric,
+  onDeleteSavedMetric
 }) => {
   const getFrequencyColor = (frequency: string) => {
     switch (frequency) {
@@ -56,7 +60,7 @@ const SelectedMetricsList: React.FC<SelectedMetricsListProps> = ({
               <div>
                 <CardTitle>Selected Metrics ({selectedMetrics.length})</CardTitle>
                 <CardDescription>
-                  {selectedTopic ? `Metrics for ${selectedTopic.name}` : 'Selected metrics for configuration'}
+                  {selectedTopic ? `Metrics for ${selectedTopic.topic}` : 'Selected metrics for configuration'}
                 </CardDescription>
               </div>
               {onSaveConfiguration && (
@@ -70,7 +74,7 @@ const SelectedMetricsList: React.FC<SelectedMetricsListProps> = ({
           <CardContent>
             <div className="grid gap-4">
               {selectedMetrics.map((metric) => (
-                <div key={metric.id} className="flex items-center justify-between p-4 border rounded-lg">
+                <div key={metric.code} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       <h4 className="font-medium">{metric.name}</h4>
@@ -96,7 +100,7 @@ const SelectedMetricsList: React.FC<SelectedMetricsListProps> = ({
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => onRemoveMetric(metric.id)}
+                      onClick={() => onRemoveMetric(metric.code)}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -138,7 +142,27 @@ const SelectedMetricsList: React.FC<SelectedMetricsListProps> = ({
                       <span>Type: {metric.dataType}</span>
                     </div>
                   </div>
-                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <div className="flex gap-2">
+                    {onEditSavedMetric && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => onEditSavedMetric(metric)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {onDeleteSavedMetric && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => onDeleteSavedMetric(metric.code)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    )}
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  </div>
                 </div>
               ))}
             </div>
