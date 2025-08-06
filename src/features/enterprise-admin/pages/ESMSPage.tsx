@@ -39,7 +39,72 @@ const ESMSPage: React.FC = () => {
       }
     }
     
-    // Adjust numbering for documents after EPR items
+    // Handle Labor Department Registrations sub-items
+    if (documentId.startsWith('labor-reg-')) {
+      const laborRegSubItems = [
+        'labor-reg-principal', 'labor-reg-minimum-wages', 'labor-reg-muster-roll', 
+        'labor-reg-accident', 'labor-reg-leave-compliance', 'labor-reg-holiday-list',
+        'labor-reg-interstate', 'labor-reg-construction', 'labor-reg-welfare', 'labor-reg-trade-union'
+      ];
+      const laborRegIndex = laborRegSubItems.indexOf(documentId);
+      if (laborRegIndex !== -1) {
+        const letter = String.fromCharCode(97 + laborRegIndex);
+        return `${sectionIndex + 1}.17.${letter}`;
+      }
+    }
+    
+    // Handle Labor Department Registers sub-items
+    if (documentId.startsWith('labor-register-')) {
+      const laborRegisterSubItems = [
+        'labor-register-overtime', 'labor-register-wages', 'labor-register-attendance',
+        'labor-register-accident', 'labor-register-maternity', 'labor-register-grievance'
+      ];
+      const laborRegisterIndex = laborRegisterSubItems.indexOf(documentId);
+      if (laborRegisterIndex !== -1) {
+        const letter = String.fromCharCode(97 + laborRegisterIndex);
+        return `${sectionIndex + 1}.18.${letter}`;
+      }
+    }
+    
+    // Handle Labor Department Annual Returns sub-items
+    if (documentId.startsWith('labor-returns-')) {
+      const laborReturnsSubItems = [
+        'labor-returns-factory', 'labor-returns-minimum-wages', 'labor-returns-muster-roll',
+        'labor-returns-accident', 'labor-returns-contract', 'labor-returns-maternity',
+        'labor-returns-interstate', 'labor-returns-construction', 'labor-returns-welfare',
+        'labor-returns-trade-union', 'labor-returns-posh', 'labor-returns-gratuity', 'labor-returns-bonus'
+      ];
+      const laborReturnsIndex = laborReturnsSubItems.indexOf(documentId);
+      if (laborReturnsIndex !== -1) {
+        const letter = String.fromCharCode(97 + laborReturnsIndex);
+        return `${sectionIndex + 1}.19.${letter}`;
+      }
+    }
+    
+    // Handle Display Requirements sub-items
+    if (documentId.startsWith('display-')) {
+      const displaySubItems = [
+        'display-abstracts', 'display-name-address', 'display-working-hours', 'display-holidays',
+        'display-factory-license', 'display-fssai', 'display-emergency', 'display-grievance'
+      ];
+      const displayIndex = displaySubItems.indexOf(documentId);
+      if (displayIndex !== -1) {
+        const letter = String.fromCharCode(97 + displayIndex);
+        return `${sectionIndex + 1}.20.${letter}`;
+      }
+    }
+    
+    // Handle Electricity Regulatory Registration sub-items
+    if (documentId.startsWith('electricity-')) {
+      const electricitySubItems = ['electricity-serc', 'electricity-cerc'];
+      const electricityIndex = electricitySubItems.indexOf(documentId);
+      if (electricityIndex !== -1) {
+        const letter = String.fromCharCode(97 + electricityIndex);
+        return `${sectionIndex + 1}.29.${letter}`;
+      }
+    }
+    
+    // Adjust numbering for documents after sub-items
     if (sectionIndex === 0) { // Compliance section
       if (docIndex >= 7) { // After the 5 EPR items (indices 2-6), adjust by 4
         return `${sectionIndex + 1}.${docIndex - 3}`;
@@ -81,34 +146,43 @@ const ESMSPage: React.FC = () => {
         { id: 'bore-well', title: 'Registration Certificate of bore well', isUploaded: false, isNotApplicable: false },
         { id: 'groundwater-license', title: 'Groundwater use license/registration (Central Ground Water Authority)', isUploaded: false, isNotApplicable: false },
         { id: 'factories-license', title: 'Factories Act License', isUploaded: false, isNotApplicable: false },
-        { 
-          id: 'labor-registrations', 
-          title: 'Labor Department Registrations',
-          subItems: ['Principal Employer', 'Minimum wages', 'Muster roll', 'Accident/incident', 'Leave compliance as per S&E Act', 'Holiday List as per S&E Act', 'Inter-state Migrant labor Registration', 'Building & Other Construction Workers', 'Labor Welfare Fund', 'Trade Union'],
-          isUploaded: false, 
-          isNotApplicable: false 
-        },
-        { 
-          id: 'labor-registers', 
-          title: 'Labor Department Registers',
-          subItems: ['Overtime', 'Wages (including deductions, fines, advances)', 'Muster roll / Attendance', 'Accident/incident', 'Maternity Benefit register', 'Grievance Register'],
-          isUploaded: false, 
-          isNotApplicable: false 
-        },
-        { 
-          id: 'labor-returns', 
-          title: 'Labor Department Annual returns filing',
-          subItems: ['Factory Annual Return (Form 21)', 'Minimum wages', 'Muster roll', 'Accident/incident', 'Contract labor', 'Maternity Benefits', 'Inter-state Migrant labor', 'Building & Other Construction Workers', 'Labor Welfare Fund', 'Trade Union', 'POSH', 'Gratuity', 'Payment of Bonus'],
-          isUploaded: false, 
-          isNotApplicable: false 
-        },
-        { 
-          id: 'display-requirements', 
-          title: 'Display Requirements- Facility',
-          subItems: ['Abstracts of major Acts (Wages, Bonus, Equal Remuneration, Minimum Wage, Child Labour, etc.)', 'Name & address of the establishment', 'Working hours', 'List of holidays', 'Factory license', 'FSSAI License', 'Emergency Contacts', 'Grievance Redressal Mechanism Policy and Procedure (English and Local language)'],
-          isUploaded: false, 
-          isNotApplicable: false 
-        },
+        { id: 'labor-reg-principal', title: 'Labor Department Registrations - Principal Employer', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-reg-minimum-wages', title: 'Labor Department Registrations - Minimum wages', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-reg-muster-roll', title: 'Labor Department Registrations - Muster roll', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-reg-accident', title: 'Labor Department Registrations - Accident/incident', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-reg-leave-compliance', title: 'Labor Department Registrations - Leave compliance as per S&E Act', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-reg-holiday-list', title: 'Labor Department Registrations - Holiday List as per S&E Act', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-reg-interstate', title: 'Labor Department Registrations - Inter-state Migrant labor Registration', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-reg-construction', title: 'Labor Department Registrations - Building & Other Construction Workers', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-reg-welfare', title: 'Labor Department Registrations - Labor Welfare Fund', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-reg-trade-union', title: 'Labor Department Registrations - Trade Union', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-register-overtime', title: 'Labor Department Registers - Overtime', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-register-wages', title: 'Labor Department Registers - Wages (including deductions, fines, advances)', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-register-attendance', title: 'Labor Department Registers - Muster roll / Attendance', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-register-accident', title: 'Labor Department Registers - Accident/incident', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-register-maternity', title: 'Labor Department Registers - Maternity Benefit register', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-register-grievance', title: 'Labor Department Registers - Grievance Register', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-returns-factory', title: 'Labor Department Annual returns filing - Factory Annual Return (Form 21)', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-returns-minimum-wages', title: 'Labor Department Annual returns filing - Minimum wages', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-returns-muster-roll', title: 'Labor Department Annual returns filing - Muster roll', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-returns-accident', title: 'Labor Department Annual returns filing - Accident/incident', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-returns-contract', title: 'Labor Department Annual returns filing - Contract labor', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-returns-maternity', title: 'Labor Department Annual returns filing - Maternity Benefits', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-returns-interstate', title: 'Labor Department Annual returns filing - Inter-state Migrant labor', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-returns-construction', title: 'Labor Department Annual returns filing - Building & Other Construction Workers', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-returns-welfare', title: 'Labor Department Annual returns filing - Labor Welfare Fund', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-returns-trade-union', title: 'Labor Department Annual returns filing - Trade Union', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-returns-posh', title: 'Labor Department Annual returns filing - POSH', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-returns-gratuity', title: 'Labor Department Annual returns filing - Gratuity', isUploaded: false, isNotApplicable: false },
+        { id: 'labor-returns-bonus', title: 'Labor Department Annual returns filing - Payment of Bonus', isUploaded: false, isNotApplicable: false },
+        { id: 'display-abstracts', title: 'Display Requirements- Facility - Abstracts of major Acts (Wages, Bonus, Equal Remuneration, Minimum Wage, Child Labour, etc.)', isUploaded: false, isNotApplicable: false },
+        { id: 'display-name-address', title: 'Display Requirements- Facility - Name & address of the establishment', isUploaded: false, isNotApplicable: false },
+        { id: 'display-working-hours', title: 'Display Requirements- Facility - Working hours', isUploaded: false, isNotApplicable: false },
+        { id: 'display-holidays', title: 'Display Requirements- Facility - List of holidays', isUploaded: false, isNotApplicable: false },
+        { id: 'display-factory-license', title: 'Display Requirements- Facility - Factory license', isUploaded: false, isNotApplicable: false },
+        { id: 'display-fssai', title: 'Display Requirements- Facility - FSSAI License', isUploaded: false, isNotApplicable: false },
+        { id: 'display-emergency', title: 'Display Requirements- Facility - Emergency Contacts', isUploaded: false, isNotApplicable: false },
+        { id: 'display-grievance', title: 'Display Requirements- Facility - Grievance Redressal Mechanism Policy and Procedure (English and Local language)', isUploaded: false, isNotApplicable: false },
         { id: 'esic-registration', title: 'ESIC Registration', isUploaded: false, isNotApplicable: false },
         { id: 'epfo-registration', title: 'EPFO Registration', isUploaded: false, isNotApplicable: false },
         { id: 'professional-tax', title: 'Professional Tax Registration', isUploaded: false, isNotApplicable: false },
@@ -117,13 +191,8 @@ const ESMSPage: React.FC = () => {
         { id: 'fire-noc', title: 'Fire NOC', isUploaded: false, isNotApplicable: false },
         { id: 'fssai-cert', title: 'FSSAI Certification', isUploaded: false, isNotApplicable: false },
         { id: 'cdsco-registration', title: 'CDSCO Registration', isUploaded: false, isNotApplicable: false },
-        { 
-          id: 'electricity-registration', 
-          title: 'Electricity Regulatory Registration',
-          subItems: ['SERC (State Electricity Regulatory Commission)', 'CERC (Central Electricity Regulatory Commission)'],
-          isUploaded: false, 
-          isNotApplicable: false 
-        },
+        { id: 'electricity-serc', title: 'Electricity Regulatory Registration - SERC (State Electricity Regulatory Commission)', isUploaded: false, isNotApplicable: false },
+        { id: 'electricity-cerc', title: 'Electricity Regulatory Registration - CERC (Central Electricity Regulatory Commission)', isUploaded: false, isNotApplicable: false },
         { id: 'msme-registration', title: 'MSME (Udyam) Registration', isUploaded: false, isNotApplicable: false },
         { id: 'ssi-registration', title: 'National Small-Scale Industries Registration', isUploaded: false, isNotApplicable: false },
         { id: 'iec-certificate', title: 'Importer-Exporter Code Certificate', isUploaded: false, isNotApplicable: false },
