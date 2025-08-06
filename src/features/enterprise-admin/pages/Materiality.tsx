@@ -45,7 +45,7 @@ const MaterialityPage = () => {
   const [industriesWithDetails, setIndustriesWithDetails] = useState([]);
   const [selectedMaterialTopics, setSelectedMaterialTopics] = useState([]);
   const [savedCustomTopics, setSavedCustomTopics] = useState([]);
-  console.log("industryList", industryList)
+  // console.log("industryList", industryList)
   const [industries, setIndustries] = useState([]);
 
   // Finalization flow state

@@ -78,9 +78,9 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="assessment">
             Materiality Assessment
-            <Badge variant="secondary" className="ml-2">
+            {/* <Badge variant="secondary" className="ml-2">
               {materialTopics.length}
-            </Badge>
+            </Badge> */}
           </TabsTrigger>
           <TabsTrigger value="matrix">Materiality Matrix</TabsTrigger>
           <TabsTrigger value="priority">Priority Analysis</TabsTrigger>
