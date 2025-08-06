@@ -34,13 +34,11 @@ const ESMSPage: React.FC = () => {
       documents: [
         { id: 'env-clearance', title: 'Environmental clearances', isUploaded: false, isNotApplicable: false },
         { id: 'hazard-waste', title: 'Hazardous waste authorizations', isUploaded: false, isNotApplicable: false },
-        { 
-          id: 'epr-registration', 
-          title: 'EPR Registration and Filing',
-          subItems: ['E-waste', 'Used Oil', 'Plastic', 'Battery', 'Tyre'],
-          isUploaded: false, 
-          isNotApplicable: false 
-        },
+        { id: 'epr-ewaste', title: 'EPR Registration and Filing - E-waste', isUploaded: false, isNotApplicable: false },
+        { id: 'epr-used-oil', title: 'EPR Registration and Filing - Used Oil', isUploaded: false, isNotApplicable: false },
+        { id: 'epr-plastic', title: 'EPR Registration and Filing - Plastic', isUploaded: false, isNotApplicable: false },
+        { id: 'epr-battery', title: 'EPR Registration and Filing - Battery', isUploaded: false, isNotApplicable: false },
+        { id: 'epr-tyre', title: 'EPR Registration and Filing - Tyre', isUploaded: false, isNotApplicable: false },
         { id: 'waste-recycling', title: 'Authorized waste recycling/disposal certificates', isUploaded: false, isNotApplicable: false },
         { 
           id: 'pollution-consent', 
