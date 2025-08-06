@@ -26,6 +26,29 @@ interface ESMSDocumentSection {
 }
 
 const ESMSPage: React.FC = () => {
+  const getDocumentNumber = (sectionIndex: number, docIndex: number, documentId: string): string => {
+    const baseNumber = `${sectionIndex + 1}.${docIndex + 1}`;
+    
+    // Handle EPR Registration and Filing sub-items with custom numbering
+    if (documentId.startsWith('epr-')) {
+      const eprSubItems = ['epr-ewaste', 'epr-used-oil', 'epr-plastic', 'epr-battery', 'epr-tyre'];
+      const eprIndex = eprSubItems.indexOf(documentId);
+      if (eprIndex !== -1) {
+        const letter = String.fromCharCode(97 + eprIndex); // 'a', 'b', 'c', etc.
+        return `${sectionIndex + 1}.3.${letter}`;
+      }
+    }
+    
+    // Adjust numbering for documents after EPR items
+    if (sectionIndex === 0) { // Compliance section
+      if (docIndex >= 7) { // After the 5 EPR items (indices 2-6), adjust by 4
+        return `${sectionIndex + 1}.${docIndex - 3}`;
+      }
+    }
+    
+    return baseNumber;
+  };
+
   const [documentSections, setDocumentSections] = useState<ESMSDocumentSection[]>([
     {
       id: 'compliance',
@@ -273,7 +296,7 @@ const ESMSPage: React.FC = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-sm font-medium text-muted-foreground">
-                          {sectionIndex + 1}.{docIndex + 1}
+                          {getDocumentNumber(sectionIndex, docIndex, document.id)}
                         </span>
                         <h4 className="font-medium">{document.title}</h4>
                         {document.isUploaded && (
