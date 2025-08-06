@@ -257,7 +257,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
         selectedTopics: selectedTopicsMateriality
       })
       console.log('updateTopicsResponse', updateTopicsResponse)
-      if(updateTopicsResponse['status'] == 200){
+      if(updateTopicsResponse['status'] == 201){
         getMaterialityData()
       }
     } catch (error) {
@@ -270,7 +270,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
     if (onUpdateTopics) {
       onUpdateTopics(selectedTopics);
     }
-    toast.success(`${selectedTopics.length} topics selected for stakeholder engagement`);
+    toast.success(`${selectedTopicsMateriality.length} topics selected for stakeholder engagement`);
   };
 
   const handleEditTopic = (topic: MaterialTopic) => {
@@ -345,6 +345,14 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
     console.log('filteredSeggregatedTopic', filteredSeggregatedTopic)
   }, [filteredSeggregatedTopic])
 
+  const getSelectedCount = () => {
+    let count = 0;
+    Object.values(seggregatedTopic).forEach((topics: MaterialTopic[]) => {
+      count += topics.filter(topic => topic.selected).length;
+    });
+    return count;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -378,7 +386,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
             </Button>
             <Button onClick={handleSaveSelectedTopics} className="flex items-center gap-2">
               <Save className="w-4 h-4" />
-              Save Selected ({selectedCount})
+              Save Selected ({getSelectedCount()})
             </Button>
           </div>
         </div>
@@ -393,7 +401,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
       <CardContent>
         <div className="mb-4 p-3 bg-muted rounded-lg">
           <div className="text-sm text-muted-foreground">
-            {selectedCount} of {totalCount} topics selected for stakeholder engagement
+          {getSelectedCount()} of {Object.values(seggregatedTopic).flat().length} topics selected for stakeholder engagement
           </div>
         </div>
 

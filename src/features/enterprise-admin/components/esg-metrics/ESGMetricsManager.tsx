@@ -241,11 +241,31 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
     setSelectedMetrics([]);
   };
 
+  // const handleAddMetric = (metricId: string) => {
+  //   const metric = availableMetrics.find(m => m.code === metricId);
+  //   if (metric && !selectedMetrics.find(sm => sm.code === metricId)) {
+  //     setSelectedMetrics([...selectedMetrics, { ...metric, isSelected: true }]);
+  //     toast.success('Metric added to your selection');
+  //   }
+  // };
   const handleAddMetric = (metricId: string) => {
-    const metric = availableMetrics.find(m => m.code === metricId);
-    if (metric && !selectedMetrics.find(sm => sm.code === metricId)) {
-      setSelectedMetrics([...selectedMetrics, { ...metric, isSelected: true }]);
-      toast.success('Metric added to your selection');
+    const separatorIndex = metricId.indexOf('::');
+    const code = metricId.substring(0, separatorIndex);
+    const name = metricId.substring(separatorIndex + 2);
+    
+    const existingIndex = selectedMetrics.findIndex(
+      m => m.code === code && m.name === name
+    );
+  console.log('existingIndex',existingIndex);
+    if (existingIndex >= 0) {
+      setSelectedMetrics(prev => prev.filter((_, index) => index !== existingIndex));
+    } else {
+      const metric = availableMetrics.find(m => m.code === code && m.name === name);
+      if (metric) {
+        setSelectedMetrics(prev => [...prev, metric]);
+      } else {
+        console.error('Metric not found:', { code, name });
+      }
     }
   };
 
@@ -414,7 +434,18 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
         finalMetrics: final,
         selectedMetrics: [...selectedMetrics, ...finalMetricsList]
       })
-      console.log('updateResponse', updateResponse)
+      
+      if (updateResponse.status === 201) {
+        setSavedMetrics(prev => [
+          ...prev,
+          ...selectedMetrics.filter(
+            metric => !prev.some(m => m.code === metric.code)
+          )
+        ]);
+        
+        setSelectedMetrics([]);
+        toast.success(`${selectedMetrics.length} metrics saved successfully`);
+      }
     } catch (error) {
       console.log("error :: updateMatrixData => ", error)
     }

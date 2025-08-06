@@ -118,10 +118,10 @@ const MetricsSelector: React.FC<MetricsSelectorProps> = ({
                   <TableCell>
                     <Button 
                       size="sm" 
-                      onClick={() => onAddMetric(metric.code)}
-                      disabled={selectedMetrics.some(sm => sm.code === metric.code)}
+                      onClick={() => onAddMetric(`${metric.code}::${metric.name}`)} // Use :: as separator
+                      // disabled={selectedMetrics.some(sm => sm.code === metric.code && sm.name === metric.name)}
                     >
-                      {selectedMetrics.some(sm => sm.code === metric.code) ? 'Added' : 'Add'}
+                      {selectedMetrics.some(sm => sm.code === metric.code && sm.name === metric.name) ? 'Remove' : 'Add'}
                     </Button>
                   </TableCell>
                 </TableRow>
