@@ -3,7 +3,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import { Building, ClipboardCheck, FileText, Home, Settings, User } from 'lucide-react';
+import { Building, ClipboardCheck, FileText, Home, Leaf, Settings, User } from 'lucide-react';
 
 export const SupplierLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -11,6 +11,7 @@ export const SupplierLayout: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const navigationItems = [
     { name: "Dashboard", href: "/supplier/dashboard", icon: Home },
+    { name: "GHG Inventory", href: "/supplier/ghg-inventory", icon: Leaf },
     { name: "Sustainability Audit", href: "/supplier/audit", icon: ClipboardCheck },
     { name: "Documents", href: "/supplier/documents", icon: FileText },
     { name: "Company Profile", href: "/supplier/profile", icon: Building },

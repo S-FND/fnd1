@@ -5,7 +5,7 @@ import { CircleAlert, TrendingUp, Edit, Trash2 } from 'lucide-react';
 
 interface MaterialTopic {
   id: string;
-  name: string;
+  topic: string;
   category: string;
   businessImpact: number;
   sustainabilityImpact: number;
@@ -43,7 +43,7 @@ const TopicCard: React.FC<TopicCardProps> = ({
   return (
     <div className="border rounded-lg p-4">
       <div className="flex justify-between items-start mb-2">
-        <div className="font-medium text-base flex-1">{topic.name}</div>
+        <div className="font-medium text-base flex-1">{topic.topic}</div>
         <div className="flex gap-2 items-center">
           {classification === 'risk' ? (
             <span className="text-xs bg-red-100 px-2 py-0.5 rounded text-red-700 flex items-center gap-1">

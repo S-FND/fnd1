@@ -30,6 +30,7 @@ const BasicCompanyFields: React.FC<BasicCompanyFieldsProps> = ({ formData, setFo
             type="email"
             value={formData.emailId}
             onChange={(e) => setFormData({ ...formData, emailId: e.target.value })}
+            readOnly={!!formData.cinNumber}
           />
         </div>
         

@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { fetchTrainingBids, fetchEHSTrainings } from '@/data';
 
 const VendorBids = () => {
-  const { isAuthenticated, user, isVendor } = useAuth();
+  const { isAuthenticated, user, isVendor,isAuthenticatedStatus } = useAuth();
   const vendorId = user?.vendorInfo?.id;
   
   const { data: bids, isLoading: bidsLoading } = useQuery({
@@ -24,8 +24,8 @@ const VendorBids = () => {
     queryFn: fetchEHSTrainings
   });
 
-  if (!isAuthenticated || !isVendor()) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus() || !isVendor()) {
+    return <Navigate to="/" />;
   }
 
   const isLoading = bidsLoading || trainingsLoading;

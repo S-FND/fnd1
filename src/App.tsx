@@ -17,6 +17,8 @@ import AuditDashboardPage from './pages/audit/AuditDashboardPage';
 import AuditChecklistPage from './pages/audit/AuditChecklistPage';
 import SupplierDashboardPage from './pages/supplier/SupplierDashboardPage';
 import SupplierAuditResponsePage from './pages/supplier/SupplierAuditResponsePage';
+import SupplierProfilePage from './pages/supplier/SupplierProfilePage';
+import GHGInventoryPage from './pages/supplier/GHGInventoryPage';
 import VendorDashboard from './pages/vendor/VendorDashboard';
 import VendorProfile from './pages/vendor/VendorProfile';
 import VendorBids from './pages/vendor/VendorBids';
@@ -66,8 +68,8 @@ function App() {
       />
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<Index />} />
-        <Route path="/login" element={<Login />} />
+        {/* <Route path="/" element={<Index />} /> */}
+        <Route path="/" element={<Login />} />
         
         {/* Company / Enterprise Admin Routes */}
         <Route path="/enhanced-dashboard" element={<EnhancedDashboard />} />
@@ -96,7 +98,7 @@ function App() {
         <Route path="/stakeholders/manage" element={<ManageStakeholdersPage />} />
         <Route path="/stakeholders/categories" element={<CategoriesPage />} />
         <Route path="/stakeholders/engagement" element={<EngagementPlanPage />} />
-        <Route path="/stakeholders/login" element={<StakeholderLoginPage />} />
+        <Route path="/stakeholders/dashboard" element={<StakeholderLoginPage />} />
         
         <Route path="/units" element={<Units />} />
         <Route path="/team-management" element={<TeamManagementPage />} />
@@ -122,6 +124,8 @@ function App() {
         
         {/* Supplier Routes */}
         <Route path="/supplier/dashboard" element={<SupplierDashboardPage />} />
+        <Route path="/supplier/ghg-inventory" element={<GHGInventoryPage />} />
+        <Route path="/supplier/profile" element={<SupplierProfilePage />} />
         <Route path="/supplier/audit-response/:id" element={<SupplierAuditResponsePage />} />
         
         {/* Vendor Routes */}

@@ -161,5 +161,16 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
     );
   }
 
+  if (role === 'StakeHolder') {
+    return [
+      {
+        name: "Materiality Assessment",
+        href: "/stakeholders/dashboard",
+        icon: LayoutDashboard,
+        featureId: 'stakeholder-Materiality-Assessment'
+      }
+    ];
+  }
+
   return baseItems;
 };

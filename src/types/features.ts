@@ -13,7 +13,8 @@ export type FeatureId =
   | 'company-profile'
   | 'settings'
   | 'dashboard'
-  | 'stakeholder-management';
+  | 'stakeholder-management'
+  | 'stakeholder-Materiality-Assessment';
 
 export interface Feature {
   id: FeatureId;
@@ -23,6 +24,8 @@ export interface Feature {
   dependencies: FeatureId[];
   dependents: FeatureId[];
   category: 'core' | 'operations' | 'reporting' | 'management';
+  accessGranted:boolean;
+  secondaryId:string;
 }
 
 export interface CompanyFeatures {

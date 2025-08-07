@@ -4,12 +4,12 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 
 export function useRouteProtection(requiredRole?: string | string[]) {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading,isAuthenticatedStatus } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && !isAuthenticatedStatus()) {
       // Redirect to login if not authenticated
       navigate('/login', { state: { from: location.pathname } });
     } else if (!isLoading && isAuthenticated && requiredRole) {
@@ -24,7 +24,7 @@ export function useRouteProtection(requiredRole?: string | string[]) {
         } else if (user?.role === 'vendor') {
           navigate('/vendor/dashboard');
         } else {
-          navigate('/dashboard');
+          navigate('/login');
         }
       }
     }

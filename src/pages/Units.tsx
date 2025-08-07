@@ -6,10 +6,10 @@ import { Navigate } from 'react-router-dom';
 import UnitsManagement from '@/components/units/UnitsManagement';
 
 const UnitsPage = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user,isAuthenticatedStatus } = useAuth();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus()) {
+    return <Navigate to="/" />;
   }
 
   if (user?.role !== 'admin') {

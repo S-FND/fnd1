@@ -4,12 +4,14 @@ import { Feature, FeatureId } from '@/types/features';
 export const features: Feature[] = [
   {
     id: 'dashboard',
+    secondaryId:'Dashboard',
     name: 'Dashboard',
     description: 'Main dashboard with company overview',
     isDefault: true,
     dependencies: [],
     dependents: [],
-    category: 'core'
+    category: 'core',
+    accessGranted:false
   },
   {
     id: 'company-profile',
@@ -18,7 +20,9 @@ export const features: Feature[] = [
     isDefault: true,
     dependencies: [],
     dependents: [],
-    category: 'management'
+    category: 'management',
+    accessGranted:false,
+    secondaryId:'Company Profile'
   },
   {
     id: 'unit-management',
@@ -27,7 +31,9 @@ export const features: Feature[] = [
     isDefault: true,
     dependencies: [],
     dependents: [],
-    category: 'management'
+    category: 'management',
+    accessGranted:false,
+    secondaryId:'Units'
   },
   {
     id: 'team-management',
@@ -36,7 +42,9 @@ export const features: Feature[] = [
     isDefault: true,
     dependencies: [],
     dependents: [],
-    category: 'management'
+    category: 'management',
+    accessGranted:false,
+    secondaryId:'Team Management'
   },
   {
     id: 'settings',
@@ -45,7 +53,9 @@ export const features: Feature[] = [
     isDefault: true,
     dependencies: [],
     dependents: [],
-    category: 'management'
+    category: 'management',
+    accessGranted:false,
+    secondaryId:'Settings'
   },
   {
     id: 'stakeholder-management',
@@ -54,7 +64,9 @@ export const features: Feature[] = [
     isDefault: false,
     dependencies: [],
     dependents: [],
-    category: 'operations'
+    category: 'operations',
+    accessGranted:false,
+    secondaryId:'Stakeholders'
   },
   {
     id: 'lms',
@@ -63,7 +75,9 @@ export const features: Feature[] = [
     isDefault: true,
     dependencies: [],
     dependents: [],
-    category: 'operations'
+    category: 'operations',
+    accessGranted:false,
+    secondaryId:'LMS'
   },
   {
     id: 'ehs-trainings',
@@ -72,7 +86,9 @@ export const features: Feature[] = [
     isDefault: true,
     dependencies: [],
     dependents: ['compliance'],
-    category: 'operations'
+    category: 'operations',
+    accessGranted:false,
+    secondaryId:'EHS Trainings'
   },
   {
     id: 'compliance',
@@ -81,7 +97,9 @@ export const features: Feature[] = [
     isDefault: false,
     dependencies: ['ehs-trainings'],
     dependents: [],
-    category: 'operations'
+    category: 'operations',
+    accessGranted:false,
+    secondaryId:'Compliance'
   },
   {
     id: 'audit',
@@ -90,7 +108,9 @@ export const features: Feature[] = [
     isDefault: false,
     dependencies: [],
     dependents: [],
-    category: 'operations'
+    category: 'operations',
+    accessGranted:false,
+    secondaryId:'Audit'
   },
   {
     id: 'esg-dd',
@@ -99,7 +119,9 @@ export const features: Feature[] = [
     isDefault: true,
     dependencies: [],
     dependents: [],
-    category: 'operations'
+    category: 'operations',
+    accessGranted:false,
+    secondaryId:'ESG DD'
   },
   {
     id: 'ghg-accounting',
@@ -108,7 +130,9 @@ export const features: Feature[] = [
     isDefault: false,
     dependencies: [],
     dependents: [],
-    category: 'operations'
+    category: 'operations',
+    accessGranted:false,
+    secondaryId:'GHG Accounting'
   },
   {
     id: 'materiality',
@@ -117,7 +141,9 @@ export const features: Feature[] = [
     isDefault: false,
     dependencies: [],
     dependents: ['esg-management'],
-    category: 'operations'
+    category: 'operations',
+    accessGranted:false,
+    secondaryId:'Materiality'
   },
   {
     id: 'esg-management',
@@ -126,7 +152,9 @@ export const features: Feature[] = [
     isDefault: false,
     dependencies: ['materiality'],
     dependents: [],
-    category: 'operations'
+    category: 'operations',
+    accessGranted:false,
+    secondaryId:'ESG Management'
   },
   {
     id: 'reports',
@@ -135,7 +163,9 @@ export const features: Feature[] = [
     isDefault: false,
     dependencies: ['lms', 'ehs-trainings', 'audit', 'ghg-accounting', 'materiality', 'esg-management'],
     dependents: [],
-    category: 'reporting'
+    category: 'reporting',
+    accessGranted:false,
+    secondaryId:'Reports'
   }
 ];
 
@@ -147,6 +177,10 @@ export const getDefaultFeatures = (): FeatureId[] => {
   return features.filter(feature => feature.isDefault).map(feature => feature.id);
 };
 
-export const getFeaturesByCategory = (category: Feature['category']): Feature[] => {
-  return features.filter(feature => feature.category === category);
+export const getFeaturesByCategory = (category: Feature['category'],pageAccessData): Feature[] => {
+  let filteredFeature= features.filter(feature => feature.category === category);
+  return filteredFeature.map((f)=>{
+    let pageAccessFilter=pageAccessData.filter((access)=> f.secondaryId == access.feature)[0]
+    return {...f,accessGranted:pageAccessFilter?pageAccessFilter.enabled:false}
+  })
 };

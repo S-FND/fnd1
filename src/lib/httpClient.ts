@@ -72,7 +72,8 @@ class HttpClient {
         } else if (error.status === 403) {
           toast.error('Access denied. You do not have permission for this action.');
         } else if (error.status === 404) {
-          toast.error('Resource not found.');
+          // toast.error('Resource not found.');
+          console.log('Resource not found.');
         } else if (error.status >= 500) {
           toast.error('Server error. Please try again later.');
         } else if (error.message) {

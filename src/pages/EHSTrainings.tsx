@@ -9,11 +9,11 @@ import EHSTrainingsCalendar from '@/components/ehs/EHSTrainingsCalendar';
 import EHSTrainingForm from '@/components/ehs/EHSTrainingForm';
 
 const EHSTrainingsPage = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user,isAuthenticatedStatus } = useAuth();
   const [activeTab, setActiveTab] = useState('list');
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus()) {
+    return <Navigate to="/" />;
   }
 
   const isAdmin = user?.role === 'admin';

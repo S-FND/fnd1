@@ -37,7 +37,7 @@ const VendorDashboard: React.FC = () => {
   }
 
   if (!isVendor()) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/" />;
   }
 
   const bidStats = {

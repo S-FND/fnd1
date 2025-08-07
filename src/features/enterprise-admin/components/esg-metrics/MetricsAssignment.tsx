@@ -10,7 +10,7 @@ import { mockSelectedMetrics, mockTeamMembers, mockUnits } from './assignment/mo
 
 interface MaterialTopic {
   id: string;
-  name: string;
+  topic: string;
   category: string;
   businessImpact: number;
   sustainabilityImpact: number;

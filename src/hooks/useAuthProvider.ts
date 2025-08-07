@@ -6,11 +6,13 @@ import { defaultPermissions } from '@/config/permissions';
 
 export const useAuthProvider = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [permissions, setPermissions] = useState<Permissions>({});
   const [token, setToken] = useState<string | null>(null);
+  // const [isAuthenticated,setIsAuthenticated]=useState(false)
   const navigate = useNavigate();
   const location = useLocation();
+  // let isAuthenticated=false;
 
   useEffect(() => {
     const storedUser = localStorage.getItem("fandoro-user");
@@ -20,9 +22,12 @@ export const useAuthProvider = () => {
     if (storedUser) setUser(JSON.parse(storedUser));
     if (storedPermissions) setPermissions(JSON.parse(storedPermissions));
     if (storedToken) setToken(storedToken);
-    
     setIsLoading(false);
   }, []);
+  
+  // useEffect(()=>{
+  //   console.log("User is here not null",user)
+  // },[user])
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -76,6 +81,8 @@ export const useAuthProvider = () => {
         navigate("/fandoro-admin/dashboard");
         break;
       case "admin":
+        navigate(from || "/company"); 
+        break;
       case "manager":
         // Redirect admin and manager to settings by default
         navigate(from || "/company");
@@ -92,12 +99,15 @@ export const useAuthProvider = () => {
       case "vendor":
         navigate(from || "/vendor/dashboard");
         break;
+      case "StakeHolder":
+        navigate("/stakeholders/dashboard")
       default:
         navigate(from || "/settings");
     }
   };
 
   const logout = () => {
+    // alert("Log out")
     setUser(null);
     setToken(null);
     setPermissions({});
@@ -106,7 +116,7 @@ export const useAuthProvider = () => {
     localStorage.removeItem("fandoro-token");
     localStorage.removeItem("fandoro-permissions");
     toast.info("You have been logged out");
-    navigate("/login");
+    navigate("/");
   };
 
   const isCompanyUser = () => user?.role === "admin" || user?.role === "manager" || user?.role === "unit_admin";
@@ -127,6 +137,26 @@ export const useAuthProvider = () => {
     return Boolean(permissions[feature].write);
   };
 
+  const isAuthenticatedStatus=(roles:string[])=>{
+    const storedUser:User = JSON.parse(localStorage.getItem("fandoro-user"));
+    const storedPermissions = localStorage.getItem("fandoro-permissions");
+    const storedToken = localStorage.getItem("fandoro-token");
+    // console.log('storedUser',storedUser)
+    // console.log('storedUser role',storedUser.role)
+    if(storedUser && storedToken ){
+      setIsLoading(false)
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+
+  useEffect(()=>{
+    setUser(JSON.parse(localStorage.getItem("fandoro-user")))
+    setIsLoading(false)
+  },[])
+
   return {
     user,
     isLoading,
@@ -141,6 +171,7 @@ export const useAuthProvider = () => {
     isFandoroAdmin,
     isEnterpriseAdmin,
     hasReadAccess,
-    hasWriteAccess
+    hasWriteAccess,
+    isAuthenticatedStatus
   };
 };

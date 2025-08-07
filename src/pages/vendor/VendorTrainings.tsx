@@ -15,7 +15,7 @@ import { fetchVendorTrainings } from '@/data';
 import { Clock, MapPin, Users, Calendar as CalendarIcon } from 'lucide-react';
 
 const VendorTrainings = () => {
-  const { isAuthenticated, user, isVendor } = useAuth();
+  const { isAuthenticated, user, isVendor,isAuthenticatedStatus } = useAuth();
   const vendorId = user?.vendorInfo?.id;
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [view, setView] = useState('list');
@@ -26,8 +26,8 @@ const VendorTrainings = () => {
     enabled: !!vendorId
   });
 
-  if (!isAuthenticated || !isVendor()) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus() || !isVendor()) {
+    return <Navigate to="/" />;
   }
 
   // Function to check if a day has any training activities

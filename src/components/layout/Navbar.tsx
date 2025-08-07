@@ -56,7 +56,7 @@ export const Navbar: React.FC = () => {
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80 z-20">
+            <DropdownMenuContent align="end" className="w-80 z-50">
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {/* <div className="max-h-[300px] overflow-auto">
@@ -85,7 +85,7 @@ export const Navbar: React.FC = () => {
                   <User className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="z-20">
+              <DropdownMenuContent align="end" className="z-50">
                 <DropdownMenuLabel>
                   <div>
                     <p>{user.name}</p>
@@ -101,7 +101,7 @@ export const Navbar: React.FC = () => {
             </DropdownMenu>
           ) : (
             <Button variant="default" asChild>
-              <Link to="/login">Log In</Link>
+              <Link to="/">Log In</Link>
             </Button>
           )}
         </div>

@@ -5,8 +5,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 interface MaterialTopic {
   id: string;
-  name: string;
-  category: string;
+  topic: string;
+  esg: string;
   businessImpact: number;
   sustainabilityImpact: number;
   color: string;
@@ -29,14 +29,19 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
     <Card>
       <CardHeader>
         <CardTitle>Select Material Topic</CardTitle>
-        <CardDescription>Choose a material topic to view recommended GIIN IRIS+ metrics</CardDescription>
+        <CardDescription>
+          Choose a material topic to view recommended metrics, or skip to manage custom metrics for all topics
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Select value={selectedTopicId} onValueChange={onSelectTopic}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select a material topic from your materiality assessment" />
+            <SelectValue placeholder="Select a material topic or skip to manage custom metrics" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="all-topics">
+              <div className="font-medium">Manage Custom Metrics (All Topics)</div>
+            </SelectItem>
             {materialTopics.map(topic => (
               <SelectItem key={topic.id} value={topic.id}>
                 <div className="flex items-center gap-2">
@@ -45,8 +50,8 @@ const TopicSelector: React.FC<TopicSelectorProps> = ({
                     style={{ backgroundColor: topic.color }}
                   />
                   <div>
-                    <div className="font-medium">{topic.name}</div>
-                    <div className="text-xs text-muted-foreground">{topic.category}</div>
+                    <div className="font-medium">{topic.topic}</div>
+                    <div className="text-xs text-muted-foreground">{topic.esg}</div>
                   </div>
                 </div>
               </SelectItem>
