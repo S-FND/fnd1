@@ -64,33 +64,33 @@ export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
     }else{
       featurePageListAccess= pageListAccess
     }
-    // if (exemptEmails.includes(userEmail)) {
-    //   setShouldShowOverlay(false);
-    // } else {
-    //   if (['/company', '/settings'].includes(location.pathname)) {
-    //     setShouldShowOverlay(false)
-    //   }
-    //   else if (location.pathname == '/esg-dd/advanced' || !location.pathname.split('/').includes('esg-dd')) {
-    //     console.log("location.pathname", location.pathname)
-    //     setShouldShowOverlay(true)
-    //   }
-    //   else {
-    //     setShouldShowOverlay(false)
-    //   }
-    // }
-    let pageAccessData:{feature:string;url:string;enabled:boolean}[]=featurePageListAccess;
-    for(let i=0;i<pageAccessData?.length;i++){
-      // console.log('pageAccessData',pageAccessData[i]['url'].split('/'))
-      // console.log(`location.pathname.split('/')`,location.pathname.split('/'))
-      if(location.pathname.split('/').includes(pageAccessData[i]['url'].split('/')[1])){
-        // console.log("Overlay",pageAccessData[i]['enabled'])
-        setShouldShowOverlay(!pageAccessData[i]['enabled'])
-        break;
+    if (exemptEmails.includes(userEmail)) {
+      setShouldShowOverlay(false);
+    } else {
+      if (['/company', '/settings'].includes(location.pathname)) {
+        setShouldShowOverlay(false)
       }
-      else{
-        setShouldShowOverlay(!pageAccessData[i]['enabled'])
+      else if (location.pathname == '/esg-dd/advanced' || !location.pathname.split('/').includes('esg-dd')) {
+        console.log("location.pathname", location.pathname)
+        setShouldShowOverlay(true)
+      }
+      else {
+        setShouldShowOverlay(false)
       }
     }
+    // let pageAccessData:{feature:string;url:string;enabled:boolean}[]=featurePageListAccess;
+    // for(let i=0;i<pageAccessData?.length;i++){
+    //   // console.log('pageAccessData',pageAccessData[i]['url'].split('/'))
+    //   // console.log(`location.pathname.split('/')`,location.pathname.split('/'))
+    //   if(location.pathname.split('/').includes(pageAccessData[i]['url'].split('/')[1])){
+    //     // console.log("Overlay",pageAccessData[i]['enabled'])
+    //     setShouldShowOverlay(!pageAccessData[i]['enabled'])
+    //     break;
+    //   }
+    //   else{
+    //     setShouldShowOverlay(!pageAccessData[i]['enabled'])
+    //   }
+    // }
     
     // console.log('getPageAccessList',)
   }, [location.pathname])
