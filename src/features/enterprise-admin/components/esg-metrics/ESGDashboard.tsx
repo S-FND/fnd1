@@ -272,52 +272,95 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
         </TabsList>
 
         <TabsContent value="charts" className="space-y-6">
-          <div className="grid gap-4">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Metric Analysis</CardTitle>
-                  <Select value={selectedMetric} onValueChange={setSelectedMetric}>
-                    <SelectTrigger className="w-64">
-                      <SelectValue placeholder="Select a metric" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {configuredMetrics.map(metric => (
-                        <SelectItem key={metric.id} value={metric.id}>
-                          {metric.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+          <Card>
+            <CardHeader>
+              <CardTitle>Metric Analysis</CardTitle>
+              <CardDescription>Charts for metrics configured to display on dashboard</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {configuredMetrics.length > 0 ? (
+                <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+                  {configuredMetrics.map(metric => {
+                    const metricEntries = dataEntries
+                      .filter(entry => entry.metricId === metric.id)
+                      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                    
+                    const chartData = metricEntries.map(entry => ({
+                      date: entry.date,
+                      value: typeof entry.value === 'string' && !isNaN(Number(entry.value)) 
+                        ? Number(entry.value) 
+                        : entry.value,
+                      month: new Date(entry.date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+                      year: new Date(entry.date).getFullYear(),
+                      financialYear: entry.financialYear,
+                      unitLevel: entry.unitLevel || 'organization'
+                    }));
+
+                    return (
+                      <Card key={metric.id} className="border-l-4 border-l-primary">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <CardTitle className="text-lg">{metric.name}</CardTitle>
+                              <CardDescription>{metric.description}</CardDescription>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm text-muted-foreground">Category</div>
+                              <div className="font-medium">{metric.category}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm">
+                            <span className="text-muted-foreground">Unit: {metric.unit}</span>
+                            <span className="text-muted-foreground">Frequency: {metric.collectionFrequency}</span>
+                            <span className="text-muted-foreground">Data Points: {chartData.length}</span>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          {chartData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={250}>
+                              <LineChart data={chartData}>
+                                <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                                <XAxis 
+                                  dataKey="month" 
+                                  tick={{ fontSize: 12 }}
+                                  interval="preserveStartEnd"
+                                />
+                                <YAxis tick={{ fontSize: 12 }} />
+                                <Tooltip 
+                                  labelFormatter={(label) => `Period: ${label}`}
+                                  formatter={(value) => [value, metric.unit]}
+                                />
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="value" 
+                                  stroke="hsl(var(--primary))" 
+                                  strokeWidth={2}
+                                  dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
+                                  activeDot={{ r: 6, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <div className="text-center py-12 text-muted-foreground">
+                              <BarChart3 className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                              <p className="text-sm">No data available for this metric</p>
+                              <p className="text-xs">Start entering data to see the trend</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
-              </CardHeader>
-              <CardContent>
-                {selectedMetric && processedData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={processedData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line 
-                        type="monotone" 
-                        dataKey="value" 
-                        stroke="#8884d8" 
-                        strokeWidth={2}
-                        dot={{ fill: '#8884d8', strokeWidth: 2, r: 4 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Select a metric to view its trend analysis</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No metrics configured for dashboard display</p>
+                  <p className="text-sm mt-1">Go to Metrics Configuration and enable "Show on Dashboard" for metrics you want to display here</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="trends" className="space-y-6">
