@@ -5,7 +5,6 @@ export type FeatureId =
   | 'esg-dd'
   | 'ghg-accounting'
   | 'materiality'
-  | 'sdg'
   | 'esg-management'
   | 'reports'
   | 'compliance'

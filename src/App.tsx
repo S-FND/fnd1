@@ -27,7 +27,6 @@ import VendorTrainings from './pages/vendor/VendorTrainings';
 import ESGPage from './features/enterprise-admin/pages/ESG';
 import EmployeeDashboardPage from './features/employee/pages/Dashboard';
 import MaterialityPage from './features/enterprise-admin/pages/Materiality';
-import SDGPage from './features/enterprise-admin/pages/SDG';
 import PersonalGHGPage from './features/employee/pages/PersonalGHG';
 import GHGAccountingPage from './features/enterprise-admin/pages/GHGAccounting';
 import UnitGHGAccountingPage from './features/unit-admin/components/ghg/UnitGHGAccountingPage';
@@ -70,7 +69,6 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/company" element={<CompanyProfilePage />} />
         <Route path="/materiality" element={<MaterialityPage />} />
-        <Route path="/sdg/*" element={<SDGPage />} />
         <Route path="/esg/*" element={<ESGPage />} />
         <Route path="/esg-dd" element={<ESGDDPage />} />
         <Route path="/esg-dd/reports" element={<ESGDDReportsPage />} />

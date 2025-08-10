@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, BarChart3, FileSearch, LineChart, ClipboardCheck, GraduationCap, Calendar, Users, Building2, Settings, FileText, TreePine, Target } from 'lucide-react';
+import { LayoutDashboard, BarChart3, FileSearch, LineChart, ClipboardCheck, GraduationCap, Calendar, Users, Building2, Settings, FileText, TreePine } from 'lucide-react';
 import { FeatureId } from '@/types/features';
 
 export interface NavigationItem {
@@ -38,16 +38,6 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
         href: "/materiality",
         icon: TreePine,
         featureId: 'materiality'
-      },
-      {
-        name: "SDG",
-        href: "/sdg",
-        icon: Target,
-        featureId: 'sdg',
-        submenu: [
-          { name: "Overview", href: "/sdg", icon: Target },
-          { name: "Strategy Setting", href: "/sdg/strategy", icon: FileText }
-        ]
       },
       {
         name: "ESG DD",
