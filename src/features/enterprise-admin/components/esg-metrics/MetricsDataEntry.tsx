@@ -12,6 +12,19 @@ import { toast } from 'sonner';
 import { ESGMetricWithTracking } from '../../data/esgMetricsData';
 import FlexibleDataInput from './FlexibleDataInput';
 
+const customStyles = {
+  control: (provided) => ({
+    ...provided,
+    width: 300, // adjust
+  }),
+  singleValue: (provided) => ({
+    ...provided,
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  }),
+};
+
 interface MaterialTopic {
   id: string;
   topic: string;
@@ -34,14 +47,16 @@ interface MetricDataEntry {
   topicId: string;
   dataType: string;
   financialYear: string;
-  industry?:string
+  industry?:string;
+  esg:string;
 }
 
 interface MetricsDataEntryProps {
   materialTopics: MaterialTopic[];
+  finalMetrics:ESGMetricWithTracking[]
 }
 
-const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) => {
+const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,finalMetrics}) => {
   const [configuredMetrics, setConfiguredMetrics] = useState<ESGMetricWithTracking[]>([]);
   const [dataEntries, setDataEntries] = useState<MetricDataEntry[]>([]);
   const [selectedMetric, setSelectedMetric] = useState<string>('');
@@ -53,15 +68,16 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
 
   // Load configured metrics from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('savedESGMetrics');
-    if (saved) {
-      try {
-        const parsedMetrics = JSON.parse(saved);
-        setConfiguredMetrics(parsedMetrics);
-      } catch (error) {
-        console.error('Error loading saved metrics:', error);
-      }
-    }
+    // const saved = localStorage.getItem('savedESGMetrics');
+    // if (saved) {
+    //   try {
+    //     const parsedMetrics = JSON.parse(saved);
+    //     setConfiguredMetrics(parsedMetrics);
+    //   } catch (error) {
+    //     console.error('Error loading saved metrics:', error);
+    //   }
+    // }
+    setConfiguredMetrics(finalMetrics)
   }, []);
 
   // Load existing data entries from localStorage
@@ -91,7 +107,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
 
     const metric = configuredMetrics.find(m => m.code === selectedMetric);
     if (!metric) return;
-
+    console.log(`metric ==> `,metric)
     const newEntry: MetricDataEntry = {
       id: `entry_${Date.now()}`,
       metricId: selectedMetric,
@@ -103,7 +119,8 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
       topicId: metric.topic,
       dataType: metric.dataType,
       financialYear: selectedFinancialYear,
-      industry:metric.industry?metric.industry:''
+      industry:metric.industry?metric.industry:'',
+      esg:metric.esg
     };
     console.log("handleSubmitData :: newEntry => ",newEntry)
     setDataEntries(prev => [newEntry, ...prev]);
@@ -202,18 +219,18 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="metric-select">Select Metric</Label>
-                  <Select value={selectedMetric} onValueChange={setSelectedMetric}>
-                    <SelectTrigger>
+                  <Select value={selectedMetric} onValueChange={setSelectedMetric} >
+                    <SelectTrigger style={{"whiteSpace":"nowrap","textOverflow":"ellipsis"}}>
                       <SelectValue placeholder="Choose a metric..." />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent >
                       {configuredMetrics.map(metric => (
                         <SelectItem key={metric.code} value={metric.code}>
                           <div className="flex flex-col">
                             <span>{metric.name}</span>
-                            <span className="text-xs text-muted-foreground">
+                            {/* <span className="text-xs text-muted-foreground">
                               {metric.collectionFrequency} • {metric.dataType}
-                            </span>
+                            </span> */}
                           </div>
                         </SelectItem>
                       ))}
@@ -305,7 +322,8 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
                           date: currentDate,
                           topicId: metric.topic,
                           dataType: metric.dataType,
-                          financialYear: selectedFinancialYear
+                          financialYear: selectedFinancialYear,
+                          esg:metric.esg
                         };
                       });
                     

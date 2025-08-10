@@ -154,11 +154,11 @@ const ESGMetricsPage: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="configuration" className="space-y-6 mt-4">
-          <ESGMetricsManager materialTopics={finalizedTopics} finalMetricsList={finalMetrics} customMetricsList={customMetrics} />
+          <ESGMetricsManager materialTopics={finalizedTopics} finalMetricsList={finalMetrics} customMetricsList={customMetrics} getMaterialityData={getMaterialityData} />
         </TabsContent>
         
         <TabsContent value="data-entry" className="space-y-6 mt-4">
-          <MetricsDataEntry materialTopics={finalizedTopics} />
+          <MetricsDataEntry materialTopics={finalizedTopics} finalMetrics={finalMetrics} />
         </TabsContent>
       </Tabs>
     </div>

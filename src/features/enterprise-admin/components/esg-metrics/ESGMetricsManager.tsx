@@ -38,9 +38,10 @@ interface ESGMetricsManagerProps {
   materialTopics: MaterialTopic[];
   finalMetricsList: ESGMetricWithTracking[],
   customMetricsList: ESGMetricWithTracking[]
+  getMaterialityData:()=>void
 }
 
-const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, finalMetricsList, customMetricsList }) => {
+const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, finalMetricsList, customMetricsList,getMaterialityData }) => {
   const [selectedTopicId, setSelectedTopicId] = useState<string>('');
   const [availableMetrics, setAvailableMetrics] = useState<ESGMetricWithTracking[]>([]);
   const [selectedMetrics, setSelectedMetrics] = useState<ESGMetricWithTracking[]>([]);
@@ -65,6 +66,24 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
       tableRows: 1,
     },
   });
+
+  useEffect(()=>{
+    
+    setSavedMetrics(finalMetricsList.map((m) =>{
+      if(m.esg){
+        return m;
+      }
+      else{
+        let esg=materialTopics.filter((mt) => mt.industry == m.industry && mt.topic == m.topic)
+        if(esg && esg.length > 0){
+          return {...m,esg:esg[0].esg}
+        }
+        else{
+          return {...m,esg:''}
+        }
+      }
+    }))
+  },[])
 
 
 
@@ -139,13 +158,30 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
     );
     console.log('remainingMetrics', remainingMetrics)
     // setSelectedMetrics(remainingMetrics);
+    finalMetricsList.map((m) =>{
+      if(m.esg){
+        return m;
+      }
+      else{
+        let esg=materialTopics.filter((mt) => mt.industry == m.industry && mt.topic == m.topic)
+        if(esg && esg.length > 0){
+          return {...m,esg:esg[0].esg}
+        }
+        else{
+          return {...m,esg:''}
+        }
+      }
+    })
     setSavedMetrics(finalMetricsList)
   }, [customMetricsList, finalMetricsList,standardMetrics]);
+
+  
 
   function getMetricsByIndustryAndTopic(
     data: any[],
     industryName: string,
-    topicName: string
+    topicName: string,
+    esg:string
   ): ESGMetricWithTracking[] {
     const industry = data.find(industry => industry.name === industryName);
     if (!industry) return [];
@@ -153,12 +189,12 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
     const topic = industry.topics.find(topic => topic.name === topicName);
     if (!topic) return [];
 
-    return topic.metrics.map((m) => { return { ...m, industry: industryName, topic: topicName } });
+    return topic.metrics.map((m) => { return { ...m, industry: industryName, topic: topicName,esg:esg } });
   }
 
   useEffect(() => {
     let preExistMetric = materialTopics.reduce((a, c) => {
-      a = a.concat(...getMetricsByIndustryAndTopic(industryList, c.industry, c.topic))
+      a = a.concat(...getMetricsByIndustryAndTopic(industryList, c.industry, c.topic,c.esg))
       return a
     }, [])
     // setSelectedMetrics(preExistMetric)
@@ -168,7 +204,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
 
   // Save metrics to localStorage whenever savedMetrics changes
   useEffect(() => {
-    // localStorage.setItem('savedESGMetrics', JSON.stringify(savedMetrics));
+    localStorage.setItem('savedESGMetrics', JSON.stringify(savedMetrics));
   }, [savedMetrics]);
 
   useEffect(() => {
@@ -227,7 +263,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
       let topicData=materialTopics.filter((m)=>m.id == selectedTopicId);
       let saveCustomMetric=[...customMetricsList].filter((cm)=> cm.topic == topicData[0].topic && cm.industry == topicData[0].industry)
       
-      let metricData=getMetricsByIndustryAndTopic(industryList,topicData[0].industry,topicData[0].topic)
+      let metricData=getMetricsByIndustryAndTopic(industryList,topicData[0].industry,topicData[0].topic,topicData[0].esg)
       setAvailableMetrics([...metricData,...customMetrics,...saveCustomMetric])
     } else {
       // If no topic selected or "all-topics" selected, show all custom metrics as available
@@ -256,7 +292,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
     const existingIndex = selectedMetrics.findIndex(
       m => m.code === code && m.name === name
     );
-  console.log('existingIndex',existingIndex);
+  // console.log('existingIndex',existingIndex);
     if (existingIndex >= 0) {
       setSelectedMetrics(prev => prev.filter((_, index) => index !== existingIndex));
     } else {
@@ -361,7 +397,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
     console.log("handleAddCustomMetric :: Entry")
     // Determine category based on selected topic or default
     let category: 'Environmental' | 'Social' | 'Governance' = 'Environmental';
-    let selectedTopic=null;
+    let selectedTopic:MaterialTopic=null;
     if (selectedTopicId) {
        selectedTopic= materialTopics.find(topic => topic.id === selectedTopicId);
       if (selectedTopic) {
@@ -386,7 +422,8 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
       inputFormat: customMetricForm.inputFormat,
       collectionFrequency: customMetricForm.collectionFrequency,
       dataPoints: [],
-      isSelected: true
+      isSelected: true,
+      esg:selectedTopic ? selectedTopic.esg :'',
     };
 
     // Add to custom metrics list and save to localStorage
@@ -445,6 +482,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
         
         setSelectedMetrics([]);
         toast.success(`${selectedMetrics.length} metrics saved successfully`);
+        getMaterialityData()
       }
     } catch (error) {
       console.log("error :: updateMatrixData => ", error)
