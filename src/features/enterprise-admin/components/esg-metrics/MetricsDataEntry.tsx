@@ -7,7 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calendar, Save, TrendingUp, Plus, Edit3 } from 'lucide-react';
+import { Calendar as CalendarIcon, Save, TrendingUp, Plus, Edit3, CalendarDays } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { ESGMetricWithTracking } from '../../data/esgMetricsData';
 import FlexibleDataInput from './FlexibleDataInput';
@@ -62,6 +66,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
   const [showBulkEntry, setShowBulkEntry] = useState<boolean>(false);
   const [bulkEntries, setBulkEntries] = useState<{[key: string]: any}>({});
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
+  const [selectedMonth, setSelectedMonth] = useState<Date | undefined>(new Date());
 
   // Load configured metrics from localStorage
   useEffect(() => {
@@ -229,14 +234,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
         }
         break;
       case 'Daily':
-        for (let day = 1; day <= 365; day++) {
-          const dayDate = new Date(year, 0, day);
-          periods.push({
-            period: `Day ${day}`,
-            periodIndex: day,
-            dueDate: dayDate.toISOString().split('T')[0]
-          });
-        }
+        // Daily periods will be generated based on selected month
         break;
       default:
         periods.push({ period: 'Single Entry', periodIndex: 1, dueDate: `${year}-12-31` });
@@ -245,8 +243,44 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
     return periods;
   };
 
+  // Generate daily periods for selected month
+  const generateDailyPeriods = (metric: ESGMetricWithTracking, selectedMonth: Date): MetricPeriod[] => {
+    const year = selectedMonth.getFullYear();
+    const month = selectedMonth.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const periods: MetricPeriod[] = [];
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayDate = new Date(year, month, day);
+      const periodLabel = `${dayDate.getDate()}`;
+      const dateStr = dayDate.toISOString().split('T')[0];
+      
+      const existingEntry = dataEntries.find(entry => 
+        entry.metricId === metric.id && 
+        entry.date === dateStr && 
+        entry.financialYear === selectedFinancialYear
+      );
+
+      periods.push({
+        id: `${metric.id}_${dateStr}_${selectedFinancialYear}`,
+        metricId: metric.id,
+        period: periodLabel,
+        periodIndex: day,
+        value: existingEntry?.value || '',
+        isCompleted: !!existingEntry,
+        dueDate: dateStr
+      });
+    }
+
+    return periods;
+  };
+
   // Get periods with completion status for a metric
   const getMetricPeriods = (metric: ESGMetricWithTracking): MetricPeriod[] => {
+    if (metric.collectionFrequency === 'Daily' && selectedMonth) {
+      return generateDailyPeriods(metric, selectedMonth);
+    }
+    
     const periods = generatePeriods(metric.collectionFrequency, selectedFinancialYear);
     
     return periods.map(period => {
@@ -343,27 +377,63 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Daily Metrics: Show Month Picker */}
+                {selectedMetric && configuredMetrics.find(m => m.id === selectedMetric)?.collectionFrequency === 'Daily' && (
+                  <div>
+                    <Label>Select Month</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !selectedMonth && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarDays className="mr-2 h-4 w-4" />
+                          {selectedMonth ? format(selectedMonth, "MMMM yyyy") : <span>Pick a month</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={selectedMonth}
+                          onSelect={setSelectedMonth}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date("1900-01-01")
+                          }
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
                 
-                <div>
-                  <Label htmlFor="period-select">Period</Label>
-                  <Select value={selectedPeriod} onValueChange={setSelectedPeriod} disabled={!selectedMetric}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose a period..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {selectedMetric && getAvailablePeriods(selectedMetric).map(period => (
-                        <SelectItem key={period.id} value={period.period}>
-                          <div className="flex items-center justify-between w-full">
-                            <span>{period.period}</span>
-                            {period.isCompleted && (
-                              <Badge variant="secondary" className="ml-2">Completed</Badge>
-                            )}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* Non-Daily Metrics: Show Period Selection */}
+                {selectedMetric && configuredMetrics.find(m => m.id === selectedMetric)?.collectionFrequency !== 'Daily' && (
+                  <div>
+                    <Label htmlFor="period-select">Period</Label>
+                    <Select value={selectedPeriod} onValueChange={setSelectedPeriod} disabled={!selectedMetric}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a period..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {selectedMetric && getAvailablePeriods(selectedMetric).map(period => (
+                          <SelectItem key={period.id} value={period.period}>
+                            <div className="flex items-center justify-between w-full">
+                              <span>{period.period}</span>
+                              {period.isCompleted && (
+                                <Badge variant="secondary" className="ml-2">Completed</Badge>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 
                 <div>
                   <Label htmlFor="entry-date">Date</Label>
@@ -376,12 +446,111 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
                 </div>
               </div>
 
-              {selectedMetric && selectedPeriod && (
+              {/* Daily Metrics: Show Calendar Grid for Selected Month */}
+              {selectedMetric && configuredMetrics.find(m => m.id === selectedMetric)?.collectionFrequency === 'Daily' && selectedMonth && (
+                <div className="p-4 border rounded-lg">
+                  <div className="mb-4">
+                    <h4 className="font-medium flex items-center gap-2">
+                      <CalendarIcon className="h-4 w-4" />
+                      Daily Data Entry - {format(selectedMonth, "MMMM yyyy")}
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      {configuredMetrics.find(m => m.id === selectedMetric)?.name}
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-7 gap-2 max-h-80 overflow-y-auto">
+                    {/* Calendar Headers */}
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                      <div key={day} className="text-center text-sm font-medium p-2 text-muted-foreground">
+                        {day}
+                      </div>
+                    ))}
+                    
+                    {/* Calendar Days */}
+                    {(() => {
+                      const year = selectedMonth.getFullYear();
+                      const month = selectedMonth.getMonth();
+                      const firstDay = new Date(year, month, 1);
+                      const lastDay = new Date(year, month + 1, 0);
+                      const startDate = new Date(firstDay);
+                      startDate.setDate(startDate.getDate() - firstDay.getDay());
+                      
+                      const days = [];
+                      const currentDate = new Date(startDate);
+                      
+                      while (currentDate <= lastDay || currentDate.getDay() !== 0) {
+                        days.push(new Date(currentDate));
+                        currentDate.setDate(currentDate.getDate() + 1);
+                        if (days.length > 42) break; // Max 6 weeks
+                      }
+                      
+                      return days.map((date, index) => {
+                        const isCurrentMonth = date.getMonth() === month;
+                        const dateStr = date.toISOString().split('T')[0];
+                        const dayNum = date.getDate();
+                        
+                        const existingEntry = dataEntries.find(entry => 
+                          entry.metricId === selectedMetric && 
+                          entry.date === dateStr && 
+                          entry.financialYear === selectedFinancialYear
+                        );
+                        
+                        return (
+                          <Button
+                            key={index}
+                            variant={existingEntry ? "default" : "outline"}
+                            className={cn(
+                              "h-12 p-1 text-xs",
+                              !isCurrentMonth && "text-muted-foreground opacity-50",
+                              existingEntry && "bg-primary text-primary-foreground"
+                            )}
+                            disabled={!isCurrentMonth}
+                            onClick={() => {
+                              if (isCurrentMonth) {
+                                setSelectedPeriod(dayNum.toString());
+                                setEntryDate(dateStr);
+                              }
+                            }}
+                          >
+                            <div className="flex flex-col items-center">
+                              <span>{dayNum}</span>
+                              {existingEntry && (
+                                <div className="w-1 h-1 bg-primary-foreground rounded-full mt-1" />
+                              )}
+                            </div>
+                          </Button>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
+              )}
+
+              {/* Data Entry Form for Selected Period */}
+              {selectedMetric && selectedPeriod && configuredMetrics.find(m => m.id === selectedMetric)?.collectionFrequency !== 'Daily' && (
                 <div className="p-4 border rounded-lg">
                   <div className="mb-3">
                     <h4 className="font-medium">Data Entry for {selectedPeriod}</h4>
                     <p className="text-sm text-muted-foreground">
                       {configuredMetrics.find(m => m.id === selectedMetric)?.name}
+                    </p>
+                  </div>
+                  <FlexibleDataInput
+                    metric={configuredMetrics.find(m => m.id === selectedMetric)!}
+                    value={entryValue}
+                    onChange={setEntryValue}
+                  />
+                </div>
+              )}
+
+              {/* Data Entry Form for Daily Metrics */}
+              {selectedMetric && selectedPeriod && configuredMetrics.find(m => m.id === selectedMetric)?.collectionFrequency === 'Daily' && (
+                <div className="p-4 border rounded-lg">
+                  <div className="mb-3">
+                    <h4 className="font-medium">Data Entry for Day {selectedPeriod}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {configuredMetrics.find(m => m.id === selectedMetric)?.name} - {format(new Date(entryDate), "PPP")}
                     </p>
                   </div>
                   <FlexibleDataInput
@@ -438,36 +607,68 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
                       
                       <div className="grid gap-3">
                         <h5 className="font-medium text-sm">Period-based Data Entry:</h5>
-                        <div className="grid gap-2 max-h-60 overflow-y-auto">
-                          {periods.map(period => (
-                            <div key={period.id} className="flex items-center gap-3 p-2 border rounded">
-                              <div className="flex-1">
-                                <span className="text-sm font-medium">{period.period}</span>
-                                {period.isCompleted && (
-                                  <Badge variant="secondary" className="ml-2">Completed</Badge>
-                                )}
-                              </div>
-                              <div className="flex-1">
-                                <FlexibleDataInput
-                                  metric={metric}
-                                  value={period.value}
-                                  onChange={(value) => {
-                                    // Update the period value in bulk entries
-                                    setBulkEntries(prev => ({ 
-                                      ...prev, 
-                                      [`${metric.id}_${period.period}`]: value 
-                                    }));
-                                  }}
-                                />
-                              </div>
+                        {metric.collectionFrequency === 'Daily' ? (
+                          // Daily metrics show month selector and summary
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3">
+                              <Label>Select Month for Daily View:</Label>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button variant="outline" size="sm">
+                                    <CalendarDays className="mr-2 h-4 w-4" />
+                                    {format(selectedMonth || new Date(), "MMMM yyyy")}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={selectedMonth}
+                                    onSelect={setSelectedMonth}
+                                    disabled={(date) =>
+                                      date > new Date() || date < new Date("1900-01-01")
+                                    }
+                                    initialFocus
+                                    className={cn("p-3 pointer-events-auto")}
+                                  />
+                                </PopoverContent>
+                              </Popover>
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                            <div className="text-sm text-muted-foreground">
+                              Daily entries for {format(selectedMonth || new Date(), "MMMM yyyy")}: {periods.filter(p => p.isCompleted).length}/{periods.length} days completed
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="grid gap-2 max-h-60 overflow-y-auto">
+                            {periods.map(period => (
+                              <div key={period.id} className="flex items-center gap-3 p-2 border rounded">
+                                <div className="flex-1">
+                                  <span className="text-sm font-medium">{period.period}</span>
+                                  {period.isCompleted && (
+                                    <Badge variant="secondary" className="ml-2">Completed</Badge>
+                                  )}
+                                </div>
+                                 <div className="flex-1">
+                                   <FlexibleDataInput
+                                     metric={metric}
+                                     value={period.value}
+                                     onChange={(value) => {
+                                       // Update the period value in bulk entries
+                                       setBulkEntries(prev => ({ 
+                                         ...prev, 
+                                         [`${metric.id}_${period.period}`]: value 
+                                       }));
+                                     }}
+                                   />
+                                 </div>
+                               </div>
+                             ))}
+                           </div>
+                         )}
+                       </div>
+                     </div>
+                   );
+                 })}
+               </div>
               
               <div className="flex gap-2">
                 <Button 
