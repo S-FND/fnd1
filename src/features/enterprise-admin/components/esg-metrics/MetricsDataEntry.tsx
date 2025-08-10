@@ -833,7 +833,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
+              <TrendingUp className="w-5 h-5" />
               Metrics Requiring Data ({metricsNeedingData.length})
             </CardTitle>
             <CardDescription>
@@ -844,22 +844,30 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
             <div className="grid gap-3">
               {metricsNeedingData.map(metric => {
                 const lastEntry = getLastEntryDate(metric.id);
+                const overdue = isOverdue(lastEntry || '', metric.collectionFrequency);
+                const periods = getMetricPeriods(metric);
+                const completedPeriods = periods.filter(p => p.isCompleted).length;
+                const totalPeriods = periods.length;
                 
                 return (
                   <div key={metric.id} className="flex items-center justify-between p-3 border rounded-lg bg-yellow-50">
                     <div>
                       <h4 className="font-medium">{metric.name}</h4>
-                      <p className="text-sm text-muted-foreground">{metric.description}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {totalPeriods} entries required • {completedPeriods} entries completed
+                      </p>
                       <div className="flex items-center gap-2 mt-1">
                         <Badge className={getFrequencyColor(metric.collectionFrequency)}>
                           {metric.collectionFrequency}
                         </Badge>
-                        <Badge variant="destructive">Overdue</Badge>
+                        <Badge variant={overdue ? "destructive" : "secondary"}>
+                          {overdue ? "Overdue" : "Completed"}
+                        </Badge>
                       </div>
                     </div>
                     <div className="text-right text-sm">
                       <div className="text-muted-foreground">Last Entry:</div>
-                      <div>{lastEntry || 'Never'}</div>
+                      <div>{lastEntry ? new Date(lastEntry).toLocaleDateString() : 'Never'}</div>
                     </div>
                   </div>
                 );
