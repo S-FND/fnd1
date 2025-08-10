@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { Plus, X } from 'lucide-react';
 
@@ -14,6 +15,7 @@ interface CustomMetricForm {
   unit: string;
   dataType: 'Numeric' | 'Percentage' | 'Text' | 'Boolean' | 'Dropdown' | 'Radio' | 'Table';
   collectionFrequency: 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Bi-Annually' | 'Annually';
+  showOnDashboard: boolean;
   inputFormat: {
     options: string[];
     tableColumns: string[];
@@ -183,6 +185,27 @@ const CustomMetricDialog: React.FC<CustomMetricDialogProps> = ({
               <SelectItem value="Annually">Annually</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-2">Show on Dashboard</label>
+          <RadioGroup 
+            value={customMetricForm.showOnDashboard ? "yes" : "no"} 
+            onValueChange={(value) => setCustomMetricForm(prev => ({...prev, showOnDashboard: value === "yes"}))}
+            className="flex flex-row gap-6"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="yes" id="dashboard-yes" />
+              <label htmlFor="dashboard-yes" className="text-sm">Yes</label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="no" id="dashboard-no" />
+              <label htmlFor="dashboard-no" className="text-sm">No</label>
+            </div>
+          </RadioGroup>
+          <p className="text-xs text-muted-foreground mt-1">
+            Choose whether this metric should be displayed as a graph on the ESG dashboard
+          </p>
         </div>
         
         {/* Input Format Configuration */}

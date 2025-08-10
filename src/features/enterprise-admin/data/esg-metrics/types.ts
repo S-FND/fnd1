@@ -23,6 +23,7 @@ export interface ESGMetricWithTracking extends ESGMetric {
   targetDate?: string;
   targetValue?: string | number | boolean;
   collectionFrequency: 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Bi-Annually' | 'Annually';
+  showOnDashboard?: boolean;
   dataPoints: {
     date: string;
     value: string | number | boolean;

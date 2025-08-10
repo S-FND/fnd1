@@ -45,6 +45,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
     unit: '',
     dataType: 'Numeric' as 'Numeric' | 'Percentage' | 'Text' | 'Boolean' | 'Dropdown' | 'Radio' | 'Table',
     collectionFrequency: 'Monthly' as 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Bi-Annually' | 'Annually',
+    showOnDashboard: false,
     inputFormat: {
       options: [] as string[],
       tableColumns: [] as string[],
@@ -159,6 +160,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
       unit: metric.unit,
       dataType: metric.dataType,
       collectionFrequency: metric.collectionFrequency,
+      showOnDashboard: (metric as any).showOnDashboard || false,
       inputFormat: {
         options: metric.inputFormat?.options || [],
         tableColumns: metric.inputFormat?.tableColumns || [],
@@ -176,6 +178,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
       unit: metric.unit,
       dataType: metric.dataType,
       collectionFrequency: metric.collectionFrequency,
+      showOnDashboard: (metric as any).showOnDashboard || false,
       inputFormat: {
         options: metric.inputFormat?.options || [],
         tableColumns: metric.inputFormat?.tableColumns || [],
@@ -200,6 +203,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
         dataType: customMetricForm.dataType,
         inputFormat: customMetricForm.inputFormat,
         collectionFrequency: customMetricForm.collectionFrequency,
+        showOnDashboard: customMetricForm.showOnDashboard,
       };
 
       setSelectedMetrics(metrics =>
@@ -256,6 +260,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
       dataType: customMetricForm.dataType,
       inputFormat: customMetricForm.inputFormat,
       collectionFrequency: customMetricForm.collectionFrequency,
+      showOnDashboard: customMetricForm.showOnDashboard,
       dataPoints: [],
       isSelected: true
     };
@@ -295,6 +300,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics })
       unit: '',
       dataType: 'Numeric',
       collectionFrequency: 'Monthly',
+      showOnDashboard: false,
       inputFormat: {
         options: [],
         tableColumns: [],

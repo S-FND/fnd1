@@ -44,7 +44,10 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
     
     if (savedMetrics) {
       try {
-        setConfiguredMetrics(JSON.parse(savedMetrics));
+        const allMetrics = JSON.parse(savedMetrics);
+        // Filter metrics that should be shown on dashboard
+        const dashboardMetrics = allMetrics.filter((metric: ESGMetricWithTracking) => metric.showOnDashboard);
+        setConfiguredMetrics(dashboardMetrics);
       } catch (error) {
         console.error('Error loading metrics:', error);
       }
