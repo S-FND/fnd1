@@ -24,7 +24,6 @@ export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({
       <div className="flex min-h-screen w-full bg-background">
         <UnifiedSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <Navbar />
           <main className="flex-1 p-4 md:p-6 overflow-auto">
             <PageOverlay>
               <div className="max-w-full">

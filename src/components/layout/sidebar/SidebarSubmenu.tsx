@@ -22,7 +22,7 @@ export const SidebarSubmenu: React.FC<SidebarSubmenuProps> = ({
   children
 }) => {
   return (
-    <React.Fragment>
+    <>
       <SidebarMenuItem>
         <SidebarMenuButton 
           onClick={onToggle}
@@ -48,6 +48,6 @@ export const SidebarSubmenu: React.FC<SidebarSubmenuProps> = ({
           {children}
         </SidebarMenuSub>
       )}
-    </React.Fragment>
+    </>
   );
 };
