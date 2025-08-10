@@ -20,24 +20,18 @@ export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({
   const { user, logout } = useAuth();
   
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
-        <UnifiedSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Header with sidebar trigger */}
-          <header className="h-12 flex items-center border-b bg-background px-4">
-            <SidebarTrigger className="mr-2" />
-          </header>
-          <main className="flex-1 p-4 md:p-6 overflow-auto">
-            <PageOverlay>
-              <div className="max-w-full">
-                {children}
-              </div>
-            </PageOverlay>
-          </main>
-        </div>
+    <div className="flex min-h-screen w-full bg-background">
+      <UnifiedSidebar />
+      <div className="flex-1 flex flex-col min-w-0">
+        <main className="flex-1 p-4 md:p-6 overflow-auto">
+          <PageOverlay>
+            <div className="max-w-full">
+              {children}
+            </div>
+          </PageOverlay>
+        </main>
       </div>
-    </SidebarProvider>
+    </div>
   );
 };
 
