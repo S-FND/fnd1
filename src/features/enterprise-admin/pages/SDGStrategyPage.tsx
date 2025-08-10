@@ -110,9 +110,9 @@ const SDGStrategyPage = () => {
 
   const getGoalDescription = (goal: 'A' | 'B' | 'C') => {
     switch (goal) {
-      case 'A': return 'Transformational Impact';
+      case 'A': return 'Baseline Impact';
       case 'B': return 'Meaningful Impact';
-      case 'C': return 'Baseline Impact';
+      case 'C': return 'Transformational Impact';
       default: return '';
     }
   };
@@ -141,21 +141,21 @@ const SDGStrategyPage = () => {
           <CardContent>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
-                <Badge className={getGoalBadgeColor('A')}>A - Transformational</Badge>
+                <Badge className={getGoalBadgeColor('A')}>A - Act to Avoid Harm</Badge>
                 <p className="text-sm text-muted-foreground">
-                  Deep, systemic change that addresses root causes and creates lasting transformation
+                  Important foundational change that prevents harm and maintains standards
                 </p>
               </div>
               <div className="space-y-2">
-                <Badge className={getGoalBadgeColor('B')}>B - Meaningful</Badge>
+                <Badge className={getGoalBadgeColor('B')}>B - Benefit Stakeholders</Badge>
                 <p className="text-sm text-muted-foreground">
                   Significant positive change that improves conditions and capabilities
                 </p>
               </div>
               <div className="space-y-2">
-                <Badge className={getGoalBadgeColor('C')}>C - Baseline</Badge>
+                <Badge className={getGoalBadgeColor('C')}>C - Contribute to Solutions</Badge>
                 <p className="text-sm text-muted-foreground">
-                  Important foundational change that prevents harm and maintains standards
+                  Deep, systemic change that addresses root causes and creates lasting transformation
                 </p>
               </div>
             </div>
@@ -211,9 +211,9 @@ const SDGStrategyPage = () => {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="A">A - Transformational</SelectItem>
-                            <SelectItem value="B">B - Meaningful</SelectItem>
-                            <SelectItem value="C">C - Baseline</SelectItem>
+                            <SelectItem value="A">A - Act to Avoid Harm</SelectItem>
+                            <SelectItem value="B">B - Benefit Stakeholders</SelectItem>
+                            <SelectItem value="C">C - Contribute to Solutions</SelectItem>
                           </SelectContent>
                         </Select>
                       ) : (
@@ -289,9 +289,9 @@ const SDGStrategyPage = () => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="A">A - Transformational</SelectItem>
-                          <SelectItem value="B">B - Meaningful</SelectItem>
-                          <SelectItem value="C">C - Baseline</SelectItem>
+                          <SelectItem value="A">A - Act to Avoid Harm</SelectItem>
+                          <SelectItem value="B">B - Benefit Stakeholders</SelectItem>
+                          <SelectItem value="C">C - Contribute to Solutions</SelectItem>
                         </SelectContent>
                       </Select>
                     </TableCell>
