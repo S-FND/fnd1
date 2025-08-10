@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
+import { BackToHomeButton } from '@/components/ui/back-to-home-button';
 import { Upload, FileText, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -300,11 +301,14 @@ const ESMSPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Environmental and Social Management System (ESMS)</h1>
-        <p className="text-muted-foreground">
-          Comprehensive ESG management framework and documentation
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Environmental and Social Management System (ESMS)</h1>
+          <p className="text-muted-foreground">
+            Comprehensive ESG management framework and documentation
+          </p>
+        </div>
+        <BackToHomeButton />
       </div>
 
       {/* Overall Progress */}

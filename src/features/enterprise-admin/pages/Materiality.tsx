@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
+import { BackToHomeButton } from '@/components/ui/back-to-home-button';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
@@ -279,11 +280,14 @@ const MaterialityPage = () => {
   return (
     <UnifiedSidebarLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Materiality Assessment</h1>
-          <p className="text-muted-foreground">
-            Analyze and prioritize ESG material topics based on business impact and sustainability impact
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Materiality Assessment</h1>
+            <p className="text-muted-foreground">
+              Identify and prioritize your most significant ESG topics based on business and sustainability impact
+            </p>
+          </div>
+          <BackToHomeButton />
         </div>
         
         <IndustrySelection 

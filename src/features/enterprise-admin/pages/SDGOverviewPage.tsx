@@ -3,6 +3,7 @@ import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { BackToHomeButton } from '@/components/ui/back-to-home-button';
 import { sdgGoals } from '@/data/sdg/goals';
 import { Target, TrendingUp, Users, Globe } from 'lucide-react';
 
@@ -14,11 +15,14 @@ const SDGOverviewPage = () => {
   return (
     <UnifiedSidebarLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">SDG Overview</h1>
-          <p className="text-muted-foreground">
-            Track your organization's progress towards the Sustainable Development Goals
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">SDG Overview</h1>
+            <p className="text-muted-foreground">
+              Track your organization's progress towards the Sustainable Development Goals
+            </p>
+          </div>
+          <BackToHomeButton />
         </div>
 
         {/* Summary Cards */}

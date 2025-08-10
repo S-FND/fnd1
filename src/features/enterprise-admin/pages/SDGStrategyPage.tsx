@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { BackToHomeButton } from '@/components/ui/back-to-home-button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -127,10 +128,13 @@ const SDGStrategyPage = () => {
               Define your most material SDG outcomes, impact goals, and theory of change
             </p>
           </div>
-          <Button onClick={handleAdd} disabled={isAdding || editingId !== null}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add SDG Outcome
-          </Button>
+          <div className="flex gap-2">
+            <BackToHomeButton />
+            <Button onClick={handleAdd} disabled={isAdding || editingId !== null}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add SDG Outcome
+            </Button>
+          </div>
         </div>
 
         {/* Goal Level Definitions */}
