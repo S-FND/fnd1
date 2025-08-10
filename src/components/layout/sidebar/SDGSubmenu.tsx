@@ -17,7 +17,8 @@ export const SDGSubmenu: React.FC<SDGSubmenuProps> = ({
 
   const submenuItems = [
     { name: "Overview", href: "/sdg", icon: Target },
-    { name: "Strategy Setting", href: "/sdg/strategy", icon: FileText }
+    { name: "Strategy Setting", href: "/sdg/strategy", icon: FileText },
+    { name: "SDG Outcome Mapping", href: "/sdg/outcome-mapping", icon: FileText }
   ];
 
   return (
