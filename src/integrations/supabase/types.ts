@@ -101,6 +101,123 @@ export type Database = {
         }
         Relationships: []
       }
+      maker_checker_rules: {
+        Row: {
+          action_type: Database["public"]["Enums"]["action_type"]
+          created_at: string
+          entity_type: string
+          id: string
+          max_pending_hours: number | null
+          min_checker_role: string
+          requires_approval: boolean
+        }
+        Insert: {
+          action_type: Database["public"]["Enums"]["action_type"]
+          created_at?: string
+          entity_type: string
+          id?: string
+          max_pending_hours?: number | null
+          min_checker_role?: string
+          requires_approval?: boolean
+        }
+        Update: {
+          action_type?: Database["public"]["Enums"]["action_type"]
+          created_at?: string
+          entity_type?: string
+          id?: string
+          max_pending_hours?: number | null
+          min_checker_role?: string
+          requires_approval?: boolean
+        }
+        Relationships: []
+      }
+      pending_actions: {
+        Row: {
+          action_data: Json
+          action_type: Database["public"]["Enums"]["action_type"]
+          approved_at: string | null
+          checker_comments: string | null
+          checker_id: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          expires_at: string | null
+          id: string
+          maker_id: string
+          original_data: Json | null
+          reason: string | null
+          status: Database["public"]["Enums"]["pending_status"]
+          updated_at: string
+        }
+        Insert: {
+          action_data: Json
+          action_type: Database["public"]["Enums"]["action_type"]
+          approved_at?: string | null
+          checker_comments?: string | null
+          checker_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          expires_at?: string | null
+          id?: string
+          maker_id: string
+          original_data?: Json | null
+          reason?: string | null
+          status?: Database["public"]["Enums"]["pending_status"]
+          updated_at?: string
+        }
+        Update: {
+          action_data?: Json
+          action_type?: Database["public"]["Enums"]["action_type"]
+          approved_at?: string | null
+          checker_comments?: string | null
+          checker_id?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          expires_at?: string | null
+          id?: string
+          maker_id?: string
+          original_data?: Json | null
+          reason?: string | null
+          status?: Database["public"]["Enums"]["pending_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          can_approve_actions: boolean | null
+          can_make_actions: boolean | null
+          created_at: string
+          id: string
+          max_approval_amount: number | null
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          can_approve_actions?: boolean | null
+          can_make_actions?: boolean | null
+          created_at?: string
+          id?: string
+          max_approval_amount?: number | null
+          role: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          can_approve_actions?: boolean | null
+          can_make_actions?: boolean | null
+          created_at?: string
+          id?: string
+          max_approval_amount?: number | null
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -140,6 +257,7 @@ export type Database = {
         | "view"
         | "share"
         | "restore"
+      pending_status: "pending" | "approved" | "rejected" | "expired"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -277,6 +395,7 @@ export const Constants = {
         "share",
         "restore",
       ],
+      pending_status: ["pending", "approved", "rejected", "expired"],
     },
   },
 } as const
