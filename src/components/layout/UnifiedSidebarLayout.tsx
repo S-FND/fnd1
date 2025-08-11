@@ -52,6 +52,7 @@ const UnifiedSidebar: React.FC = () => {
     esgdd: location.pathname.startsWith('/esg-dd'),
     reports: location.pathname.startsWith('/reports'),
     stakeholders: location.pathname.startsWith('/stakeholders'),
+    sdg: location.pathname.startsWith('/sdg'),
     audit: location.pathname.startsWith('/audit')
   });
   
