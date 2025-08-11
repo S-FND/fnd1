@@ -56,6 +56,103 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          ip_address: unknown | null
+          new_data: Json | null
+          old_data: Json | null
+          portfolio_company_id: string
+          request_id: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: unknown | null
+          new_data?: Json | null
+          old_data?: Json | null
+          portfolio_company_id: string
+          request_id?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: unknown | null
+          new_data?: Json | null
+          old_data?: Json | null
+          portfolio_company_id?: string
+          request_id?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_portfolio_company_id_fkey"
+            columns: ["portfolio_company_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      autosave_drafts: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          form_data: Json
+          id: string
+          portfolio_company_id: string
+          updated_at: string
+          user_id: string
+          version: number | null
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          form_data: Json
+          id?: string
+          portfolio_company_id: string
+          updated_at?: string
+          user_id: string
+          version?: number | null
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          form_data?: Json
+          id?: string
+          portfolio_company_id?: string
+          updated_at?: string
+          user_id?: string
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autosave_drafts_portfolio_company_id_fkey"
+            columns: ["portfolio_company_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_versions: {
         Row: {
           change_summary: string | null
@@ -185,6 +282,110 @@ export type Database = {
         }
         Relationships: []
       }
+      portfolio_companies: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          settings: Json | null
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          settings?: Json | null
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          settings?: Json | null
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      role_permissions: {
+        Row: {
+          action: string
+          created_at: string
+          granted: boolean | null
+          id: string
+          resource: string
+          role: Database["public"]["Enums"]["portfolio_role"]
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          granted?: boolean | null
+          id?: string
+          resource: string
+          role: Database["public"]["Enums"]["portfolio_role"]
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          granted?: boolean | null
+          id?: string
+          resource?: string
+          role?: Database["public"]["Enums"]["portfolio_role"]
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          approved_at: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          invite_code: string | null
+          is_active: boolean | null
+          portfolio_company_id: string | null
+          role: Database["public"]["Enums"]["portfolio_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          invite_code?: string | null
+          is_active?: boolean | null
+          portfolio_company_id?: string | null
+          role: Database["public"]["Enums"]["portfolio_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          invite_code?: string | null
+          is_active?: boolean | null
+          portfolio_company_id?: string | null
+          role?: Database["public"]["Enums"]["portfolio_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_portfolio_company_id_fkey"
+            columns: ["portfolio_company_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           can_approve_actions: boolean | null
@@ -235,6 +436,14 @@ export type Database = {
         }
         Returns: string
       }
+      get_user_company: {
+        Args: { user_uuid: string }
+        Returns: string
+      }
+      get_user_role: {
+        Args: { user_uuid: string }
+        Returns: Database["public"]["Enums"]["portfolio_role"]
+      }
       log_action: {
         Args: {
           p_action_type: Database["public"]["Enums"]["action_type"]
@@ -258,6 +467,13 @@ export type Database = {
         | "share"
         | "restore"
       pending_status: "pending" | "approved" | "rejected" | "expired"
+      portfolio_role:
+        | "portfolio_company_admin"
+        | "portfolio_team_editor"
+        | "portfolio_team_viewer"
+        | "supplier"
+        | "stakeholder"
+        | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -396,6 +612,14 @@ export const Constants = {
         "restore",
       ],
       pending_status: ["pending", "approved", "rejected", "expired"],
+      portfolio_role: [
+        "portfolio_company_admin",
+        "portfolio_team_editor",
+        "portfolio_team_viewer",
+        "supplier",
+        "stakeholder",
+        "super_admin",
+      ],
     },
   },
 } as const
