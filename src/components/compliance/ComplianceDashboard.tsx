@@ -6,9 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, CheckCircle2, CircleAlert, ClipboardCheck, FileCheck, FileWarning } from 'lucide-react';
 import { complianceItems } from '@/data';
 import ComplianceCalendarView from './ComplianceCalendarView';
+import { NewComplianceForm } from './NewComplianceForm';
+import { ReportNonComplianceForm } from './ReportNonComplianceForm';
+import { toast } from 'sonner';
 
 const ComplianceDashboard: React.FC = () => {
   const [showCalendarView, setShowCalendarView] = useState(false);
+  const [showNewComplianceForm, setShowNewComplianceForm] = useState(false);
+  const [showNonComplianceForm, setShowNonComplianceForm] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -114,11 +119,19 @@ const ComplianceDashboard: React.FC = () => {
             <div className="border-t pt-4 space-y-2">
               <h3 className="font-medium">Quick Actions</h3>
               <div className="space-y-2">
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => setShowNewComplianceForm(true)}
+                >
                   <FileCheck className="mr-2 h-4 w-4" />
                   Submit New Compliance
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => setShowNonComplianceForm(true)}
+                >
                   <FileWarning className="mr-2 h-4 w-4" />
                   Report Non-Compliance
                 </Button>
@@ -381,6 +394,24 @@ const ComplianceDashboard: React.FC = () => {
       {showCalendarView && (
         <ComplianceCalendarView onClose={() => setShowCalendarView(false)} />
       )}
+
+      <NewComplianceForm
+        open={showNewComplianceForm}
+        onClose={() => setShowNewComplianceForm(false)}
+        onSubmit={(data) => {
+          console.log('New compliance requirement:', data);
+          toast.success('Compliance requirement submitted successfully!');
+        }}
+      />
+
+      <ReportNonComplianceForm
+        open={showNonComplianceForm}
+        onClose={() => setShowNonComplianceForm(false)}
+        onSubmit={(data) => {
+          console.log('Non-compliance report:', data);
+          toast.success('Non-compliance report submitted successfully!');
+        }}
+      />
     </div>
   );
 };
