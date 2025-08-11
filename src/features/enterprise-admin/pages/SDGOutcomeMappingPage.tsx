@@ -21,6 +21,9 @@ const SDGOutcomeMappingPage = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState<Partial<SDGOutcomeMapping>>({});
+  const [selectedInitiativeId, setSelectedInitiativeId] = useState<string | null>(null);
+  const [selectedInitiatives, setSelectedInitiatives] = useState<Set<string>>(new Set());
+  const [isMultiSelect, setIsMultiSelect] = useState(false);
 
   const handleAdd = () => {
     setIsAdding(true);
@@ -64,7 +67,52 @@ const SDGOutcomeMappingPage = () => {
   const handleCreateFromStrategy = (outcome: any) => {
     const newMapping = createMappingFromOutcome(outcome);
     setFormData(newMapping);
+    setSelectedInitiativeId(outcome.id);
     setIsAdding(true);
+  };
+
+  const handleCreateMappingForInitiative = (initiativeId: string) => {
+    const outcome = unmappedOutcomes.find(o => o.id === initiativeId);
+    if (outcome) {
+      handleCreateFromStrategy(outcome);
+    }
+  };
+
+  const handleCreateMultipleMappings = () => {
+    if (selectedInitiatives.size === 0) return;
+    
+    // Create mappings for all selected initiatives
+    selectedInitiatives.forEach(initiativeId => {
+      const outcome = unmappedOutcomes.find(o => o.id === initiativeId);
+      if (outcome) {
+        const newMapping = createMappingFromOutcome(outcome);
+        addOutcomeMapping(newMapping);
+      }
+    });
+    
+    setSelectedInitiatives(new Set());
+    setIsMultiSelect(false);
+  };
+
+  const toggleInitiativeSelection = (initiativeId: string) => {
+    const newSelection = new Set(selectedInitiatives);
+    if (newSelection.has(initiativeId)) {
+      newSelection.delete(initiativeId);
+    } else {
+      newSelection.add(initiativeId);
+    }
+    setSelectedInitiatives(newSelection);
+  };
+
+  const handleAddAnotherOutcome = () => {
+    if (selectedInitiativeId) {
+      const outcome = unmappedOutcomes.find(o => o.id === selectedInitiativeId);
+      if (outcome) {
+        const newMapping = createMappingFromOutcome(outcome);
+        setFormData(newMapping);
+        setIsAdding(true);
+      }
+    }
   };
 
   const unmappedOutcomes = getUnmappedOutcomes();
@@ -365,25 +413,88 @@ const SDGOutcomeMappingPage = () => {
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
               You have {unmappedOutcomes.length} strategy outcome(s) that haven't been mapped yet. 
-              Click below to quickly create detailed outcome mappings.
+              You can create mappings for individual initiatives or select multiple initiatives at once.
             </p>
+            
+            <div className="flex gap-2 mb-4">
+              <Button 
+                size="sm" 
+                variant={isMultiSelect ? "default" : "outline"}
+                onClick={() => {
+                  setIsMultiSelect(!isMultiSelect);
+                  setSelectedInitiatives(new Set());
+                }}
+              >
+                {isMultiSelect ? "Exit Multi-Select" : "Multi-Select Mode"}
+              </Button>
+              
+              {isMultiSelect && selectedInitiatives.size > 0 && (
+                <Button 
+                  size="sm" 
+                  onClick={handleCreateMultipleMappings}
+                  disabled={isAdding || editingId !== null}
+                >
+                  Create {selectedInitiatives.size} Mappings
+                </Button>
+              )}
+            </div>
+
             <div className="space-y-3">
               {unmappedOutcomes.map((outcome) => (
                 <div key={outcome.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">{outcome.what}</p>
-                    <p className="text-sm text-muted-foreground">{outcome.who}</p>
-                    <Badge className="mt-1" variant="outline">{outcome.abcGoal} Goal</Badge>
+                  <div className="flex items-center gap-3 flex-1">
+                    {isMultiSelect && (
+                      <input
+                        type="checkbox"
+                        checked={selectedInitiatives.has(outcome.id)}
+                        onChange={() => toggleInitiativeSelection(outcome.id)}
+                        className="h-4 w-4"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{outcome.what}</p>
+                      <p className="text-sm text-muted-foreground">{outcome.who}</p>
+                      <Badge className="mt-1" variant="outline">{outcome.abcGoal} Goal</Badge>
+                    </div>
                   </div>
-                  <Button 
-                    size="sm" 
-                    onClick={() => handleCreateFromStrategy(outcome)}
-                    disabled={isAdding || editingId !== null}
-                  >
-                    Create Mapping
-                  </Button>
+                  
+                  {!isMultiSelect && (
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleCreateMappingForInitiative(outcome.id)}
+                        disabled={isAdding || editingId !== null}
+                      >
+                        Create Mapping
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Add another outcome for selected initiative */}
+      {selectedInitiativeId && !isAdding && !editingId && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium">Add another outcome for the same initiative?</p>
+                <p className="text-xs text-muted-foreground">Continue mapping outcomes for this SDG initiative</p>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={handleAddAnotherOutcome}>
+                  <Plus className="h-3 w-3 mr-1" />
+                  Add Another Outcome
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setSelectedInitiativeId(null)}>
+                  Done
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
