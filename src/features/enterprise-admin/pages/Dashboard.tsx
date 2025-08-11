@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
+
 import AdminDashboard from '@/features/enterprise-admin/components/Dashboard';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -18,11 +18,7 @@ const EnterpriseAdminDashboardPage = () => {
     return <Navigate to="/login" />;
   }
 
-  return (
-    <UnifiedSidebarLayout>
-      <AdminDashboard />
-    </UnifiedSidebarLayout>
-  );
+  return <AdminDashboard />;
 };
 
 export default EnterpriseAdminDashboardPage;

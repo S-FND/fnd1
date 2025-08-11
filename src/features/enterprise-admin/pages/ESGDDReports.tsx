@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
+
 import { useAuth } from '@/context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
@@ -29,58 +29,84 @@ const ESGDDReportsPage = () => {
   }
 
   return (
-    <UnifiedSidebarLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <Link to="/esg-dd" className="text-sm text-muted-foreground hover:text-foreground flex items-center mb-2">
-              <ArrowLeft className="h-4 w-4 mr-1" /> Back to ESG DD
-            </Link>
-            <h1 className="text-2xl font-bold tracking-tight">ESG DD Reports</h1>
-            <p className="text-muted-foreground">
-              View and manage all your ESG due diligence reports, both manual and automated.
-            </p>
-          </div>
-          
-          <Button asChild>
-            <Link to="/esg-dd">
-              <Plus className="h-4 w-4 mr-2" />
-              New ESG DD
-            </Link>
-          </Button>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">ESG Due Diligence Reports</h1>
+          <p className="text-muted-foreground mt-2">
+            View and manage all your ESG due diligence reports
+          </p>
         </div>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileSearch className="h-5 w-5 text-primary" />
-              ESG Due Diligence Reports
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="all" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="all">All Reports ({allReports.length})</TabsTrigger>
-                <TabsTrigger value="manual">Manual ({manualReports.length})</TabsTrigger>
-                <TabsTrigger value="automated">Automated ({automatedReports.length})</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="all">
-                <ESGDDReportsList reports={allReports} />
-              </TabsContent>
-              
-              <TabsContent value="manual">
-                <ESGDDReportsList reports={manualReports} />
-              </TabsContent>
-              
-              <TabsContent value="automated">
-                <ESGDDReportsList reports={automatedReports} />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+        <Button onClick={() => navigate('/esg-dd')} variant="outline">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to ESG DD
+        </Button>
       </div>
-    </UnifiedSidebarLayout>
+
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Search reports..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="in_progress">In Progress</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="grid gap-4">
+        {filteredReports.map((report) => (
+          <Card key={report.id} className="hover:shadow-md transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <h3 className="font-semibold">{report.title}</h3>
+                  <p className="text-sm text-muted-foreground">{report.description}</p>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span>Created: {report.createdAt}</span>
+                    <span>Type: {report.type}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={getStatusVariant(report.status)}>
+                    {report.status.replace('_', ' ')}
+                  </Badge>
+                  <Button variant="outline" size="sm">
+                    <Eye className="h-4 w-4 mr-2" />
+                    View
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {filteredReports.length === 0 && (
+        <div className="text-center py-12">
+          <FileSearch className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+          <h3 className="text-lg font-medium mb-2">No reports found</h3>
+          <p className="text-muted-foreground">
+            {searchTerm || statusFilter !== 'all' 
+              ? 'Try adjusting your search or filter criteria'
+              : 'Create your first ESG due diligence assessment to see reports here'
+            }
+          </p>
+        </div>
+      )}
+    </div>
   );
 };
 

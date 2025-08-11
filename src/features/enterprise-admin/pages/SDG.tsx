@@ -1,5 +1,5 @@
 import React from 'react';
-import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
+
 import { useAuth } from '@/context/AuthContext';
 import { Navigate, Routes, Route } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
@@ -20,13 +20,11 @@ const SDGPage = () => {
   }
 
   return (
-    <UnifiedSidebarLayout>
-      <Routes>
-        <Route index element={<SDGOverviewPage />} />
-        <Route path="strategy" element={<SDGStrategyPage />} />
-        <Route path="outcome-mapping" element={<SDGOutcomeMappingPage />} />
-      </Routes>
-    </UnifiedSidebarLayout>
+    <Routes>
+      <Route index element={<SDGOverviewPage />} />
+      <Route path="strategy" element={<SDGStrategyPage />} />
+      <Route path="outcome-mapping" element={<SDGOutcomeMappingPage />} />
+    </Routes>
   );
 };
 

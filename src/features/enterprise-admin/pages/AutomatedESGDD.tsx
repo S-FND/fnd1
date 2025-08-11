@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
+
 import { useAuth } from '@/context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
@@ -30,44 +30,49 @@ const AutomatedESGDDPage = () => {
   }
 
   return (
-    <UnifiedSidebarLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <Link to="/esg-dd" className="text-sm text-muted-foreground hover:text-foreground flex items-center mb-2">
-              <ArrowLeft className="h-4 w-4 mr-1" /> Back to ESG DD
-            </Link>
-            <h1 className="text-2xl font-bold tracking-tight">Automated ESG Due Diligence</h1>
-            <p className="text-muted-foreground">
-              Generate ESG due diligence reports automatically based on company information and regulatory requirements.
-            </p>
-          </div>
-          
-          {!wizardActive && (
-            <Button onClick={() => setWizardActive(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Automated Assessment
-            </Button>
-          )}
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Automated ESG Due Diligence</h1>
+          <p className="text-muted-foreground mt-2">
+            Generate ESG due diligence assessments automatically using AI-powered analysis
+          </p>
         </div>
-        
-        {wizardActive ? (
-          <ESGDDWizard onComplete={() => setWizardActive(false)} onCancel={() => setWizardActive(false)} />
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileSearch className="h-5 w-5 text-primary" />
-                Automated ESG DD Reports
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ESGDDReportsList reports={automatedReports} />
-            </CardContent>
-          </Card>
-        )}
+        <Button onClick={() => navigate('/esg-dd')} variant="outline">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to ESG DD
+        </Button>
       </div>
-    </UnifiedSidebarLayout>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Automated Assessment Generation</CardTitle>
+          <CardDescription>
+            Use our AI-powered system to automatically generate comprehensive ESG due diligence assessments
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="text-center py-12">
+            <Bot className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">AI-Powered ESG Assessment</h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Our automated system will analyze your organization's data and generate 
+              a comprehensive ESG due diligence assessment with recommendations.
+            </p>
+            
+            <div className="space-y-4 max-w-sm mx-auto">
+              <Button className="w-full" size="lg">
+                <Sparkles className="h-4 w-4 mr-2" />
+                Generate Assessment
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                This process typically takes 5-10 minutes to complete
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

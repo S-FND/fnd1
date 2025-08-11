@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
+
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
@@ -277,81 +277,129 @@ const MaterialityPage = () => {
   };
 
   return (
-    <UnifiedSidebarLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Materiality Assessment</h1>
-          <p className="text-muted-foreground">
-            Analyze and prioritize ESG material topics based on business impact and sustainability impact
-          </p>
-        </div>
-        
-        <IndustrySelection 
-          selectedIndustries={tempSelectedIndustries} 
-          onIndustryChange={handleIndustryChange}
-          onClearSelection={() => setTempSelectedIndustries([])}
-          onUpdateMatrix={updateMatrixData}
-        />
-        
-        <MaterialityTabs 
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          selectedCategory={selectedCategory}
-          setSelectedCategory={setSelectedCategory}
-          materialTopics={materialTopics}
-          materialityData={filteredData}
-          highPriorityTopics={highPriorityTopics}
-          mediumPriorityTopics={mediumPriorityTopics}
-          lowPriorityTopics={lowPriorityTopics}
+    <div className="container mx-auto p-6 space-y-6">
+      <MaterialityTabs
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        finalizationStep={finalizationStep}
+        finalizationMethod={finalizationMethod}
+      />
+
+      {/* Industry Selection Tab */}
+      {activeTab === 'industry' && (
+        <IndustrySelection
+          industries={industries}
           selectedIndustries={selectedIndustries}
-          activeFrameworks={activeFrameworks}
-          setActiveFrameworks={setActiveFrameworks}
-          onUpdateTopics={handleUpdateTopics}
-          onUpdateSelectedTopics={handleUpdateSelectedTopics}
+          tempSelectedIndustries={tempSelectedIndustries}
+          setTempSelectedIndustries={setTempSelectedIndustries}
+          onConfirmIndustries={handleConfirmIndustries}
         />
-        
-        {/* Finalization Flow */}
-        {finalizationStep === 'method' && (
-          <FinalizationMethodSelector 
-            onSelectMethod={handleFinalizationMethodSelect}
-          />
-        )}
-        
-        {finalizationStep === 'internal' && (
-          <InternalFinalization
-            materialTopics={selectedTopicsForEngagement.length > 0 ? selectedTopicsForEngagement : materialTopics}
-            onFinalize={handleInternalFinalization}
-            onBack={handleBackToMethodSelection}
-          />
-        )}
-        
-        {finalizationStep === 'stakeholder' && (
-          <StakeholderEngagement
-            selectedIndustries={selectedIndustries}
-            materialTopics={selectedTopicsForEngagement.length > 0 ? selectedTopicsForEngagement : materialTopics}
-            onUpdatePrioritization={handleUpdatePrioritization}
-          />
-        )}
-        
-        {finalizationStep === 'completed' && finalizedTopics.length > 0 && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-green-800 mb-2">Material Topics Finalized!</h3>
-            <p className="text-green-700 mb-4">
-              {finalizedTopics.length} material topics have been finalized using the {finalizationMethod} method. 
-              You can now configure ESG metrics for these topics in the ESG Management section.
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setFinalizationStep('method')}
-                className="px-4 py-2 text-sm bg-white border border-green-300 text-green-700 rounded-md hover:bg-green-50"
-              >
-                Start New Assessment
-              </button>
+      )}
+
+      {/* Assessment Tab */}
+      {activeTab === 'assessment' && (
+        <div className="space-y-6">
+          <div className="space-y-4">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">Materiality Assessment</h1>
+                <p className="text-muted-foreground">
+                  Identify and prioritize material sustainability topics for your organization
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="border rounded-md px-3 py-2"
+                >
+                  <option value="All">All Categories</option>
+                  {Array.from(new Set(materialTopics.map(topic => topic.category))).map(category => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+              </div>
             </div>
+            
+            {selectedIndustries.length === 0 ? (
+              <div className="text-center py-12">
+                <h3 className="text-lg font-medium mb-2">No Industry Selected</h3>
+                <p className="text-muted-foreground mb-4">
+                  Please select at least one industry to proceed with the materiality assessment.
+                </p>
+                <button
+                  onClick={() => setActiveTab('industry')}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90"
+                >
+                  Select Industries
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <MaterialityMatrix
+                  data={getFilteredTopics()}
+                  onPointClick={(point) => console.log('Point clicked:', point)}
+                />
+              </div>
+            )}
           </div>
-        )}
-      </div>
-    </UnifiedSidebarLayout>
+        </div>
+      )}
+
+      {/* Stakeholder Engagement Tab */}
+      {activeTab === 'engagement' && (
+        <StakeholderEngagement
+          selectedTopics={selectedTopicsForEngagement}
+          setSelectedTopics={setSelectedTopicsForEngagement}
+          materialTopics={materialTopics}
+          onProceedToFinalization={() => setActiveTab('finalization')}
+        />
+      )}
+
+      {/* Finalization Tab */}
+      {activeTab === 'finalization' && (
+        <div className="space-y-6">
+          {finalizationStep === 'method' && (
+            <FinalizationMethodSelector
+              onSelectMethod={(method) => {
+                setFinalizationMethod(method);
+                setFinalizationStep(method);
+              }}
+            />
+          )}
+
+          {finalizationStep === 'internal' && (
+            <InternalFinalization
+              materialTopics={materialTopics}
+              onFinalize={handleInternalFinalization}
+              onBack={handleBackToMethodSelection}
+            />
+          )}
+
+          {finalizationStep === 'stakeholder' && (
+            <div className="text-center py-12">
+              <h3 className="text-lg font-medium mb-2">Stakeholder Finalization</h3>
+              <p className="text-muted-foreground">
+                Stakeholder finalization workflow coming soon...
+              </p>
+            </div>
+          )}
+
+          {finalizationStep === 'completed' && (
+            <div className="text-center py-12">
+              <h3 className="text-lg font-medium mb-2">Assessment Complete</h3>
+              <p className="text-muted-foreground mb-4">
+                Your materiality assessment has been completed successfully.
+              </p>
+              <div className="space-y-2">
+                <p>Total Topics Assessed: {finalizedTopics.length}</p>
+                <p>High Priority Topics: {finalizedTopics.filter(t => t.businessImpact > 7 && t.sustainabilityImpact > 7).length}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 };
 

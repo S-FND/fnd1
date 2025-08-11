@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
+
 import { useAuth } from '@/context/AuthContext';
 import { Navigate, Routes, Route } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
@@ -27,19 +27,17 @@ const ESGPage = () => {
   }
 
   return (
-    <UnifiedSidebarLayout>
-      <Routes>
-        <Route index element={<ESGManagementPage />} />
-        <Route path="esms" element={<ESMSPage />} />
-        <Route path="metrics" element={<ESGMetricsPage />} />
-        <Route path="reports" element={<ReportsPage />} />
-        <Route path="reports/brsr" element={<BRSRReport />} />
-        <Route path="reports/gri" element={<GRIReport />} />
-        <Route path="reports/tcfd" element={<TCFDReport />} />
-        <Route path="reports/esrs" element={<ESRSReport />} />
-        <Route path="reports/impact" element={<ImpactReport />} />
-      </Routes>
-    </UnifiedSidebarLayout>
+    <Routes>
+      <Route index element={<ESGManagementPage />} />
+      <Route path="esms" element={<ESMSPage />} />
+      <Route path="metrics" element={<ESGMetricsPage />} />
+      <Route path="reports" element={<ReportsPage />} />
+      <Route path="reports/brsr" element={<BRSRReport />} />
+      <Route path="reports/gri" element={<GRIReport />} />
+      <Route path="reports/tcfd" element={<TCFDReport />} />
+      <Route path="reports/esrs" element={<ESRSReport />} />
+      <Route path="reports/impact" element={<ImpactReport />} />
+    </Routes>
   );
 };
 
