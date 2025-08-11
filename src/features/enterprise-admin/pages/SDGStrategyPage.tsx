@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
+import { useSDG, type SDGOutcome } from '@/contexts/SDGContext';
 import {
   Table,
   TableBody,
@@ -21,31 +22,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-interface SDGOutcome {
-  id: string;
-  what: string;
-  who: string;
-  abcGoal: 'A' | 'B' | 'C';
-  impactThesis: string;
-}
-
 const SDGStrategyPage = () => {
-  const [outcomes, setOutcomes] = useState<SDGOutcome[]>([
-    {
-      id: '1',
-      what: 'SDG 4: Quality Education - Target 4.7',
-      who: 'Local community students and educators',
-      abcGoal: 'B',
-      impactThesis: 'If we provide comprehensive sustainability education programs, then we believe local communities will develop stronger environmental awareness and sustainable practices.'
-    },
-    {
-      id: '2',
-      what: 'SDG 13: Climate Action - Target 13.3',
-      who: 'Employees and supply chain partners',
-      abcGoal: 'A',
-      impactThesis: 'If we implement carbon reduction training and incentive programs, then we believe our workforce will significantly reduce organizational carbon footprint.'
-    }
-  ]);
+  const { outcomes, addOutcome, updateOutcome, deleteOutcome } = useSDG();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -75,14 +53,10 @@ const SDGStrategyPage = () => {
         abcGoal: formData.abcGoal || 'B',
         impactThesis: formData.impactThesis || ''
       };
-      setOutcomes([...outcomes, newOutcome]);
+      addOutcome(newOutcome);
       setIsAdding(false);
     } else if (editingId) {
-      setOutcomes(outcomes.map(outcome => 
-        outcome.id === editingId 
-          ? { ...outcome, ...formData } as SDGOutcome
-          : outcome
-      ));
+      updateOutcome(editingId, formData);
       setEditingId(null);
     }
     setFormData({});
@@ -95,7 +69,7 @@ const SDGStrategyPage = () => {
   };
 
   const handleDelete = (id: string) => {
-    setOutcomes(outcomes.filter(outcome => outcome.id !== id));
+    deleteOutcome(id);
   };
 
   const getGoalBadgeColor = (goal: 'A' | 'B' | 'C') => {

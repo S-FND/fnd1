@@ -6,35 +6,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Trash2, Edit, Save, X, Plus } from 'lucide-react';
-
-interface SDGOutcomeMapping {
-  id: string;
-  sdgTargetNumber: string;
-  description: string;
-  abcGoal: 'A' | 'B' | 'C';
-  stakeholder: string;
-  impactThesis: string;
-  outputOutcome: string;
-  metricSource: string;
-  outcomeThreshold: string;
-  thresholdSetBy: string;
-  targetType: string;
-  targetValue: string;
-  internalBaseline: string;
-  counterfactual: string;
-  counterfactualSource: string;
-  stakeholderMateriality: 'High' | 'Medium' | 'Low';
-  riskLevel?: 'High' | 'Medium' | 'Low';
-  riskDescription?: string;
-  performanceData?: string;
-  targetComparison?: string;
-  thresholdComparison?: string;
-  peerComparison?: string;
-}
+import { Trash2, Edit, Save, X, Plus, ArrowRight } from 'lucide-react';
+import { useSDG, type SDGOutcomeMapping } from '@/contexts/SDGContext';
 
 const SDGOutcomeMappingPage = () => {
-  const [outcomes, setOutcomes] = useState<SDGOutcomeMapping[]>([]);
+  const { 
+    outcomeMappings, 
+    addOutcomeMapping, 
+    updateOutcomeMapping, 
+    deleteOutcomeMapping,
+    getUnmappedOutcomes,
+    createMappingFromOutcome
+  } = useSDG();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState<Partial<SDGOutcomeMapping>>({});
@@ -55,12 +38,10 @@ const SDGOutcomeMappingPage = () => {
         ...formData,
         id: Date.now().toString(),
       } as SDGOutcomeMapping;
-      setOutcomes([...outcomes, newOutcome]);
+      addOutcomeMapping(newOutcome);
       setIsAdding(false);
     } else if (editingId) {
-      setOutcomes(outcomes.map(o => 
-        o.id === editingId ? { ...formData, id: editingId } as SDGOutcomeMapping : o
-      ));
+      updateOutcomeMapping(editingId, formData);
       setEditingId(null);
     }
     setFormData({});
@@ -73,12 +54,20 @@ const SDGOutcomeMappingPage = () => {
   };
 
   const handleDelete = (id: string) => {
-    setOutcomes(outcomes.filter(o => o.id !== id));
+    deleteOutcomeMapping(id);
   };
 
   const updateFormData = (field: keyof SDGOutcomeMapping, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  const handleCreateFromStrategy = (outcome: any) => {
+    const newMapping = createMappingFromOutcome(outcome);
+    setFormData(newMapping);
+    setIsAdding(true);
+  };
+
+  const unmappedOutcomes = getUnmappedOutcomes();
 
   const getGoalBadgeColor = (goal: 'A' | 'B' | 'C') => {
     switch (goal) {
@@ -364,6 +353,42 @@ const SDGOutcomeMappingPage = () => {
         </CardContent>
       </Card>
 
+      {/* Unmapped strategy outcomes */}
+      {unmappedOutcomes.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <ArrowRight className="h-5 w-5" />
+              Create Mappings from Strategy Outcomes
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              You have {unmappedOutcomes.length} strategy outcome(s) that haven't been mapped yet. 
+              Click below to quickly create detailed outcome mappings.
+            </p>
+            <div className="space-y-3">
+              {unmappedOutcomes.map((outcome) => (
+                <div key={outcome.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex-1">
+                    <p className="font-medium text-sm">{outcome.what}</p>
+                    <p className="text-sm text-muted-foreground">{outcome.who}</p>
+                    <Badge className="mt-1" variant="outline">{outcome.abcGoal} Goal</Badge>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    onClick={() => handleCreateFromStrategy(outcome)}
+                    disabled={isAdding || editingId !== null}
+                  >
+                    Create Mapping
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Data table */}
       <Card>
         <CardContent className="p-0">
@@ -399,13 +424,13 @@ const SDGOutcomeMappingPage = () => {
                 {isAdding && renderFormRow(formData, true)}
 
                 {/* Existing outcomes */}
-                {outcomes.map(outcome => 
+                {outcomeMappings.map(outcome => 
                   editingId === outcome.id 
                     ? renderFormRow(formData, true)
                     : renderDataRow(outcome)
                 )}
 
-                {outcomes.length === 0 && !isAdding && (
+                {outcomeMappings.length === 0 && !isAdding && (
                   <TableRow>
                     <TableCell colSpan={21} className="text-center py-8 text-muted-foreground">
                       No SDG outcome mappings yet. Add your first one to get started.

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { FeaturesProvider } from '@/context/FeaturesContext';
+import { SDGProvider } from '@/contexts/SDGContext';
 import './App.css';
 import Index from './pages/Index';
 import Login from './pages/Login';
@@ -61,7 +62,8 @@ import ActionLogPage from './components/action-log/ActionLogPage';
 function App() {
   return (
     <FeaturesProvider>
-      <Routes>
+      <SDGProvider>
+        <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Index />} />
         <Route path="/login" element={<Login />} />
@@ -133,7 +135,8 @@ function App() {
         <Route path="/vendor/trainings" element={<VendorTrainings />} />
         
         <Route path="*" element={<NotFound />} />
-      </Routes>
+        </Routes>
+      </SDGProvider>
     </FeaturesProvider>
   );
 }
