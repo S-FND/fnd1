@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import AdminDashboard from '@/components/dashboard/AdminDashboard';
 import EmployeeDashboard from '@/components/dashboard/EmployeeDashboard';
 import { useAuth } from '@/context/AuthContext';
@@ -19,11 +18,7 @@ const Dashboard = () => {
     return <Navigate to="/login" />;
   }
 
-  return (
-    <UnifiedSidebarLayout>
-      {isCompanyUser() ? <AdminDashboard /> : <EmployeeDashboard />}
-    </UnifiedSidebarLayout>
-  );
+  return isCompanyUser() ? <AdminDashboard /> : <EmployeeDashboard />;
 };
 
 export default Dashboard;

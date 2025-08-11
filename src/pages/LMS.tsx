@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
@@ -20,14 +19,13 @@ const LMSPage = () => {
   }
 
   return (
-    <UnifiedSidebarLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Learning Management System</h1>
-          <p className="text-muted-foreground">
-            Access training modules, track progress, and manage learning programs.
-          </p>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Learning Management System</h1>
+        <p className="text-muted-foreground">
+          Access training modules, track progress, and manage learning programs.
+        </p>
+      </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
@@ -91,7 +89,7 @@ const LMSPage = () => {
           </CardContent>
         </Card>
       </div>
-    </UnifiedSidebarLayout>
+    </div>
   );
 };
 

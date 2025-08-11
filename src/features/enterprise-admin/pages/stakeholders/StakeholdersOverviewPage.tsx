@@ -1,7 +1,6 @@
 
 import React from 'react';
 import StakeholderOverview from '../../components/stakeholders/StakeholderOverview';
-import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
@@ -18,11 +17,7 @@ const StakeholdersOverviewPage = () => {
     return <Navigate to="/login" />;
   }
 
-  return (
-    <UnifiedSidebarLayout>
-      <StakeholderOverview />
-    </UnifiedSidebarLayout>
-  );
+  return <StakeholderOverview />;
 };
 
 export default StakeholdersOverviewPage;
