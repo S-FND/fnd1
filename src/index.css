@@ -14,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
  
-    --primary: 175 73% 46%; /* Brand color */
+    --primary: 142 71% 45%; /* Green color for buttons */
     --primary-foreground: 0 0% 100%;
  
     --secondary: 210 40% 96.1%;
@@ -31,7 +31,7 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 175 73% 46%;
+    --ring: 142 71% 45%;
  
     --radius: 0.5rem;
     
@@ -41,7 +41,7 @@
     --sidebar-border: 214.3 31.8% 91.4%;
     --sidebar-accent: 210 40% 96.1%;
     --sidebar-accent-foreground: 222.2 47.4% 11.2%;
-    --sidebar-ring: 175 73% 46%;
+    --sidebar-ring: 142 71% 45%;
   }
  
   .dark {
@@ -54,7 +54,7 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
  
-    --primary: 175 73% 46%;
+    --primary: 142 71% 45%;
     --primary-foreground: 0 0% 100%;
  
     --secondary: 217.2 32.6% 17.5%;
@@ -71,7 +71,7 @@
  
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 175 73% 46%;
+    --ring: 142 71% 45%;
     
     /* Sidebar specific */
     --sidebar: 222.2 84% 4.9%;
@@ -79,7 +79,7 @@
     --sidebar-border: 217.2 32.6% 17.5%;
     --sidebar-accent: 217.2 32.6% 17.5%;
     --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-ring: 175 73% 46%;
+    --sidebar-ring: 142 71% 45%;
   }
 }
  
