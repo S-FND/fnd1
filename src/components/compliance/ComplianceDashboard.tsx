@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, CheckCircle2, CircleAlert, ClipboardCheck, FileCheck, FileWarning } from 'lucide-react';
 import { complianceItems } from '@/data';
+import ComplianceCalendarView from './ComplianceCalendarView';
 
 const ComplianceDashboard: React.FC = () => {
+  const [showCalendarView, setShowCalendarView] = useState(false);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col space-y-1.5">
@@ -24,7 +27,12 @@ const ComplianceDashboard: React.FC = () => {
                 <CardTitle>Compliance Calendar</CardTitle>
                 <CardDescription>Upcoming deadlines and requirements</CardDescription>
               </div>
-              <Button variant="outline" size="sm" className="flex items-center gap-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-1"
+                onClick={() => setShowCalendarView(true)}
+              >
                 <Calendar className="h-4 w-4" />
                 <span>View Calendar</span>
               </Button>
@@ -369,6 +377,10 @@ const ComplianceDashboard: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {showCalendarView && (
+        <ComplianceCalendarView onClose={() => setShowCalendarView(false)} />
+      )}
     </div>
   );
 };
