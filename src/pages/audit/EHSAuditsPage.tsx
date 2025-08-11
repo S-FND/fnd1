@@ -1,28 +1,26 @@
-
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Download, Plus, Calendar, Shield, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { Search, Download, Plus, Calendar as CalendarIcon, Shield, CheckCircle } from 'lucide-react';
 
 const EHSAuditsPage = () => {
   const { isAuthenticated, isCompanyUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
-
-  if (!isCompanyUser()) {
-    return <Navigate to="/dashboard" />;
-  }
-
-  const ehsAudits = [
+  const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
+  const [audits, setAudits] = useState([
     {
       id: 'ehs-1',
       title: 'Safety Management System Audit',
@@ -50,12 +48,56 @@ const EHSAuditsPage = () => {
       date: '2024-04-15',
       auditor: 'EHS Experts India'
     }
-  ];
+  ]);
 
-  const filteredAudits = ehsAudits.filter(audit => 
+  const [newAuditForm, setNewAuditForm] = useState({
+    title: '',
+    location: '',
+    auditor: '',
+    date: undefined as Date | undefined,
+    type: '',
+    priority: 'medium',
+    description: ''
+  });
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  if (!isCompanyUser()) {
+    return <Navigate to="/dashboard" />;
+  }
+
+  const filteredAudits = audits.filter(audit => 
     audit.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     audit.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleScheduleAudit = () => {
+    if (newAuditForm.title && newAuditForm.location && newAuditForm.auditor && newAuditForm.date) {
+      const newAudit = {
+        id: `ehs-${Date.now()}`,
+        title: newAuditForm.title,
+        location: newAuditForm.location,
+        status: 'scheduled',
+        score: null,
+        date: format(newAuditForm.date, 'yyyy-MM-dd'),
+        auditor: newAuditForm.auditor
+      };
+      
+      setAudits([...audits, newAudit]);
+      setNewAuditForm({
+        title: '',
+        location: '',
+        auditor: '',
+        date: undefined,
+        type: '',
+        priority: 'medium',
+        description: ''
+      });
+      setIsScheduleDialogOpen(false);
+    }
+  };
 
   return (
     <UnifiedSidebarLayout>
@@ -77,10 +119,126 @@ const EHSAuditsPage = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Schedule Audit
-          </Button>
+          <Dialog open={isScheduleDialogOpen} onOpenChange={setIsScheduleDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Schedule Audit
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Schedule New EHS Audit</DialogTitle>
+                <DialogDescription>
+                  Plan and schedule a new Environment, Health & Safety audit for your organization.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="audit-title">Audit Title</Label>
+                  <Input
+                    id="audit-title"
+                    placeholder="e.g., Environmental Compliance Audit"
+                    value={newAuditForm.title}
+                    onChange={(e) => setNewAuditForm({...newAuditForm, title: e.target.value})}
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <Label htmlFor="audit-type">Audit Type</Label>
+                  <Select value={newAuditForm.type} onValueChange={(value) => setNewAuditForm({...newAuditForm, type: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select audit type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="environmental">Environmental Compliance</SelectItem>
+                      <SelectItem value="safety">Safety Management</SelectItem>
+                      <SelectItem value="health">Health & Hygiene</SelectItem>
+                      <SelectItem value="training">Training & Awareness</SelectItem>
+                      <SelectItem value="emergency">Emergency Preparedness</SelectItem>
+                      <SelectItem value="waste">Waste Management</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="audit-location">Location/Unit</Label>
+                  <Input
+                    id="audit-location"
+                    placeholder="e.g., Mumbai Factory, Delhi Office"
+                    value={newAuditForm.location}
+                    onChange={(e) => setNewAuditForm({...newAuditForm, location: e.target.value})}
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="audit-auditor">Auditor/Agency</Label>
+                  <Input
+                    id="audit-auditor"
+                    placeholder="e.g., EHS Consultants Ltd"
+                    value={newAuditForm.auditor}
+                    onChange={(e) => setNewAuditForm({...newAuditForm, auditor: e.target.value})}
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label>Scheduled Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "justify-start text-left font-normal",
+                          !newAuditForm.date && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {newAuditForm.date ? format(newAuditForm.date, "PPP") : "Pick a date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={newAuditForm.date}
+                        onSelect={(date) => setNewAuditForm({...newAuditForm, date})}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="audit-priority">Priority</Label>
+                  <Select value={newAuditForm.priority} onValueChange={(value) => setNewAuditForm({...newAuditForm, priority: value})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="low">Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="audit-description">Description (Optional)</Label>
+                  <Textarea
+                    id="audit-description"
+                    placeholder="Additional details about the audit scope and objectives..."
+                    value={newAuditForm.description}
+                    onChange={(e) => setNewAuditForm({...newAuditForm, description: e.target.value})}
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="submit" onClick={handleScheduleAudit}>
+                  Schedule Audit
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           <Button variant="outline">
             <Download className="mr-2 h-4 w-4" />
             Export Reports
@@ -93,7 +251,7 @@ const EHSAuditsPage = () => {
               <CardTitle className="text-sm font-medium">Total Audits</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{ehsAudits.length}</div>
+              <div className="text-2xl font-bold">{audits.length}</div>
               <p className="text-xs text-muted-foreground">This quarter</p>
             </CardContent>
           </Card>
@@ -166,12 +324,12 @@ const StatusBadge: React.FC<{status: string}> = ({status}) => {
     case 'in_progress':
       variant = "secondary";
       label = "In Progress";
-      icon = <Calendar className="h-3 w-3 mr-1" />;
+      icon = <CalendarIcon className="h-3 w-3 mr-1" />;
       break;
     case 'scheduled':
       variant = "outline";
       label = "Scheduled";
-      icon = <Calendar className="h-3 w-3 mr-1" />;
+      icon = <CalendarIcon className="h-3 w-3 mr-1" />;
       break;
   }
   
