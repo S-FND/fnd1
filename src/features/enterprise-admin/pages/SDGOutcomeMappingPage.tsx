@@ -16,7 +16,8 @@ const SDGOutcomeMappingPage = () => {
     updateOutcomeMapping, 
     deleteOutcomeMapping,
     getUnmappedOutcomes,
-    createMappingFromOutcome
+    createMappingFromOutcome,
+    getMappingCountForOutcome
   } = useSDG();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -401,18 +402,18 @@ const SDGOutcomeMappingPage = () => {
         </CardContent>
       </Card>
 
-      {/* Unmapped strategy outcomes */}
+      {/* Strategy initiatives for outcome mapping */}
       {unmappedOutcomes.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <ArrowRight className="h-5 w-5" />
-              Create Mappings from Strategy Outcomes
+              Create Outcome Mappings from Strategy Initiatives
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              You have {unmappedOutcomes.length} strategy outcome(s) that haven't been mapped yet. 
+              Each strategy initiative can have multiple outcome mappings. 
               You can create mappings for individual initiatives or select multiple initiatives at once.
             </p>
             
@@ -454,7 +455,14 @@ const SDGOutcomeMappingPage = () => {
                     <div className="flex-1">
                       <p className="font-medium text-sm">{outcome.what}</p>
                       <p className="text-sm text-muted-foreground">{outcome.who}</p>
-                      <Badge className="mt-1" variant="outline">{outcome.abcGoal} Goal</Badge>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline">{outcome.abcGoal} Goal</Badge>
+                        {getMappingCountForOutcome(outcome.id) > 0 && (
+                          <Badge variant="secondary" className="text-xs">
+                            {getMappingCountForOutcome(outcome.id)} outcome{getMappingCountForOutcome(outcome.id) > 1 ? 's' : ''} mapped
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </div>
                   

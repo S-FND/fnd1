@@ -53,6 +53,7 @@ interface SDGContextType {
   // Utility functions
   createMappingFromOutcome: (outcome: SDGOutcome) => SDGOutcomeMapping;
   getUnmappedOutcomes: () => SDGOutcome[];
+  getMappingCountForOutcome: (outcomeId: string) => number;
 }
 
 const SDGContext = createContext<SDGContextType | undefined>(undefined);
@@ -174,13 +175,12 @@ export const SDGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const getUnmappedOutcomes = (): SDGOutcome[] => {
-    const mappedOutcomeIds = new Set(
-      outcomeMappings
-        .filter(mapping => mapping.strategyOutcomeId)
-        .map(mapping => mapping.strategyOutcomeId)
-    );
-    
-    return outcomes.filter(outcome => !mappedOutcomeIds.has(outcome.id));
+    // Return all outcomes since each initiative can have multiple outcome mappings
+    return outcomes;
+  };
+
+  const getMappingCountForOutcome = (outcomeId: string): number => {
+    return outcomeMappings.filter(mapping => mapping.strategyOutcomeId === outcomeId).length;
   };
 
   const value: SDGContextType = {
@@ -195,7 +195,8 @@ export const SDGProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     updateOutcomeMapping,
     deleteOutcomeMapping,
     createMappingFromOutcome,
-    getUnmappedOutcomes
+    getUnmappedOutcomes,
+    getMappingCountForOutcome
   };
 
   return <SDGContext.Provider value={value}>{children}</SDGContext.Provider>;
