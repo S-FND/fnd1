@@ -14,16 +14,132 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      action_logs: {
+        Row: {
+          action_type: Database["public"]["Enums"]["action_type"]
+          created_at: string
+          description: string | null
+          entity_id: string | null
+          entity_name: string | null
+          entity_type: string
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action_type: Database["public"]["Enums"]["action_type"]
+          created_at?: string
+          description?: string | null
+          entity_id?: string | null
+          entity_name?: string | null
+          entity_type: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action_type?: Database["public"]["Enums"]["action_type"]
+          created_at?: string
+          description?: string | null
+          entity_id?: string | null
+          entity_name?: string | null
+          entity_type?: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      document_versions: {
+        Row: {
+          change_summary: string | null
+          content: string | null
+          created_at: string
+          created_by: string | null
+          document_id: string
+          file_size: number | null
+          file_url: string | null
+          id: string
+          is_current: boolean | null
+          mime_type: string | null
+          title: string
+          version_number: number
+        }
+        Insert: {
+          change_summary?: string | null
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          document_id: string
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          is_current?: boolean | null
+          mime_type?: string | null
+          title: string
+          version_number: number
+        }
+        Update: {
+          change_summary?: string | null
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          document_id?: string
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          is_current?: boolean | null
+          mime_type?: string | null
+          title?: string
+          version_number?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_document_version: {
+        Args: {
+          p_document_id: string
+          p_title: string
+          p_content?: string
+          p_file_url?: string
+          p_file_size?: number
+          p_mime_type?: string
+          p_change_summary?: string
+        }
+        Returns: string
+      }
+      log_action: {
+        Args: {
+          p_action_type: Database["public"]["Enums"]["action_type"]
+          p_entity_type: string
+          p_entity_id?: string
+          p_entity_name?: string
+          p_description?: string
+          p_metadata?: Json
+        }
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      action_type:
+        | "create"
+        | "update"
+        | "delete"
+        | "upload"
+        | "download"
+        | "view"
+        | "share"
+        | "restore"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +266,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      action_type: [
+        "create",
+        "update",
+        "delete",
+        "upload",
+        "download",
+        "view",
+        "share",
+        "restore",
+      ],
+    },
   },
 } as const
