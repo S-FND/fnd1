@@ -6,7 +6,17 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, Check, X } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Upload, FileText, Check, X, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ESMSDocument {
@@ -26,6 +36,18 @@ interface ESMSDocumentSection {
 }
 
 const ESMSPage: React.FC = () => {
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    sectionId: string;
+    documentId: string;
+    documentTitle: string;
+  }>({
+    open: false,
+    sectionId: '',
+    documentId: '',
+    documentTitle: '',
+  });
+
   const getDocumentNumber = (sectionIndex: number, docIndex: number, documentId: string): string => {
     const baseNumber = `${sectionIndex + 1}.${docIndex + 1}`;
     
@@ -284,6 +306,35 @@ const ESMSPage: React.FC = () => {
     ));
   };
 
+  const handleDeleteDocument = (sectionId: string, documentId: string, documentTitle: string) => {
+    setDeleteDialog({
+      open: true,
+      sectionId,
+      documentId,
+      documentTitle,
+    });
+  };
+
+  const confirmDeleteDocument = () => {
+    const { sectionId, documentId, documentTitle } = deleteDialog;
+    
+    setDocumentSections(prev => prev.map(section => 
+      section.id === sectionId 
+        ? {
+            ...section,
+            documents: section.documents.map(doc => 
+              doc.id === documentId 
+                ? { ...doc, isUploaded: false, fileName: undefined }
+                : doc
+            )
+          }
+        : section
+    ));
+
+    toast.success(`Document "${documentTitle}" has been deleted`);
+    setDeleteDialog({ open: false, sectionId: '', documentId: '', documentTitle: '' });
+  };
+
   const calculateSectionProgress = (section: ESMSDocumentSection) => {
     const applicableDocuments = section.documents.filter(doc => !doc.isNotApplicable);
     const uploadedDocuments = applicableDocuments.filter(doc => doc.isUploaded);
@@ -434,6 +485,16 @@ const ESMSPage: React.FC = () => {
                             <Upload className="w-4 h-4 mr-2" />
                             {document.isUploaded ? 'Replace' : 'Upload'}
                           </Button>
+                          {document.isUploaded && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleDeleteDocument(section.id, document.id, document.title)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -444,6 +505,27 @@ const ESMSPage: React.FC = () => {
           </CardContent>
         </Card>
       ))}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Document</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deleteDialog.documentTitle}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteDocument}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
