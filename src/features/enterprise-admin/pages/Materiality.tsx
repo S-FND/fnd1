@@ -3,15 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
-import { industries } from '../data/materiality';
-import { toast } from 'sonner';
-import { 
-  getCombinedTopics, 
-  generateMatrixData, 
-  MaterialTopic as FrameworkMaterialTopic, 
-  sasbTopics, 
-  griTopics 
-} from '../data/frameworkTopics';
+import { Button } from '@/components/ui/button';
 
 // Import refactored components
 import IndustrySelection from '../components/materiality/IndustrySelection';
@@ -278,127 +270,33 @@ const MaterialityPage = () => {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <MaterialityTabs
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        finalizationStep={finalizationStep}
-        finalizationMethod={finalizationMethod}
-      />
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Materiality Assessment</h1>
+          <p className="text-muted-foreground mt-2">
+            Identify and prioritize material sustainability topics for your organization
+          </p>
+        </div>
+      </div>
 
-      {/* Industry Selection Tab */}
-      {activeTab === 'industry' && (
-        <IndustrySelection
-          industries={industries}
-          selectedIndustries={selectedIndustries}
-          tempSelectedIndustries={tempSelectedIndustries}
-          setTempSelectedIndustries={setTempSelectedIndustries}
-          onConfirmIndustries={handleConfirmIndustries}
-        />
-      )}
-
-      {/* Assessment Tab */}
-      {activeTab === 'assessment' && (
-        <div className="space-y-6">
-          <div className="space-y-4">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight">Materiality Assessment</h1>
-                <p className="text-muted-foreground">
-                  Identify and prioritize material sustainability topics for your organization
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="border rounded-md px-3 py-2"
-                >
-                  <option value="All">All Categories</option>
-                  {Array.from(new Set(materialTopics.map(topic => topic.category))).map(category => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            
-            {selectedIndustries.length === 0 ? (
-              <div className="text-center py-12">
-                <h3 className="text-lg font-medium mb-2">No Industry Selected</h3>
-                <p className="text-muted-foreground mb-4">
-                  Please select at least one industry to proceed with the materiality assessment.
-                </p>
-                <button
-                  onClick={() => setActiveTab('industry')}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90"
-                >
-                  Select Industries
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <MaterialityMatrix
-                  data={getFilteredTopics()}
-                  onPointClick={(point) => console.log('Point clicked:', point)}
-                />
-              </div>
-            )}
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <h3 className="text-lg font-medium mb-2">Materiality Assessment Tool</h3>
+          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+            Our comprehensive materiality assessment tool helps you identify and prioritize 
+            the most important ESG topics for your organization.
+          </p>
+          
+          <div className="space-y-4 max-w-sm mx-auto">
+            <Button className="w-full" size="lg">
+              Start Assessment
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Begin your materiality assessment process
+            </p>
           </div>
         </div>
-      )}
-
-      {/* Stakeholder Engagement Tab */}
-      {activeTab === 'engagement' && (
-        <StakeholderEngagement
-          selectedTopics={selectedTopicsForEngagement}
-          setSelectedTopics={setSelectedTopicsForEngagement}
-          materialTopics={materialTopics}
-          onProceedToFinalization={() => setActiveTab('finalization')}
-        />
-      )}
-
-      {/* Finalization Tab */}
-      {activeTab === 'finalization' && (
-        <div className="space-y-6">
-          {finalizationStep === 'method' && (
-            <FinalizationMethodSelector
-              onSelectMethod={(method) => {
-                setFinalizationMethod(method);
-                setFinalizationStep(method);
-              }}
-            />
-          )}
-
-          {finalizationStep === 'internal' && (
-            <InternalFinalization
-              materialTopics={materialTopics}
-              onFinalize={handleInternalFinalization}
-              onBack={handleBackToMethodSelection}
-            />
-          )}
-
-          {finalizationStep === 'stakeholder' && (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium mb-2">Stakeholder Finalization</h3>
-              <p className="text-muted-foreground">
-                Stakeholder finalization workflow coming soon...
-              </p>
-            </div>
-          )}
-
-          {finalizationStep === 'completed' && (
-            <div className="text-center py-12">
-              <h3 className="text-lg font-medium mb-2">Assessment Complete</h3>
-              <p className="text-muted-foreground mb-4">
-                Your materiality assessment has been completed successfully.
-              </p>
-              <div className="space-y-2">
-                <p>Total Topics Assessed: {finalizedTopics.length}</p>
-                <p>High Priority Topics: {finalizedTopics.filter(t => t.businessImpact > 7 && t.sustainabilityImpact > 7).length}</p>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      </div>
     </div>
   );
 };

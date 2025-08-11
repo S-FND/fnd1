@@ -14,7 +14,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Upload, Download, Plus } from 'lucide-react';
+import { ArrowLeft, Upload, Download, Plus, FileText } from 'lucide-react';
+import { CardDescription } from '@/components/ui/card';
 
 const ManualESGDDPage = () => {
   const { isLoading } = useRouteProtection(['admin', 'unit_admin']);
@@ -68,128 +69,47 @@ const ManualESGDDPage = () => {
   };
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
-      <UnifiedSidebarLayout>
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <Link to="/esg-dd" className="text-sm text-muted-foreground hover:text-foreground flex items-center mb-2">
-                <ArrowLeft className="h-4 w-4 mr-1" /> Back to ESG DD
-              </Link>
-              <h1 className="text-2xl font-bold tracking-tight">Manual ESG Due Diligence</h1>
-              <p className="text-muted-foreground">
-                Create and manage manually created ESG due diligence reports.
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <Link to="/esg-dd" className="text-sm text-muted-foreground hover:text-foreground flex items-center mb-2">
+            <ArrowLeft className="h-4 w-4 mr-1" /> Back to ESG DD
+          </Link>
+          <h1 className="text-2xl font-bold tracking-tight">Manual ESG Due Diligence</h1>
+          <p className="text-muted-foreground">
+            Create detailed ESG due diligence assessments manually
+          </p>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>ESG Due Diligence Assessment</CardTitle>
+          <CardDescription>
+            Create a comprehensive manual ESG assessment for suppliers and partners
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-12">
+            <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">Manual ESG Assessment</h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Create detailed ESG due diligence assessments with custom questionnaires,
+              document uploads, and comprehensive scoring.
+            </p>
+            
+            <div className="space-y-4 max-w-sm mx-auto">
+              <Button className="w-full" size="lg">
+                <Plus className="h-4 w-4 mr-2" />
+                Start New Assessment
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Create comprehensive ESG assessments with detailed questionnaires
               </p>
             </div>
-            
-            <div className="flex gap-2">
-              <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline">
-                    <Upload className="h-4 w-4 mr-2" />
-                    Upload External Report
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Upload External ESG DD Report</DialogTitle>
-                    <DialogDescription>
-                      Upload an ESG due diligence report created by external consultants or agencies.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={handleUpload}>
-                    <div className="grid gap-4 py-4">
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="title" className="text-right">
-                          Title
-                        </Label>
-                        <Input
-                          id="title"
-                          name="title"
-                          className="col-span-3"
-                          value={uploadForm.title}
-                          onChange={handleUploadChange}
-                          required
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="companyName" className="text-right">
-                          Company
-                        </Label>
-                        <Input
-                          id="companyName"
-                          name="companyName"
-                          className="col-span-3"
-                          value={uploadForm.companyName}
-                          onChange={handleUploadChange}
-                          required
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="date" className="text-right">
-                          Report Date
-                        </Label>
-                        <Input
-                          id="date"
-                          name="date"
-                          type="date"
-                          className="col-span-3"
-                          value={uploadForm.date}
-                          onChange={handleUploadChange}
-                          required
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="description" className="text-right">
-                          Description
-                        </Label>
-                        <Textarea
-                          id="description"
-                          name="description"
-                          className="col-span-3"
-                          value={uploadForm.description}
-                          onChange={handleUploadChange as any}
-                        />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="file" className="text-right">
-                          Report File
-                        </Label>
-                        <Input
-                          id="file"
-                          type="file"
-                          className="col-span-3"
-                          accept=".pdf,.doc,.docx"
-                          onChange={handleFileChange}
-                          required
-                        />
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button type="submit">Upload Report</Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
-              
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Create New ESG DD
-              </Button>
-            </div>
           </div>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>Manual & Uploaded ESG DD Reports</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ESGDDReportsList reports={filteredReports} />
-            </CardContent>
-          </Card>
-        </div>
-      </UnifiedSidebarLayout>
+        </CardContent>
+      </Card>
     </div>
   );
 };
