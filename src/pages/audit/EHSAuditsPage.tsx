@@ -14,12 +14,15 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { Search, Download, Plus, Calendar as CalendarIcon, Shield, CheckCircle } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Search, Download, Plus, Calendar as CalendarIcon, Shield, CheckCircle, FileText } from 'lucide-react';
 
 const EHSAuditsPage = () => {
   const { isAuthenticated, isCompanyUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [selectedReports, setSelectedReports] = useState<string[]>([]);
   const [audits, setAudits] = useState([
     {
       id: 'ehs-1',
@@ -96,6 +99,63 @@ const EHSAuditsPage = () => {
         description: ''
       });
       setIsScheduleDialogOpen(false);
+    }
+  };
+
+  const handleExportReports = () => {
+    if (selectedReports.length === 0) return;
+    
+    // Simulate downloading reports
+    selectedReports.forEach((auditId) => {
+      const audit = audits.find(a => a.id === auditId);
+      if (audit) {
+        // Create a simple text report content
+        const reportContent = `
+EHS AUDIT REPORT
+================
+
+Audit Title: ${audit.title}
+Location: ${audit.location}
+Date: ${audit.date}
+Auditor: ${audit.auditor}
+Status: ${audit.status}
+${audit.score ? `Score: ${audit.score}%` : ''}
+
+Report generated on: ${new Date().toLocaleDateString()}
+        `;
+        
+        // Create and download file
+        const blob = new Blob([reportContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${audit.title.replace(/\s+/g, '_')}_Report.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    });
+    
+    setSelectedReports([]);
+    setIsExportDialogOpen(false);
+  };
+
+  const handleSelectReport = (auditId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedReports([...selectedReports, auditId]);
+    } else {
+      setSelectedReports(selectedReports.filter(id => id !== auditId));
+    }
+  };
+
+  const handleSelectAllReports = (checked: boolean) => {
+    if (checked) {
+      // Only select completed audits that have reports
+      const completedAudits = audits.filter(audit => audit.status === 'completed');
+      setSelectedReports(completedAudits.map(audit => audit.id));
+    } else {
+      setSelectedReports([]);
     }
   };
 
@@ -239,10 +299,132 @@ const EHSAuditsPage = () => {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Export Reports
-          </Button>
+          <Dialog open={isExportDialogOpen} onOpenChange={setIsExportDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Export Reports
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Export Audit Reports</DialogTitle>
+                <DialogDescription>
+                  Select the audit reports you want to download. Only completed audits with available reports are shown.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                <div className="space-y-4">
+                  {/* Select All */}
+                  <div className="flex items-center space-x-2 p-3 border rounded-lg bg-muted/50">
+                    <Checkbox
+                      id="select-all"
+                      checked={
+                        audits.filter(audit => audit.status === 'completed').length > 0 &&
+                        selectedReports.length === audits.filter(audit => audit.status === 'completed').length
+                      }
+                      onCheckedChange={handleSelectAllReports}
+                    />
+                    <Label htmlFor="select-all" className="font-medium">
+                      Select All Available Reports ({audits.filter(audit => audit.status === 'completed').length})
+                    </Label>
+                  </div>
+
+                  {/* Available Reports */}
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {audits
+                      .filter(audit => audit.status === 'completed')
+                      .map((audit) => (
+                        <div key={audit.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                          <Checkbox
+                            id={audit.id}
+                            checked={selectedReports.includes(audit.id)}
+                            onCheckedChange={(checked) => handleSelectReport(audit.id, checked as boolean)}
+                          />
+                          <div className="flex items-center space-x-3 flex-1">
+                            <FileText className="h-5 w-5 text-blue-500" />
+                            <div className="flex-1">
+                              <Label htmlFor={audit.id} className="font-medium cursor-pointer">
+                                {audit.title}
+                              </Label>
+                              <p className="text-sm text-muted-foreground">
+                                {audit.location} • {audit.date} • Score: {audit.score}%
+                              </p>
+                            </div>
+                          </div>
+                          <Badge variant="default" className="flex items-center">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Report Available
+                          </Badge>
+                        </div>
+                      ))}
+                    
+                    {audits.filter(audit => audit.status === 'completed').length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                        <p>No completed audits with reports available</p>
+                        <p className="text-sm">Complete audits to generate downloadable reports</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* In Progress and Scheduled Audits (Read-only) */}
+                  {audits.filter(audit => audit.status !== 'completed').length > 0 && (
+                    <div className="pt-4 border-t">
+                      <h4 className="font-medium text-sm text-muted-foreground mb-2">
+                        Pending Audits (Reports not yet available)
+                      </h4>
+                      <div className="space-y-2">
+                        {audits
+                          .filter(audit => audit.status !== 'completed')
+                          .map((audit) => (
+                            <div key={audit.id} className="flex items-center space-x-3 p-3 border rounded-lg opacity-60">
+                              <Checkbox disabled />
+                              <div className="flex items-center space-x-3 flex-1">
+                                <FileText className="h-5 w-5 text-muted-foreground" />
+                                <div className="flex-1">
+                                  <p className="font-medium text-muted-foreground">{audit.title}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {audit.location} • {audit.date}
+                                  </p>
+                                </div>
+                              </div>
+                              <Badge variant="outline">
+                                <CalendarIcon className="h-3 w-3 mr-1" />
+                                {audit.status === 'in_progress' ? 'In Progress' : 'Scheduled'}
+                              </Badge>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <DialogFooter className="flex justify-between">
+                <p className="text-sm text-muted-foreground">
+                  {selectedReports.length} report(s) selected
+                </p>
+                <div className="space-x-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setSelectedReports([]);
+                      setIsExportDialogOpen(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handleExportReports}
+                    disabled={selectedReports.length === 0}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Selected ({selectedReports.length})
+                  </Button>
+                </div>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
