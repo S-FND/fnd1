@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CalendarIcon, ChevronLeft, ChevronRight, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { CalendarIcon, ChevronLeft, ChevronRight, AlertTriangle, CheckCircle, Clock, Plus } from 'lucide-react';
 import { complianceItems } from '@/data/compliance/items';
 import { format, startOfQuarter, endOfQuarter, isWithinInterval, addQuarters, subQuarters } from 'date-fns';
+import { NewComplianceForm } from './NewComplianceForm';
+import { toast } from 'sonner';
 
 interface ComplianceCalendarViewProps {
   onClose?: () => void;
@@ -17,6 +19,7 @@ const ComplianceCalendarView: React.FC<ComplianceCalendarViewProps> = ({ onClose
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [viewType, setViewType] = useState<'quarter' | 'year'>('quarter');
   const [currentQuarter, setCurrentQuarter] = useState(new Date());
+  const [showNewComplianceForm, setShowNewComplianceForm] = useState(false);
 
   // Get compliance items for next quarter
   const nextQuarterItems = useMemo(() => {
@@ -92,14 +95,32 @@ const ComplianceCalendarView: React.FC<ComplianceCalendarViewProps> = ({ onClose
     return complianceItems.map(item => new Date(item.deadline));
   }, []);
 
+  const handleNewComplianceSubmit = (data: any) => {
+    // Here you would typically send the data to your backend
+    console.log('New compliance requirement:', data);
+    toast.success('Compliance requirement added successfully!');
+    
+    // In a real app, you would add this to your state management or make an API call
+    // For now, we'll just show a success message
+  };
+
   return (
     <Dialog defaultOpen onOpenChange={(open) => !open && onClose?.()}>
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CalendarIcon className="h-5 w-5" />
-            Compliance Calendar
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5" />
+              Compliance Calendar
+            </DialogTitle>
+            <Button 
+              onClick={() => setShowNewComplianceForm(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Submit New Compliance
+            </Button>
+          </div>
         </DialogHeader>
 
         <Tabs value={viewType} onValueChange={(value) => setViewType(value as 'quarter' | 'year')}>
@@ -301,6 +322,12 @@ const ComplianceCalendarView: React.FC<ComplianceCalendarViewProps> = ({ onClose
             </Card>
           </TabsContent>
         </Tabs>
+
+        <NewComplianceForm
+          open={showNewComplianceForm}
+          onClose={() => setShowNewComplianceForm(false)}
+          onSubmit={handleNewComplianceSubmit}
+        />
       </DialogContent>
     </Dialog>
   );
