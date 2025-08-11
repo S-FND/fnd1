@@ -14,7 +14,8 @@ export type FeatureId =
   | 'company-profile'
   | 'settings'
   | 'dashboard'
-  | 'stakeholder-management';
+  | 'stakeholder-management'
+  | 'action-log';
 
 export interface Feature {
   id: FeatureId;

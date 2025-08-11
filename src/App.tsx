@@ -56,6 +56,7 @@ import SupplierAuditsPage from './pages/audit/SupplierAuditsPage';
 import EHSAuditsPage from './pages/audit/EHSAuditsPage';
 import InternalAuditsPage from './pages/audit/InternalAuditsPage';
 import LMSPage from './pages/LMS';
+import ActionLogPage from './components/action-log/ActionLogPage';
 
 function App() {
   return (
@@ -97,6 +98,7 @@ function App() {
         
         <Route path="/units" element={<Units />} />
         <Route path="/team-management" element={<TeamManagementPage />} />
+        <Route path="/action-log" element={<ActionLogPage />} />
         <Route path="/ehs-trainings" element={<EHSTrainings />} />
         <Route path="/ehs-trainings/:id" element={<EHSTrainingDetails />} />
         

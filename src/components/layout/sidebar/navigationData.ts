@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, BarChart3, FileSearch, LineChart, ClipboardCheck, GraduationCap, Calendar, Users, Building2, Settings, FileText, TreePine, Target } from 'lucide-react';
+import { LayoutDashboard, BarChart3, FileSearch, LineChart, ClipboardCheck, GraduationCap, Calendar, Users, Building2, Settings, FileText, TreePine, Target, Activity } from 'lucide-react';
 import { FeatureId } from '@/types/features';
 
 export interface NavigationItem {
@@ -134,6 +134,12 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
         href: "/team-management",
         icon: Users,
         featureId: 'team-management'
+      },
+      {
+        name: "Action Log",
+        href: "/action-log",
+        icon: Activity,
+        featureId: 'action-log'
       }
     );
 
