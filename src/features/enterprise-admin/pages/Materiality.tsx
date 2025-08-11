@@ -1,272 +1,22 @@
-import React, { useState, useEffect } from 'react';
-
+import React from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { Button } from '@/components/ui/button';
-
-// Import refactored components
-import IndustrySelection from '../components/materiality/IndustrySelection';
-import MaterialityTabs from '../components/materiality/MaterialityTabs';
-import StakeholderEngagement from '../components/materiality/StakeholderEngagement';
-import FinalizationMethodSelector from '../components/materiality/FinalizationMethodSelector';
-import InternalFinalization from '../components/materiality/InternalFinalization';
-
-// Define a union type for allowed frameworks
-type Framework = 'SASB' | 'GRI' | 'Custom';
-
-// Create a local MaterialTopic type that extends the framework one but makes businessImpact and sustainabilityImpact required
-interface MaterialTopic extends Omit<FrameworkMaterialTopic, 'businessImpact' | 'sustainabilityImpact'> {
-  businessImpact: number;
-  sustainabilityImpact: number;
-  color: string;
-}
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { BarChart3 } from 'lucide-react';
 
 const MaterialityPage = () => {
   const { isLoading } = useRouteProtection(['admin', 'manager', 'unit_admin']);
   const { user, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState('assessment');
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
-  const [tempSelectedIndustries, setTempSelectedIndustries] = useState<string[]>([]);
-  const [materialTopics, setMaterialTopics] = useState<MaterialTopic[]>([]);
-  const [selectedTopicsForEngagement, setSelectedTopicsForEngagement] = useState<MaterialTopic[]>([]);
-  const [activeFrameworks, setActiveFrameworks] = useState<Framework[]>(['SASB', 'GRI', 'Custom']);
-  
-  // Finalization flow state
-  const [finalizationStep, setFinalizationStep] = useState<'method' | 'internal' | 'stakeholder' | 'completed'>('method');
-  const [finalizationMethod, setFinalizationMethod] = useState<'internal' | 'stakeholder' | null>(null);
-  const [finalizedTopics, setFinalizedTopics] = useState<MaterialTopic[]>([]);
-  
-  // Update tempSelectedIndustries when selectedIndustries changes
-  useEffect(() => {
-    setTempSelectedIndustries([...selectedIndustries]);
-  }, [selectedIndustries]);
-  
-  // Initialize with some default topics
-  useEffect(() => {
-    // Load custom topics from localStorage
-    const savedCustomTopics = localStorage.getItem('customMaterialTopics');
-    let customTopics: MaterialTopic[] = [];
-    
-    if (savedCustomTopics) {
-      try {
-        customTopics = JSON.parse(savedCustomTopics);
-      } catch (error) {
-        console.error('Error loading custom topics:', error);
-      }
-    }
-
-    // If no industries selected, use a mix of common topics
-    if (selectedIndustries.length === 0) {
-      const commonSasbTopics = sasbTopics.slice(0, 6).map(ensureRequiredProps);
-      const commonGriTopics = griTopics.slice(0, 6).map(ensureRequiredProps);
-      setMaterialTopics([...commonSasbTopics, ...commonGriTopics, ...customTopics]);
-    } else {
-      // Otherwise, get topics for selected industries plus custom topics
-      const topics = getCombinedTopics(selectedIndustries, activeFrameworks).map(ensureRequiredProps);
-      setMaterialTopics([...topics, ...customTopics]);
-    }
-  }, [selectedIndustries, activeFrameworks]);
-  
-  // Helper function to ensure topics have the required properties
-  const ensureRequiredProps = (topic: FrameworkMaterialTopic): MaterialTopic => {
-    // Calculate impacts if not already present
-    const businessImpact = topic.businessImpact ?? calculateInitialBusinessImpact(topic);
-    const sustainabilityImpact = topic.sustainabilityImpact ?? calculateInitialSustainabilityImpact(topic);
-    const color = topic.color ?? getCategoryColor(topic.category);
-    
-    return {
-      ...topic,
-      businessImpact,
-      sustainabilityImpact,
-      color
-    };
-  };
-  
-  // Helper function to calculate initial business impact for topics missing it
-  const calculateInitialBusinessImpact = (topic: FrameworkMaterialTopic): number => {
-    // Base values by framework
-    const baseValues: Record<Framework, number> = {
-      'SASB': 7.0,
-      'GRI': 6.5,
-      'Custom': 7.0
-    };
-    
-    // Modifiers by category
-    const categoryModifiers: Record<string, number> = {
-      'Environment': 0.0,
-      'Social': 0.5,
-      'Governance': 1.5
-    };
-    
-    const base = baseValues[topic.framework as Framework] || 7.0;
-    const modifier = categoryModifiers[topic.category] || 0;
-    
-    // Add some randomness to make the matrix more interesting
-    const randomVariation = (Math.random() - 0.5) * 2;
-    
-    return Math.min(10, Math.max(1, base + modifier + randomVariation));
-  };
-  
-  // Helper function to calculate initial sustainability impact for topics missing it
-  const calculateInitialSustainabilityImpact = (topic: FrameworkMaterialTopic): number => {
-    // Base values by framework
-    const baseValues: Record<Framework, number> = {
-      'SASB': 6.5,
-      'GRI': 7.0,
-      'Custom': 7.0
-    };
-    
-    // Modifiers by category
-    const categoryModifiers: Record<string, number> = {
-      'Environment': 1.5,
-      'Social': 1.0,
-      'Governance': 0.0
-    };
-    
-    const base = baseValues[topic.framework as Framework] || 7.0;
-    const modifier = categoryModifiers[topic.category] || 0;
-    
-    // Add some randomness to make the matrix more interesting
-    const randomVariation = (Math.random() - 0.5) * 2;
-    
-    return Math.min(10, Math.max(1, base + modifier + randomVariation));
-  };
-  
-  // Helper function to get color for a category
-  const getCategoryColor = (category: string): string => {
-    const colors: Record<string, string> = {
-      'Environment': '#22c55e', // green
-      'Social': '#60a5fa',     // blue
-      'Governance': '#f59e0b'  // amber
-    };
-    
-    return colors[category] || '#94a3b8'; // default to slate
-  };
-  
-  const updateMatrixData = () => {
-    // Update the actual selected industries from the temp selection
-    setSelectedIndustries([...tempSelectedIndustries]);
-    
-    if (tempSelectedIndustries.length === 0) {
-      const commonSasbTopics = sasbTopics.slice(0, 6).map(ensureRequiredProps);
-      const commonGriTopics = griTopics.slice(0, 6).map(ensureRequiredProps);
-      setMaterialTopics([...commonSasbTopics, ...commonGriTopics]);
-      toast.info('Reset to default materiality assessment');
-      return;
-    }
-    
-    // Get combined topics from selected industries
-    const topics = getCombinedTopics(tempSelectedIndustries, activeFrameworks).map(ensureRequiredProps);
-    setMaterialTopics(topics);
-    
-    toast.info(`Updated materiality assessment for ${tempSelectedIndustries.length} selected ${tempSelectedIndustries.length === 1 ? 'industry' : 'industries'}`);
-  };
-
-  // Handle updating topics from the MaterialTopicsTab
-  const handleUpdateTopics = (updatedTopics: MaterialTopic[]) => {
-    setMaterialTopics(updatedTopics);
-    
-    // Save custom topics to localStorage
-    const customTopics = updatedTopics.filter(topic => topic.framework === 'Custom');
-    localStorage.setItem('customMaterialTopics', JSON.stringify(customTopics));
-  };
-
-  // Handle updating selected topics for stakeholder engagement
-  const handleUpdateSelectedTopics = (selectedTopics: MaterialTopic[]) => {
-    setSelectedTopicsForEngagement(selectedTopics);
-    toast.info(`${selectedTopics.length} topics selected for stakeholder engagement`);
-  };
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !['admin', 'manager', 'unit_admin'].includes(user?.role || '')) {
     return <Navigate to="/login" />;
   }
-
-  const handleIndustryChange = (industryId: string, checked: boolean) => {
-    if (checked) {
-      setTempSelectedIndustries(prev => [...prev, industryId]);
-    } else {
-      setTempSelectedIndustries(prev => prev.filter(id => id !== industryId));
-    }
-  };
-
-  const materialityData = generateMatrixData(materialTopics);
-  const filteredTopics = selectedCategory === 'All' 
-    ? materialTopics 
-    : materialTopics.filter(topic => topic.category === selectedCategory);
-
-  const filteredData = materialityData.filter(item => {
-    if (selectedCategory !== 'All' && item.category !== selectedCategory) {
-      return false;
-    }
-    if (item.framework && !activeFrameworks.includes(item.framework as Framework)) {
-      return false;
-    }
-    return true;
-  });
-
-  const highPriorityTopics = materialTopics.filter(
-    topic => topic.businessImpact >= 7.5 && topic.sustainabilityImpact >= 7.5
-  );
-
-  const mediumPriorityTopics = materialTopics.filter(
-    topic => (topic.businessImpact >= 7.5 && topic.sustainabilityImpact < 7.5) || 
-            (topic.businessImpact < 7.5 && topic.sustainabilityImpact >= 7.5)
-  );
-
-  const lowPriorityTopics = materialTopics.filter(
-    topic => topic.businessImpact < 7.5 && topic.sustainabilityImpact < 7.5
-  );
-
-  // Handle updating topics from stakeholder prioritization
-  const handleUpdatePrioritization = (updatedTopics: MaterialTopic[]) => {
-    // Merge updated topics with existing ones
-    const updatedMaterialTopics = materialTopics.map(topic => {
-      const updatedTopic = updatedTopics.find(t => t.id === topic.id);
-      return updatedTopic || topic;
-    });
-    
-    setMaterialTopics(updatedMaterialTopics);
-    setFinalizedTopics(updatedTopics);
-    setFinalizationStep('completed');
-    
-    // Save finalized topics to localStorage for ESG Metrics page
-    localStorage.setItem('finalizedMaterialTopics', JSON.stringify(updatedTopics));
-    
-    toast.info('Material topics finalized with stakeholder input');
-  };
-
-  // Handle finalization method selection
-  const handleFinalizationMethodSelect = (method: 'internal' | 'stakeholder') => {
-    setFinalizationMethod(method);
-    if (method === 'internal') {
-      setFinalizationStep('internal');
-    } else {
-      setFinalizationStep('stakeholder');
-    }
-  };
-
-  // Handle internal finalization
-  const handleInternalFinalization = (selectedTopics: MaterialTopic[]) => {
-    setFinalizedTopics(selectedTopics);
-    setFinalizationStep('completed');
-    
-    // Save finalized topics to localStorage for ESG Metrics page
-    localStorage.setItem('finalizedMaterialTopics', JSON.stringify(selectedTopics));
-    
-    toast.success('Material topics finalized internally');
-  };
-
-  // Handle back to method selection
-  const handleBackToMethodSelection = () => {
-    setFinalizationStep('method');
-    setFinalizationMethod(null);
-  };
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -279,23 +29,83 @@ const MaterialityPage = () => {
         </div>
       </div>
 
-      <div className="space-y-6">
-        <div className="text-center py-12">
-          <h3 className="text-lg font-medium mb-2">Materiality Assessment Tool</h3>
-          <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-            Our comprehensive materiality assessment tool helps you identify and prioritize 
-            the most important ESG topics for your organization.
-          </p>
-          
-          <div className="space-y-4 max-w-sm mx-auto">
-            <Button className="w-full" size="lg">
-              Start Assessment
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              Begin your materiality assessment process
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Materiality Assessment Tool
+          </CardTitle>
+          <CardDescription>
+            Comprehensive materiality assessment to identify and prioritize ESG topics
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-12">
+            <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">Start Your Materiality Assessment</h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Our comprehensive materiality assessment tool helps you identify and prioritize 
+              the most important ESG topics for your organization based on stakeholder input 
+              and business impact.
             </p>
+            
+            <div className="space-y-4 max-w-sm mx-auto">
+              <Button className="w-full" size="lg">
+                Start Assessment
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                Begin your materiality assessment process
+              </p>
+            </div>
           </div>
-        </div>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle>Industry Analysis</CardTitle>
+            <CardDescription>Analyze material topics by industry</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Select your industry to get relevant materiality topics and benchmarks.
+            </p>
+            <Button variant="outline" className="w-full">
+              Select Industry
+            </Button>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle>Stakeholder Engagement</CardTitle>
+            <CardDescription>Collect stakeholder input</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Engage stakeholders to understand their priorities and concerns.
+            </p>
+            <Button variant="outline" className="w-full">
+              Start Engagement
+            </Button>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle>Impact Matrix</CardTitle>
+            <CardDescription>Visualize material topics</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Generate impact vs. influence matrix for your material topics.
+            </p>
+            <Button variant="outline" className="w-full">
+              View Matrix
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
