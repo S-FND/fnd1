@@ -2,19 +2,20 @@
 import React, { useState } from 'react';
 
 import { useAuth } from '@/context/AuthContext';
-import { Navigate, Link } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { mockESGDDReports } from '../data/esgDD';
 import { ESGDDReportsList } from '../components/esg-dd/ESGDDReportsList';
 import { ESGDDWizard } from '../components/esg-dd/ESGDDWizard';
-import { ArrowLeft, FileSearch, Plus } from 'lucide-react';
+import { ArrowLeft, FileSearch, Plus, Bot, Sparkles } from 'lucide-react';
 
 const AutomatedESGDDPage = () => {
   const { isLoading } = useRouteProtection(['admin', 'unit_admin']);
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>('reports');
   const [wizardActive, setWizardActive] = useState(false);
 
