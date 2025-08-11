@@ -66,58 +66,54 @@ const ESGCapPage = () => {
   };
 
   return (
-    <div className="min-h-screen">
-      <UnifiedSidebarLayout>
-        <div className="space-y-6">
-          <div>
-            <Link to="/esg-dd" className="text-sm text-muted-foreground hover:text-foreground flex items-center mb-2">
-              <ArrowLeft className="h-4 w-4 mr-1" /> Back to ESG DD
-            </Link>
-            <h1 className="text-2xl font-bold tracking-tight">ESG Corrective Action Plan</h1>
-            <p className="text-muted-foreground">
-              Track and manage corrective actions from ESG due diligence assessments.
-            </p>
+    <div className="space-y-6">
+      <div>
+        <Link to="/esg-dd" className="text-sm text-muted-foreground hover:text-foreground flex items-center mb-2">
+          <ArrowLeft className="h-4 w-4 mr-1" /> Back to ESG DD
+        </Link>
+        <h1 className="text-2xl font-bold tracking-tight">ESG Corrective Action Plan</h1>
+        <p className="text-muted-foreground">
+          Track and manage corrective actions from ESG due diligence assessments.
+        </p>
+      </div>
+      
+      <Card className="h-[calc(100vh-12rem)] flex flex-col">
+        <CardHeader className="flex-shrink-0">
+          <CardTitle>ESG CAP Items</CardTitle>
+          <CardDescription>
+            Manage and track all ESG corrective action items across assessments.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-shrink-0 mb-4">
+            <ESGCapFilters 
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+              categoryFilter={categoryFilter}
+              setCategoryFilter={setCategoryFilter}
+            />
           </div>
           
-          <Card className="h-[calc(100vh-12rem)] flex flex-col">
-            <CardHeader className="flex-shrink-0">
-              <CardTitle>ESG CAP Items</CardTitle>
-              <CardDescription>
-                Manage and track all ESG corrective action items across assessments.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col overflow-hidden">
-              <div className="flex-shrink-0 mb-4">
-                <ESGCapFilters 
-                  searchTerm={searchTerm}
-                  setSearchTerm={setSearchTerm}
-                  statusFilter={statusFilter}
-                  setStatusFilter={setStatusFilter}
-                  categoryFilter={categoryFilter}
-                  setCategoryFilter={setCategoryFilter}
-                />
-              </div>
-              
-              <div className="flex-1 overflow-auto">
-                <ESGCapTable 
-                  sortedItems={sortedItems} 
-                  sortConfig={sortConfig} 
-                  requestSort={requestSort} 
-                />
-              </div>
-              
-              <div className="flex justify-end gap-2 mt-4 flex-shrink-0">
-                <Button variant="outline">
-                  Request CAP Change
-                </Button>
-                <Button>
-                  Accept CAP
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </UnifiedSidebarLayout>
+          <div className="flex-1 overflow-auto">
+            <ESGCapTable 
+              sortedItems={sortedItems} 
+              sortConfig={sortConfig} 
+              requestSort={requestSort} 
+            />
+          </div>
+          
+          <div className="flex justify-end gap-2 mt-4 flex-shrink-0">
+            <Button variant="outline">
+              Request CAP Change
+            </Button>
+            <Button>
+              Accept CAP
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
