@@ -6,11 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart3, Users, Building2, Grid3X3 } from 'lucide-react';
 import CheQMateriality from '../components/materiality/CheQMateriality';
+import StakeholderEngagement from '../components/materiality/StakeholderEngagement';
+import IndustrySelection from '../components/materiality/IndustrySelection';
+import { industries } from '../data/materiality';
 
 const MaterialityPage = () => {
   const { isLoading } = useRouteProtection(['admin', 'manager', 'unit_admin']);
   const { user, isAuthenticated } = useAuth();
   const [currentView, setCurrentView] = useState<'overview' | 'assessment' | 'industry' | 'stakeholder' | 'matrix'>('overview');
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -40,6 +44,10 @@ const MaterialityPage = () => {
     setCurrentView('overview');
   };
 
+  const handleUpdatePrioritization = (updatedTopics: any[]) => {
+    console.log('Updated prioritizations:', updatedTopics);
+  };
+
   if (currentView === 'assessment') {
     return (
       <div className="container mx-auto p-6 space-y-6">
@@ -47,13 +55,14 @@ const MaterialityPage = () => {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Materiality Assessment</h1>
             <p className="text-muted-foreground mt-2">
-              Interactive materiality assessment tool
+              Comprehensive ESG materiality analysis with stakeholder input
             </p>
           </div>
           <Button variant="outline" onClick={handleBackToOverview}>
             Back to Overview
           </Button>
         </div>
+        
         <CheQMateriality />
       </div>
     );
@@ -66,13 +75,14 @@ const MaterialityPage = () => {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Industry Analysis</h1>
             <p className="text-muted-foreground mt-2">
-              Analyze material topics specific to your industry
+              Select industries to customize material topics for your organization
             </p>
           </div>
           <Button variant="outline" onClick={handleBackToOverview}>
             Back to Overview
           </Button>
         </div>
+        
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -85,12 +95,46 @@ const MaterialityPage = () => {
               Choose your primary industry to get relevant material topics and benchmarks.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {['Financial Services', 'Technology', 'Manufacturing', 'Healthcare', 'Energy', 'Retail'].map((industry) => (
-                <Button key={industry} variant="outline" className="h-auto p-4 text-left">
-                  {industry}
+              {industries.map((industry) => (
+                <Button 
+                  key={industry.id} 
+                  variant={selectedIndustries.includes(industry.id) ? "default" : "outline"} 
+                  className="h-auto p-4 text-left"
+                  onClick={() => {
+                    if (selectedIndustries.includes(industry.id)) {
+                      setSelectedIndustries(selectedIndustries.filter(id => id !== industry.id));
+                    } else {
+                      setSelectedIndustries([...selectedIndustries, industry.id]);
+                    }
+                  }}
+                >
+                  {industry.name}
                 </Button>
               ))}
             </div>
+            {selectedIndustries.length > 0 && (
+              <div className="mt-4">
+                <h4 className="text-sm font-medium mb-2">Selected Industries:</h4>
+                <div className="flex flex-wrap gap-2">
+                  {selectedIndustries.map(industryId => {
+                    const industry = industries.find(i => i.id === industryId);
+                    return (
+                      <div key={industryId} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
+                        {industry?.name}
+                      </div>
+                    );
+                  })}
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-2"
+                  onClick={() => setSelectedIndustries([])}
+                >
+                  Clear Selection
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -104,13 +148,14 @@ const MaterialityPage = () => {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Stakeholder Engagement</h1>
             <p className="text-muted-foreground mt-2">
-              Collect input from your stakeholders
+              Create stakeholder groups and collect materiality input
             </p>
           </div>
           <Button variant="outline" onClick={handleBackToOverview}>
             Back to Overview
           </Button>
         </div>
+        
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -146,15 +191,16 @@ const MaterialityPage = () => {
       <div className="container mx-auto p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Impact Matrix</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Materiality Matrix</h1>
             <p className="text-muted-foreground mt-2">
-              Visualize your material topics
+              Visualize topics by business and sustainability impact
             </p>
           </div>
           <Button variant="outline" onClick={handleBackToOverview}>
             Back to Overview
           </Button>
         </div>
+        
         <CheQMateriality />
       </div>
     );
