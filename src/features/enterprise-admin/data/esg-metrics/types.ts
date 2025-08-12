@@ -17,6 +17,7 @@ export interface ESGMetric {
     tableRows?: number; // For table format
   };
   industry?:string;
+  esg:string;
 }
 
 export interface ESGMetricWithTracking extends ESGMetric {

@@ -87,6 +87,7 @@ const SelectedMetricsList: React.FC<SelectedMetricsListProps> = ({
                     <div className="flex gap-4 text-xs text-muted-foreground">
                       <span>Unit: {metric.unit}</span>
                       <span>Type: {metric.dataType}</span>
+                      <span>Industry: {metric.industry}</span>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -140,6 +141,7 @@ const SelectedMetricsList: React.FC<SelectedMetricsListProps> = ({
                     <div className="flex gap-4 text-xs text-muted-foreground">
                       <span>Unit: {metric.unit}</span>
                       <span>Type: {metric.dataType}</span>
+                      <span>Industry: {metric.industry}</span>
                     </div>
                   </div>
                   <div className="flex gap-2">
