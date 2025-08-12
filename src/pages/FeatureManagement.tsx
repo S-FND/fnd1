@@ -74,7 +74,7 @@ const FeatureManagementPage = () => {
   }, [pageAccessData])
 
   useEffect(() => {
-    getPageAccess()
+    // getPageAccess()
   }, [])
 
   if (isLoading) {

@@ -77,7 +77,8 @@ class HttpClient {
         } else if (error.status >= 500) {
           toast.error('Server error. Please try again later.');
         } else if (error.message) {
-          toast.error(error.message);
+          // toast.error(error.message);
+          console.log(error.message);
         }
         
         throw error;

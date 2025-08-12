@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,6 +16,7 @@ interface FlexibleDataInputProps {
 }
 
 const FlexibleDataInput: React.FC<FlexibleDataInputProps> = ({ metric, value, onChange }) => {
+  // console.log('FlexibleDataInput :: value :: ',value)
   const [tableData, setTableData] = useState<string[][]>(() => {
     if (metric.dataType === 'Table' && value && Array.isArray(value)) {
       return value;
@@ -45,6 +46,9 @@ const FlexibleDataInput: React.FC<FlexibleDataInputProps> = ({ metric, value, on
     setTableData(newTableData);
     onChange(newTableData);
   };
+  useEffect(()=>{
+    // console.log('tableData ==> ',tableData)
+  },[tableData])
 
   const renderInput = () => {
     switch (metric.dataType) {
