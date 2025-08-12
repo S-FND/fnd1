@@ -380,7 +380,7 @@ const MaterialityPage = () => {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
@@ -403,9 +403,9 @@ const MaterialityPage = () => {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
               <Grid3X3 className="h-4 w-4" />
-              ESG Metrics Integration
+              Configure ESG Metrics
             </CardTitle>
-            <CardDescription>Configure metrics for finalized topics</CardDescription>
+            <CardDescription>Set up metrics for finalized topics</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
@@ -415,12 +415,36 @@ const MaterialityPage = () => {
               }
             </p>
             <Button 
-              variant="outline" 
               className="w-full" 
               disabled={finalizedTopics.length === 0}
               onClick={() => window.location.href = '/esg/metrics'}
             >
               Configure Metrics
+            </Button>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              View Results
+            </CardTitle>
+            <CardDescription>Review materiality assessment results</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              {finalizedTopics.length > 0 
+                ? 'View and analyze your finalized material topics'
+                : 'Complete assessment to view results'
+              }
+            </p>
+            <Button 
+              variant="outline"
+              className="w-full" 
+              disabled={finalizedTopics.length === 0}
+            >
+              View Results
             </Button>
           </CardContent>
         </Card>
