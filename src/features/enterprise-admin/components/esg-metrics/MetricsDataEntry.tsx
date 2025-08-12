@@ -107,7 +107,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
     //     console.error('Error loading saved metrics:', error);
     //   }
     // }
-    getGraph()
+    // getGraph()
     getMetricsKpiData(selectedFinancialYear);
     setConfiguredMetrics(finalMetrics)
   }, []);
