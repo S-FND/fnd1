@@ -427,7 +427,7 @@ const MaterialityPage = () => {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
+              <BarChart3 className="h-4 w-4" />
               View Results
             </CardTitle>
             <CardDescription>Review materiality assessment results</CardDescription>
