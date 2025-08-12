@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { TrendingUp, TrendingDown, BarChart3, PieChart as PieChartIcon, Building2 } from 'lucide-react';
 import { ESGMetricWithTracking } from '../../data/esgMetricsData';
+import ChartComponent from './graphShow';
 
 interface MetricDataEntry {
   id: string;
@@ -180,7 +181,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
   const renderMetricOverview = () => (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {configuredMetrics.slice(0, 4).map((metric, index) => {
-        const metricEntries = dataEntries.filter(entry => entry.metricId === metric.id);
+        const metricEntries = dataEntries.filter(entry => entry.metricId === metric.code);
         const latestEntry = metricEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
         const previousEntry = metricEntries[1];
         
@@ -192,7 +193,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
         }
 
         return (
-          <Card key={metric.id}>
+          <Card key={metric.code}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">{metric.name}</CardTitle>
               <div className="text-2xl font-bold">
@@ -270,7 +271,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
 
         <TabsContent value="charts" className="space-y-6">
           <div className="grid gap-4">
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>Metric Analysis</CardTitle>
@@ -313,7 +314,8 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
                   </div>
                 )}
               </CardContent>
-            </Card>
+            </Card> */}
+            <ChartComponent  />
           </div>
         </TabsContent>
 
