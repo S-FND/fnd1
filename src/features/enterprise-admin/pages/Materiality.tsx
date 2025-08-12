@@ -418,7 +418,7 @@ const MaterialityPage = () => {
               variant="outline" 
               className="w-full" 
               disabled={finalizedTopics.length === 0}
-              onClick={() => window.location.href = '/admin/esg-metrics'}
+              onClick={() => window.location.href = '/esg/metrics'}
             >
               Configure Metrics
             </Button>
