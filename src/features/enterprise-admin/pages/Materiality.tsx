@@ -1,20 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart3, Users, Building2, Grid3X3 } from 'lucide-react';
-import CheQMateriality from '../components/materiality/CheQMateriality';
+import { Badge } from '@/components/ui/badge';
+import { BarChart3, Users, Building2, Grid3X3, ArrowLeft } from 'lucide-react';
 import StakeholderEngagement from '../components/materiality/StakeholderEngagement';
 import IndustrySelection from '../components/materiality/IndustrySelection';
+import FinalizationMethodSelector from '../components/materiality/FinalizationMethodSelector';
+import InternalFinalization from '../components/materiality/InternalFinalization';
 import { industries } from '../data/materiality';
+import { MaterialTopic, getTopicsByIndustry, getCombinedTopics, topicColors } from '../data/frameworkTopics';
 
 const MaterialityPage = () => {
   const { isLoading } = useRouteProtection(['admin', 'manager', 'unit_admin']);
   const { user, isAuthenticated } = useAuth();
-  const [currentView, setCurrentView] = useState<'overview' | 'assessment' | 'industry' | 'stakeholder' | 'matrix'>('overview');
+  const [currentView, setCurrentView] = useState<'overview' | 'industry' | 'topics' | 'method' | 'internal' | 'stakeholder'>('overview');
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+  const [materialTopics, setMaterialTopics] = useState<MaterialTopic[]>([]);
+  const [finalizationMethod, setFinalizationMethod] = useState<'internal' | 'stakeholder' | null>(null);
+  const [finalizedTopics, setFinalizedTopics] = useState<MaterialTopic[]>([]);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -24,119 +30,241 @@ const MaterialityPage = () => {
     return <Navigate to="/login" />;
   }
 
-  const handleStartAssessment = () => {
-    setCurrentView('assessment');
-  };
+  // Update material topics when industries change
+  useEffect(() => {
+    if (selectedIndustries.length > 0) {
+      const topics = getCombinedTopics(selectedIndustries, ['SASB', 'GRI']);
+      setMaterialTopics(topics);
+    } else {
+      setMaterialTopics([]);
+    }
+  }, [selectedIndustries]);
 
-  const handleIndustryAnalysis = () => {
+  const handleStartAssessment = () => {
     setCurrentView('industry');
   };
 
-  const handleStakeholderEngagement = () => {
-    setCurrentView('stakeholder');
+  const handleIndustrySelected = (industries: string[]) => {
+    setSelectedIndustries(industries);
+    if (industries.length > 0) {
+      setCurrentView('topics');
+    }
   };
 
-  const handleImpactMatrix = () => {
-    setCurrentView('matrix');
+  const handleProceedToMethod = () => {
+    setCurrentView('method');
   };
 
-  const handleBackToOverview = () => {
+  const handleMethodSelected = (method: 'internal' | 'stakeholder') => {
+    setFinalizationMethod(method);
+    if (method === 'internal') {
+      setCurrentView('internal');
+    } else {
+      setCurrentView('stakeholder');
+    }
+  };
+
+  const handleFinalizeMaterial = (topics: MaterialTopic[]) => {
+    setFinalizedTopics(topics);
+    // Save to localStorage for ESG Metrics
+    localStorage.setItem('finalizedMaterialTopics', JSON.stringify(topics));
     setCurrentView('overview');
   };
 
-  const handleUpdatePrioritization = (updatedTopics: any[]) => {
-    console.log('Updated prioritizations:', updatedTopics);
+  const handleBack = () => {
+    switch (currentView) {
+      case 'industry':
+        setCurrentView('overview');
+        break;
+      case 'topics':
+        setCurrentView('industry');
+        break;
+      case 'method':
+        setCurrentView('topics');
+        break;
+      case 'internal':
+      case 'stakeholder':
+        setCurrentView('method');
+        break;
+      default:
+        setCurrentView('overview');
+    }
   };
 
-  if (currentView === 'assessment') {
-    return (
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Materiality Assessment</h1>
-            <p className="text-muted-foreground mt-2">
-              Comprehensive ESG materiality analysis with stakeholder input
-            </p>
-          </div>
-          <Button variant="outline" onClick={handleBackToOverview}>
-            Back to Overview
-          </Button>
-        </div>
-        
-        <CheQMateriality />
-      </div>
-    );
-  }
+  const handleUpdatePrioritization = (updatedTopics: MaterialTopic[]) => {
+    setMaterialTopics(updatedTopics);
+  };
 
   if (currentView === 'industry') {
     return (
       <div className="container mx-auto p-6 space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Industry Analysis</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Industry Selection</h1>
             <p className="text-muted-foreground mt-2">
-              Select industries to customize material topics for your organization
+              Select your industry to get relevant SASB/GRI material topics
             </p>
           </div>
-          <Button variant="outline" onClick={handleBackToOverview}>
-            Back to Overview
+          <Button variant="outline" onClick={handleBack}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
           </Button>
         </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
-              Select Your Industry
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              Choose your primary industry to get relevant material topics and benchmarks.
+        <IndustrySelection
+          selectedIndustries={selectedIndustries}
+          onIndustryChange={(industryId, checked) => {
+            if (checked) {
+              setSelectedIndustries([...selectedIndustries, industryId]);
+            } else {
+              setSelectedIndustries(selectedIndustries.filter(id => id !== industryId));
+            }
+          }}
+          onClearSelection={() => setSelectedIndustries([])}
+          onUpdateMatrix={() => handleIndustrySelected(selectedIndustries)}
+        />
+      </div>
+    );
+  }
+
+  if (currentView === 'topics') {
+    const topicsByCategory = materialTopics.reduce((acc, topic) => {
+      if (!acc[topic.category]) {
+        acc[topic.category] = [];
+      }
+      acc[topic.category].push(topic);
+      return acc;
+    }, {} as Record<string, MaterialTopic[]>);
+
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Material Topics</h1>
+            <p className="text-muted-foreground mt-2">
+              Review industry-specific SASB/GRI material topics by category
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {industries.map((industry) => (
-                <Button 
-                  key={industry.id} 
-                  variant={selectedIndustries.includes(industry.id) ? "default" : "outline"} 
-                  className="h-auto p-4 text-left"
-                  onClick={() => {
-                    if (selectedIndustries.includes(industry.id)) {
-                      setSelectedIndustries(selectedIndustries.filter(id => id !== industry.id));
-                    } else {
-                      setSelectedIndustries([...selectedIndustries, industry.id]);
-                    }
-                  }}
-                >
-                  {industry.name}
-                </Button>
-              ))}
-            </div>
-            {selectedIndustries.length > 0 && (
-              <div className="mt-4">
-                <h4 className="text-sm font-medium mb-2">Selected Industries:</h4>
-                <div className="flex flex-wrap gap-2">
-                  {selectedIndustries.map(industryId => {
-                    const industry = industries.find(i => i.id === industryId);
-                    return (
-                      <div key={industryId} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
-                        {industry?.name}
+          </div>
+          <Button variant="outline" onClick={handleBack}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+        </div>
+
+        <div className="space-y-6">
+          {['Environment', 'Social', 'Governance'].map(category => (
+            <Card key={category}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <div
+                    className="w-4 h-4 rounded-full"
+                    style={{ backgroundColor: topicColors[category as keyof typeof topicColors] }}
+                  />
+                  {category} Topics
+                </CardTitle>
+                <CardDescription>
+                  {topicsByCategory[category]?.length || 0} topics available
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {topicsByCategory[category]?.map(topic => (
+                    <div key={topic.id} className="border rounded-lg p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-medium">{topic.name}</h4>
+                        <Badge variant="outline" className="text-xs">
+                          {topic.framework}
+                        </Badge>
                       </div>
-                    );
-                  })}
+                      <p className="text-sm text-muted-foreground mb-3">
+                        {topic.description}
+                      </p>
+                      <div className="text-xs text-muted-foreground">
+                        Relevant to: {topic.industryRelevance.slice(0, 3).join(', ')}
+                        {topic.industryRelevance.length > 3 && ' +more'}
+                      </div>
+                    </div>
+                  )) || (
+                    <div className="col-span-full text-center text-muted-foreground py-8">
+                      No {category.toLowerCase()} topics available for selected industries
+                    </div>
+                  )}
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-2"
-                  onClick={() => setSelectedIndustries([])}
-                >
-                  Clear Selection
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="flex justify-end">
+          <Button onClick={handleProceedToMethod} disabled={materialTopics.length === 0}>
+            Proceed to Finalization
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentView === 'method') {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Finalization Method</h1>
+            <p className="text-muted-foreground mt-2">
+              Choose how to finalize your material topics
+            </p>
+          </div>
+          <Button variant="outline" onClick={handleBack}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+        </div>
+        
+        <FinalizationMethodSelector onSelectMethod={handleMethodSelected} />
+      </div>
+    );
+  }
+
+  if (currentView === 'internal') {
+    return (
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Internal Finalization</h1>
+            <p className="text-muted-foreground mt-2">
+              Select material topics with internal team input
+            </p>
+          </div>
+          <Button variant="outline" onClick={handleBack}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+        </div>
+        
+        <InternalFinalization
+          materialTopics={materialTopics.map(topic => ({
+            id: topic.id,
+            name: topic.name,
+            category: topic.category,
+            businessImpact: topic.businessImpact || 5,
+            sustainabilityImpact: topic.sustainabilityImpact || 5,
+            color: topicColors[topic.category as keyof typeof topicColors],
+            description: topic.description,
+            framework: topic.framework
+          }))}
+          onFinalize={(selectedTopics) => {
+            const finalizedWithIndustryRelevance = selectedTopics.map(topic => {
+              const originalTopic = materialTopics.find(mt => mt.id === topic.id);
+              return {
+                ...topic,
+                framework: originalTopic?.framework as 'SASB' | 'GRI' | 'Custom' || 'Custom',
+                industryRelevance: originalTopic?.industryRelevance || []
+              };
+            });
+            handleFinalizeMaterial(finalizedWithIndustryRelevance);
+          }}
+          onBack={handleBack}
+        />
       </div>
     );
   }
@@ -148,60 +276,26 @@ const MaterialityPage = () => {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Stakeholder Engagement</h1>
             <p className="text-muted-foreground mt-2">
-              Create stakeholder groups and collect materiality input
+              Invite stakeholders to prioritize material topics
             </p>
           </div>
-          <Button variant="outline" onClick={handleBackToOverview}>
-            Back to Overview
+          <Button variant="outline" onClick={handleBack}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
           </Button>
         </div>
         
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Stakeholder Groups
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              Engage with different stakeholder groups to understand their sustainability priorities.
-            </p>
-            <div className="space-y-4">
-              {['Investors', 'Customers', 'Employees', 'Suppliers', 'Communities', 'Regulators'].map((group) => (
-                <div key={group} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h3 className="font-medium">{group}</h3>
-                    <p className="text-sm text-muted-foreground">Collect input from {group.toLowerCase()}</p>
-                  </div>
-                  <Button variant="outline">
-                    Start Survey
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+        <StakeholderEngagement
+          selectedIndustries={selectedIndustries}
+          materialTopics={materialTopics}
+          onUpdatePrioritization={handleUpdatePrioritization}
+        />
 
-  if (currentView === 'matrix') {
-    return (
-      <div className="container mx-auto p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Materiality Matrix</h1>
-            <p className="text-muted-foreground mt-2">
-              Visualize topics by business and sustainability impact
-            </p>
-          </div>
-          <Button variant="outline" onClick={handleBackToOverview}>
-            Back to Overview
+        <div className="flex justify-end">
+          <Button onClick={() => handleFinalizeMaterial(materialTopics)}>
+            Finalize Topics
           </Button>
         </div>
-        
-        <CheQMateriality />
       </div>
     );
   }
@@ -249,39 +343,58 @@ const MaterialityPage = () => {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {finalizedTopics.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Finalized Material Topics
+            </CardTitle>
+            <CardDescription>
+              {finalizedTopics.length} topics have been finalized and are ready for ESG metrics configuration
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+              {finalizedTopics.slice(0, 6).map(topic => (
+                <div key={topic.id} className="border rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div
+                      className="w-2 h-2 rounded-full"
+                      style={{ backgroundColor: topicColors[topic.category as keyof typeof topicColors] }}
+                    />
+                    <span className="font-medium text-sm">{topic.name}</span>
+                  </div>
+                  <Badge variant="outline" className="text-xs">
+                    {topic.framework}
+                  </Badge>
+                </div>
+              ))}
+              {finalizedTopics.length > 6 && (
+                <div className="border rounded-lg p-3 flex items-center justify-center text-muted-foreground">
+                  +{finalizedTopics.length - 6} more topics
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
-              Industry Analysis
+              Quick Start Assessment
             </CardTitle>
-            <CardDescription>Analyze material topics by industry</CardDescription>
+            <CardDescription>Complete materiality assessment workflow</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Select your industry to get relevant materiality topics and benchmarks.
+              Follow the guided process: Industry → Topics → Finalization Method → Results
             </p>
-            <Button variant="outline" className="w-full" onClick={handleIndustryAnalysis}>
-              Select Industry
-            </Button>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Stakeholder Engagement
-            </CardTitle>
-            <CardDescription>Collect stakeholder input</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Engage stakeholders to understand their priorities and concerns.
-            </p>
-            <Button variant="outline" className="w-full" onClick={handleStakeholderEngagement}>
-              Start Engagement
+            <Button className="w-full" onClick={handleStartAssessment}>
+              Start Assessment
             </Button>
           </CardContent>
         </Card>
@@ -290,16 +403,24 @@ const MaterialityPage = () => {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2">
               <Grid3X3 className="h-4 w-4" />
-              Impact Matrix
+              ESG Metrics Integration
             </CardTitle>
-            <CardDescription>Visualize material topics</CardDescription>
+            <CardDescription>Configure metrics for finalized topics</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              Generate impact vs. influence matrix for your material topics.
+              {finalizedTopics.length > 0 
+                ? `${finalizedTopics.length} finalized topics ready for metrics configuration`
+                : 'Complete materiality assessment to configure ESG metrics'
+              }
             </p>
-            <Button variant="outline" className="w-full" onClick={handleImpactMatrix}>
-              View Matrix
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              disabled={finalizedTopics.length === 0}
+              onClick={() => window.location.href = '/admin/esg-metrics'}
+            >
+              Configure Metrics
             </Button>
           </CardContent>
         </Card>
