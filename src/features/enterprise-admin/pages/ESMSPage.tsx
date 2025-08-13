@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,16 +6,28 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, Check, X } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Upload, FileText, Check, X, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { httpClient } from '@/lib/httpClient';
 
 interface ESMSDocument {
   id: string;
   title: string;
   subItems?: string[];
-  isUploaded: boolean;
-  isNotApplicable: boolean;
+  fileChange: boolean;
+  isApplicable: string;
   fileName?: string;
+  fileUrl?: string;
 }
 
 interface ESMSDocumentSection {
@@ -26,23 +38,245 @@ interface ESMSDocumentSection {
 }
 
 const ESMSPage: React.FC = () => {
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    sectionId: string;
+    documentId: string;
+    documentTitle: string;
+    fileUrl?: string;
+  }>({
+    open: false,
+    sectionId: '',
+    documentId: '',
+    documentTitle: '',
+    fileUrl: ''
+  });
+
+  const [documentSections, setDocumentSections] = useState<ESMSDocumentSection[]>([
+    {
+      id: 'compliance',
+      title: 'Compliance - Registration/Filing/Returns/Reports',
+      description: 'Legal compliance documents and regulatory registrations',
+      documents: [
+        { id: 'env-clearance', title: 'Environmental clearances', fileChange: false, isApplicable: "yes" },
+        { id: 'hazard-waste', title: 'Hazardous waste authorizations', fileChange: false, isApplicable: "yes" },
+        { id: 'epr-ewaste', title: 'EPR Registration and Filing - E-waste', fileChange: false, isApplicable: "yes" },
+        { id: 'epr-used-oil', title: 'EPR Registration and Filing - Used Oil', fileChange: false, isApplicable: "yes" },
+        { id: 'epr-plastic', title: 'EPR Registration and Filing - Plastic', fileChange: false, isApplicable: "yes" },
+        { id: 'epr-battery', title: 'EPR Registration and Filing - Battery', fileChange: false, isApplicable: "yes" },
+        { id: 'epr-tyre', title: 'EPR Registration and Filing - Tyre', fileChange: false, isApplicable: "yes" },
+        { id: 'waste-recycling', title: 'Authorized waste recycling/disposal certificates', fileChange: false, isApplicable: "yes" },
+        {
+          id: 'pollution-consent',
+          title: 'State Pollution Control Board Consent',
+          subItems: ['Consent to Establish', 'Consent to Operate'],
+          fileChange: false,
+          isApplicable: "yes"
+        },
+        { id: 'trem-card', title: 'TREM Card for Transportation', fileChange: false, isApplicable: "yes" },
+        { id: 'building-stability', title: 'Building Stability Certificate', fileChange: false, isApplicable: "yes" },
+        { id: 'electrical-inspector', title: 'Electrical Inspector for operation of Generator set(s)', fileChange: false, isApplicable: "yes" },
+        { id: 'industrial-order', title: 'Industrial Standing Order approved from Factory Inspector', fileChange: false, isApplicable: "yes" },
+        { id: 'psara-license', title: 'PSARA license of the Security Agency (under Private Security Agency Regulation Act)', fileChange: false, isApplicable: "yes" },
+        { id: 'factory-plan', title: 'Factory Approved Plan by DISH (Dept. of Industrial Safety & Health)', fileChange: false, isApplicable: "yes" },
+        { id: 'env-statement', title: 'Environmental Statement in Form V', fileChange: false, isApplicable: "yes" },
+        { id: 'esia-reports', title: 'Environmental & Social Impact Assessment (ESIA/EIA) Reports', fileChange: false, isApplicable: "yes" },
+        { id: 'bore-well', title: 'Registration Certificate of bore well', fileChange: false, isApplicable: "yes" },
+        { id: 'groundwater-license', title: 'Groundwater use license/registration (Central Ground Water Authority)', fileChange: false, isApplicable: "yes" },
+        { id: 'factories-license', title: 'Factories Act License', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-reg-principal', title: 'Labor Department Registrations - Principal Employer', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-reg-minimum-wages', title: 'Labor Department Registrations - Minimum wages', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-reg-muster-roll', title: 'Labor Department Registrations - Muster roll', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-reg-accident', title: 'Labor Department Registrations - Accident/incident', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-reg-leave-compliance', title: 'Labor Department Registrations - Leave compliance as per S&E Act', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-reg-holiday-list', title: 'Labor Department Registrations - Holiday List as per S&E Act', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-reg-interstate', title: 'Labor Department Registrations - Inter-state Migrant labor Registration', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-reg-construction', title: 'Labor Department Registrations - Building & Other Construction Workers', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-reg-welfare', title: 'Labor Department Registrations - Labor Welfare Fund', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-reg-trade-union', title: 'Labor Department Registrations - Trade Union', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-register-overtime', title: 'Labor Department Registers - Overtime', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-register-wages', title: 'Labor Department Registers - Wages (including deductions, fines, advances)', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-register-attendance', title: 'Labor Department Registers - Muster roll / Attendance', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-register-accident', title: 'Labor Department Registers - Accident/incident', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-register-maternity', title: 'Labor Department Registers - Maternity Benefit register', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-register-grievance', title: 'Labor Department Registers - Grievance Register', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-returns-factory', title: 'Labor Department Annual returns filing - Factory Annual Return (Form 21)', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-returns-minimum-wages', title: 'Labor Department Annual returns filing - Minimum wages', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-returns-muster-roll', title: 'Labor Department Annual returns filing - Muster roll', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-returns-accident', title: 'Labor Department Annual returns filing - Accident/incident', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-returns-contract', title: 'Labor Department Annual returns filing - Contract labor', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-returns-maternity', title: 'Labor Department Annual returns filing - Maternity Benefits', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-returns-interstate', title: 'Labor Department Annual returns filing - Inter-state Migrant labor', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-returns-construction', title: 'Labor Department Annual returns filing - Building & Other Construction Workers', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-returns-welfare', title: 'Labor Department Annual returns filing - Labor Welfare Fund', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-returns-trade-union', title: 'Labor Department Annual returns filing - Trade Union', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-returns-posh', title: 'Labor Department Annual returns filing - POSH', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-returns-gratuity', title: 'Labor Department Annual returns filing - Gratuity', fileChange: false, isApplicable: "yes" },
+        { id: 'labor-returns-bonus', title: 'Labor Department Annual returns filing - Payment of Bonus', fileChange: false, isApplicable: "yes" },
+        { id: 'display-abstracts', title: 'Display Requirements- Facility - Abstracts of major Acts (Wages, Bonus, Equal Remuneration, Minimum Wage, Child Labour, etc.)', fileChange: false, isApplicable: "yes" },
+        { id: 'display-name-address', title: 'Display Requirements- Facility - Name & address of the establishment', fileChange: false, isApplicable: "yes" },
+        { id: 'display-working-hours', title: 'Display Requirements- Facility - Working hours', fileChange: false, isApplicable: "yes" },
+        { id: 'display-holidays', title: 'Display Requirements- Facility - List of holidays', fileChange: false, isApplicable: "yes" },
+        { id: 'display-factory-license', title: 'Display Requirements- Facility - Factory license', fileChange: false, isApplicable: "yes" },
+        { id: 'display-fssai', title: 'Display Requirements- Facility - FSSAI License', fileChange: false, isApplicable: "yes" },
+        { id: 'display-emergency', title: 'Display Requirements- Facility - Emergency Contacts', fileChange: false, isApplicable: "yes" },
+        { id: 'display-grievance', title: 'Display Requirements- Facility - Grievance Redressal Mechanism Policy and Procedure (English and Local language)', fileChange: false, isApplicable: "yes" },
+        { id: 'esic-registration', title: 'ESIC Registration', fileChange: false, isApplicable: "yes" },
+        { id: 'epfo-registration', title: 'EPFO Registration', fileChange: false, isApplicable: "yes" },
+        { id: 'professional-tax', title: 'Professional Tax Registration', fileChange: false, isApplicable: "yes" },
+        { id: 'shops-establishment', title: 'Shops and Establishment Registration', fileChange: false, isApplicable: "yes" },
+        { id: 'building-occupancy', title: 'Building Occupancy Certificate (BOC)', fileChange: false, isApplicable: "yes" },
+        { id: 'fire-noc', title: 'Fire NOC', fileChange: false, isApplicable: "yes" },
+        { id: 'fssai-cert', title: 'FSSAI Certification', fileChange: false, isApplicable: "yes" },
+        { id: 'cdsco-registration', title: 'CDSCO Registration', fileChange: false, isApplicable: "yes" },
+        { id: 'electricity-serc', title: 'Electricity Regulatory Registration - SERC (State Electricity Regulatory Commission)', fileChange: false, isApplicable: "yes" },
+        { id: 'electricity-cerc', title: 'Electricity Regulatory Registration - CERC (Central Electricity Regulatory Commission)', fileChange: false, isApplicable: "yes" },
+        { id: 'msme-registration', title: 'MSME (Udyam) Registration', fileChange: false, isApplicable: "yes" },
+        { id: 'ssi-registration', title: 'National Small-Scale Industries Registration', fileChange: false, isApplicable: "yes" },
+        { id: 'iec-certificate', title: 'Importer-Exporter Code Certificate', fileChange: false, isApplicable: "yes" },
+        { id: 'trade-license', title: 'Trade License', fileChange: false, isApplicable: "yes" },
+        { id: 'legal-metrology', title: 'Legal Metrology Certificate', fileChange: false, isApplicable: "yes" },
+        { id: 'bis-certificate', title: 'BIS Certificate', fileChange: false, isApplicable: "yes" },
+        { id: 'rohs-certificate', title: 'RoHS Certificate', fileChange: false, isApplicable: "yes" },
+      ]
+    },
+    {
+      id: 'policies',
+      title: 'Policies/SOPs',
+      description: 'Corporate policies and standard operating procedures',
+      documents: [
+        { id: 'esg-policy', title: 'Environmental, Social, and Governance Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'code-conduct', title: 'Code of Conduct and Business Ethics', fileChange: false, isApplicable: "yes" },
+        { id: 'ehs-policy', title: 'Environment, Health, Safety (EHS) Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'human-rights', title: 'Human Rights and Fair Labor Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'equal-opportunity', title: 'Equal Opportunity Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'diversity-policy', title: 'Diversity, Equity & Inclusion Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'gender-equality', title: 'Gender Equality Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'employee-handbook', title: 'Employee Handbook', fileChange: false, isApplicable: "yes" },
+        { id: 'hr-policy', title: 'HR Policy and Procedures', fileChange: false, isApplicable: "yes" },
+        { id: 'anti-bribery', title: 'Anti-Bribery and Anti-Corruption Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'whistleblower', title: 'Whistleblower Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'grievance-redressal', title: 'Grievance Redressal Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'responsible-sourcing', title: 'Responsible Sourcing & Supply Chain Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'stakeholder-engagement', title: 'Stakeholder Engagement Plan', fileChange: false, isApplicable: "yes" },
+        { id: 'community-development', title: 'Community Development Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'data-privacy', title: 'Data Privacy and Protection Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'occupational-health', title: 'Occupational Health and Safety Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'energy-management', title: 'Energy Management Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'biodiversity-conservation', title: 'Biodiversity Conservation Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'waste-management', title: 'Waste Management Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'water-resource', title: 'Water Resource Management Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'land-acquisition', title: 'Land Acquisition and Resettlement Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'child-labor', title: 'Child Labor & Forced Labor Prohibition Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'retrenchment-policy', title: 'Retrenchment Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'posh-policy', title: 'Prevention of Sexual Harassment (POSH) Policy', fileChange: false, isApplicable: "yes" },
+        { id: 'risk-management', title: 'Risk Management Framework (including E&S risks)', fileChange: false, isApplicable: "yes" },
+        { id: 'materiality-assessment', title: 'Materiality Assessment Framework', fileChange: false, isApplicable: "yes" },
+        { id: 'supplier-code', title: 'Supplier Code of Conduct', fileChange: false, isApplicable: "yes" },
+        { id: 'monitoring-sop', title: 'Monitoring & Measurement SOP (for ESG KPIs and compliance tracking)', fileChange: false, isApplicable: "yes" },
+        { id: 'record-keeping', title: 'Record Keeping & Documentation SOP', fileChange: false, isApplicable: "yes" },
+        { id: 'hira', title: 'Hazard Identification and Risk Assessment (HIRA)', fileChange: false, isApplicable: "yes" },
+        { id: 'ppe-usage', title: 'PPE Usage Policy and SOP', fileChange: false, isApplicable: "yes" },
+        { id: 'job-safety', title: 'Job/Process Safety Analysis', fileChange: false, isApplicable: "yes" },
+        { id: 'legal-compliance', title: 'Legal Compliance Register', fileChange: false, isApplicable: "yes" },
+        { id: 'emergency-response', title: 'Emergency Response and Preparedness Plan', fileChange: false, isApplicable: "yes" },
+        { id: 'fire-safety', title: 'Fire and Electrical Safety Certificates and SOP', fileChange: false, isApplicable: "yes" },
+        { id: 'incident-management', title: 'Incident Management Policy and Register', fileChange: false, isApplicable: "yes" },
+        { id: 'first-aid', title: 'First Aid Policy and Consumption Records', fileChange: false, isApplicable: "yes" },
+      ]
+    }
+  ]);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const getUserEntityId = () => {
+    try {
+      const user = localStorage.getItem('fandoro-user');
+      if (user) {
+        const parsedUser = JSON.parse(user);
+        return parsedUser?.entityId || null;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error parsing user data:", error);
+      return null;
+    }
+  };
+  const entityId = getUserEntityId();
+  const token = localStorage.getItem('fandoro-token');
+
+  useEffect(() => {
+    if (entityId) {
+      loadESMSData();
+    }
+  }, [entityId]);
+
+  const loadESMSData = async () => {
+    try {
+      setIsLoading(true);
+      const response: any = await httpClient.get(`document/esms/${entityId}`);
+      if (response.data && response.data.data) {
+        const savedData = response.data.data;
+
+        setDocumentSections(prevSections =>
+          prevSections.map(section => ({
+            ...section,
+            documents: section.documents.map(doc => {
+              const fieldName = doc.id.replace(/-/g, '_');
+
+              if (savedData[fieldName]) {
+                const savedDoc = savedData[fieldName];
+
+                if (Array.isArray(savedDoc.file_path) && savedDoc.file_path.length > 0) {
+                  const fileUrl = savedDoc.file_path[0];
+                  const transformedUrl = `https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/${fileUrl}`;
+                  return {
+                    id: doc.id,
+                    title: doc.title,
+                    subItems: doc.subItems,
+                    fileChange: true,
+                    isApplicable: "yes",
+                    fileName: savedDoc.file_path[0].split('/').pop() || '',
+                    fileUrl: transformedUrl
+                  };
+                }
+                else if (savedDoc.isApplicable === "no") {
+                  return {
+                    ...doc, // Keep all existing doc properties
+                    isApplicable: "no",
+                    fileChange: false,
+                    fileName: undefined,
+                    fileUrl: undefined
+                  };
+                }
+              }
+              return doc;
+            })
+          }))
+        );
+      }
+    } catch (error) {
+      console.error('Error loading ESMS ', error);
+      toast.error('Failed to load ESMS data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const getDocumentNumber = (sectionIndex: number, docIndex: number, documentId: string): string => {
     const baseNumber = `${sectionIndex + 1}.${docIndex + 1}`;
-    
-    // Handle EPR Registration and Filing sub-items with custom numbering
+
     if (documentId.startsWith('epr-')) {
       const eprSubItems = ['epr-ewaste', 'epr-used-oil', 'epr-plastic', 'epr-battery', 'epr-tyre'];
       const eprIndex = eprSubItems.indexOf(documentId);
       if (eprIndex !== -1) {
-        const letter = String.fromCharCode(97 + eprIndex); // 'a', 'b', 'c', etc.
+        const letter = String.fromCharCode(97 + eprIndex);
         return `${sectionIndex + 1}.3.${letter}`;
       }
     }
-    
-    // Handle Labor Department Registrations sub-items
+
     if (documentId.startsWith('labor-reg-')) {
       const laborRegSubItems = [
-        'labor-reg-principal', 'labor-reg-minimum-wages', 'labor-reg-muster-roll', 
+        'labor-reg-principal', 'labor-reg-minimum-wages', 'labor-reg-muster-roll',
         'labor-reg-accident', 'labor-reg-leave-compliance', 'labor-reg-holiday-list',
         'labor-reg-interstate', 'labor-reg-construction', 'labor-reg-welfare', 'labor-reg-trade-union'
       ];
@@ -52,8 +286,7 @@ const ESMSPage: React.FC = () => {
         return `${sectionIndex + 1}.17.${letter}`;
       }
     }
-    
-    // Handle Labor Department Registers sub-items
+
     if (documentId.startsWith('labor-register-')) {
       const laborRegisterSubItems = [
         'labor-register-overtime', 'labor-register-wages', 'labor-register-attendance',
@@ -65,8 +298,7 @@ const ESMSPage: React.FC = () => {
         return `${sectionIndex + 1}.18.${letter}`;
       }
     }
-    
-    // Handle Labor Department Annual Returns sub-items
+
     if (documentId.startsWith('labor-returns-')) {
       const laborReturnsSubItems = [
         'labor-returns-factory', 'labor-returns-minimum-wages', 'labor-returns-muster-roll',
@@ -80,8 +312,7 @@ const ESMSPage: React.FC = () => {
         return `${sectionIndex + 1}.19.${letter}`;
       }
     }
-    
-    // Handle Display Requirements sub-items
+
     if (documentId.startsWith('display-')) {
       const displaySubItems = [
         'display-abstracts', 'display-name-address', 'display-working-hours', 'display-holidays',
@@ -93,8 +324,7 @@ const ESMSPage: React.FC = () => {
         return `${sectionIndex + 1}.20.${letter}`;
       }
     }
-    
-    // Handle Electricity Regulatory Registration sub-items
+
     if (documentId.startsWith('electricity-')) {
       const electricitySubItems = ['electricity-serc', 'electricity-cerc'];
       const electricityIndex = electricitySubItems.indexOf(documentId);
@@ -103,199 +333,218 @@ const ESMSPage: React.FC = () => {
         return `${sectionIndex + 1}.29.${letter}`;
       }
     }
-    
-    // Adjust numbering for documents after sub-items
-    if (sectionIndex === 0) { // Compliance section
-      if (docIndex >= 7) { // After the 5 EPR items (indices 2-6), adjust by 4
+
+    if (sectionIndex === 0) {
+      if (docIndex >= 7) {
         return `${sectionIndex + 1}.${docIndex - 3}`;
       }
     }
-    
+
     return baseNumber;
   };
 
-  const [documentSections, setDocumentSections] = useState<ESMSDocumentSection[]>([
-    {
-      id: 'compliance',
-      title: 'Compliance - Registration/Filing/Returns/Reports',
-      description: 'Legal compliance documents and regulatory registrations',
-      documents: [
-        { id: 'env-clearance', title: 'Environmental clearances', isUploaded: false, isNotApplicable: false },
-        { id: 'hazard-waste', title: 'Hazardous waste authorizations', isUploaded: false, isNotApplicable: false },
-        { id: 'epr-ewaste', title: 'EPR Registration and Filing - E-waste', isUploaded: false, isNotApplicable: false },
-        { id: 'epr-used-oil', title: 'EPR Registration and Filing - Used Oil', isUploaded: false, isNotApplicable: false },
-        { id: 'epr-plastic', title: 'EPR Registration and Filing - Plastic', isUploaded: false, isNotApplicable: false },
-        { id: 'epr-battery', title: 'EPR Registration and Filing - Battery', isUploaded: false, isNotApplicable: false },
-        { id: 'epr-tyre', title: 'EPR Registration and Filing - Tyre', isUploaded: false, isNotApplicable: false },
-        { id: 'waste-recycling', title: 'Authorized waste recycling/disposal certificates', isUploaded: false, isNotApplicable: false },
-        { 
-          id: 'pollution-consent', 
-          title: 'State Pollution Control Board Consent',
-          subItems: ['Consent to Establish', 'Consent to Operate'],
-          isUploaded: false, 
-          isNotApplicable: false 
-        },
-        { id: 'trem-card', title: 'TREM Card for Transportation', isUploaded: false, isNotApplicable: false },
-        { id: 'building-stability', title: 'Building Stability Certificate', isUploaded: false, isNotApplicable: false },
-        { id: 'electrical-inspector', title: 'Electrical Inspector for operation of Generator set(s)', isUploaded: false, isNotApplicable: false },
-        { id: 'industrial-order', title: 'Industrial Standing Order approved from Factory Inspector', isUploaded: false, isNotApplicable: false },
-        { id: 'psara-license', title: 'PSARA license of the Security Agency (under Private Security Agency Regulation Act)', isUploaded: false, isNotApplicable: false },
-        { id: 'factory-plan', title: 'Factory Approved Plan by DISH (Dept. of Industrial Safety & Health)', isUploaded: false, isNotApplicable: false },
-        { id: 'env-statement', title: 'Environmental Statement in Form V', isUploaded: false, isNotApplicable: false },
-        { id: 'esia-reports', title: 'Environmental & Social Impact Assessment (ESIA/EIA) Reports', isUploaded: false, isNotApplicable: false },
-        { id: 'bore-well', title: 'Registration Certificate of bore well', isUploaded: false, isNotApplicable: false },
-        { id: 'groundwater-license', title: 'Groundwater use license/registration (Central Ground Water Authority)', isUploaded: false, isNotApplicable: false },
-        { id: 'factories-license', title: 'Factories Act License', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-reg-principal', title: 'Labor Department Registrations - Principal Employer', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-reg-minimum-wages', title: 'Labor Department Registrations - Minimum wages', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-reg-muster-roll', title: 'Labor Department Registrations - Muster roll', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-reg-accident', title: 'Labor Department Registrations - Accident/incident', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-reg-leave-compliance', title: 'Labor Department Registrations - Leave compliance as per S&E Act', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-reg-holiday-list', title: 'Labor Department Registrations - Holiday List as per S&E Act', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-reg-interstate', title: 'Labor Department Registrations - Inter-state Migrant labor Registration', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-reg-construction', title: 'Labor Department Registrations - Building & Other Construction Workers', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-reg-welfare', title: 'Labor Department Registrations - Labor Welfare Fund', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-reg-trade-union', title: 'Labor Department Registrations - Trade Union', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-register-overtime', title: 'Labor Department Registers - Overtime', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-register-wages', title: 'Labor Department Registers - Wages (including deductions, fines, advances)', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-register-attendance', title: 'Labor Department Registers - Muster roll / Attendance', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-register-accident', title: 'Labor Department Registers - Accident/incident', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-register-maternity', title: 'Labor Department Registers - Maternity Benefit register', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-register-grievance', title: 'Labor Department Registers - Grievance Register', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-returns-factory', title: 'Labor Department Annual returns filing - Factory Annual Return (Form 21)', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-returns-minimum-wages', title: 'Labor Department Annual returns filing - Minimum wages', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-returns-muster-roll', title: 'Labor Department Annual returns filing - Muster roll', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-returns-accident', title: 'Labor Department Annual returns filing - Accident/incident', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-returns-contract', title: 'Labor Department Annual returns filing - Contract labor', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-returns-maternity', title: 'Labor Department Annual returns filing - Maternity Benefits', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-returns-interstate', title: 'Labor Department Annual returns filing - Inter-state Migrant labor', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-returns-construction', title: 'Labor Department Annual returns filing - Building & Other Construction Workers', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-returns-welfare', title: 'Labor Department Annual returns filing - Labor Welfare Fund', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-returns-trade-union', title: 'Labor Department Annual returns filing - Trade Union', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-returns-posh', title: 'Labor Department Annual returns filing - POSH', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-returns-gratuity', title: 'Labor Department Annual returns filing - Gratuity', isUploaded: false, isNotApplicable: false },
-        { id: 'labor-returns-bonus', title: 'Labor Department Annual returns filing - Payment of Bonus', isUploaded: false, isNotApplicable: false },
-        { id: 'display-abstracts', title: 'Display Requirements- Facility - Abstracts of major Acts (Wages, Bonus, Equal Remuneration, Minimum Wage, Child Labour, etc.)', isUploaded: false, isNotApplicable: false },
-        { id: 'display-name-address', title: 'Display Requirements- Facility - Name & address of the establishment', isUploaded: false, isNotApplicable: false },
-        { id: 'display-working-hours', title: 'Display Requirements- Facility - Working hours', isUploaded: false, isNotApplicable: false },
-        { id: 'display-holidays', title: 'Display Requirements- Facility - List of holidays', isUploaded: false, isNotApplicable: false },
-        { id: 'display-factory-license', title: 'Display Requirements- Facility - Factory license', isUploaded: false, isNotApplicable: false },
-        { id: 'display-fssai', title: 'Display Requirements- Facility - FSSAI License', isUploaded: false, isNotApplicable: false },
-        { id: 'display-emergency', title: 'Display Requirements- Facility - Emergency Contacts', isUploaded: false, isNotApplicable: false },
-        { id: 'display-grievance', title: 'Display Requirements- Facility - Grievance Redressal Mechanism Policy and Procedure (English and Local language)', isUploaded: false, isNotApplicable: false },
-        { id: 'esic-registration', title: 'ESIC Registration', isUploaded: false, isNotApplicable: false },
-        { id: 'epfo-registration', title: 'EPFO Registration', isUploaded: false, isNotApplicable: false },
-        { id: 'professional-tax', title: 'Professional Tax Registration', isUploaded: false, isNotApplicable: false },
-        { id: 'shops-establishment', title: 'Shops and Establishment Registration', isUploaded: false, isNotApplicable: false },
-        { id: 'building-occupancy', title: 'Building Occupancy Certificate (BOC)', isUploaded: false, isNotApplicable: false },
-        { id: 'fire-noc', title: 'Fire NOC', isUploaded: false, isNotApplicable: false },
-        { id: 'fssai-cert', title: 'FSSAI Certification', isUploaded: false, isNotApplicable: false },
-        { id: 'cdsco-registration', title: 'CDSCO Registration', isUploaded: false, isNotApplicable: false },
-        { id: 'electricity-serc', title: 'Electricity Regulatory Registration - SERC (State Electricity Regulatory Commission)', isUploaded: false, isNotApplicable: false },
-        { id: 'electricity-cerc', title: 'Electricity Regulatory Registration - CERC (Central Electricity Regulatory Commission)', isUploaded: false, isNotApplicable: false },
-        { id: 'msme-registration', title: 'MSME (Udyam) Registration', isUploaded: false, isNotApplicable: false },
-        { id: 'ssi-registration', title: 'National Small-Scale Industries Registration', isUploaded: false, isNotApplicable: false },
-        { id: 'iec-certificate', title: 'Importer-Exporter Code Certificate', isUploaded: false, isNotApplicable: false },
-        { id: 'trade-license', title: 'Trade License', isUploaded: false, isNotApplicable: false },
-        { id: 'legal-metrology', title: 'Legal Metrology Certificate', isUploaded: false, isNotApplicable: false },
-        { id: 'bis-certificate', title: 'BIS Certificate', isUploaded: false, isNotApplicable: false },
-        { id: 'rohs-certificate', title: 'RoHS Certificate', isUploaded: false, isNotApplicable: false },
-      ]
-    },
-    {
-      id: 'policies',
-      title: 'Policies/SOPs',
-      description: 'Corporate policies and standard operating procedures',
-      documents: [
-        { id: 'esg-policy', title: 'Environmental, Social, and Governance Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'code-conduct', title: 'Code of Conduct and Business Ethics', isUploaded: false, isNotApplicable: false },
-        { id: 'ehs-policy', title: 'Environment, Health, Safety (EHS) Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'human-rights', title: 'Human Rights and Fair Labor Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'equal-opportunity', title: 'Equal Opportunity Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'diversity-policy', title: 'Diversity, Equity & Inclusion Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'gender-equality', title: 'Gender Equality Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'employee-handbook', title: 'Employee Handbook', isUploaded: false, isNotApplicable: false },
-        { id: 'hr-policy', title: 'HR Policy and Procedures', isUploaded: false, isNotApplicable: false },
-        { id: 'anti-bribery', title: 'Anti-Bribery and Anti-Corruption Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'whistleblower', title: 'Whistleblower Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'grievance-redressal', title: 'Grievance Redressal Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'responsible-sourcing', title: 'Responsible Sourcing & Supply Chain Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'stakeholder-engagement', title: 'Stakeholder Engagement Plan', isUploaded: false, isNotApplicable: false },
-        { id: 'community-development', title: 'Community Development Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'data-privacy', title: 'Data Privacy and Protection Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'occupational-health', title: 'Occupational Health and Safety Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'energy-management', title: 'Energy Management Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'biodiversity-conservation', title: 'Biodiversity Conservation Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'waste-management', title: 'Waste Management Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'water-resource', title: 'Water Resource Management Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'land-acquisition', title: 'Land Acquisition and Resettlement Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'child-labor', title: 'Child Labor & Forced Labor Prohibition Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'retrenchment-policy', title: 'Retrenchment Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'posh-policy', title: 'Prevention of Sexual Harassment (POSH) Policy', isUploaded: false, isNotApplicable: false },
-        { id: 'risk-management', title: 'Risk Management Framework (including E&S risks)', isUploaded: false, isNotApplicable: false },
-        { id: 'materiality-assessment', title: 'Materiality Assessment Framework', isUploaded: false, isNotApplicable: false },
-        { id: 'supplier-code', title: 'Supplier Code of Conduct', isUploaded: false, isNotApplicable: false },
-        { id: 'monitoring-sop', title: 'Monitoring & Measurement SOP (for ESG KPIs and compliance tracking)', isUploaded: false, isNotApplicable: false },
-        { id: 'record-keeping', title: 'Record Keeping & Documentation SOP', isUploaded: false, isNotApplicable: false },
-        { id: 'hira', title: 'Hazard Identification and Risk Assessment (HIRA)', isUploaded: false, isNotApplicable: false },
-        { id: 'ppe-usage', title: 'PPE Usage Policy and SOP', isUploaded: false, isNotApplicable: false },
-        { id: 'job-safety', title: 'Job/Process Safety Analysis', isUploaded: false, isNotApplicable: false },
-        { id: 'legal-compliance', title: 'Legal Compliance Register', isUploaded: false, isNotApplicable: false },
-        { id: 'emergency-response', title: 'Emergency Response and Preparedness Plan', isUploaded: false, isNotApplicable: false },
-        { id: 'fire-safety', title: 'Fire and Electrical Safety Certificates and SOP', isUploaded: false, isNotApplicable: false },
-        { id: 'incident-management', title: 'Incident Management Policy and Register', isUploaded: false, isNotApplicable: false },
-        { id: 'first-aid', title: 'First Aid Policy and Consumption Records', isUploaded: false, isNotApplicable: false },
-      ]
-    }
-  ]);
-
-  const handleFileUpload = (sectionId: string, documentId: string, event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (sectionId: string, documentId: string, event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      const fileName = files[0].name;
-      setDocumentSections(prev => prev.map(section => 
-        section.id === sectionId 
-          ? {
-              ...section,
-              documents: section.documents.map(doc => 
-                doc.id === documentId 
-                  ? { ...doc, isUploaded: true, fileName }
-                  : doc
-              )
-            }
-          : section
-      ));
-      toast.success(`Document "${fileName}" uploaded successfully`);
+      try {
+        const fileName = files[0].name;
+        const formData = new FormData();
+
+        const fieldName = documentId.replace(/-/g, '_') + '_file';
+        formData.append(fieldName, files[0]);
+
+        const dataToSave = {
+          entityId: entityId,
+          [documentId.replace(/-/g, '_')]: {
+            file_path: [fileName],
+            fileChange: true
+          }
+        };
+
+        formData.append('data', JSON.stringify(dataToSave));
+
+        for (let [key, value] of formData.entries()) {
+          console.log(key, value.constructor.name, value);
+        }
+        const response = await fetch('http://localhost:3002/document/esms', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Server error:', errorText);
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        
+        await loadESMSData();
+        toast.success(`Document "${fileName}" uploaded successfully`);
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        toast.error('Failed to upload document');
+      }
     }
   };
 
-  const handleNotApplicableToggle = (sectionId: string, documentId: string, checked: boolean) => {
-    setDocumentSections(prev => prev.map(section => 
-      section.id === sectionId 
-        ? {
+  const handleNotApplicableToggle = async (sectionId: string, documentId: string, checked: boolean) => {
+    try {
+      setDocumentSections(prev =>
+        prev.map(section => {
+          if (section.id === sectionId) {
+            return {
+              ...section,
+              documents: section.documents.map(doc => {
+                if (doc.id === documentId) {
+                  return {
+                    ...doc,
+                    isApplicable: checked ? "no" : "yes",
+                    fileChange: checked ? false : doc.fileChange,
+                    fileName: checked ? undefined : doc.fileName
+                  };
+                }
+                return doc;
+              })
+            };
+          }
+          return section;
+        })
+      );
+
+      const dataToSave = {
+        entityId: entityId,
+        [documentId.replace(/-/g, '_')]: {
+          answer: checked ? "no" : "yes",
+          isApplicable: checked ? "no" : "yes",
+          fileChange: checked ? false : true
+        }
+      };
+
+      await httpClient.post('document/esms', {
+        data: JSON.stringify(dataToSave)
+      });
+
+      toast.success('Status updated successfully');
+    } catch (error) {
+      console.error('Error updating document status:', error);
+      toast.error('Failed to update document status');
+    }
+  };
+
+  const handleDeleteDocument = async (sectionId: string, documentId: string, documentTitle: string, fileUrl?: string) => {
+    try {
+      setDeleteDialog({
+        open: true,
+        sectionId,
+        documentId,
+        documentTitle,
+        fileUrl
+      });
+    } catch (error) {
+      console.error('Error initiating document deletion:', error);
+      toast.error('Failed to initiate document deletion');
+    }
+  };
+
+  const confirmDeleteDocument = async () => {
+    try {
+      const { sectionId, documentId, documentTitle, fileUrl } = deleteDialog;
+
+      if (fileUrl) {
+        const filePath = fileUrl.replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/', '');
+
+        const payload :any = {
+          filesToDelete: [filePath]
+        };
+
+        const response = await fetch('http://localhost:3002/document/esms', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            filesToDelete: [filePath],
+          })
+        });
+      }
+      
+      setDocumentSections(prev => prev.map(section =>
+        section.id === sectionId
+          ? {
             ...section,
-            documents: section.documents.map(doc => 
-              doc.id === documentId 
-                ? { ...doc, isNotApplicable: checked, isUploaded: checked ? false : doc.isUploaded, fileName: checked ? undefined : doc.fileName }
+            documents: section.documents.map(doc =>
+              doc.id === documentId
+                ? { ...doc, fileChange: false, fileName: undefined, fileUrl: undefined }
                 : doc
             )
           }
-        : section
-    ));
+          : section
+      ));
+
+      toast.success(`Document "${documentTitle}" has been archived`);
+      setDeleteDialog({ open: false, sectionId: '', documentId: '', documentTitle: '', fileUrl: '' });
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast.error('Failed to archive document');
+    }
   };
 
   const calculateSectionProgress = (section: ESMSDocumentSection) => {
-    const applicableDocuments = section.documents.filter(doc => !doc.isNotApplicable);
-    const uploadedDocuments = applicableDocuments.filter(doc => doc.isUploaded);
+    const applicableDocuments = section.documents.filter(doc => doc.isApplicable === "yes");
+    const uploadedDocuments = applicableDocuments.filter(doc => doc.fileChange);
     return applicableDocuments.length > 0 ? (uploadedDocuments.length / applicableDocuments.length) * 100 : 100;
   };
 
   const calculateOverallProgress = () => {
-    const allApplicableDocuments = documentSections.flatMap(section => 
-      section.documents.filter(doc => !doc.isNotApplicable)
+    const allApplicableDocuments = documentSections.flatMap(section =>
+      section.documents.filter(doc => doc.isApplicable === "yes")
     );
-    const allUploadedDocuments = allApplicableDocuments.filter(doc => doc.isUploaded);
+    const allUploadedDocuments = allApplicableDocuments.filter(doc => doc.fileChange);
     return allApplicableDocuments.length > 0 ? (allUploadedDocuments.length / allApplicableDocuments.length) * 100 : 100;
+  };
+
+  const handleViewFile = (fileUrl: string) => {
+    if (fileUrl) {
+      window.open(fileUrl, '_blank');
+    }
+  };
+
+  const saveAllDocuments = async () => {
+    try {
+      setIsLoading(true);
+
+      const dataToSave: any = {
+        entityId: entityId
+      };
+
+      documentSections.forEach(section => {
+        section.documents.forEach(doc => {
+          const fieldKey = doc.id.replace(/-/g, '_');
+          dataToSave[fieldKey] = {
+            fileChange: doc.fileChange,
+            isApplicable: doc.isApplicable,
+            fileName: doc.fileName,
+            fileUrl: doc.fileUrl
+          };
+        });
+      });
+
+      await httpClient.post('document/esms', {
+        data: JSON.stringify(dataToSave)
+      });
+
+      toast.success('Data saved successfully');
+    } catch (error) {
+      console.error('Error saving documents:', error);
+      toast.error('Failed to save documents');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -307,7 +556,6 @@ const ESMSPage: React.FC = () => {
         </p>
       </div>
 
-      {/* Overall Progress */}
       <Card>
         <CardHeader>
           <CardTitle>ESMS Completion Progress</CardTitle>
@@ -324,7 +572,7 @@ const ESMSPage: React.FC = () => {
               </div>
               <Progress value={calculateOverallProgress()} className="h-3" />
             </div>
-            
+
             {documentSections.map(section => (
               <div key={section.id}>
                 <div className="flex justify-between text-sm mb-2">
@@ -338,7 +586,6 @@ const ESMSPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Document Sections */}
       {documentSections.map((section, sectionIndex) => (
         <Card key={section.id}>
           <CardHeader>
@@ -353,7 +600,7 @@ const ESMSPage: React.FC = () => {
                 </div>
               </div>
               <Badge variant="outline">
-                {section.documents.filter(doc => !doc.isNotApplicable && doc.isUploaded).length} / {section.documents.filter(doc => !doc.isNotApplicable).length} completed
+                {section.documents.filter(doc => doc.isApplicable === "yes" && doc.fileChange).length} / {section.documents.filter(doc => doc.isApplicable === "yes").length} completed
               </Badge>
             </div>
           </CardHeader>
@@ -368,19 +615,19 @@ const ESMSPage: React.FC = () => {
                           {getDocumentNumber(sectionIndex, docIndex, document.id)}
                         </span>
                         <h4 className="font-medium">{document.title}</h4>
-                        {document.isUploaded && (
+                        {document.fileChange && (
                           <Badge variant="default" className="ml-2">
                             <Check className="w-3 h-3 mr-1" />
                             Uploaded
                           </Badge>
                         )}
-                        {document.isNotApplicable && (
+                        {/* {document.isApplicable && (
                           <Badge variant="secondary" className="ml-2">
                             N/A
                           </Badge>
-                        )}
+                        )} */}
                       </div>
-                      
+
                       {document.subItems && document.subItems.length > 0 && (
                         <div className="ml-4 mt-2">
                           <p className="text-sm text-muted-foreground mb-1">Sub-items:</p>
@@ -409,7 +656,7 @@ const ESMSPage: React.FC = () => {
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id={`na-${document.id}`}
-                          checked={document.isNotApplicable}
+                          checked={document.isApplicable === "no"}
                           onCheckedChange={(checked) => handleNotApplicableToggle(section.id, document.id, checked as boolean)}
                         />
                         <Label htmlFor={`na-${document.id}`} className="text-sm">
@@ -417,23 +664,55 @@ const ESMSPage: React.FC = () => {
                         </Label>
                       </div>
 
-                      {!document.isNotApplicable && (
+                      {document.isApplicable === "yes" && (
                         <div className="flex items-center gap-2">
                           <Input
                             type="file"
                             id={`upload-${section.id}-${document.id}`}
                             className="hidden"
-                            onChange={(e) => handleFileUpload(section.id, document.id, e)}
+                            onChange={(e) => {
+                              handleFileUpload(section.id, document.id, e);
+                            }}
                             accept=".pdf,.doc,.docx,.xlsx,.xls"
                           />
-                          <Button 
-                            variant="outline" 
+
+                          <Button
+                            variant="outline"
                             size="sm"
-                            onClick={() => window.document.getElementById(`upload-${section.id}-${document.id}`)?.click()}
+                            onClick={() => {
+                              const fileInput = window.document.getElementById(`upload-${section.id}-${document.id}`);
+                              if (fileInput) {
+                                fileInput.click();
+                              }
+                            }}
+                            disabled={isLoading}
                           >
                             <Upload className="w-4 h-4 mr-2" />
-                            {document.isUploaded ? 'Replace' : 'Upload'}
+                            {document.fileChange ? 'Replace' : 'Upload'}
                           </Button>
+                          {document.fileChange && (
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewFile(document.fileUrl)}
+                                className="text-blue-600 hover:text-blue-800"
+                                disabled={isLoading}
+                              >
+                                <FileText className="w-4 h-4 mr-1" />
+                                View
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteDocument(section.id, document.id, document.title, document.fileUrl)}
+                                className="text-destructive hover:text-destructive"
+                                disabled={isLoading}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -444,6 +723,37 @@ const ESMSPage: React.FC = () => {
           </CardContent>
         </Card>
       ))}
+
+      <div className="flex justify-end">
+        <Button
+          onClick={saveAllDocuments}
+          disabled={isLoading}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          {isLoading ? 'Saving...' : 'Save All Documents'}
+        </Button>
+      </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Document</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deleteDialog.documentTitle}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteDocument}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
