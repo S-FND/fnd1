@@ -650,7 +650,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
                                  <div className="flex-1">
                                    <FlexibleDataInput
                                      metric={metric}
-                                     value={period.value}
+                                     value={bulkEntries[`${metric.id}_${period.period}`] || ''}
                                      onChange={(value) => {
                                        // Update the period value in bulk entries
                                        setBulkEntries(prev => ({ 
