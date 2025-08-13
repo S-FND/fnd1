@@ -12,6 +12,7 @@ import FinalizationMethodSelector from '../components/materiality/FinalizationMe
 import InternalFinalization from '../components/materiality/InternalFinalization';
 import { industries } from '../data/materiality';
 import { MaterialTopic, getTopicsByIndustry, getCombinedTopics, topicColors } from '../data/frameworkTopics';
+import { AutosaveForm } from '@/components/portfolio/AutosaveForm';
 
 const MaterialityPage = () => {
   const { isLoading } = useRouteProtection(['admin', 'manager', 'unit_admin']);
@@ -21,6 +22,29 @@ const MaterialityPage = () => {
   const [materialTopics, setMaterialTopics] = useState<MaterialTopic[]>([]);
   const [finalizationMethod, setFinalizationMethod] = useState<'internal' | 'stakeholder' | null>(null);
   const [finalizedTopics, setFinalizedTopics] = useState<MaterialTopic[]>([]);
+
+  // Load saved data on mount
+  useEffect(() => {
+    const savedData = localStorage.getItem('materialityAssessmentData');
+    if (savedData) {
+      const parsed = JSON.parse(savedData);
+      setCurrentView(parsed.currentView || 'overview');
+      setSelectedIndustries(parsed.selectedIndustries || []);
+      setFinalizationMethod(parsed.finalizationMethod || null);
+      setFinalizedTopics(parsed.finalizedTopics || []);
+    }
+  }, []);
+
+  // Save data whenever state changes
+  useEffect(() => {
+    const dataToSave = {
+      currentView,
+      selectedIndustries,
+      finalizationMethod,
+      finalizedTopics
+    };
+    localStorage.setItem('materialityAssessmentData', JSON.stringify(dataToSave));
+  }, [currentView, selectedIndustries, finalizationMethod, finalizedTopics]);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;

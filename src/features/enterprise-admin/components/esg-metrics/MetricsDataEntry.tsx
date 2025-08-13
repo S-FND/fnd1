@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { ESGMetricWithTracking } from '../../data/esgMetricsData';
 import FlexibleDataInput from './FlexibleDataInput';
+import { AutosaveForm } from '@/components/portfolio/AutosaveForm';
 
 interface MaterialTopic {
   id: string;

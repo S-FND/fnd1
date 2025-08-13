@@ -7,6 +7,7 @@ import { companySchema, CompanyFormData } from './schemas/companySchema';
 import { defaultCompanyData } from './data/defaultCompanyData';
 import CompanyEditForm from './CompanyEditForm';
 import CompanyDisplay from './CompanyDisplay';
+import { AutosaveForm } from '@/components/portfolio/AutosaveForm';
 
 const EditableCompanyProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -42,13 +43,21 @@ const EditableCompanyProfile = () => {
 
   if (isEditing) {
     return (
-      <div className="space-y-6">
-        <CompanyEditForm 
-          form={form} 
-          onSubmit={onSubmit} 
-          onCancel={handleCancel} 
-        />
-      </div>
+      <AutosaveForm
+        entityType="company_profile"
+        defaultValues={form.getValues()}
+        onSubmit={onSubmit}
+        debounceMs={2000}
+        className="space-y-6"
+      >
+        {(autosaveForm) => (
+          <CompanyEditForm 
+            form={autosaveForm} 
+            onSubmit={onSubmit} 
+            onCancel={handleCancel} 
+          />
+        )}
+      </AutosaveForm>
     );
   }
 

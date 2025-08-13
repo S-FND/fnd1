@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import OutsourcedServicesSection from './OutsourcedServicesSection';
 import { OutsourcedService } from './types';
+import { AutosaveForm } from '@/components/portfolio/AutosaveForm';
 
 interface EmployeeData {
   function: string;
