@@ -10,6 +10,7 @@ import {
 } from 'recharts';
 import { TrendingUp, TrendingDown, BarChart3, PieChart as PieChartIcon, Building2 } from 'lucide-react';
 import { ESGMetricWithTracking } from '../../data/esgMetricsData';
+import { SmartChart } from '@/components/charts/SmartChart';
 
 interface MetricDataEntry {
   id: string;
@@ -317,29 +318,14 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
                         </CardHeader>
                         <CardContent>
                           {chartData.length > 0 ? (
-                            <ResponsiveContainer width="100%" height={250}>
-                              <LineChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                                <XAxis 
-                                  dataKey="month" 
-                                  tick={{ fontSize: 12 }}
-                                  interval="preserveStartEnd"
-                                />
-                                <YAxis tick={{ fontSize: 12 }} />
-                                <Tooltip 
-                                  labelFormatter={(label) => `Period: ${label}`}
-                                  formatter={(value) => [value, metric.unit]}
-                                />
-                                <Line 
-                                  type="monotone" 
-                                  dataKey="value" 
-                                  stroke="hsl(var(--primary))" 
-                                  strokeWidth={2}
-                                  dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
-                                  activeDot={{ r: 6, stroke: 'hsl(var(--primary))', strokeWidth: 2 }}
-                                />
-                              </LineChart>
-                            </ResponsiveContainer>
+                            <SmartChart
+                              data={chartData}
+                              dataKey="value"
+                              xAxisKey="month"
+                              title={metric.name}
+                              unit={metric.unit}
+                              height={250}
+                            />
                           ) : (
                             <div className="text-center py-12 text-muted-foreground">
                               <BarChart3 className="h-8 w-8 mx-auto mb-2 opacity-50" />
