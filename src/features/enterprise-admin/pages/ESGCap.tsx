@@ -21,6 +21,7 @@ const ESGCapPage = () => {
   const [sortConfig, setSortConfig] = useState<{ key: keyof ESGCapItem; direction: 'asc' | 'desc' } | null>(
     { key: 'deadline', direction: 'asc' }
   );
+  const [items, setItems] = useState<ESGCapItem[]>(mockESGCapItems);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -31,7 +32,7 @@ const ESGCapPage = () => {
   }
 
   // Apply filters and search
-  const filteredItems = mockESGCapItems.filter(item => {
+  const filteredItems = items.filter(item => {
     const matchesSearch = 
       item.issue.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -63,6 +64,15 @@ const ESGCapPage = () => {
       direction = 'desc';
     }
     setSortConfig({ key, direction });
+  };
+
+  // Handle item updates
+  const handleItemUpdate = (updatedItem: ESGCapItem) => {
+    setItems(prevItems => 
+      prevItems.map(item => 
+        item.id === updatedItem.id ? updatedItem : item
+      )
+    );
   };
 
   return (
@@ -100,7 +110,8 @@ const ESGCapPage = () => {
             <ESGCapTable 
               sortedItems={sortedItems} 
               sortConfig={sortConfig} 
-              requestSort={requestSort} 
+              requestSort={requestSort}
+              onItemUpdate={handleItemUpdate}
             />
           </div>
           
