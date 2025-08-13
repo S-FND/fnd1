@@ -201,7 +201,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
           answer: item.isApplicable,
           reason: item.notes || '',
           file_path: [
-            ...(filePaths[key]?.map(path => path.replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/ ', '')) || []),
+            ...(filePaths[key]?.map(path => path.replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/', '')) || []),
             ...item.attachment.map(file => file.name)
           ],
           fileChange: item.attachment.length > 0

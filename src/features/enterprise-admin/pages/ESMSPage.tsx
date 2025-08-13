@@ -19,6 +19,8 @@ import {
 import { Upload, FileText, Check, X, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { httpClient } from '@/lib/httpClient';
+import { ENV } from "@/config/env";
+const API_URL = ENV.API_URL;
 
 interface ESMSDocument {
   id: string;
@@ -366,7 +368,7 @@ const ESMSPage: React.FC = () => {
         for (let [key, value] of formData.entries()) {
           console.log(key, value.constructor.name, value);
         }
-        const response = await fetch('http://localhost:3002/document/esms', {
+        const response = await fetch(`${API_URL}/document/esms`, {
           method: 'POST',
           body: formData,
           headers: {
@@ -461,7 +463,7 @@ const ESMSPage: React.FC = () => {
           filesToDelete: [filePath]
         };
 
-        const response = await fetch('http://localhost:3002/document/esms', {
+        const response = await fetch(`${API_URL}/document/esms`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
