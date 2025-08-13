@@ -1,18 +1,19 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Upload, X } from 'lucide-react';
+import { useIRLData, IRLFile } from '@/hooks/useIRLData';
+import { toast } from 'sonner';
 
 interface ITSecurityItem {
   id: number;
   name: string;
   status: string;
   notes: string;
-  uploadedFiles: File[];
+  uploadedFiles: IRLFile[];
 }
 
 const itSecurityQuestions = [
@@ -28,6 +29,8 @@ const itSecurityQuestions = [
 ];
 
 const IRLITSecurity = () => {
+  const { loadSectionAllData, saveSectionData, uploadMultipleFiles, deleteFile } = useIRLData();
+  const [loading, setLoading] = useState(true);
   const [itSecurityItems, setITSecurityItems] = useState<ITSecurityItem[]>(
     itSecurityQuestions.map((question, index) => ({
       id: index + 1,
@@ -38,50 +41,162 @@ const IRLITSecurity = () => {
     }))
   );
 
-  const handleStatusChange = (id: number, status: string) => {
+  // Load data when component mounts
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const sectionData = await loadSectionAllData('itsecurity');
+      
+      // Update the items with loaded data
+      setITSecurityItems(prevItems => 
+        prevItems.map(item => {
+          const savedData = sectionData[`item-${item.id}`];
+          if (savedData) {
+            return {
+              ...item,
+              status: savedData.value?.status || '',
+              notes: savedData.value?.notes || '',
+              uploadedFiles: savedData.files || []
+            };
+          }
+          return item;
+        })
+      );
+    } catch (error) {
+      console.error('Error loading IT Security data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStatusChange = async (id: number, status: string) => {
     setITSecurityItems(items => 
       items.map(item => item.id === id ? { ...item, status } : item)
     );
+
+    // Save to database immediately
+    const item = itSecurityItems.find(item => item.id === id);
+    if (item) {
+      await saveSectionData('itsecurity', `item-${id}`, {
+        status,
+        notes: item.notes,
+        name: item.name
+      }, item.uploadedFiles);
+    }
   };
 
-  const handleNotesChange = (id: number, notes: string) => {
+  const handleNotesChange = async (id: number, notes: string) => {
     setITSecurityItems(items => 
       items.map(item => item.id === id ? { ...item, notes } : item)
     );
+
+    // Save to database immediately
+    const item = itSecurityItems.find(item => item.id === id);
+    if (item) {
+      await saveSectionData('itsecurity', `item-${id}`, {
+        status: item.status,
+        notes,
+        name: item.name
+      }, item.uploadedFiles);
+    }
   };
 
-  const handleFileUpload = (id: number, files: FileList | null) => {
+  const handleFileUpload = async (id: number, files: FileList | null) => {
     if (!files) return;
     
-    const newFiles = Array.from(files);
-    setITSecurityItems(items => 
-      items.map(item => 
-        item.id === id 
-          ? { ...item, uploadedFiles: [...item.uploadedFiles, ...newFiles] }
-          : item
-      )
-    );
+    try {
+      const uploadedFiles = await uploadMultipleFiles('itsecurity', `item-${id}`, files);
+      
+      setITSecurityItems(items => 
+        items.map(item => 
+          item.id === id 
+            ? { ...item, uploadedFiles: [...item.uploadedFiles, ...uploadedFiles] }
+            : item
+        )
+      );
+
+      // Save to database
+      const updatedItem = itSecurityItems.find(item => item.id === id);
+      if (updatedItem) {
+        await saveSectionData('itsecurity', `item-${id}`, {
+          status: updatedItem.status,
+          notes: updatedItem.notes,
+          name: updatedItem.name
+        }, [...updatedItem.uploadedFiles, ...uploadedFiles]);
+      }
+
+      toast.success(`${uploadedFiles.length} file(s) uploaded successfully`);
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      toast.error('Failed to upload files');
+    }
   };
 
-  const handleRemoveFile = (id: number, fileIndex: number) => {
-    setITSecurityItems(items => 
-      items.map(item => 
-        item.id === id 
-          ? { ...item, uploadedFiles: item.uploadedFiles.filter((_, index) => index !== fileIndex) }
-          : item
-      )
-    );
+  const handleRemoveFile = async (id: number, fileIndex: number) => {
+    const item = itSecurityItems.find(item => item.id === id);
+    if (!item) return;
+
+    const fileToRemove = item.uploadedFiles[fileIndex];
+    
+    try {
+      // Delete from storage if it has a URL (meaning it was uploaded)
+      if ('url' in fileToRemove) {
+        await deleteFile(fileToRemove.url);
+      }
+
+      const updatedFiles = item.uploadedFiles.filter((_, index) => index !== fileIndex);
+      
+      setITSecurityItems(items => 
+        items.map(item => 
+          item.id === id 
+            ? { ...item, uploadedFiles: updatedFiles }
+            : item
+        )
+      );
+
+      // Update database
+      await saveSectionData('itsecurity', `item-${id}`, {
+        status: item.status,
+        notes: item.notes,
+        name: item.name
+      }, updatedFiles);
+
+      toast.success('File removed successfully');
+    } catch (error) {
+      console.error('Error removing file:', error);
+      toast.error('Failed to remove file');
+    }
   };
 
-  const handleSave = () => {
-    console.log('Saving IT Security data:', itSecurityItems);
-    // TODO: Implement save functionality
+  const handleSave = async () => {
+    try {
+      // Save all items
+      for (const item of itSecurityItems) {
+        await saveSectionData('itsecurity', `item-${item.id}`, {
+          status: item.status,
+          notes: item.notes,
+          name: item.name
+        }, item.uploadedFiles);
+      }
+      toast.success('IT Security data saved successfully');
+    } catch (error) {
+      console.error('Error saving data:', error);
+      toast.error('Failed to save data');
+    }
   };
 
   const handleSubmit = () => {
     console.log('Submitting IT Security data:', itSecurityItems);
     // TODO: Implement submit functionality
   };
+
+  if (loading) {
+    return <div className="flex items-center justify-center p-8">Loading...</div>;
+  }
 
   return (
     <Card>
@@ -154,7 +269,9 @@ const IRLITSecurity = () => {
                         <div className="space-y-1">
                           {item.uploadedFiles.map((file, fileIndex) => (
                             <div key={fileIndex} className="flex items-center justify-between bg-gray-50 p-2 rounded text-sm">
-                              <span className="truncate flex-1">{file.name}</span>
+                              <span className="truncate flex-1">
+                                {'name' in file ? file.name : (file as File).name}
+                              </span>
                               <Button
                                 variant="ghost"
                                 size="sm"

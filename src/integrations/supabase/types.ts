@@ -198,6 +198,93 @@ export type Database = {
         }
         Relationships: []
       }
+      esms_documents: {
+        Row: {
+          created_at: string
+          document_id: string
+          file_name: string | null
+          file_size: number | null
+          file_url: string | null
+          id: string
+          is_not_applicable: boolean
+          is_uploaded: boolean
+          mime_type: string | null
+          portfolio_company_id: string | null
+          section_id: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_id: string
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          is_not_applicable?: boolean
+          is_uploaded?: boolean
+          mime_type?: string | null
+          portfolio_company_id?: string | null
+          section_id: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_id?: string
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          is_not_applicable?: boolean
+          is_uploaded?: boolean
+          mime_type?: string | null
+          portfolio_company_id?: string | null
+          section_id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      irl_data: {
+        Row: {
+          created_at: string
+          field_key: string
+          field_value: Json | null
+          files: Json | null
+          id: string
+          portfolio_company_id: string | null
+          section_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          field_key: string
+          field_value?: Json | null
+          files?: Json | null
+          id?: string
+          portfolio_company_id?: string | null
+          section_type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          field_key?: string
+          field_value?: Json | null
+          files?: Json | null
+          id?: string
+          portfolio_company_id?: string | null
+          section_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       maker_checker_rules: {
         Row: {
           action_type: Database["public"]["Enums"]["action_type"]
