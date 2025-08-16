@@ -21,7 +21,7 @@ interface SelectedMetricsListProps {
   selectedMetrics: ESGMetricWithTracking[];
   selectedTopic: MaterialTopic | undefined;
   onEditMetric: (metric: ESGMetricWithTracking) => void;
-  onRemoveMetric: (metricId: string) => void;
+  onRemoveMetric: (metric: ESGMetricWithTracking) => void;
   onSaveConfiguration?: () => void;
   savedMetrics?: ESGMetricWithTracking[];
   onEditSavedMetric?: (metric: ESGMetricWithTracking) => void;
@@ -101,7 +101,8 @@ const SelectedMetricsList: React.FC<SelectedMetricsListProps> = ({
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => onRemoveMetric(metric.code)}
+                      // onClick={() => onRemoveMetric(metric.code)}
+                      onClick={() => onRemoveMetric(metric)}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
