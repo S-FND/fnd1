@@ -101,8 +101,12 @@ const MetricsSelector: React.FC<MetricsSelectorProps> = ({
               </TableRow>
             </TableHeader>
             <TableBody>
+            {/* !savedMetrics.filter((sm) => sm.code == metric.code)[0] */}
               {availableMetrics.map(metric => (
-                !savedMetrics.filter((sm) => sm.code == metric.code)[0]  && <TableRow key={metric.id}>
+                savedMetrics.findIndex(item =>
+                  Object.keys(metric).every(key => item[key] === metric[key])
+                ) < 0
+                  && <TableRow key={metric.id}>
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
                     {metric.name}

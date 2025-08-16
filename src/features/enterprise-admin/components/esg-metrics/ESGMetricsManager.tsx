@@ -266,6 +266,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
       let saveCustomMetric = [...customMetricsList].filter((cm) => cm.topic == topicData[0].topic && cm.industry == topicData[0].industry)
 
       let metricData = getMetricsByIndustryAndTopic(industryList, topicData[0].industry, topicData[0].topic, topicData[0].esg)
+      console.log(`metricData => `, metricData)
       setAvailableMetrics([...metricData, ...customMetrics, ...saveCustomMetric])
     } else {
       // If no topic selected or "all-topics" selected, show all custom metrics as available
@@ -307,8 +308,20 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
     }
   };
 
-  const handleRemoveMetric = (metricId: string) => {
-    setSelectedMetrics(selectedMetrics.filter(m => m.code !== metricId));
+  const handleRemoveMetric = (metric:ESGMetricWithTracking) => {
+    // console.log(`handleRemoveMetric :: handleRemoveMetric :: metric => `, metric)
+    // console.log(`handleRemoveMetric :: handleRemoveMetric :: selectedMetrics => `, selectedMetrics)
+    // console.log(`selectedMetrics.filter(m => m.code !== metricId)`,selectedMetrics.filter(m => m.code !== metric.code && metric.name !== metric.name))
+    // setSelectedMetrics(selectedMetrics.filter(m => m.code !== metricId));
+    let tempSelectedMetrics = [...selectedMetrics]
+    const index = tempSelectedMetrics.findIndex(item =>
+      Object.keys(metric).every(key => item[key] === metric[key])
+    );
+    console.log(`handleRemoveMetric :: index => `, index)
+    if (index > -1) {
+      tempSelectedMetrics.splice(index, 1); // remove it
+    }
+    setSelectedMetrics([...tempSelectedMetrics]);
     toast.success('Metric removed from selection');
   };
 
@@ -376,7 +389,6 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
   };
 
   const handleSaveEdit = async () => {
-    debugger;
     console.log(`handleSaveEdit :: handleSaveEdit `)
     if (editingMetric) {
       const updatedMetric = {
@@ -390,15 +402,37 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
       };
       console.log(`handleSaveEdit :: updatedMetric :: updatedMetric => `, updatedMetric)
       console.log(`handleSaveEdit :: updatedMetric :: selectedMetrics => `, selectedMetrics)
-      setSelectedMetrics(metrics =>
-        metrics.map(m => m.code === editingMetric.code ? updatedMetric : m)
+
+      const index = selectedMetrics.findIndex(item =>
+        Object.keys(editingMetric).every(key => item[key] === editingMetric[key])
       );
+      const tempSelectedMetrics = [...selectedMetrics];
+      if(index >= 0) {
+        tempSelectedMetrics.splice(index, 1,updatedMetric); // remove the old metric
+      }
+      // tempSelectedMetrics[index] = updatedMetric;
+      // setSelectedMetrics(metrics =>
+      //   metrics.map(m => m.code === editingMetric.code ? updatedMetric : m)
+      // );
+      setSelectedMetrics(tempSelectedMetrics);
+
+
+
 
       // Update in saved metrics if it exists there
-      setSavedMetrics(metrics =>
-        metrics.map(m => m.code === editingMetric.code ? updatedMetric : m)
+      const indexSaved = savedMetrics.findIndex(item =>
+        Object.keys(editingMetric).every(key => item[key] === editingMetric[key])
       );
-      let final = savedMetrics.map(m => m.code === editingMetric.code ? updatedMetric : m)
+      const tempSavedMetrics = [...savedMetrics];
+      if(indexSaved >= 0) {
+        tempSavedMetrics.splice(indexSaved, 1,updatedMetric); // remove the old metric
+      }
+      setSavedMetrics(tempSavedMetrics);
+      let final=tempSavedMetrics;
+      // setSavedMetrics(metrics =>
+      //   metrics.map(m => m.code === editingMetric.code ? updatedMetric : m)
+      // );
+      // let final = savedMetrics.map(m => m.code === editingMetric.code ? updatedMetric : m)
 
       // Update in custom metrics if it's a custom metric
       if (editingMetric.source === 'Custom') {
@@ -591,7 +625,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
             metric => !prev.some(m => m.code === metric.code)
           )
         ]);
-
+        // setSelectedTopicId(selectedTopicId)
         setSelectedMetrics([]);
         toast.success(`${selectedMetrics.length} metrics saved successfully`);
         getMaterialityData()

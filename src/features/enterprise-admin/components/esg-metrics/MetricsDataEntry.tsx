@@ -36,8 +36,8 @@ interface MetricDataEntry {
   topicId: string;
   dataType: string;
   financialYear: string;
-  esg:string;
-  industry:string;
+  esg: string;
+  industry: string;
   period?: string; // e.g., "Q1", "January", "Week 1", etc.
   periodIndex?: number; // For ordering periods
 }
@@ -54,7 +54,7 @@ interface MetricPeriod {
 
 interface MetricsDataEntryProps {
   materialTopics: MaterialTopic[];
-  finalMetrics:ESGMetricWithTracking[]
+  finalMetrics: ESGMetricWithTracking[]
 }
 
 const financialYearList = [
@@ -66,7 +66,7 @@ const financialYearList = [
   { value: "2025-2026", label: "2025-2026" },
 ];
 
-const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,finalMetrics}) => {
+const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, finalMetrics }) => {
   const [configuredMetrics, setConfiguredMetrics] = useState<ESGMetricWithTracking[]>([]);
   const [dataEntries, setDataEntries] = useState<MetricDataEntry[]>([]);
   const [selectedMetric, setSelectedMetric] = useState<string>('');
@@ -74,26 +74,27 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
   const [entryDate, setEntryDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [selectedFinancialYear, setSelectedFinancialYear] = useState<string>(financialYearList.reverse()[0].value);
   const [showBulkEntry, setShowBulkEntry] = useState<boolean>(false);
-  const [bulkEntries, setBulkEntries] = useState<{[key: string]: any}>({});
+  const [bulkEntries, setBulkEntries] = useState<{ [key: string]: any }>({});
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
 
 
-  const getMetricsKpiData=async (selectedYear)=>{
+  const getMetricsKpiData = async (selectedYear) => {
     try {
-      let metricDataResponse=await httpClient.get(`materiality/metrics/data-entry?year=${selectedYear}`)
-      console.log('metricDataResponse',metricDataResponse)
-      if(metricDataResponse['data']['status']){
+      let metricDataResponse = await httpClient.get(`materiality/metrics/data-entry?year=${selectedYear}`)
+      // console.log('metricDataResponse', metricDataResponse)
+      if (metricDataResponse['data']['status']) {
         setDataEntries(metricDataResponse['data']['data']['metricsEntries'])
       }
     } catch (error) {
-      
+      console.error("Error fetching metrics KPI data:", error);
+      toast.error('Failed to load metrics data');
     }
-   
+
   }
 
-  const getGraph=()=>{
-    let data=httpClient.get(`materiality/metrics/data-entry/dashboard?year=${selectedFinancialYear}`);
-    console.log("data",data)
+  const getGraph = () => {
+    let data = httpClient.get(`materiality/metrics/data-entry/dashboard?year=${selectedFinancialYear}`);
+    console.log("data", data)
   }
 
   // Load configured metrics from localStorage
@@ -112,7 +113,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
     setConfiguredMetrics(finalMetrics)
   }, []);
 
-  
+
 
   // Load existing data entries from localStorage
   useEffect(() => {
@@ -138,21 +139,22 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
       toast.error('Please fill in all required fields');
       return;
     }
-
-    const metric = configuredMetrics.find(m => m.code === selectedMetric);
+    let tempParsedMetric:ESGMetricWithTracking = JSON.parse(selectedMetric);
+    const metric = configuredMetrics?.find(m => m.code === tempParsedMetric.code && m.name === tempParsedMetric.name);
     if (!metric) return;
-    console.log(`metric ==> `,metric)
+    console.log(`metric ==> `, metric)
 
     // Check if entry already exists for this period
-    const existingEntryIndex = dataEntries.findIndex(entry => 
-      entry.metricId === selectedMetric && 
-      entry.period === selectedPeriod && 
+    const existingEntryIndex = dataEntries.findIndex(entry =>
+      entry.metricId === tempParsedMetric.code &&
+      entry.metricName === tempParsedMetric.name &&
+      entry.period === selectedPeriod &&
       entry.financialYear === selectedFinancialYear
     );
 
     const newEntry: MetricDataEntry = {
       id: existingEntryIndex >= 0 ? dataEntries[existingEntryIndex].id : `entry_${Date.now()}`,
-      metricId: selectedMetric,
+      metricId: tempParsedMetric.code,
       metricName: metric.name,
       unit: metric.unit,
       frequency: metric.collectionFrequency,
@@ -161,14 +163,14 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
       topicId: metric.topic,
       dataType: metric.dataType,
       financialYear: selectedFinancialYear,
-      industry:metric.industry?metric.industry:'',
-      esg:metric.esg,
+      industry: metric.industry ? metric.industry : '',
+      esg: metric.esg,
       period: selectedPeriod,
-      periodIndex: getAvailablePeriods(selectedMetric).find(p => p.period === selectedPeriod)?.periodIndex || 0
+      periodIndex: getAvailablePeriods(tempParsedMetric.code,tempParsedMetric.name).find(p => p.period === selectedPeriod)?.periodIndex || 0
     };
-    let dataEntryResponse=await httpClient.post('materiality/metrics/data-entry',newEntry)
-    console.log(`dataEntryResponse`,dataEntryResponse)
-    if(dataEntryResponse['data']['status']){
+    let dataEntryResponse = await httpClient.post('materiality/metrics/data-entry', newEntry)
+    console.log(`dataEntryResponse`, dataEntryResponse)
+    if (dataEntryResponse['data']['status']) {
       toast.success('Data entry submitted successfully');
       getMetricsKpiData(selectedFinancialYear);
     }
@@ -185,7 +187,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
     //   setDataEntries(prev => [newEntry, ...prev]);
     //   toast.success('Data entry submitted successfully');
     // }
-    
+
     // Reset form
     setSelectedMetric('');
     setEntryValue('');
@@ -207,11 +209,11 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
 
   const isOverdue = (lastEntry: string, frequency: string) => {
     if (!lastEntry) return true;
-    
+
     const lastEntryDate = new Date(lastEntry);
     const today = new Date();
     const daysDiff = Math.floor((today.getTime() - lastEntryDate.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     switch (frequency) {
       case 'Daily': return daysDiff >= 1;
       case 'Weekly': return daysDiff >= 7;
@@ -232,7 +234,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
   const getAllEntryPeriod = (metricId: string) => {
     const entries = dataEntries.filter(entry => entry.metricId === metricId);
     if (entries.length === 0) return null;
-    return entries.map((e)=> e.period); // Since entries are sorted by newest first
+    return entries.map((e) => e.period); // Since entries are sorted by newest first
   };
 
   // Generate periods based on frequency
@@ -251,7 +253,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
         break;
       case 'Monthly':
         const months = ['January', 'February', 'March', 'April', 'May', 'June',
-                       'July', 'August', 'September', 'October', 'November', 'December'];
+          'July', 'August', 'September', 'October', 'November', 'December'];
         months.forEach((month, index) => {
           const monthNum = String(index + 1).padStart(2, '0');
           const daysInMonth = new Date(year, index + 1, 0).getDate();
@@ -304,9 +306,9 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
     // console.log(`getMetricPeriods :: metric ==> `,metric)
     // console.log(`getMetricPeriods :: dataEntries ==> `,dataEntries)
     return periods.map(period => {
-      const existingEntry = dataEntries.find(entry => 
-        entry.metricId === metric.code && 
-        entry.period === period.period && 
+      const existingEntry = dataEntries.find(entry =>
+        entry.metricId === metric.code &&
+        entry.period === period.period &&
         entry.financialYear === selectedFinancialYear
       );
 
@@ -323,36 +325,43 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
   };
 
   // Get available periods for selected metric
-  const getAvailablePeriods = (metricId: string) => {
+  const getAvailablePeriods = (metricId: string,metricName:string) => {
     // console.log('metricId',metricId)
-    const metric = configuredMetrics.find(m => m.code === metricId);
+    const metric = configuredMetrics?.find(m => m.code === metricId && m.name === metricName);
     if (!metric) return [];
     return getMetricPeriods(metric);
   };
 
-  const metricsNeedingData = configuredMetrics.filter(metric => {
+  const metricsNeedingData = configuredMetrics?.filter(metric => {
     const lastEntry = getLastEntryDate(metric.code);
-    const allEntryPeriod=getAllEntryPeriod(metric.code)
+    const allEntryPeriod = getAllEntryPeriod(metric.code)
     return isOverdue(lastEntry || '', metric.collectionFrequency);
   });
 
-  // useEffect(()=>{
-  //   console.log(`dataEntries ==> `,dataEntries)
-  // },[dataEntries])
 
-  useEffect(()=>{
-    if(selectedPeriod && selectedMetric && selectedFinancialYear && dataEntries){
-      let checkExistingValue=dataEntries.filter((entry) => entry.financialYear==selectedFinancialYear && entry.period == selectedPeriod && entry.metricId == selectedMetric)
-      console.log(`selectedMetric == checkExistingValue => `,checkExistingValue)
-      if(checkExistingValue && checkExistingValue.length > 0 && checkExistingValue[0]['value']){
+
+  useEffect(() => {
+    if (selectedPeriod && selectedMetric && selectedFinancialYear && dataEntries) {
+      let checkExistingValue = dataEntries.filter((entry) => entry.financialYear == selectedFinancialYear && entry.period == selectedPeriod && entry.metricId == JSON.parse(selectedMetric).code && entry.metricName == JSON.parse(selectedMetric).name);
+      console.log(`selectedMetric == checkExistingValue => `, checkExistingValue)
+      if (checkExistingValue && checkExistingValue.length > 0 && checkExistingValue[0]['value']) {
         setEntryValue(checkExistingValue[0]['value'])
       }
     }
-    
-  },[selectedPeriod,selectedMetric,selectedFinancialYear])
-  useEffect(()=>{
-    console.log(`bulkEntries => `,bulkEntries)
-  },[bulkEntries])
+
+  }, [selectedPeriod, selectedMetric, selectedFinancialYear])
+  // useEffect(() => {
+  //   console.log(`bulkEntries => `, bulkEntries)
+  // }, [bulkEntries])
+
+  // useEffect(() => {
+  //   console.log(`dataEntries => `, dataEntries)
+  // }, [bulkEntries])
+
+  useEffect(() => {
+    console.log(`configuredMetrics => `, configuredMetrics)
+  }, [configuredMetrics])
+
   return (
     <div className="space-y-6">
       {/* Data Entry Form */}
@@ -372,15 +381,15 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
                 </SelectTrigger>
                 <SelectContent>
                   {
-                  
-                  financialYearList.map((year) => {
-                    // const year = new Date().getFullYear() - i;
-                    return (
-                      <SelectItem key={year.value} value={year.label}>
-                        {year.label}
-                      </SelectItem>
-                    );
-                  })}
+
+                    financialYearList.map((year) => {
+                      // const year = new Date().getFullYear() - i;
+                      return (
+                        <SelectItem key={year.value} value={year.label}>
+                          {year.label}
+                        </SelectItem>
+                      );
+                    })}
                 </SelectContent>
               </Select>
               <Button
@@ -401,12 +410,12 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
                 <div>
                   <Label htmlFor="metric-select">Select Metric</Label>
                   <Select value={selectedMetric} onValueChange={setSelectedMetric} >
-                    <SelectTrigger style={{"whiteSpace":"nowrap","textOverflow":"ellipsis"}}>
+                    <SelectTrigger style={{ "whiteSpace": "nowrap", "textOverflow": "ellipsis" }}>
                       <SelectValue placeholder="Choose a metric..." />
                     </SelectTrigger>
                     <SelectContent >
-                      {configuredMetrics.map(metric => (
-                        <SelectItem key={metric.code} value={metric.code}>
+                      {configuredMetrics?.map(metric => (
+                        <SelectItem key={metric.id} value={JSON.stringify(metric)}>
                           <div className="flex flex-col">
                             <span>{metric.name}</span>
                             {/* <span className="text-xs text-muted-foreground">
@@ -418,7 +427,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="period-select">Period</Label>
                   <Select value={selectedPeriod} onValueChange={setSelectedPeriod} disabled={!selectedMetric}>
@@ -426,7 +435,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
                       <SelectValue placeholder="Choose a period..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {selectedMetric && getAvailablePeriods(selectedMetric).map(period => (
+                      {selectedMetric && getAvailablePeriods(JSON.parse(selectedMetric).code,JSON.parse(selectedMetric).name).map(period => (
                         <SelectItem key={period.id} value={period.period}>
                           <div className="flex items-center justify-between w-full">
                             <span>{period.period}</span>
@@ -439,7 +448,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="entry-date">Date</Label>
                   <Input
@@ -456,25 +465,25 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
                   <div className="mb-3">
                     <h4 className="font-medium">Data Entry for {selectedPeriod}</h4>
                     <p className="text-sm text-muted-foreground">
-                      {configuredMetrics.find(m => m.id === selectedMetric)?.name}
+                      {configuredMetrics?.find(m => m.id === JSON.parse(selectedMetric).id)?.name}
                     </p>
                   </div>
                   <FlexibleDataInput
-                    metric={configuredMetrics.find(m => m.code === selectedMetric)!}
+                    metric={configuredMetrics?.find(m => m.code === JSON.parse(selectedMetric)?.code && m.name == JSON.parse(selectedMetric)?.name)!}
                     value={entryValue}
                     onChange={setEntryValue}
                   />
                 </div>
               )}
-              
-              <Button 
-                onClick={handleSubmitData} 
+
+              <Button
+                onClick={handleSubmitData}
                 className="w-full md:w-auto"
                 disabled={!selectedMetric || !entryValue || !selectedPeriod}
               >
                 <Save className="w-4 h-4 mr-2" />
-                {selectedPeriod && getAvailablePeriods(selectedMetric).find(p => p.period === selectedPeriod)?.isCompleted 
-                  ? 'Update Data Entry' 
+                {selectedPeriod && getAvailablePeriods(JSON.parse(selectedMetric).code,JSON.parse(selectedMetric).name).find(p => p.period === selectedPeriod)?.isCompleted
+                  ? 'Update Data Entry'
                   : 'Submit Data Entry'}
               </Button>
             </div>
@@ -487,12 +496,12 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
                   Enter data for multiple metrics at once for financial year {selectedFinancialYear}
                 </p>
               </div>
-              
+
               <div className="grid gap-6">
-                {configuredMetrics.map(metric => {
+                {configuredMetrics?.map(metric => {
                   const periods = getMetricPeriods(metric);
                   const completedPeriods = periods.filter(p => p.isCompleted).length;
-                  
+
                   return (
                     <div key={metric.id} className="p-4 border rounded-lg space-y-4">
                       <div className="flex items-center justify-between">
@@ -510,7 +519,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="grid gap-3">
                         <h5 className="font-medium text-sm">Period-based Data Entry:</h5>
                         <div className="grid gap-2 max-h-60 overflow-y-auto">
@@ -525,12 +534,14 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
                               <div className="flex-1">
                                 <FlexibleDataInput
                                   metric={metric}
-                                  value={period.value}
+                                  value={bulkEntries[`${metric.code}_${period.period}`] ??
+                                    period.value ??
+                                    ""}
                                   onChange={(value) => {
                                     // Update the period value in bulk entries
-                                    setBulkEntries(prev => ({ 
-                                      ...prev, 
-                                      [`${metric.id}_${period.period}`]: value 
+                                    setBulkEntries(prev => ({
+                                      ...prev,
+                                      [`${metric.code}_${period.period}`]: value
                                     }));
                                   }}
                                 />
@@ -543,38 +554,94 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
                   );
                 })}
               </div>
-              
+
               <div className="flex gap-2">
-                <Button 
-                  onClick={() => {
+                <Button
+                  onClick={async () => {
                     // Submit all bulk entries
                     const currentDate = new Date().toISOString().split('T')[0];
                     const newEntries: MetricDataEntry[] = [];
-                    
+                    // debugger;
+                    // console.log("=====>>> ", Object.entries(bulkEntries)
+                    //   .filter(([_, value]) => value && value !== ''))
+                    // Object.entries(bulkEntries)
+                    //   .filter(([_, value]) => value && value !== '')
+                    //   .forEach(([key, value]) => {
+                    //     const [metricId, period] = key.includes('_') && !key.startsWith('entry_') 
+                    //       ? key.split('_').slice(0, -1).join('_') + '_' + key.split('_').slice(-1)[0]
+                    //       : [key, 'Single Entry'];
+
+                    //     const metric = configuredMetrics.find(m => m.code === metricId.split('_')[0])!;
+                    //     if (!metric) return;
+
+                    //     const periodData = period !== 'Single Entry' 
+                    //       ? getMetricPeriods(metric).find(p => p.period === period.split('_').slice(-1)[0])
+                    //       : { periodIndex: 1 };
+
+                    //     // Check for existing entry
+                    //     const existingEntryIndex = dataEntries.findIndex(entry => 
+                    //       entry.metricId === metricId.split('_')[0] && 
+                    //       entry.period === (period !== 'Single Entry' ? period.split('_').slice(-1)[0] : undefined) && 
+                    //       entry.financialYear === selectedFinancialYear
+                    //     );
+
+                    //     const entry: MetricDataEntry = {
+                    //       id: existingEntryIndex >= 0 ? dataEntries[existingEntryIndex].id : `entry_${Date.now()}_${metricId}_${period}`,
+                    //       metricId: metricId.split('_')[0],
+                    //       metricName: metric.name,
+                    //       unit: metric.unit,
+                    //       frequency: metric.collectionFrequency,
+                    //       value,
+                    //       date: currentDate,
+                    //       topicId: metric.topic,
+                    //       dataType: metric.dataType,
+                    //       financialYear: selectedFinancialYear,
+                    //       esg:metric.esg,
+                    //       industry:metric.industry,
+                    //       period: period !== 'Single Entry' ? period.split('_').slice(-1)[0] : undefined,
+                    //       periodIndex: periodData?.periodIndex || 1
+                    //     };
+                    //     console.log(`entry => `,entry)
+                    //     newEntries.push(entry);
+                    //   });
                     Object.entries(bulkEntries)
-                      .filter(([_, value]) => value && value !== '')
+                      .filter(([_, value]) => value !== '' && value !== null && value !== undefined) // keeps 0 and false
                       .forEach(([key, value]) => {
-                        const [metricId, period] = key.includes('_') && !key.startsWith('entry_') 
-                          ? key.split('_').slice(0, -1).join('_') + '_' + key.split('_').slice(-1)[0]
-                          : [key, 'Single Entry'];
-                        
-                        const metric = configuredMetrics.find(m => m.id === metricId.split('_')[0])!;
+                        let metricId: string;
+                        let period: string;
+
+                        // Extract metricId and period correctly
+                        if (key.includes('_') && !key.startsWith('entry_')) {
+                          const parts = key.split('_');
+                          period = parts.pop()!;       // last part = "January"
+                          metricId = parts.join('_');  // rest = "RR-BI-430a.1"
+                        } else {
+                          metricId = key;
+                          period = 'Single Entry';
+                        }
+
+                        // Find matching metric
+                        const metric = configuredMetrics?.find(m => m.code === metricId);
                         if (!metric) return;
-                        
-                        const periodData = period !== 'Single Entry' 
-                          ? getMetricPeriods(metric).find(p => p.period === period.split('_').slice(-1)[0])
+
+                        // Find matching period object if applicable
+                        const periodData = period !== 'Single Entry'
+                          ? getMetricPeriods(metric).find(p => p.period === period)
                           : { periodIndex: 1 };
-                        
+
                         // Check for existing entry
-                        const existingEntryIndex = dataEntries.findIndex(entry => 
-                          entry.metricId === metricId.split('_')[0] && 
-                          entry.period === (period !== 'Single Entry' ? period.split('_').slice(-1)[0] : undefined) && 
+                        const existingEntryIndex = dataEntries.findIndex(entry =>
+                          entry.metricId === metricId &&
+                          entry.period === (period !== 'Single Entry' ? period : undefined) &&
                           entry.financialYear === selectedFinancialYear
                         );
-                        
+
+                        // Build new entry
                         const entry: MetricDataEntry = {
-                          id: existingEntryIndex >= 0 ? dataEntries[existingEntryIndex].id : `entry_${Date.now()}_${metricId}_${period}`,
-                          metricId: metricId.split('_')[0],
+                          id: existingEntryIndex >= 0
+                            ? dataEntries[existingEntryIndex].id
+                            : `entry_${Date.now()}_${metricId}_${period}`,
+                          metricId,
                           metricName: metric.name,
                           unit: metric.unit,
                           frequency: metric.collectionFrequency,
@@ -583,37 +650,46 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
                           topicId: metric.topic,
                           dataType: metric.dataType,
                           financialYear: selectedFinancialYear,
-                          esg:metric.esg,
-                          industry:metric.industry,
-                          period: period !== 'Single Entry' ? period.split('_').slice(-1)[0] : undefined,
+                          esg: metric.esg,
+                          industry: metric.industry,
+                          period: period !== 'Single Entry' ? period : undefined,
                           periodIndex: periodData?.periodIndex || 1
                         };
-                        
+
+                        console.log(`entry =>`, entry);
                         newEntries.push(entry);
                       });
-                    
+
+
                     if (newEntries.length > 0) {
-                      // Update existing entries and add new ones
-                      setDataEntries(prev => {
-                        const updated = [...prev];
-                        newEntries.forEach(newEntry => {
-                          const existingIndex = updated.findIndex(entry => 
-                            entry.metricId === newEntry.metricId && 
-                            entry.period === newEntry.period && 
-                            entry.financialYear === newEntry.financialYear
-                          );
-                          
-                          if (existingIndex >= 0) {
-                            updated[existingIndex] = newEntry;
-                          } else {
-                            updated.unshift(newEntry);
-                          }
+                      let dataMultiEntryResponse = await httpClient.post('materiality/metrics/data-entry', newEntries)
+                      console.log(`dataMultiEntryResponse`, dataMultiEntryResponse)
+                      if (dataMultiEntryResponse['data']['status']) {
+                        toast.success('Data entry submitted successfully');
+                        // Update existing entries and add new ones
+                        setDataEntries(prev => {
+                          const updated = [...prev];
+                          newEntries.forEach(newEntry => {
+                            const existingIndex = updated.findIndex(entry =>
+                              entry.metricId === newEntry.metricId &&
+                              entry.period === newEntry.period &&
+                              entry.financialYear === newEntry.financialYear
+                            );
+
+                            if (existingIndex >= 0) {
+                              updated[existingIndex] = newEntry;
+                            } else {
+                              updated.unshift(newEntry);
+                            }
+                          });
+                          return updated;
                         });
-                        return updated;
-                      });
-                      
-                      setBulkEntries({});
-                      toast.success(`${newEntries.length} data entries submitted successfully`);
+
+                        setBulkEntries({});
+                        toast.success(`${newEntries.length} data entries submitted successfully`);
+                        getMetricsKpiData(selectedFinancialYear);
+
+                      }
                     } else {
                       toast.error('Please enter data for at least one metric');
                     }
@@ -624,8 +700,8 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
                   <Save className="w-4 h-4 mr-2" />
                   Submit All Entries
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setBulkEntries({})}
                 >
                   Clear All
@@ -639,23 +715,23 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
       {/* Available Metrics */}
       <Card>
         <CardHeader>
-          <CardTitle>Configured Metrics ({configuredMetrics.length})</CardTitle>
+          <CardTitle>Configured Metrics ({configuredMetrics?.length})</CardTitle>
           <CardDescription>
             All metrics configured for data collection
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {configuredMetrics.length > 0 ? (
+          {configuredMetrics?.length > 0 ? (
             <div className="grid gap-3">
-              {configuredMetrics.map(metric => {
+              {configuredMetrics?.map(metric => {
                 const periods = getMetricPeriods(metric);
                 // console.log(`periods ==> `,periods)
                 const completedPeriods = periods.filter(p => p.isCompleted).length;
                 const totalPeriods = periods.length;
                 const completionRate = totalPeriods > 0 ? Math.round((completedPeriods / totalPeriods) * 100) : 0;
-                
+
                 return (
-                  <div key={metric.id} className="p-3 border rounded-lg">
+                  <div key={metric.code} className="p-3 border rounded-lg">
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <h4 className="font-medium">{metric.name}</h4>
@@ -671,17 +747,16 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Period status grid */}
                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
                       {periods.slice(0, 12).map(period => (
                         <div
                           key={period.id}
-                          className={`p-2 text-xs text-center rounded border ${
-                            period.isCompleted 
-                              ? 'bg-green-50 border-green-200 text-green-800' 
-                              : 'bg-gray-50 border-gray-200 text-gray-600'
-                          }`}
+                          className={`p-2 text-xs text-center rounded border ${period.isCompleted
+                            ? 'bg-green-50 border-green-200 text-green-800'
+                            : 'bg-gray-50 border-gray-200 text-gray-600'
+                            }`}
                         >
                           {period.period}
                         </div>
@@ -721,7 +796,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
             <div className="grid gap-3">
               {metricsNeedingData.map(metric => {
                 const lastEntry = getLastEntryDate(metric.code);
-                
+
                 return (
                   <div key={metric.code} className="flex items-center justify-between p-3 border rounded-lg bg-yellow-50">
                     <div>
@@ -774,7 +849,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
               <TableBody>
                 {dataEntries.slice(0, 10).map(entry => {
                   let displayValue = entry.value;
-                  
+
                   // Format value based on data type
                   if (entry.dataType === 'Boolean') {
                     displayValue = entry.value === 'true' ? 'Yes' : 'No';
@@ -783,7 +858,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics ,fin
                   } else if (Array.isArray(entry.value)) {
                     displayValue = entry.value.join(', ');
                   }
-                  
+
                   return (
                     <TableRow key={entry.id}>
                       <TableCell className="font-medium">{entry.metricName}</TableCell>
