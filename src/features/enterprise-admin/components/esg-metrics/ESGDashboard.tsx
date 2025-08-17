@@ -11,6 +11,10 @@ import {
 import { TrendingUp, TrendingDown, BarChart3, PieChart as PieChartIcon, Building2 } from 'lucide-react';
 import { ESGMetricWithTracking } from '../../data/esgMetricsData';
 import ChartComponent from './graphShow';
+import { httpClient } from '@/lib/httpClient';
+import MetricsGraph from './graphShow';
+import MetricsGraph1 from './graphShow1';
+import { DynamicChart } from './dynamicCharts';
 
 interface MetricDataEntry {
   id: string;
@@ -48,26 +52,33 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
   const [viewMode, setViewMode] = useState<'charts' | 'trends' | 'comparison'>('charts');
   const [selectedYear, setSelectedYear] = useState<string>(financialYearList.reverse()[0].value); // Default to current year
 
+  const getGraphData = async(year: string) => {
+    // Filter data entries based on the selected year
+    let graphData=await httpClient.get(`materiality/metrics/graph-data?year=${year}`);
+    console.log("Graph Data", graphData);
+  }
+
   // Load data on component mount
   useEffect(() => {
-    const savedMetrics = localStorage.getItem('savedESGMetrics');
-    const savedEntries = localStorage.getItem('esgDataEntries');
+    // const savedMetrics = localStorage.getItem('savedESGMetrics');
+    // const savedEntries = localStorage.getItem('esgDataEntries');
 
-    if (savedMetrics) {
-      try {
-        setConfiguredMetrics(JSON.parse(savedMetrics));
-      } catch (error) {
-        console.error('Error loading metrics:', error);
-      }
-    }
+    // if (savedMetrics) {
+    //   try {
+    //     setConfiguredMetrics(JSON.parse(savedMetrics));
+    //   } catch (error) {
+    //     console.error('Error loading metrics:', error);
+    //   }
+    // }
 
-    if (savedEntries) {
-      try {
-        setDataEntries(JSON.parse(savedEntries));
-      } catch (error) {
-        console.error('Error loading entries:', error);
-      }
-    }
+    // if (savedEntries) {
+    //   try {
+    //     setDataEntries(JSON.parse(savedEntries));
+    //   } catch (error) {
+    //     console.error('Error loading entries:', error);
+    //   }
+    // }
+    getGraphData(selectedYear);
   }, []);
 
   // Process data for charts
@@ -345,7 +356,9 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
                 )}
               </CardContent>
             </Card> */}
-            <ChartComponent />
+            {/* <MetricsGraph /> */}
+            {/* <MetricsGraph1 /> */}
+            <DynamicChart />
           </div>
         </TabsContent>
 
