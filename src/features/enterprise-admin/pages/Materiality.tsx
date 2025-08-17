@@ -35,6 +35,16 @@ const MaterialityPage = () => {
     }
   }, []);
 
+  // Update material topics when industries change
+  useEffect(() => {
+    if (selectedIndustries.length > 0) {
+      const topics = getCombinedTopics(selectedIndustries, ['SASB', 'GRI']);
+      setMaterialTopics(topics);
+    } else {
+      setMaterialTopics([]);
+    }
+  }, [selectedIndustries]);
+
   // Save data whenever state changes
   useEffect(() => {
     const dataToSave = {
@@ -53,16 +63,6 @@ const MaterialityPage = () => {
   if (!isAuthenticated || !['admin', 'manager', 'unit_admin'].includes(user?.role || '')) {
     return <Navigate to="/login" />;
   }
-
-  // Update material topics when industries change
-  useEffect(() => {
-    if (selectedIndustries.length > 0) {
-      const topics = getCombinedTopics(selectedIndustries, ['SASB', 'GRI']);
-      setMaterialTopics(topics);
-    } else {
-      setMaterialTopics([]);
-    }
-  }, [selectedIndustries]);
 
   const handleStartAssessment = () => {
     setCurrentView('industry');
