@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { Plus, X } from 'lucide-react';
 
@@ -14,6 +15,7 @@ interface CustomMetricForm {
   unit: string;
   dataType: 'Numeric' | 'Percentage' | 'Text' | 'Boolean' | 'Dropdown' | 'Radio' | 'Table';
   collectionFrequency: 'Daily' | 'Weekly' | 'Monthly' | 'Quarterly' | 'Bi-Annually' | 'Annually';
+  showOnDashboard: boolean;
   inputFormat: {
     options: string[];
     tableColumns: string[];
@@ -23,13 +25,14 @@ interface CustomMetricForm {
 
 interface MaterialTopic {
   id: string;
-  topic: string;
-  esg: string;
+  name: string;
+  category: string;
   businessImpact: number;
   sustainabilityImpact: number;
   color: string;
   description: string;
   framework?: string;
+  
 }
 
 interface CustomMetricDialogProps {
@@ -116,9 +119,42 @@ const CustomMetricDialog: React.FC<CustomMetricDialogProps> = ({
       <DialogHeader>
         <DialogTitle>{isEdit ? 'Edit Metric' : 'Add Custom Metric'}</DialogTitle>
         <DialogDescription>
-          {isEdit ? 'Modify the metric details' : `Create a custom metric for ${selectedTopic?.topic}`}
+          {isEdit ? 'Modify the metric details' : `Create a custom metric for ${selectedTopic?.name}`}
         </DialogDescription>
       </DialogHeader>
+      
+      {/* Help Documentation */}
+      <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+        <h4 className="font-medium text-blue-900 mb-2">Custom Metric Creation Guide</h4>
+        <p className="text-sm text-blue-800 mb-3">
+          Define metrics to track and measure your ESG performance. Select the appropriate data type based on how you'll collect this information:
+        </p>
+        <div className="space-y-2 text-xs text-blue-700">
+          <div><strong>Numeric:</strong> For measurable values (e.g., 150 kWh, 2500 liters)</div>
+          <div><strong>Percentage:</strong> For ratio-based metrics (e.g., 85% renewable energy usage)</div>
+          <div><strong>Text:</strong> For qualitative descriptions or notes</div>
+          <div><strong>Yes/No:</strong> For binary questions (e.g., "Do you have a diversity policy?")</div>
+          <div><strong>Dropdown:</strong> For selecting from predefined options (e.g., certification levels)</div>
+          <div><strong>Radio buttons:</strong> For exclusive single-choice questions</div>
+          <div><strong>Table:</strong> For complex data with multiple dimensions</div>
+        </div>
+        <div className="mt-3 p-3 bg-blue-100 rounded border-l-4 border-blue-400">
+          <p className="text-xs font-medium text-blue-900 mb-1">Table Data Type - Important Guidelines:</p>
+          <p className="text-xs text-blue-800 mb-2">
+            When using Table data type, columns represent main categories while rows represent sub-categories for detailed analysis.
+          </p>
+          <div className="text-xs text-blue-700">
+            <strong>Example:</strong> Employee Demographics
+            <br />
+            <strong>Columns:</strong> Male, Female, Others (main demographic categories)
+            <br />
+            <strong>Rows:</strong> HR, Sales, Management, etc. (department sub-categories)
+            <br />
+            This structure allows you to track employee count by both gender and department.
+          </div>
+        </div>
+      </div>
+      
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1">Metric Name *</label>
@@ -183,6 +219,27 @@ const CustomMetricDialog: React.FC<CustomMetricDialogProps> = ({
               <SelectItem value="Annually">Annually</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-2">Show on Dashboard</label>
+          <RadioGroup 
+            value={customMetricForm.showOnDashboard ? "yes" : "no"} 
+            onValueChange={(value) => setCustomMetricForm(prev => ({...prev, showOnDashboard: value === "yes"}))}
+            className="flex flex-row gap-6"
+          >
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="yes" id="dashboard-yes" />
+              <label htmlFor="dashboard-yes" className="text-sm">Yes</label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="no" id="dashboard-no" />
+              <label htmlFor="dashboard-no" className="text-sm">No</label>
+            </div>
+          </RadioGroup>
+          <p className="text-xs text-muted-foreground mt-1">
+            Choose whether this metric should be displayed as a graph on the ESG dashboard
+          </p>
         </div>
         
         {/* Input Format Configuration */}

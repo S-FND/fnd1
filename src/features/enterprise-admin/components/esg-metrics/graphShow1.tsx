@@ -19,6 +19,7 @@ import {
   PolarRadiusAxis,
   Radar,
   ResponsiveContainer,
+  ReferenceLine,
 } from "recharts";
 
 const rawMetricsData = {
@@ -52,7 +53,6 @@ const rawMetricsData = {
     { period: "December", value: "12", dataType: "Percentage", financialYear: "2025-2026" },
   ],
   "Air emissions of the pollutants: Volatile organic compounds (VOCs)": [
-    { period: "Q1", value: "10", dataType: "Numeric", financialYear: "2025-2026" },
     { period: "Q2", value: "20", dataType: "Numeric", financialYear: "2025-2026" },
   ],
 };
@@ -76,7 +76,7 @@ const monthOrder = {
   Q4: 16,
 };
 
-export default function MetricsGraph() {
+export default function MetricsGraph1() {
   const [view, setView] = useState("monthly");
   const [chartType, setChartType] = useState("line");
 
@@ -116,66 +116,11 @@ export default function MetricsGraph() {
     return yearly;
   }, [metricsData]);
 
-//   const renderChart = (metric, data) => {
-//     if (!data || data.length === 0) return null;
-//     const xKey = view === "monthly" ? "period" : "year";
-//     console.log("Rendering chart for metric:", metric, "with data:", data);
-//     return (
-//       <Card className="mb-6 shadow-lg rounded-2xl" key={metric}>
-//         <CardContent>
-//           <h2 className="text-lg font-semibold mb-4">{metric}</h2>
-//           <ResponsiveContainer width="100%" height={300}>
-//             <>
-//               {chartType === "line" && (
-//                 <LineChart data={data}>
-//                   <CartesianGrid strokeDasharray="3 3" />
-//                   <XAxis dataKey={xKey} />
-//                   <YAxis />
-//                   <Tooltip />
-//                   <Legend />
-//                   <Line type="monotone" dataKey="value" />
-//                 </LineChart>
-//               )}
-//               {chartType === "bar" && (
-//                 <BarChart data={data}>
-//                   <CartesianGrid strokeDasharray="3 3" />
-//                   <XAxis dataKey={xKey} />
-//                   <YAxis />
-//                   <Tooltip />
-//                   <Legend />
-//                   <Bar dataKey="value" />
-//                 </BarChart>
-//               )}
-//               {chartType === "area" && (
-//                 <AreaChart data={data}>
-//                   <CartesianGrid strokeDasharray="3 3" />
-//                   <XAxis dataKey={xKey} />
-//                   <YAxis />
-//                   <Tooltip />
-//                   <Legend />
-//                   <Area type="monotone" dataKey="value" />
-//                 </AreaChart>
-//               )}
-//               {chartType === "radar" && (
-//                 <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
-//                   <PolarGrid />
-//                   <PolarAngleAxis dataKey={xKey} />
-//                   <PolarRadiusAxis />
-//                   <Radar name="Value" dataKey="value" />
-//                   <Legend />
-//                 </RadarChart>
-//               )}
-//             </>
-//           </ResponsiveContainer>
-//         </CardContent>
-//       </Card>
-//     );
-//   };
-
-    
-const renderChart = (metric, data) => {
+  const renderChart = (metric, data) => {
     if (!data || data.length === 0) return null;
     const xKey = view === "monthly" ? "period" : "year";
+    const baseline = 50;
+    const target = 100;
   
     let chartElement: React.ReactElement | null = null;
   
@@ -184,9 +129,11 @@ const renderChart = (metric, data) => {
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey={xKey} />
-          <YAxis allowDecimals={false} />
+          <YAxis />
           <Tooltip />
           <Legend />
+          {/* <ReferenceLine y={baseline} stroke="blue" label="Baseline" />
+          <ReferenceLine y={target} stroke="red" label="Target" /> */}
           <Line type="monotone" dataKey="value" stroke="#8884d8" />
         </LineChart>
       );
@@ -195,9 +142,11 @@ const renderChart = (metric, data) => {
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey={xKey} />
-          <YAxis allowDecimals={false} />
+          <YAxis />
           <Tooltip />
           <Legend />
+          {/* <ReferenceLine y={baseline} stroke="blue" label="Baseline" />
+          <ReferenceLine y={target} stroke="red" label="Target" /> */}
           <Bar dataKey="value" fill="#82ca9d" />
         </BarChart>
       );
@@ -206,9 +155,11 @@ const renderChart = (metric, data) => {
         <AreaChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey={xKey} />
-          <YAxis allowDecimals={false} />
+          <YAxis />
           <Tooltip />
           <Legend />
+          {/* <ReferenceLine y={baseline} stroke="blue" label="Baseline" />
+          <ReferenceLine y={target} stroke="red" label="Target" /> */}
           <Area
             type="monotone"
             dataKey="value"
@@ -248,8 +199,8 @@ const renderChart = (metric, data) => {
     );
   };
   
-  
-return (
+
+  return (
     <div className="p-4">
       <div className="flex gap-4 mb-6 flex-wrap">
         <Button variant={view === "monthly" ? "default" : "outline"} onClick={() => setView("monthly")}>
