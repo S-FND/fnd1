@@ -15,6 +15,7 @@ import { httpClient } from '@/lib/httpClient';
 import MetricsGraph from './graphShow';
 import MetricsGraph1 from './graphShow1';
 import { DynamicChart } from './dynamicCharts';
+import CustomDashboardTab from './custom-graph';
 
 interface MetricDataEntry {
   id: string;
@@ -51,11 +52,17 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
   const [selectedUnit, setSelectedUnit] = useState<string>('organization');
   const [viewMode, setViewMode] = useState<'charts' | 'trends' | 'comparison'>('charts');
   const [selectedYear, setSelectedYear] = useState<string>(financialYearList.reverse()[0].value); // Default to current year
+  const [graphData, setGraphData] = useState<any>({});
 
   const getGraphData = async(year: string) => {
     // Filter data entries based on the selected year
     let graphData=await httpClient.get(`materiality/metrics/graph-data?year=${year}`);
     console.log("Graph Data", graphData);
+    if(graphData && graphData.data && graphData.data['status']) {
+      // setConfiguredMetrics(graphData.data.metrics);
+      // setDataEntries(graphData.data.entries);
+      setGraphData(graphData.data['data']);
+    }
   }
 
   // Load data on component mount
@@ -78,7 +85,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
     //     console.error('Error loading entries:', error);
     //   }
     // }
-    getGraphData(selectedYear);
+    // getGraphData(selectedYear);
   }, []);
 
   // Process data for charts
@@ -358,7 +365,8 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
             </Card> */}
             {/* <MetricsGraph /> */}
             {/* <MetricsGraph1 /> */}
-            <DynamicChart />
+            {/* <DynamicChart /> */}
+            {/* <CustomDashboardTab graphData={graphData} /> */}
           </div>
         </TabsContent>
 

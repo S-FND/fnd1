@@ -139,7 +139,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
       toast.error('Please fill in all required fields');
       return;
     }
-    let tempParsedMetric:ESGMetricWithTracking = JSON.parse(selectedMetric);
+    let tempParsedMetric: ESGMetricWithTracking = JSON.parse(selectedMetric);
     const metric = configuredMetrics?.find(m => m.code === tempParsedMetric.code && m.name === tempParsedMetric.name);
     if (!metric) return;
     console.log(`metric ==> `, metric)
@@ -166,7 +166,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
       industry: metric.industry ? metric.industry : '',
       esg: metric.esg,
       period: selectedPeriod,
-      periodIndex: getAvailablePeriods(tempParsedMetric.code,tempParsedMetric.name).find(p => p.period === selectedPeriod)?.periodIndex || 0
+      periodIndex: getAvailablePeriods(tempParsedMetric.code, tempParsedMetric.name).find(p => p.period === selectedPeriod)?.periodIndex || 0
     };
     let dataEntryResponse = await httpClient.post('materiality/metrics/data-entry', newEntry)
     console.log(`dataEntryResponse`, dataEntryResponse)
@@ -325,17 +325,80 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
   };
 
   // Get available periods for selected metric
-  const getAvailablePeriods = (metricId: string,metricName:string) => {
+  const getAvailablePeriods = (metricId: string, metricName: string) => {
     // console.log('metricId',metricId)
     const metric = configuredMetrics?.find(m => m.code === metricId && m.name === metricName);
     if (!metric) return [];
     return getMetricPeriods(metric);
   };
 
+  type PeriodType = "weekly" | "monthly" | "quarterly" | "bi-annually";
+
+  function getAllPeriodTillNow(date: Date = new Date(), type: PeriodType): string[] {
+    const year = date.getFullYear();
+    const month = date.getMonth(); // 0-based
+    const periods: string[] = [];
+
+    switch (type) {
+      case "monthly": {
+        const monthNames = [
+          "January", "February", "March", "April", "May", "June",
+          "July", "August", "September", "October", "November", "December"
+        ];
+        for (let m = 0; m <= month; m++) {
+          periods.push(`${monthNames[m]}`);
+        }
+        break;
+      }
+
+      case "quarterly": {
+        const currentQuarter = Math.floor(month / 3) + 1;
+        for (let q = 1; q <= currentQuarter; q++) {
+          periods.push(`Q${q}`);
+        }
+        break;
+      }
+
+      case "bi-annually": {
+        const currentHalf = month < 6 ? 1 : 2;
+        for (let h = 1; h <= currentHalf; h++) {
+          periods.push(`H${h}`);
+        }
+        break;
+      }
+
+      case "weekly": {
+        // Calculate ISO weeks till now
+        const firstDayOfYear = new Date(year, 0, 1);
+        const days = Math.floor((date.getTime() - firstDayOfYear.getTime()) / 86400000);
+        const currentWeek = Math.ceil((days + firstDayOfYear.getDay() + 1) / 7);
+        for (let w = 1; w <= currentWeek; w++) {
+          periods.push(`Week ${w}`);
+        }
+        break;
+      }
+    }
+
+    return periods;
+  }
+
+
+
   const metricsNeedingData = configuredMetrics?.filter(metric => {
     const lastEntry = getLastEntryDate(metric.code);
     const allEntryPeriod = getAllEntryPeriod(metric.code)
-    return isOverdue(lastEntry || '', metric.collectionFrequency);
+    let allPeriodsTillDate = getAllPeriodTillNow(new Date(), metric.collectionFrequency.toLowerCase() as PeriodType);
+    let checkEntries=dataEntries.filter((entry) => entry.metricName == metric.name && entry.financialYear == selectedFinancialYear );
+    const missingPeriods = allPeriodsTillDate.filter(
+      p => !checkEntries.some(e => e.period === p)
+    );
+    
+    
+    console.log(`allPeriodsTillDate ==> `, allPeriodsTillDate)
+    console.log(`checkEntries ==> `, checkEntries)
+    console.log(`missingPeriods ==> `, missingPeriods)
+    // return isOverdue(lastEntry || '', metric.collectionFrequency);
+    return missingPeriods.length>0;
   });
 
 
@@ -435,7 +498,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                       <SelectValue placeholder="Choose a period..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {selectedMetric && getAvailablePeriods(JSON.parse(selectedMetric).code,JSON.parse(selectedMetric).name).map(period => (
+                      {selectedMetric && getAvailablePeriods(JSON.parse(selectedMetric).code, JSON.parse(selectedMetric).name).map(period => (
                         <SelectItem key={period.id} value={period.period}>
                           <div className="flex items-center justify-between w-full">
                             <span>{period.period}</span>
@@ -482,7 +545,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                 disabled={!selectedMetric || !entryValue || !selectedPeriod}
               >
                 <Save className="w-4 h-4 mr-2" />
-                {selectedPeriod && getAvailablePeriods(JSON.parse(selectedMetric).code,JSON.parse(selectedMetric).name).find(p => p.period === selectedPeriod)?.isCompleted
+                {selectedPeriod && getAvailablePeriods(JSON.parse(selectedMetric).code, JSON.parse(selectedMetric).name).find(p => p.period === selectedPeriod)?.isCompleted
                   ? 'Update Data Entry'
                   : 'Submit Data Entry'}
               </Button>

@@ -17,6 +17,8 @@ import { httpClient } from '@/lib/httpClient';
 
 interface MaterialTopic {
   id: string;
+  name: string; // Add this property
+  category: string;
   topic: string;
   esg: string;
   businessImpact: number;
@@ -67,6 +69,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
       tableColumns: [] as string[],
       tableRows: 1,
     },
+    showOnDashboard: false,
   });
 
   useEffect(() => {
@@ -339,6 +342,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
         tableColumns: metric.inputFormat?.tableColumns || [],
         tableRows: metric.inputFormat?.tableRows || 1,
       },
+      showOnDashboard: metric.showOnDashboard || false,
     });
     setIsEditDialogOpen(true);
   };
@@ -357,6 +361,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
         tableColumns: metric.inputFormat?.tableColumns || [],
         tableRows: metric.inputFormat?.tableRows || 1,
       },
+      showOnDashboard: metric.showOnDashboard || false,
     });
     setIsEditDialogOpen(true);
   };
@@ -564,6 +569,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
       dataPoints: [],
       isSelected: true,
       esg: selectedTopic ? selectedTopic.esg : '',
+      showOnDashboard: customMetricForm.showOnDashboard || false,
     };
 
     // Add to custom metrics list and save to localStorage
@@ -648,6 +654,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
         tableColumns: [],
         tableRows: 1,
       },
+      showOnDashboard: false,
     });
   };
 
