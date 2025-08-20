@@ -84,10 +84,13 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
       // console.log('metricDataResponse', metricDataResponse)
       if (metricDataResponse['data']['status']) {
         setDataEntries(metricDataResponse['data']['data']['metricsEntries'])
+      }else {
+        setDataEntries([]);
       }
     } catch (error) {
       console.error("Error fetching metrics KPI data:", error);
-      toast.error('Failed to load metrics data');
+      // toast.error('Failed to load metrics data');
+      setDataEntries([]); 
     }
 
   }
@@ -335,6 +338,9 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
   type PeriodType = "weekly" | "monthly" | "quarterly" | "bi-annually";
 
   function getAllPeriodTillNow(date: Date = new Date(), type: PeriodType): string[] {
+
+    if (!type) return [];
+
     const year = date.getFullYear();
     const month = date.getMonth(); // 0-based
     const periods: string[] = [];
@@ -385,6 +391,9 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
 
 
   const metricsNeedingData = configuredMetrics?.filter(metric => {
+
+    if (!metric || !metric.collectionFrequency) return false;
+
     const lastEntry = getLastEntryDate(metric.code);
     const allEntryPeriod = getAllEntryPeriod(metric.code)
     let allPeriodsTillDate = getAllPeriodTillNow(new Date(), metric.collectionFrequency.toLowerCase() as PeriodType);
@@ -399,7 +408,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
     console.log(`missingPeriods ==> `, missingPeriods)
     // return isOverdue(lastEntry || '', metric.collectionFrequency);
     return missingPeriods.length>0;
-  });
+  }) || [];
 
 
 
