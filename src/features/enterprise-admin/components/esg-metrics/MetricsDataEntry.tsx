@@ -422,28 +422,6 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
     }
 
   }, [selectedPeriod, selectedMetric, selectedFinancialYear])
-  // In your useEffect that sets entryValue
-// useEffect(() => {
-//   if (selectedPeriod && selectedMetric && selectedFinancialYear && dataEntries) {
-//     try {
-//       const parsedMetric = JSON.parse(selectedMetric);
-//       if (!parsedMetric) return;
-      
-//       let checkExistingValue = dataEntries.filter((entry) => 
-//         entry.financialYear == selectedFinancialYear && 
-//         entry.period == selectedPeriod && 
-//         entry.metricId == parsedMetric.code && 
-//         entry.metricName == parsedMetric.name
-//       );
-      
-//       if (checkExistingValue && checkExistingValue.length > 0 && checkExistingValue[0]['value']) {
-//         setEntryValue(checkExistingValue[0]['value'])
-//       }
-//     } catch (e) {
-//       console.error('Error parsing selectedMetric:', e);
-//     }
-//   }
-// }, [selectedPeriod, selectedMetric, selectedFinancialYear]);
   // useEffect(() => {
   //   console.log(`bulkEntries => `, bulkEntries)
   // }, [bulkEntries])
