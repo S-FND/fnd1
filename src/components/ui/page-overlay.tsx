@@ -57,7 +57,7 @@ export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
   },[user])
 
   useEffect(() => {
-    const exemptEmails = ['abhishek@fandoro.com','shekhar.sharma@eggoz.in','sample@abclogistics.com','ved.vedprakash@fandoro.com'];
+    const exemptEmails = ['abhishek@fandoro.com','shekhar.sharma@eggoz.in','sample@abclogistics.com','ved.vedprakash@fandoro.com','rajatkumar2257@gmail.com'];
 
     let featurePageListAccess;
     if (!pageListAccess || !Array.isArray(pageListAccess)){
