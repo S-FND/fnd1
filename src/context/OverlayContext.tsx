@@ -73,7 +73,7 @@ export const OverlayProvider: React.FC<OverlayProviderProps> = ({ children }) =>
 
   useEffect(()=>{
     if (!pageActiveList) {
-      getPageAccess();
+      // getPageAccess();
     }
   },[pageActiveList])
 

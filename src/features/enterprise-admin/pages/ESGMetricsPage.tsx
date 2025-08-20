@@ -86,7 +86,7 @@ const ESGMetricsPage: React.FC = () => {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">ESG Metrics Management</h1>
         <p className="text-muted-foreground">
-          Configure and manage ESG metrics based on your finalized material topics from the materiality assessment
+          Configure and manage ESG metrics. You can upload metrics directly or link them to material topics from your materiality assessment
         </p>
       </div>
 
@@ -124,15 +124,15 @@ const ESGMetricsPage: React.FC = () => {
           </div>
           
           {finalizedTopics.length === 0 && (
-            <div className="text-center py-12">
+            <div className="text-center py-8">
               <div className="max-w-md mx-auto">
                 <h3 className="text-lg font-medium text-muted-foreground mb-2">
                   No Material Topics Finalized
                 </h3>
-                <p className="text-muted-foreground mb-6">
-                  Complete your materiality assessment to identify and finalize material topics before configuring ESG metrics.
+                <p className="text-muted-foreground mb-4">
+                  You can still upload and configure ESG metrics independently, or complete your materiality assessment to link metrics to specific topics.
                 </p>
-                <Button onClick={() => navigate('/materiality')}>
+                <Button variant="outline" onClick={() => navigate('/materiality')}>
                   Go to Materiality Assessment
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
@@ -154,11 +154,11 @@ const ESGMetricsPage: React.FC = () => {
         </TabsContent>
         
         <TabsContent value="configuration" className="space-y-6 mt-4">
-          <ESGMetricsManager materialTopics={finalizedTopics} finalMetricsList={finalMetrics} customMetricsList={customMetrics} />
+          <ESGMetricsManager materialTopics={finalizedTopics} finalMetricsList={finalMetrics} customMetricsList={customMetrics} getMaterialityData={getMaterialityData} />
         </TabsContent>
         
         <TabsContent value="data-entry" className="space-y-6 mt-4">
-          <MetricsDataEntry materialTopics={finalizedTopics} />
+          <MetricsDataEntry materialTopics={finalizedTopics} finalMetrics={finalMetrics} />
         </TabsContent>
       </Tabs>
     </div>

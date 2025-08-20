@@ -28,6 +28,7 @@ interface MetricsSelectorProps {
   isAddDialogOpen: boolean;
   setIsAddDialogOpen: (open: boolean) => void;
   children: React.ReactNode; // For the custom metric dialog
+  savedMetrics
 }
 
 const MetricsSelector: React.FC<MetricsSelectorProps> = ({
@@ -38,7 +39,8 @@ const MetricsSelector: React.FC<MetricsSelectorProps> = ({
   onOpenCustomDialog,
   isAddDialogOpen,
   setIsAddDialogOpen,
-  children
+  children,
+  savedMetrics
 }) => {
   if (!selectedTopic) return null;
 
@@ -93,38 +95,45 @@ const MetricsSelector: React.FC<MetricsSelectorProps> = ({
                 <TableHead>Metric Name</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead>Unit</TableHead>
+                <TableHead>Industry</TableHead>
                 <TableHead>Framework</TableHead>
                 <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
+            {/* !savedMetrics.filter((sm) => sm.code == metric.code)[0] */}
               {availableMetrics.map(metric => (
-                <TableRow key={metric.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      {metric.name}
-                      {metric.source === 'IRIS+' && (
-                        <Badge variant="secondary" className="text-xs bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-                          IRIS+
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm">{metric.description}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{metric.unit}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{metric.framework}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Button 
-                      size="sm" 
-                      onClick={() => onAddMetric(`${metric.code}::${metric.name}`)} // Use :: as separator
-                      // disabled={selectedMetrics.some(sm => sm.code === metric.code && sm.name === metric.name)}
-                    >
-                      {selectedMetrics.some(sm => sm.code === metric.code && sm.name === metric.name) ? 'Remove' : 'Add'}
-                    </Button>
-                  </TableCell>
-                </TableRow>
+                savedMetrics.findIndex(item =>
+                  Object.keys(metric).every(key => item[key] === metric[key])
+                ) < 0
+                  && <TableRow key={metric.id}>
+                <TableCell className="font-medium">
+                  <div className="flex items-center gap-2">
+                    {metric.name}
+                    {metric.source === 'IRIS+' && (
+                      <Badge variant="secondary" className="text-xs bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                        IRIS+
+                      </Badge>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell className="text-sm">{metric.description}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{metric.unit}</TableCell>
+                <TableCell className="text-sm">{metric.industry}</TableCell>
+                <TableCell>
+                  <Badge variant="outline">{metric.framework}</Badge>
+                </TableCell>
+                <TableCell>
+                  <Button 
+                    size="sm" 
+                    onClick={() => onAddMetric(`${metric.code}::${metric.name}`)} // Use :: as separator
+                    // disabled={selectedMetrics.some(sm => sm.code === metric.code && sm.name === metric.name)}
+                  >
+                    {selectedMetrics.some(sm => sm.code === metric.code && sm.name === metric.name) || savedMetrics.some(sm => sm.code === metric.code && sm.name === metric.name) ? 'Remove' : 'Add'}
+                  </Button>
+                </TableCell>
+              </TableRow>
+                
               ))}
             </TableBody>
           </Table>

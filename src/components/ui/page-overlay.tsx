@@ -50,14 +50,15 @@ export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
     }
     else{
       if(!pageListAccess){
-        getPageAccess()
+        // getPageAccess()
       }
     }
     
   },[user])
 
   useEffect(() => {
-    const exemptEmails = ['shekhar.sharma@eggoz.in','sample@abclogistics.com'];
+    const exemptEmails = ['abhishek@fandoro.com','shekhar.sharma@eggoz.in','sample@abclogistics.com','ved.vedprakash@fandoro.com'];
+
     let featurePageListAccess;
     if (!pageListAccess || !Array.isArray(pageListAccess)){
       featurePageListAccess= JSON.parse(localStorage.getItem('pageAccess'))

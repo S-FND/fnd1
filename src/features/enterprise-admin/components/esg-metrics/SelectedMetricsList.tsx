@@ -21,7 +21,7 @@ interface SelectedMetricsListProps {
   selectedMetrics: ESGMetricWithTracking[];
   selectedTopic: MaterialTopic | undefined;
   onEditMetric: (metric: ESGMetricWithTracking) => void;
-  onRemoveMetric: (metricId: string) => void;
+  onRemoveMetric: (metric: ESGMetricWithTracking) => void;
   onSaveConfiguration?: () => void;
   savedMetrics?: ESGMetricWithTracking[];
   onEditSavedMetric?: (metric: ESGMetricWithTracking) => void;
@@ -87,6 +87,7 @@ const SelectedMetricsList: React.FC<SelectedMetricsListProps> = ({
                     <div className="flex gap-4 text-xs text-muted-foreground">
                       <span>Unit: {metric.unit}</span>
                       <span>Type: {metric.dataType}</span>
+                      <span>Industry: {metric.industry}</span>
                     </div>
                   </div>
                   <div className="flex gap-2">
@@ -100,7 +101,8 @@ const SelectedMetricsList: React.FC<SelectedMetricsListProps> = ({
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => onRemoveMetric(metric.code)}
+                      // onClick={() => onRemoveMetric(metric.code)}
+                      onClick={() => onRemoveMetric(metric)}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -140,6 +142,7 @@ const SelectedMetricsList: React.FC<SelectedMetricsListProps> = ({
                     <div className="flex gap-4 text-xs text-muted-foreground">
                       <span>Unit: {metric.unit}</span>
                       <span>Type: {metric.dataType}</span>
+                      <span>Industry: {metric.industry}</span>
                     </div>
                   </div>
                   <div className="flex gap-2">

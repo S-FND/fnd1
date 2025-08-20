@@ -17,6 +17,8 @@ export interface ESGMetric {
     tableRows?: number; // For table format
   };
   industry?:string;
+  esg:string;
+  showOnDashboard?: boolean; // Whether to show this metric on the dashboard
 }
 
 export interface ESGMetricWithTracking extends ESGMetric {
