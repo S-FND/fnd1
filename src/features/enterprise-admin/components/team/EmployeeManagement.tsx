@@ -150,19 +150,26 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
   const handleAssignEmployee = async (employee: Employee) => {
     setSelectedEmployee(employee);
 
-    // Fetch current user access
-    try {
-      const accessData = await fetchUserAccess(employee._id);
-      if (accessData?.status) {
-        setSelectedUrls(accessData.data || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch user access:', error);
+    // Use the employee's existing accessUrls instead of fetching from another endpoint
+    setSelectedUrls(employee.accessUrls || []);
+
+    // Update selectAll based on current accessUrls
+    if (employee.accessUrls && employee.accessUrls.length === urlList.length) {
+      setSelectAll(true);
+    } else {
+      setSelectAll(false);
     }
 
     setIsAssignDialogOpen(true);
   };
-
+  useEffect(() => {
+    // Keep selectAll checkbox in sync with actual selections
+    if (selectedUrls.length === urlList.length && urlList.length > 0) {
+      setSelectAll(true);
+    } else {
+      setSelectAll(false);
+    }
+  }, [selectedUrls, urlList]);
   const handleSaveEdit = async () => {
     try {
       if (!selectedEmployee) return;
@@ -196,9 +203,20 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
     if (!selectedEmployee) return;
 
     try {
-      const [response, error] = await assignEmployeeUrls(selectedEmployee._id, selectedUrls);
+      // Create the complete update object following your example pattern
+      const updateObj = {
+        ...selectedEmployee, // Include all existing employee data
+        accessUrls: selectedUrls, // Update only the accessUrls
+        updatedAt: new Date().toISOString() // Add current timestamp
+      };
 
-      if (response?.status) {
+      console.log('Sending to /subuser/activate:', updateObj);
+
+      const [response, error] = await updateEmployee(updateObj);
+
+      console.log('API Response:', response);
+
+      if (response?.status === true || response?._id) {
         toast.success('Access URLs assigned successfully');
         refreshData();
         setIsAssignDialogOpen(false);
@@ -287,7 +305,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
     return matchesSearch && matchesRole && matchesLocation;
   });
 
-  const roles = ['admin', 'maker', 'checker', 'viewer','User'];
+  const roles = ['admin', 'maker', 'checker', 'viewer', 'User'];
 
   if (loading || isUrlLoading) {
     return (
@@ -497,7 +515,13 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
       </Dialog>
 
       {/* Assignment Dialog */}
-      <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
+      <Dialog open={isAssignDialogOpen} onOpenChange={(open) => {
+        setIsAssignDialogOpen(open);
+        if (!open) {
+          setSelectedUrls([]);
+          setSelectAll(false);
+        }
+      }}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
@@ -515,43 +539,52 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
                   checked={selectAll}
                   onCheckedChange={toggleSelectAll}
                 />
-                <span>Select All</span>
+                <span>Select All ({selectedUrls.length}/{urlList.length} selected)</span>
               </label>
             </div>
 
-            {Object.entries(getUrlHierarchy()).map(([category, urls]) => (
-              <div key={category} className="space-y-3">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`category-${category}`}
-                    checked={urls.every(url => isUrlSelected(`${category}-${url}`))}
-                    onCheckedChange={(checked) => {
-                      urls.forEach(url => {
-                        handleUrlSelect(`${category}-${url}`, !!checked);
-                      });
-                    }}
-                  />
-                  <Label htmlFor={`category-${category}`} className="font-medium">
-                    {category}
-                  </Label>
-                </div>
+            {Object.entries(getUrlHierarchy()).map(([category, urls]) => {
+              const categoryUrls = urls.map(url => `${category}-${url}`);
+              const allCategoryUrlsSelected = categoryUrls.every(url => selectedUrls.includes(url));
+              const someCategoryUrlsSelected = categoryUrls.some(url => selectedUrls.includes(url));
 
-                <div className="ml-6 space-y-2">
-                  {urls.map((url, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`url-${category}-${url}`}
-                        checked={isUrlSelected(`${category}-${url}`)}
-                        onCheckedChange={(checked) => handleUrlSelect(`${category}-${url}`, !!checked)}
-                      />
-                      <Label htmlFor={`url-${category}-${url}`} className="text-sm">
-                        {url}
-                      </Label>
-                    </div>
-                  ))}
+              return (
+                <div key={category} className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`category-${category}`}
+                      checked={allCategoryUrlsSelected}
+                      onCheckedChange={(checked) => {
+                        categoryUrls.forEach(url => {
+                          handleUrlSelect(url, !!checked);
+                        });
+                      }}
+                    />
+                    <Label htmlFor={`category-${category}`} className="font-medium">
+                      {category} ({categoryUrls.filter(url => selectedUrls.includes(url)).length}/{categoryUrls.length})
+                    </Label>
+                  </div>
+
+                  <div className="ml-6 space-y-2">
+                    {urls.map((url, index) => {
+                      const fullUrl = `${category}-${url}`;
+                      return (
+                        <div key={index} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`url-${fullUrl}`}
+                            checked={selectedUrls.includes(fullUrl)}
+                            onCheckedChange={(checked) => handleUrlSelect(fullUrl, !!checked)}
+                          />
+                          <Label htmlFor={`url-${fullUrl}`} className="text-sm">
+                            {url}
+                          </Label>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             <div className="flex gap-2">
               <Button onClick={() => setIsAssignDialogOpen(false)} variant="outline" className="flex-1">
