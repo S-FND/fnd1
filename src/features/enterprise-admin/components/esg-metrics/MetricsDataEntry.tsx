@@ -81,18 +81,32 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
   const getMetricsKpiData = async (selectedYear) => {
     try {
       let metricDataResponse = await httpClient.get(`materiality/metrics/data-entry?year=${selectedYear}`)
-      // console.log('metricDataResponse', metricDataResponse)
       if (metricDataResponse['data']['status']) {
-        setDataEntries(metricDataResponse['data']['data']['metricsEntries'])
-      }else {
+        const metricsEntries = metricDataResponse['data']['data']['metricsEntries'];
+        
+        let flattenedEntries = [];
+        
+        if (Array.isArray(metricsEntries)) {
+          flattenedEntries = metricsEntries.flatMap(entry => {
+            if (Array.isArray(entry)) {
+              return entry;
+            } else if (typeof entry === 'object' && entry !== null) {
+              return [entry];
+            }
+            return [];
+          });
+        } else {
+          flattenedEntries = [];
+        }
+        
+        setDataEntries(flattenedEntries);
+      } else {
         setDataEntries([]);
       }
     } catch (error) {
       console.error("Error fetching metrics KPI data:", error);
-      // toast.error('Failed to load metrics data');
       setDataEntries([]); 
     }
-
   }
 
   const getGraph = () => {
@@ -102,6 +116,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
 
   // Load configured metrics from localStorage
   useEffect(() => {
+    console.log('its hit when we change year ');
     // const saved = localStorage.getItem('savedESGMetrics');
     // if (saved) {
     //   try {
@@ -114,12 +129,12 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
     // getGraph()
     getMetricsKpiData(selectedFinancialYear);
     setConfiguredMetrics(finalMetrics)
-  }, []);
+  }, [finalMetrics,selectedFinancialYear]);
 
 
 
   // Load existing data entries from localStorage
-  useEffect(() => {
+  // useEffect(() => {
     // const savedEntries = localStorage.getItem('esgDataEntries');
     // if (savedEntries) {
     //   try {
@@ -129,8 +144,8 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
     //     console.error('Error loading data entries:', error);
     //   }
     // }
-    getMetricsKpiData(selectedFinancialYear);
-  }, [selectedFinancialYear]);
+  //   getMetricsKpiData(selectedFinancialYear);
+  // }, [selectedFinancialYear]);
 
   // Save data entries to localStorage whenever they change
   useEffect(() => {
