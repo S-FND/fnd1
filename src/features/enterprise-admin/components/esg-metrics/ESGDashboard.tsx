@@ -391,11 +391,18 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
                        <SelectValue placeholder="Select Year" />
                      </SelectTrigger>
                      <SelectContent>
-                       {Array.from(new Set(processedData.map(entry => entry.year.toString())))
-                         .sort((a, b) => Number(b) - Number(a))
-                         .map(year => (
+                       {(() => {
+                         // Sample years + years from data
+                         const currentYear = new Date().getFullYear();
+                         const sampleYears = [currentYear, currentYear - 1, currentYear - 2, currentYear - 3, currentYear - 4];
+                         const dataYears = Array.from(new Set(processedData.map(entry => entry.year.toString())));
+                         const allYears = Array.from(new Set([...sampleYears.map(y => y.toString()), ...dataYears]))
+                           .sort((a, b) => Number(b) - Number(a));
+                         
+                         return allYears.map(year => (
                            <SelectItem key={year} value={year}>{year}</SelectItem>
-                         ))}
+                         ));
+                       })()}
                      </SelectContent>
                    </Select>
                   
