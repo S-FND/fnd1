@@ -106,14 +106,14 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
     }));
   }, [processedData, selectedUnit]);
 
-  // Month-on-month trend data
-  const monthlyTrends = useMemo(() => {
-    let filteredData = processedData;
-    
-    // Filter by selected year and month
-    if (selectedTrendYear !== 'all') {
-      filteredData = processedData.filter(entry => entry.year.toString() === selectedTrendYear);
-    }
+   // Month-on-month trend data
+   const monthlyTrends = useMemo(() => {
+     let filteredData = processedData;
+     
+     // Filter by selected year and month
+     if (selectedTrendYear) {
+       filteredData = processedData.filter(entry => entry.year.toString() === selectedTrendYear);
+     }
     
     if (selectedTrendMonth !== 'all') {
       filteredData = filteredData.filter(entry => {
@@ -385,20 +385,19 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
               <CardHeader>
                 <CardTitle>Monthly Trends</CardTitle>
                 <CardDescription>Month-on-month performance</CardDescription>
-                <div className="flex gap-2 mt-4">
-                  <Select value={selectedTrendYear} onValueChange={setSelectedTrendYear}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="Year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Years</SelectItem>
-                      {Array.from(new Set(processedData.map(entry => entry.year.toString())))
-                        .sort()
-                        .map(year => (
-                          <SelectItem key={year} value={year}>{year}</SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
+                 <div className="flex gap-2 mt-4">
+                   <Select value={selectedTrendYear} onValueChange={setSelectedTrendYear}>
+                     <SelectTrigger className="w-32">
+                       <SelectValue placeholder="Select Year" />
+                     </SelectTrigger>
+                     <SelectContent>
+                       {Array.from(new Set(processedData.map(entry => entry.year.toString())))
+                         .sort((a, b) => Number(b) - Number(a))
+                         .map(year => (
+                           <SelectItem key={year} value={year}>{year}</SelectItem>
+                         ))}
+                     </SelectContent>
+                   </Select>
                   
                   <Select value={selectedTrendMonth} onValueChange={setSelectedTrendMonth}>
                     <SelectTrigger className="w-32">
