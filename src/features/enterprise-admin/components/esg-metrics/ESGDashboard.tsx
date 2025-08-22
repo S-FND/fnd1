@@ -37,6 +37,8 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
   const [selectedPeriod, setSelectedPeriod] = useState<string>('12months');
   const [selectedUnit, setSelectedUnit] = useState<string>('organization');
   const [viewMode, setViewMode] = useState<'charts' | 'trends' | 'comparison'>('charts');
+  const [selectedTrendYear, setSelectedTrendYear] = useState<string>(new Date().getFullYear().toString());
+  const [selectedTrendMonth, setSelectedTrendMonth] = useState<string>('all');
 
   // Load data on component mount
   useEffect(() => {
@@ -106,7 +108,21 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
 
   // Month-on-month trend data
   const monthlyTrends = useMemo(() => {
-    const monthly = processedData.reduce((acc, entry) => {
+    let filteredData = processedData;
+    
+    // Filter by selected year and month
+    if (selectedTrendYear !== 'all') {
+      filteredData = processedData.filter(entry => entry.year.toString() === selectedTrendYear);
+    }
+    
+    if (selectedTrendMonth !== 'all') {
+      filteredData = filteredData.filter(entry => {
+        const entryMonth = new Date(entry.date).getMonth();
+        return entryMonth.toString() === selectedTrendMonth;
+      });
+    }
+    
+    const monthly = filteredData.reduce((acc, entry) => {
       const monthKey = entry.month;
       if (!acc[monthKey]) {
         acc[monthKey] = { month: monthKey, values: [], count: 0 };
@@ -123,26 +139,30 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
         count: item.count
       }))
       .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
-  }, [processedData]);
+  }, [processedData, selectedTrendYear, selectedTrendMonth]);
 
-  // Year-on-year comparison
+  // Year-on-year comparison with enhanced trend analysis
   const yearlyComparison = useMemo(() => {
+    const currentYear = new Date().getFullYear();
     const yearly = processedData.reduce((acc, entry) => {
       const year = entry.year.toString();
       if (!acc[year]) {
-        acc[year] = { year, values: [], count: 0 };
+        acc[year] = { year, values: [], count: 0, isCurrentYear: entry.year === currentYear };
       }
       acc[year].values.push(Number(entry.value) || 0);
       acc[year].count++;
       return acc;
-    }, {} as Record<string, { year: string; values: number[]; count: number }>);
+    }, {} as Record<string, { year: string; values: number[]; count: number; isCurrentYear: boolean }>);
 
-    return Object.values(yearly).map(item => ({
-      year: item.year,
-      value: item.values.reduce((sum, val) => sum + val, 0) / item.count,
-      total: item.values.reduce((sum, val) => sum + val, 0),
-      count: item.count
-    }));
+    return Object.values(yearly)
+      .map(item => ({
+        year: item.isCurrentYear ? `${item.year} (YTD)` : item.year,
+        value: item.values.reduce((sum, val) => sum + val, 0) / item.count,
+        total: item.values.reduce((sum, val) => sum + val, 0),
+        count: item.count,
+        isCurrentYear: item.isCurrentYear
+      }))
+      .sort((a, b) => parseInt(a.year) - parseInt(b.year));
   }, [processedData]);
 
   // Category-wise breakdown
@@ -229,14 +249,25 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
 
   return (
     <div className="space-y-6">
-      {/* Header Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
+      {/* Metrics Overview */}
+      {renderMetricOverview()}
+
+      {/* Main Dashboard Tabs */}
+      <Tabs value={viewMode} onValueChange={(value: any) => setViewMode(value)}>
+        <TabsList>
+          <TabsTrigger value="charts">Charts & Trends</TabsTrigger>
+          <TabsTrigger value="trends">Timeline Analysis</TabsTrigger>
+          <TabsTrigger value="comparison">Category Comparison</TabsTrigger>
+        </TabsList>
+
+        {/* Centered Title between Tabs and Controls */}
+        <div className="text-center py-6">
           <h2 className="text-2xl font-bold tracking-tight">ESG Metrics Dashboard</h2>
           <p className="text-muted-foreground">Monitor and analyze your ESG performance</p>
         </div>
-        
-        <div className="flex gap-2">
+
+        {/* Header Controls */}
+        <div className="flex justify-end gap-2 mb-6">
           <Select value={selectedUnit} onValueChange={setSelectedUnit}>
             <SelectTrigger className="w-40">
               <SelectValue />
@@ -259,18 +290,6 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
             </SelectContent>
           </Select>
         </div>
-      </div>
-
-      {/* Metrics Overview */}
-      {renderMetricOverview()}
-
-      {/* Main Dashboard Tabs */}
-      <Tabs value={viewMode} onValueChange={(value: any) => setViewMode(value)}>
-        <TabsList>
-          <TabsTrigger value="charts">Charts & Trends</TabsTrigger>
-          <TabsTrigger value="trends">Timeline Analysis</TabsTrigger>
-          <TabsTrigger value="comparison">Category Comparison</TabsTrigger>
-        </TabsList>
 
         <TabsContent value="charts" className="space-y-6">
           <Card>
@@ -355,6 +374,35 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
               <CardHeader>
                 <CardTitle>Monthly Trends</CardTitle>
                 <CardDescription>Month-on-month performance</CardDescription>
+                <div className="flex gap-2 mt-4">
+                  <Select value={selectedTrendYear} onValueChange={setSelectedTrendYear}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Years</SelectItem>
+                      {Array.from(new Set(processedData.map(entry => entry.year.toString())))
+                        .sort()
+                        .map(year => (
+                          <SelectItem key={year} value={year}>{year}</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select value={selectedTrendMonth} onValueChange={setSelectedTrendMonth}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="Month" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Months</SelectItem>
+                      {Array.from({ length: 12 }, (_, i) => (
+                        <SelectItem key={i} value={i.toString()}>
+                          {new Date(2000, i).toLocaleDateString('en-US', { month: 'long' })}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </CardHeader>
               <CardContent>
                 {monthlyTrends.length > 0 ? (
@@ -378,7 +426,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
             <Card>
               <CardHeader>
                 <CardTitle>Year-on-Year Comparison</CardTitle>
-                <CardDescription>Annual performance comparison</CardDescription>
+                <CardDescription>Trend from data collection start to current year till date</CardDescription>
               </CardHeader>
               <CardContent>
                 {yearlyComparison.length > 0 ? (
@@ -387,8 +435,16 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="year" />
                       <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="value" fill="#ffc658" />
+                      <Tooltip formatter={(value, name, props) => [
+                        value,
+                        props.payload.isCurrentYear ? 'Current Year (YTD)' : 'Full Year'
+                      ]} />
+                      <Bar 
+                        dataKey="value" 
+                        fill="#ffc658"
+                        stroke="#f39c12"
+                        strokeWidth={1}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
