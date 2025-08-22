@@ -254,17 +254,17 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
 
       {/* Main Dashboard Tabs */}
       <Tabs value={viewMode} onValueChange={(value: any) => setViewMode(value)}>
-        <TabsList>
-          <TabsTrigger value="charts">Charts & Trends</TabsTrigger>
-          <TabsTrigger value="trends">Timeline Analysis</TabsTrigger>
-          <TabsTrigger value="comparison">Category Comparison</TabsTrigger>
-        </TabsList>
-
         {/* Centered Title above Charts & Trends tabs */}
         <div className="text-center py-6">
           <h2 className="text-2xl font-bold tracking-tight">ESG Metrics Dashboard</h2>
           <p className="text-muted-foreground">Monitor and analyze your ESG performance</p>
         </div>
+
+        <TabsList>
+          <TabsTrigger value="charts">Charts & Trends</TabsTrigger>
+          <TabsTrigger value="trends">Timeline Analysis</TabsTrigger>
+          <TabsTrigger value="comparison">Category Comparison</TabsTrigger>
+        </TabsList>
 
         {/* Header Controls */}
         <div className="flex justify-end gap-2 mb-6">
