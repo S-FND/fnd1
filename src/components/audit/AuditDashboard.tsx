@@ -105,11 +105,7 @@ const AuditDashboard: React.FC = () => {
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Supplier Audits</CardTitle>
-          <CardDescription>Track and manage supplier sustainability audits</CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <Tabs defaultValue="all">
             <TabsList>
               <TabsTrigger value="all">All Suppliers</TabsTrigger>
