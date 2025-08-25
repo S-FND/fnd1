@@ -132,8 +132,8 @@ export default function MetricsGraph1() {
           <YAxis />
           <Tooltip />
           <Legend />
-          {/* <ReferenceLine y={baseline} stroke="blue" label="Baseline" />
-          <ReferenceLine y={target} stroke="red" label="Target" /> */}
+          <ReferenceLine y={baseline} stroke="blue" label="Baseline" />
+          <ReferenceLine y={target} stroke="red" label="Target" />
           <Line type="monotone" dataKey="value" stroke="#8884d8" />
         </LineChart>
       );
@@ -145,8 +145,8 @@ export default function MetricsGraph1() {
           <YAxis />
           <Tooltip />
           <Legend />
-          {/* <ReferenceLine y={baseline} stroke="blue" label="Baseline" />
-          <ReferenceLine y={target} stroke="red" label="Target" /> */}
+          <ReferenceLine y={baseline} stroke="blue" label="Baseline" />
+          <ReferenceLine y={target} stroke="red" label="Target" />
           <Bar dataKey="value" fill="#82ca9d" />
         </BarChart>
       );
@@ -158,8 +158,8 @@ export default function MetricsGraph1() {
           <YAxis />
           <Tooltip />
           <Legend />
-          {/* <ReferenceLine y={baseline} stroke="blue" label="Baseline" />
-          <ReferenceLine y={target} stroke="red" label="Target" /> */}
+          <ReferenceLine y={baseline} stroke="blue" label="Baseline" />
+          <ReferenceLine y={target} stroke="red" label="Target" />
           <Area
             type="monotone"
             dataKey="value"

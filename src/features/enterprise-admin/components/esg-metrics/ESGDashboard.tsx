@@ -85,7 +85,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
     //     console.error('Error loading entries:', error);
     //   }
     // }
-    // getGraphData(selectedYear);
+    getGraphData(selectedYear);
   }, []);
 
   // Process data for charts
@@ -366,7 +366,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
             {/* <MetricsGraph /> */}
             {/* <MetricsGraph1 /> */}
             {/* <DynamicChart /> */}
-            {/* <CustomDashboardTab graphData={graphData} /> */}
+            <CustomDashboardTab graphData={graphData} />
           </div>
         </TabsContent>
 
@@ -388,6 +388,8 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
                       <Area type="monotone" dataKey="value" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
                     </AreaChart>
                   </ResponsiveContainer>
+                  //  <DynamicChart /> 
+                   
                 ) : (
                   <div className="text-center py-12 text-muted-foreground">
                     <p>No monthly trend data available</p>
@@ -419,6 +421,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
                 )}
               </CardContent>
             </Card>
+            <MetricsGraph1 /> 
           </div>
         </TabsContent>
 
