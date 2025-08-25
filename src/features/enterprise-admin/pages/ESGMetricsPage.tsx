@@ -13,6 +13,8 @@ import { httpClient } from '@/lib/httpClient';
 
 interface MaterialTopic {
   id: string;
+  name: string; // Add this property
+  category: string;
   topic: string;
   esg: string;
   businessImpact: number;
@@ -20,6 +22,7 @@ interface MaterialTopic {
   color: string;
   description: string;
   framework?: string;
+  industry?: string;
 }
 
 const ESGMetricsPage: React.FC = () => {
