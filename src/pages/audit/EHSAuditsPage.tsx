@@ -458,11 +458,7 @@ Report generated on: ${new Date().toLocaleDateString()}
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle>EHS Audit Schedule</CardTitle>
-            <CardDescription>Track environment, health & safety audits across all locations</CardDescription>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="space-y-4">
               {filteredAudits.map((audit) => (
                 <div key={audit.id} className="flex items-center justify-between p-4 border rounded-lg">
