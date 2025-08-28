@@ -63,6 +63,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                   key={item.name}
                   isExpanded={expandedMenus.audit}
                   onToggle={() => toggleMenu('audit')}
+                  role={role}
                 />
               );
             }

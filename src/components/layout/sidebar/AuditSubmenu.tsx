@@ -1,26 +1,28 @@
 
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
-import { ChevronDown, ChevronRight, FileText, Users, Shield, Building } from 'lucide-react';
+import { ChevronDown, ChevronRight, FileText } from 'lucide-react';
 import { SidebarMenuItem, SidebarMenuButton, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { getNavigationItems } from './navigationData';
 
 interface AuditSubmenuProps {
   isExpanded: boolean;
   onToggle: () => void;
+  role: string;
 }
 
 export const AuditSubmenu: React.FC<AuditSubmenuProps> = ({
   isExpanded,
-  onToggle
+  onToggle,
+  role
 }) => {
   const location = useLocation();
 
-  const submenuItems = [
-    { name: "Supplier Audits", href: "/audit/supplier", icon: Users },
-    { name: "EHS Audits", href: "/audit/ehs", icon: Shield },
-    { name: "Internal Audits", href: "/audit/internal", icon: Building }
-  ];
+  // Get audit submenu items from navigation data
+  const navigationItems = getNavigationItems(role);
+  const auditItem = navigationItems.find(item => item.name === 'Audit');
+  const submenuItems = auditItem?.submenu || [];
 
   return (
     <SidebarMenuItem>
