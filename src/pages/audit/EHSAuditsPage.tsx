@@ -160,12 +160,6 @@ Report generated on: ${new Date().toLocaleDateString()}
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">EHS Audits</h1>
-        <p className="text-muted-foreground">
-          Environment, Health & Safety audit management and compliance tracking
-        </p>
-      </div>
 
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1 relative">
