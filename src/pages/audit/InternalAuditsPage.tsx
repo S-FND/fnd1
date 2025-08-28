@@ -142,11 +142,7 @@ const InternalAuditsPage = () => {
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Internal Audit Pipeline</CardTitle>
-            <CardDescription>Track internal ESG and compliance audits across departments</CardDescription>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <Tabs defaultValue="all">
               <TabsList>
                 <TabsTrigger value="all">All Audits</TabsTrigger>
