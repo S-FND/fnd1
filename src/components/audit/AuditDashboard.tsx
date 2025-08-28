@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import AuditSummaryStats from './AuditSummaryStats';
@@ -95,11 +95,7 @@ const AuditDashboard: React.FC = () => {
       />
 
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle>Audit Summary</CardTitle>
-          <CardDescription>Overview of supplier sustainability compliance</CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <AuditSummaryStats suppliers={suppliers} />
         </CardContent>
       </Card>

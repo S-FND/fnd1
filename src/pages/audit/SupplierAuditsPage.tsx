@@ -18,16 +18,7 @@ const SupplierAuditsPage = () => {
 
   return (
     <UnifiedSidebarLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Supplier Audits</h1>
-          <p className="text-muted-foreground">
-            Manage and track sustainability audits for your suppliers
-          </p>
-        </div>
-        
-        <AuditDashboard />
-      </div>
+      <AuditDashboard />
     </UnifiedSidebarLayout>
   );
 };
