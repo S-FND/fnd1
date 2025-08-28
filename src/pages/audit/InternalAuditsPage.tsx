@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -67,110 +66,108 @@ const InternalAuditsPage = () => {
   );
 
   return (
-    <UnifiedSidebarLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Internal Audits</h1>
-          <p className="text-muted-foreground">
-            Internal ESG and compliance audits across departments and business units
-          </p>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Internal Audits</h1>
+        <p className="text-muted-foreground">
+          Internal ESG and compliance audits across departments and business units
+        </p>
+      </div>
 
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search internal audits..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            New Audit
-          </Button>
-          <Button variant="outline">
-            <Download className="mr-2 h-4 w-4" />
-            Audit Reports
-          </Button>
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search internal audits..."
+            className="pl-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          New Audit
+        </Button>
+        <Button variant="outline">
+          <Download className="mr-2 h-4 w-4" />
+          Audit Reports
+        </Button>
+      </div>
 
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Active Audits</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {internalAudits.filter(a => a.status === 'in_progress').length}
-              </div>
-              <p className="text-xs text-muted-foreground">Currently ongoing</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Completed</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {internalAudits.filter(a => a.status === 'completed').length}
-              </div>
-              <p className="text-xs text-muted-foreground">This quarter</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Total Findings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {internalAudits.reduce((sum, audit) => sum + audit.findings, 0)}
-              </div>
-              <p className="text-xs text-muted-foreground">Across all audits</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Departments</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">6</div>
-              <p className="text-xs text-muted-foreground">Under audit scope</p>
-            </CardContent>
-          </Card>
-        </div>
-
+      <div className="grid gap-4 md:grid-cols-4">
         <Card>
-          <CardContent className="pt-6">
-            <Tabs defaultValue="all">
-              <TabsList>
-                <TabsTrigger value="all">All Audits</TabsTrigger>
-                <TabsTrigger value="completed">Completed</TabsTrigger>
-                <TabsTrigger value="in_progress">In Progress</TabsTrigger>
-                <TabsTrigger value="planned">Planned</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="all" className="mt-4">
-                <AuditList audits={filteredAudits} />
-              </TabsContent>
-
-              <TabsContent value="completed" className="mt-4">
-                <AuditList audits={filteredAudits.filter(a => a.status === 'completed')} />
-              </TabsContent>
-
-              <TabsContent value="in_progress" className="mt-4">
-                <AuditList audits={filteredAudits.filter(a => a.status === 'in_progress')} />
-              </TabsContent>
-
-              <TabsContent value="planned" className="mt-4">
-                <AuditList audits={filteredAudits.filter(a => a.status === 'planned')} />
-              </TabsContent>
-            </Tabs>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Active Audits</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {internalAudits.filter(a => a.status === 'in_progress').length}
+            </div>
+            <p className="text-xs text-muted-foreground">Currently ongoing</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {internalAudits.filter(a => a.status === 'completed').length}
+            </div>
+            <p className="text-xs text-muted-foreground">This quarter</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Total Findings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {internalAudits.reduce((sum, audit) => sum + audit.findings, 0)}
+            </div>
+            <p className="text-xs text-muted-foreground">Across all audits</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Departments</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">6</div>
+            <p className="text-xs text-muted-foreground">Under audit scope</p>
           </CardContent>
         </Card>
       </div>
-    </UnifiedSidebarLayout>
+
+      <Card>
+        <CardContent className="pt-6">
+          <Tabs defaultValue="all">
+            <TabsList>
+              <TabsTrigger value="all">All Audits</TabsTrigger>
+              <TabsTrigger value="completed">Completed</TabsTrigger>
+              <TabsTrigger value="in_progress">In Progress</TabsTrigger>
+              <TabsTrigger value="planned">Planned</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all" className="mt-4">
+              <AuditList audits={filteredAudits} />
+            </TabsContent>
+
+            <TabsContent value="completed" className="mt-4">
+              <AuditList audits={filteredAudits.filter(a => a.status === 'completed')} />
+            </TabsContent>
+
+            <TabsContent value="in_progress" className="mt-4">
+              <AuditList audits={filteredAudits.filter(a => a.status === 'in_progress')} />
+            </TabsContent>
+
+            <TabsContent value="planned" className="mt-4">
+              <AuditList audits={filteredAudits.filter(a => a.status === 'planned')} />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

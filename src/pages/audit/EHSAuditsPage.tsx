@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -160,25 +159,24 @@ Report generated on: ${new Date().toLocaleDateString()}
   };
 
   return (
-    <UnifiedSidebarLayout>
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">EHS Audits</h1>
-          <p className="text-muted-foreground">
-            Environment, Health & Safety audit management and compliance tracking
-          </p>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">EHS Audits</h1>
+        <p className="text-muted-foreground">
+          Environment, Health & Safety audit management and compliance tracking
+        </p>
+      </div>
 
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search EHS audits..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search EHS audits..."
+            className="pl-8"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
           <Dialog open={isScheduleDialogOpen} onOpenChange={setIsScheduleDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -484,8 +482,7 @@ Report generated on: ${new Date().toLocaleDateString()}
           </CardContent>
         </Card>
       </div>
-    </UnifiedSidebarLayout>
-  );
+    );
 };
 
 const StatusBadge: React.FC<{status: string}> = ({status}) => {
