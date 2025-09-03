@@ -11,6 +11,12 @@ export interface PortfolioCompany {
   name: string;
   slug: string;
   settings: Record<string, any>;
+  is_approved?: boolean;
+  approval_status?: string;
+  approved_at?: string | null;
+  approved_by?: string | null;
+  rejection_reason?: string | null;
+  access_notes?: string | null;
   created_at: string;
   updated_at: string;
 }
