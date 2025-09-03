@@ -94,7 +94,7 @@ export const Navbar: React.FC = () => {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to="/profile">Profile Settings</Link>
+                  <Link to="/company">Profile Settings</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
               </DropdownMenuContent>

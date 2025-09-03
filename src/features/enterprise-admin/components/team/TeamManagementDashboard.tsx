@@ -97,7 +97,7 @@ const TeamManagementDashboard = () => {
       ...emp,
       role: emp.accessUrls?.includes('admin') ? 'Admin' : 'User',
       department: 'General',
-      location: emp.selectedLocation || 'Unassigned',
+      location: emp?.userAccess?.[0]?.location || 'Unassigned',
       city: emp.selectedLocation?.split(' ')[0] || 'Unknown',
       status: emp.active ? 'Active' : 'Inactive'
     }));

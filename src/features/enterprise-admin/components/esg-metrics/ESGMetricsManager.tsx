@@ -73,7 +73,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
   });
 
   useEffect(() => {
-
+    if (!materialTopics || !finalMetricsList) return;
     setSavedMetrics(finalMetricsList.map((m) => {
       if (m.esg) {
         return m;
@@ -158,6 +158,8 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
     //     console.error('Error loading custom metrics:', error);
     //   }
     // }
+    if (!materialTopics || !finalMetricsList) return;
+
     const remainingMetrics = [...customMetricsList, ...standardMetrics].filter(
       metric => !finalMetricsList.some(toRemove => toRemove.code === metric.code)
     );
