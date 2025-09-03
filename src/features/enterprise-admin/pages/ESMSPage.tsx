@@ -258,7 +258,7 @@ const ESMSPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Error loading ESMS ', error);
-      toast.error('Failed to load ESMS data');
+      // toast.error('Failed to load ESMS data');
     } finally {
       setIsLoading(false);
     }

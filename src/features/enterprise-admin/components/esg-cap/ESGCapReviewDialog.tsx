@@ -27,10 +27,11 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
   const [actualCompletionDate, setActualCompletionDate] = useState<string>(
     item.status === 'completed' ? new Date().toISOString().split('T')[0] : ''
   );
+
   const { toast } = useToast();
 
   const isAccepted = item.status === 'completed';
-  
+
   const handleInputChange = (field: keyof ESGCapItem, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -46,29 +47,8 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
     }
   };
 
-  const handleRequestChange = () => {
-    onUpdate(formData);
-    toast({
-      title: "CAP Change Requested",
-      description: "Your changes have been submitted for review.",
-    });
-    onClose();
-  };
-
-  const handleAcceptCAP = () => {
-    const updatedItem = {
-      ...formData,
-      status: 'completed' as ESGCapStatus
-    };
-    onUpdate(updatedItem);
-    toast({
-      title: "CAP Accepted",
-      description: "The corrective action plan item has been accepted and frozen.",
-    });
-    onClose();
-  };
-
   const handleSave = () => {
+    console.log('formData________', formData);
     onUpdate(formData);
     toast({
       title: "Changes saved",
@@ -76,22 +56,21 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
     });
     onClose();
   };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Review CAP Item</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="issue">Issue *</Label>
+              <Label htmlFor="item">Item *</Label>
               <Input
-                id="issue"
-                value={formData.issue}
-                onChange={(e) => handleInputChange('issue', e.target.value)}
+                id="item"
+                value={formData.item}
+                onChange={(e) => handleInputChange('item', e.target.value)}
                 disabled={isAccepted}
               />
             </div>
@@ -115,22 +94,22 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="measures">Measures</Label>
             <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
+              id="measures"
+              value={formData.measures}
+              onChange={(e) => handleInputChange('measures', e.target.value)}
               disabled={isAccepted}
               rows={3}
             />
           </div>
 
           <div>
-            <Label htmlFor="recommendation">Recommendation</Label>
+            <Label htmlFor="resource">Resource</Label>
             <Textarea
-              id="recommendation"
-              value={formData.recommendation}
-              onChange={(e) => handleInputChange('recommendation', e.target.value)}
+              id="resource"
+              value={formData.resource}
+              onChange={(e) => handleInputChange('resource', e.target.value)}
               disabled={isAccepted}
               rows={3}
             />
@@ -148,17 +127,17 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="High">High</SelectItem>
+                  <SelectItem value="Medium">Medium</SelectItem>
+                  <SelectItem value="Low">Low</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label htmlFor="dealCondition">Deal Condition</Label>
+              <Label htmlFor="CS">Deal Condition</Label>
               <Select
-                value={formData.dealCondition}
-                onValueChange={(value: ESGCapDealCondition) => handleInputChange('dealCondition', value)}
+                value={formData.CS}
+                onValueChange={(value: ESGCapDealCondition) => handleInputChange('CS', value)}
                 disabled={isAccepted}
               >
                 <SelectTrigger>
@@ -175,21 +154,21 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="assignedTo">Assigned To</Label>
+              <Label htmlFor="deliverable">Deliverable</Label>
               <Input
-                id="assignedTo"
-                value={formData.assignedTo || ''}
-                onChange={(e) => handleInputChange('assignedTo', e.target.value)}
+                id="deliverable"
+                value={formData.deliverable || ''}
+                onChange={(e) => handleInputChange('deliverable', e.target.value)}
                 disabled={isAccepted}
               />
             </div>
             <div>
-              <Label htmlFor="deadline">Deadline</Label>
+              <Label htmlFor="targetDate">Target Date</Label>
               <Input
-                id="deadline"
+                id="targetDate"
                 type="date"
-                value={formData.deadline}
-                onChange={(e) => handleInputChange('deadline', e.target.value)}
+                value={formData.targetDate}
+                onChange={(e) => handleInputChange('targetDate', e.target.value)}
                 disabled={isAccepted}
               />
             </div>
@@ -206,9 +185,12 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="Open">Open</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="in_progress">In Progress</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="delayed">Delayed</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -218,8 +200,8 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
                 <Input
                   id="actualDate"
                   type="date"
-                  value={actualCompletionDate}
-                  onChange={(e) => setActualCompletionDate(e.target.value)}
+                  value={formData.actualDate || ''}
+                  onChange={(e) => handleInputChange('actualDate', e.target.value)}
                 />
               </div>
             )}
