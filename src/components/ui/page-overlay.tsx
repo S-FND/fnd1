@@ -11,15 +11,15 @@ interface PageOverlayProps {
 }
 
 export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
-  const { isOverlayActive, isUrlOverlayActive ,getPageAccessList,setPageList} = useOverlay();
+  const { isOverlayActive, isUrlOverlayActive, getPageAccessList, setPageList } = useOverlay();
   const [shouldShowOverlay, setShouldShowOverlay] = useState(true)
   const location = useLocation();
 
-  const user:User = JSON.parse(localStorage.getItem('fandoro-user') || '{}');
+  const user: User = JSON.parse(localStorage.getItem('fandoro-user') || '{}');
   const userEmail = user?.email;
-  const [pageActiveList,setPageActiveList]=useState();
+  const [pageActiveList, setPageActiveList] = useState();
 
-  let pageListAccess=getPageAccessList()
+  let pageListAccess = getPageAccessList()
 
   // console.log("From Page-overlay : pageListAccess => ",pageListAccess)
 
@@ -30,7 +30,7 @@ export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
         let pageAccess = pageAccessResponse['data']['data']['data'];
         setPageList(pageAccess)
         setPageActiveList(pageAccess)
-        localStorage.setItem('pageAccess',JSON.stringify(pageAccess))
+        localStorage.setItem('pageAccess', JSON.stringify(pageAccess))
       }
     } catch (error) {
 
@@ -41,58 +41,63 @@ export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
   //   if(!pageListAccess){
   //     getPageAccess()
   //   }
-    
+
   // },[pageListAccess])
 
-  useEffect(()=>{
-    if(['StakeHolder','employee'].includes(user.role)){
+  useEffect(() => {
+    if (['StakeHolder', 'employee'].includes(user.role)) {
       setShouldShowOverlay(false)
     }
-    else{
-      if(!pageListAccess){
+    else {
+      if (!pageListAccess) {
         // getPageAccess()
       }
     }
-    
-  },[user])
+
+  }, [user])
 
   useEffect(() => {
-    const exemptEmails = ['abhishek@fandoro.com','shekhar.sharma@eggoz.in','sample@abclogistics.com','ved.vedprakash@fandoro.com','rajatkumar2257@gmail.com'];
+    // const exemptEmails = ['abhishek@fandoro.com','shekhar.sharma@eggoz.in','sample@abclogistics.com','ved.vedprakash@fandoro.com','rajatkumar2257@gmail.com'];
 
-    let featurePageListAccess;
-    if (!pageListAccess || !Array.isArray(pageListAccess)){
-      featurePageListAccess= JSON.parse(localStorage.getItem('pageAccess'))
-    }else{
-      featurePageListAccess= pageListAccess
-    }
-    if (exemptEmails.includes(userEmail)) {
-      setShouldShowOverlay(false);
-    } else {
-      if (['/company', '/settings'].includes(location.pathname)) {
-        setShouldShowOverlay(false)
-      }
-      else if (location.pathname == '/esg-dd/advanced' || !location.pathname.split('/').includes('esg-dd')) {
-        console.log("location.pathname", location.pathname)
-        setShouldShowOverlay(true)
-      }
-      else {
-        setShouldShowOverlay(false)
-      }
-    }
-    // let pageAccessData:{feature:string;url:string;enabled:boolean}[]=featurePageListAccess;
-    // for(let i=0;i<pageAccessData?.length;i++){
-    //   // console.log('pageAccessData',pageAccessData[i]['url'].split('/'))
-    //   // console.log(`location.pathname.split('/')`,location.pathname.split('/'))
-    //   if(location.pathname.split('/').includes(pageAccessData[i]['url'].split('/')[1])){
-    //     // console.log("Overlay",pageAccessData[i]['enabled'])
-    //     setShouldShowOverlay(!pageAccessData[i]['enabled'])
-    //     break;
+    // let featurePageListAccess;
+    // if (!pageListAccess || !Array.isArray(pageListAccess)){
+    //   featurePageListAccess= JSON.parse(localStorage.getItem('pageAccess'))
+    // }else{
+    //   featurePageListAccess= pageListAccess
+    // }
+    // if (exemptEmails.includes(userEmail)) {
+    //   setShouldShowOverlay(false);
+    // } else {
+    //   if (['/company', '/settings'].includes(location.pathname)) {
+    //     setShouldShowOverlay(false)
     //   }
-    //   else{
-    //     setShouldShowOverlay(!pageAccessData[i]['enabled'])
+    //   else if (location.pathname == '/esg-dd/advanced' || !location.pathname.split('/').includes('esg-dd')) {
+    //     console.log("location.pathname", location.pathname)
+    //     setShouldShowOverlay(true)
+    //   }
+    //   else {
+    //     setShouldShowOverlay(false)
     //   }
     // }
-    
+    let pageAccessData: { feature: string; url: string; adminEnabled: boolean }[] = localStorage.getItem('fandoro-access') ? (JSON.parse(localStorage.getItem('fandoro-access') || '{}'))['companyFeaturePageAccess'] : [];
+    if (['/company', '/settings'].includes(location.pathname)) {
+      setShouldShowOverlay(false)
+    }
+    else {
+      for (let i = 0; i < pageAccessData?.length; i++) {
+        // console.log('pageAccessData',pageAccessData[i]['url'].split('/'))
+        // console.log(`location.pathname.split('/')`,location.pathname.split('/'))
+        if (location.pathname.split('/').includes(pageAccessData[i]['url'].split('/')[1])) {
+          // console.log("Overlay",pageAccessData[i]['enabled'])
+          setShouldShowOverlay(!pageAccessData[i]['adminEnabled'])
+          break;
+        }
+        else {
+          setShouldShowOverlay(!pageAccessData[i]['adminEnabled'])
+        }
+      }
+    }
+
     // console.log('getPageAccessList',)
   }, [location.pathname])
   // Check if overlay should be active for current URL or globally
