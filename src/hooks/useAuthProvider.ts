@@ -44,7 +44,7 @@ export const useAuthProvider = () => {
         setIsLoading(false);
         return;
       }
-      const { user, token } = data;
+      const { user, token,access } = data;
 
       // 👇 Assign _id to companyId if role is company-type and companyId is missing
       if (
@@ -61,6 +61,7 @@ export const useAuthProvider = () => {
       localStorage.setItem("fandoro-user", JSON.stringify(user));
       localStorage.setItem("fandoro-token", token);
       localStorage.setItem("fandoro-permissions", JSON.stringify(rolePermissions));
+      localStorage.setItem("fandoro-access", JSON.stringify(access));
       
       toast.success("Login successful!");
       redirectBasedOnRole(user.role);
@@ -141,11 +142,23 @@ export const useAuthProvider = () => {
     const storedUser:User = JSON.parse(localStorage.getItem("fandoro-user"));
     const storedPermissions = localStorage.getItem("fandoro-permissions");
     const storedToken = localStorage.getItem("fandoro-token");
-    // console.log('storedUser',storedUser)
-    // console.log('storedUser role',storedUser.role)
+    console.log('storedUser',storedUser)
+    console.log('storedUser role',storedUser.role)
     if(storedUser && storedToken ){
+      if(roles && roles.length>0){
+        if(roles.includes(storedUser.role)){
+          setIsLoading(false)
+          return true;
+        }
+        else{
+          setIsLoading(false)
+          return false;
+        }
+      }
+      else{
       setIsLoading(false)
       return true;
+      }
     }
     else{
       return false;

@@ -42,19 +42,7 @@ const FeatureManagementPage = () => {
     }
   }, [companyFeatures]);
 
-  const getPageAccess = async () => {
-    try {
-      let pageAccessResponse = await httpClient.get('company/settings/access');
-      console.log('pageAccessResponse', pageAccessResponse)
-      if (pageAccessResponse['status'] == 200) {
-        let pageAccess = pageAccessResponse['data']['data']['data'];
-        console.log('pageAccessData', pageAccessData)
-        setPageAccessData(pageAccess)
-      }
-    } catch (error) {
-
-    }
-  }
+  
   const [validation,setValidation]=useState(null);
   const [availableFeatures,setAvailableFeatures]=useState(null);
   const [categorizedFeatures,setCategorizedFeatures]=useState<CategorizedFeatures | null>(null)
@@ -74,6 +62,11 @@ const FeatureManagementPage = () => {
   }, [pageAccessData])
 
   useEffect(() => {
+    let featureAccess=JSON.parse(localStorage.getItem('fandoro-access') || 'null');
+    if(featureAccess){
+      setPageAccessData(featureAccess['companyFeaturePageAccess'])
+      // setPageList(featureAccess)
+    }
     // getPageAccess()
   }, [])
 
