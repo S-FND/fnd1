@@ -79,7 +79,9 @@ export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
     //     setShouldShowOverlay(false)
     //   }
     // }
-    let pageAccessData: { feature: string; url: string; adminEnabled: boolean }[] = localStorage.getItem('fandoro-access') ? (JSON.parse(localStorage.getItem('fandoro-access') || '{}'))['companyFeaturePageAccess'] : [];
+    let accessData=localStorage.getItem('fandoro-access')
+    let pageAccessData: { feature: string; url: string; adminEnabled: boolean }[] = accessData && accessData !== 'undefined' && accessData !== 'null' ? (JSON.parse(localStorage.getItem('fandoro-access') || '{}'))['companyFeaturePageAccess'] : [];
+    // console.log("pageAccessData", pageAccessData)
     if (['/company', '/settings'].includes(location.pathname)) {
       setShouldShowOverlay(false)
     }
