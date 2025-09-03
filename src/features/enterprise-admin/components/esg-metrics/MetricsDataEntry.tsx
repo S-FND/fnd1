@@ -109,10 +109,10 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
     }
   }
 
-  const getGraph = () => {
-    let data = httpClient.get(`materiality/metrics/data-entry/dashboard?year=${selectedFinancialYear}`);
-    console.log("data", data)
-  }
+  // const getGraph = () => {
+  //   let data = httpClient.get(`materiality/metrics/data-entry/dashboard?year=${selectedFinancialYear}`);
+  //   console.log("data", data)
+  // }
 
   // Load configured metrics from localStorage
   useEffect(() => {
