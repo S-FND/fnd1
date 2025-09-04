@@ -186,7 +186,7 @@ const ComparePlanView = ({
                 <td className="p-3 text-center">{index + 1}</td>
 
                 <td className={`p-3 ${changedFields.item ? "border-l-4 border-yellow-500" : ""} check`}>
-                  {item.issue}
+                  {item.item}
                 </td>
 
                 <td className={`p-3 ${changedFields.category ? "border-l-4 border-yellow-500" : ""}`}>
@@ -484,7 +484,7 @@ const ESGCapPage = () => {
   // Apply filters and search
   const filteredItems = esgCap?.plan?.filter(item => {
     const matchesSearch =
-      item.issue?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
+      item.item?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
       item.measures?.toLowerCase().includes(searchTerm?.toLowerCase());
     const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
     const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
@@ -533,7 +533,7 @@ const ESGCapPage = () => {
           )
         };
       });
-      toast.success(`Item "${originalItem.issue}" reverted to original`);
+      toast.success(`Item "${originalItem.item}" reverted to original`);
     }
   };
 
