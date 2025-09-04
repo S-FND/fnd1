@@ -156,7 +156,7 @@ const ComparePlanView = ({
         <thead>
           <tr className="bg-gray-100" style={{ fontWeight: 500 }}>
             <th className="p-3 text-left w-[60px]" style={{ fontWeight: 500 }}>S. No</th>
-            <SortableHeader field="issue" title="Issue" />
+            <SortableHeader field="item" title="Item" />
             <th className="p-3 text-left">Category</th>
             <SortableHeader field="priority" title="Priority" />
             <th className="p-3 text-left">Measures and/or Corrective Actions</th>
@@ -185,7 +185,7 @@ const ComparePlanView = ({
               >
                 <td className="p-3 text-center">{index + 1}</td>
 
-                <td className={`p-3 ${changedFields.issue ? "border-l-4 border-yellow-500" : ""} check`}>
+                <td className={`p-3 ${changedFields.item ? "border-l-4 border-yellow-500" : ""} check`}>
                   {item.issue}
                 </td>
 
@@ -465,8 +465,7 @@ const ESGCapPage = () => {
           response = await updatePlan(finalData);
           break;
       }
-
-      if (response && response[0]) {
+      if (response) {
         toast.success("Successfully Submitted!");
         await loadData();
       }
@@ -569,7 +568,6 @@ const ESGCapPage = () => {
   // Check if accept button should be disabled
   const shouldDisableAcceptButton = () => {
     if (!esgCap || !esgCap.founderPlanFinalStatus) return false;
-
     // Disable accept button if founder has already accepted
     if (user?.entityType === 2 && esgCap.founderPlanFinalStatus === true) {
       return true;
