@@ -406,6 +406,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
         dataType: customMetricForm.dataType,
         inputFormat: customMetricForm.inputFormat,
         collectionFrequency: customMetricForm.collectionFrequency,
+        showOnDashboard:customMetricForm.showOnDashboard
       };
       console.log(`handleSaveEdit :: updatedMetric :: updatedMetric => `, updatedMetric)
       console.log(`handleSaveEdit :: updatedMetric :: selectedMetrics => `, selectedMetrics)
@@ -489,6 +490,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
         dataType: customMetricForm.dataType,
         inputFormat: customMetricForm.inputFormat,
         collectionFrequency: customMetricForm.collectionFrequency,
+        showOnDashboard:customMetricForm.showOnDashboard
       };
       console.log(`handleSaveEdit :: updatedMetric :: updatedMetric => `, updatedMetric)
       console.log(`handleSaveEdit :: updatedMetric :: selectedMetrics => `, selectedMetrics)
