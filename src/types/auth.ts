@@ -33,6 +33,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  entityType: number;
   companyId: string;
   locationId: string;
   unitId?: string;

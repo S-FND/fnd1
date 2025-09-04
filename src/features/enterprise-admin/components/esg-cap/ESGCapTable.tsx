@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Table, TableBody } from "@/components/ui/table";
 import { ESGCapItem } from '../../types/esgDD';
@@ -19,7 +18,8 @@ export const ESGCapTable: React.FC<ESGCapTableProps> = ({
   sortConfig, 
   requestSort,
   onItemUpdate 
-}) => {
+}
+) => {
   return (
     <div className="space-y-6">
       <div className="rounded-md border overflow-hidden">
