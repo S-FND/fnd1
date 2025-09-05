@@ -20,6 +20,7 @@ export const ESGCapTable: React.FC<ESGCapTableProps> = ({
   onItemUpdate 
 }
 ) => {
+  console.log('sortedItems',sortedItems);
   return (
     <div className="space-y-6">
       <div className="rounded-md border overflow-hidden">
