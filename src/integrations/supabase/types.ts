@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
+  // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
@@ -371,43 +371,25 @@ export type Database = {
       }
       portfolio_companies: {
         Row: {
-          access_notes: string | null
-          approval_status: string
-          approved_at: string | null
-          approved_by: string | null
           created_at: string
           id: string
-          is_approved: boolean
           name: string
-          rejection_reason: string | null
           settings: Json | null
           slug: string
           updated_at: string
         }
         Insert: {
-          access_notes?: string | null
-          approval_status?: string
-          approved_at?: string | null
-          approved_by?: string | null
           created_at?: string
           id?: string
-          is_approved?: boolean
           name: string
-          rejection_reason?: string | null
           settings?: Json | null
           slug: string
           updated_at?: string
         }
         Update: {
-          access_notes?: string | null
-          approval_status?: string
-          approved_at?: string | null
-          approved_by?: string | null
           created_at?: string
           id?: string
-          is_approved?: boolean
           name?: string
-          rejection_reason?: string | null
           settings?: Json | null
           slug?: string
           updated_at?: string
@@ -438,33 +420,6 @@ export type Database = {
           id?: string
           resource?: string
           role?: Database["public"]["Enums"]["portfolio_role"]
-        }
-        Relationships: []
-      }
-      system_settings: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          setting_key: string
-          setting_value: Json
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          setting_key: string
-          setting_value?: Json
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          setting_key?: string
-          setting_value?: Json
-          updated_at?: string
         }
         Relationships: []
       }
@@ -558,13 +513,13 @@ export type Database = {
     Functions: {
       create_document_version: {
         Args: {
-          p_change_summary?: string
-          p_content?: string
           p_document_id: string
-          p_file_size?: number
-          p_file_url?: string
-          p_mime_type?: string
           p_title: string
+          p_content?: string
+          p_file_url?: string
+          p_file_size?: number
+          p_mime_type?: string
+          p_change_summary?: string
         }
         Returns: string
       }
@@ -579,10 +534,10 @@ export type Database = {
       log_action: {
         Args: {
           p_action_type: Database["public"]["Enums"]["action_type"]
-          p_description?: string
+          p_entity_type: string
           p_entity_id?: string
           p_entity_name?: string
-          p_entity_type: string
+          p_description?: string
           p_metadata?: Json
         }
         Returns: string

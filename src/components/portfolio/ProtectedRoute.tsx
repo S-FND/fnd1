@@ -3,7 +3,6 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { usePortfolioAuth } from '@/hooks/usePortfolioAuth';
 import { PortfolioRole } from '@/types/portfolio';
 import { UnauthorizedPage } from './UnauthorizedPage';
-import { CompanyAccessGate } from './CompanyAccessGate';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ProtectedRouteProps {
@@ -12,7 +11,6 @@ interface ProtectedRouteProps {
   requiredResource?: string;
   requiredAction?: string;
   requireAll?: boolean;
-  bypassCompanyAccess?: boolean;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
@@ -21,7 +19,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredResource,
   requiredAction,
   requireAll = false,
-  bypassCompanyAccess = false,
 }) => {
   const { 
     isLoading, 
@@ -160,14 +157,5 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <UnauthorizedPage />;
   }
 
-  // Apply company access control unless bypassed
-  if (bypassCompanyAccess) {
-    return <>{children}</>;
-  }
-
-  return (
-    <CompanyAccessGate>
-      {children}
-    </CompanyAccessGate>
-  );
+  return <>{children}</>;
 };
