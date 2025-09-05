@@ -31,7 +31,8 @@ const ESGCapPage = () => {
   }
 
   // Apply filters and search
-  const filteredItems = mockESGCapItems.filter(item => {
+  const dummy: ESGCapItem[] = [];
+  const filteredItems = dummy.filter(item => {
     const matchesSearch = 
       item.issue.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.description.toLowerCase().includes(searchTerm.toLowerCase());
