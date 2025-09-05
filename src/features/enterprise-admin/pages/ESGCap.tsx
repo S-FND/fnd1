@@ -161,7 +161,7 @@ const ComparePlanView = ({
             <SortableHeader field="priority" title="Priority" />
             <th className="p-3 text-left">Measures and/or Corrective Actions</th>
             <th className="p-3 text-left">Resource & Responsibility</th>
-            <th className="p-3 text-left">Expected Deliverable</th>
+            {/* <th className="p-3 text-left">Expected Deliverable</th> */}
             <SortableHeader field="targetDate" title="Target Date" />
             <th className="p-3 text-left">CP/CS</th>
             <th className="p-3 text-left">Actual Date</th>
@@ -205,9 +205,9 @@ const ComparePlanView = ({
                   {item.resource || ''}
                 </td>
 
-                <td className={`p-3 ${changedFields.deliverable ? "border-l-4 border-yellow-500" : ""}`}>
+                {/* <td className={`p-3 ${changedFields.deliverable ? "border-l-4 border-yellow-500" : ""}`}>
                   {item.deliverable || ''}
-                </td>
+                </td> */}
 
                 <td className={`p-3 ${changedFields.targetDate ? "border-l-4 border-yellow-500" : ""}`}>
                   {formatDate(item.targetDate)}
@@ -268,7 +268,7 @@ const ComparePlanView = ({
 
 const ESGCapPage = () => {
   const { isLoading: authLoading } = useRouteProtection(['admin', 'unit_admin']);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const [loading, setLoading] = useState(false);
   const [esgCap, setEsgCap] = useState<ESGCapData | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -587,9 +587,8 @@ const ESGCapPage = () => {
       </div>
     );
   }
-
-  if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'unit_admin')) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus) {
+    return <Navigate to="/" />;
   }
 
   const handleUpdateItem = (updatedItem: ESGCapItem) => {

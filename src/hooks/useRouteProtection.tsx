@@ -11,6 +11,7 @@ export function useRouteProtection(requiredRole?: string | string[]) {
   useEffect(() => {
     if (!isLoading && !isAuthenticatedStatus()) {
       // Redirect to login if not authenticated
+      console.log('ist me 14');
       navigate('/login', { state: { from: location.pathname } });
     } else if (!isLoading && isAuthenticated && requiredRole) {
       // Check for role-based access if required
@@ -24,6 +25,8 @@ export function useRouteProtection(requiredRole?: string | string[]) {
         } else if (user?.role === 'vendor') {
           navigate('/vendor/dashboard');
         } else {
+      console.log('ist me 18');
+
           navigate('/login');
         }
       }
