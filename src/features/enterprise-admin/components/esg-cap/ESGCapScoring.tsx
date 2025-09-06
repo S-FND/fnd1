@@ -8,11 +8,12 @@ interface ESGCapScoringProps {
 }
 
 export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items }) => {
-  // Priority weightages
+
+  // Priority weightages - adjusted for actual priority values (capitalized)
   const priorityWeights = {
-    high: 2,
-    medium: 1,
-    low: 0.5
+    High: 2,
+    Medium: 1,
+    Low: 0.5
   };
 
   // Calculate total weightage
@@ -20,14 +21,20 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items }) => {
   const baseWeight = totalItems > 0 ? 100 / totalItems : 0;
   
   const totalWeightage = items.reduce((sum, item) => {
-    return sum + (baseWeight * priorityWeights[item.priority]);
+    // Handle case sensitivity - convert to proper case
+    const priority = item.priority || 'Medium'; // Default to Medium if undefined
+    const weight = priorityWeights[priority] || priorityWeights.Medium;
+    return sum + (baseWeight * weight);
   }, 0);
 
   // Calculate completed weightage
   const completedWeightage = items
     .filter(item => item.status === 'completed')
     .reduce((sum, item) => {
-      return sum + (baseWeight * priorityWeights[item.priority]);
+      // Handle case sensitivity - convert to proper case
+      const priority = item.priority || 'Medium'; // Default to Medium if undefined
+      const weight = priorityWeights[priority] || priorityWeights.Medium;
+      return sum + (baseWeight * weight);
     }, 0);
 
   // Calculate progress percentage

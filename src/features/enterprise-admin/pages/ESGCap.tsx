@@ -161,7 +161,7 @@ const ComparePlanView = ({
             <SortableHeader field="priority" title="Priority" />
             <th className="p-3 text-left">Measures and/or Corrective Actions</th>
             <th className="p-3 text-left">Resource & Responsibility</th>
-            <th className="p-3 text-left">Expected Deliverable</th>
+            {/* <th className="p-3 text-left">Expected Deliverable</th> */}
             <SortableHeader field="targetDate" title="Target Date" />
             <th className="p-3 text-left">CP/CS</th>
             <th className="p-3 text-left">Actual Date</th>
@@ -172,9 +172,9 @@ const ComparePlanView = ({
         </thead>
         <tbody>
           {sortedItems.map((item, index) => {
-            // Convert item.id to string for consistent comparison
-            const itemId = String(item.id);
-            const originalItem = originalPlan.find(i => String(i.id) === itemId);
+            // Ensure we have a proper ID for comparison
+            const itemId = item.id || `temp-${index}`;
+            const originalItem = originalPlan.find(i => i.id === item.id);
             const changedFields = getChangedFields(item, originalItem);
             const hasChanges = Object.values(changedFields).some(Boolean);
 
@@ -205,9 +205,9 @@ const ComparePlanView = ({
                   {item.resource || ''}
                 </td>
 
-                <td className={`p-3 ${changedFields.deliverable ? "border-l-4 border-yellow-500" : ""}`}>
+                {/* <td className={`p-3 ${changedFields.deliverable ? "border-l-4 border-yellow-500" : ""}`}>
                   {item.deliverable || ''}
-                </td>
+                </td> */}
 
                 <td className={`p-3 ${changedFields.targetDate ? "border-l-4 border-yellow-500" : ""}`}>
                   {formatDate(item.targetDate)}
@@ -232,7 +232,7 @@ const ComparePlanView = ({
                         hasChanged && (
                           <button
                             key={field}
-                            onClick={() => onRevertField(itemId, field as keyof ESGCapItem)}
+                            onClick={() => onRevertField(String(itemId), field as keyof ESGCapItem)}
                             className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-colors"
                             title={`Revert ${field} to original`}
                           >
@@ -251,7 +251,7 @@ const ComparePlanView = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => onRevertItem(itemId)}
+                      onClick={() => onRevertItem(String(itemId))}
                     >
                       Revert
                     </Button>
@@ -268,7 +268,7 @@ const ComparePlanView = ({
 
 const ESGCapPage = () => {
   const { isLoading: authLoading } = useRouteProtection(['admin', 'unit_admin']);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isAuthenticatedStatus } = useAuth();
   const [loading, setLoading] = useState(false);
   const [esgCap, setEsgCap] = useState<ESGCapData | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -522,6 +522,7 @@ const ESGCapPage = () => {
 
   // Handle revert to original item
   const handleRevertItem = (itemId: string) => {
+    // Use proper ID handling with fallback
     const originalItem = originalPlan.find(item => String(item.id) === itemId);
     if (originalItem) {
       setEsgCap(prev => {
@@ -539,6 +540,7 @@ const ESGCapPage = () => {
 
   // Handle revert specific field
   const handleRevertField = (itemId: string, field: keyof ESGCapItem) => {
+    // Use proper ID handling with fallback
     const originalItem = originalPlan.find(item => String(item.id) === itemId);
     if (originalItem && field in originalItem) {
       setEsgCap(prev => {
@@ -580,6 +582,7 @@ const ESGCapPage = () => {
 
     return false;
   };
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -587,9 +590,8 @@ const ESGCapPage = () => {
       </div>
     );
   }
-
-  if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'unit_admin')) {
-    return <Navigate to="/login" />;
+  if (!isAuthenticatedStatus) {
+    return <Navigate to="/" />;
   }
 
   const handleUpdateItem = (updatedItem: ESGCapItem) => {
@@ -599,7 +601,7 @@ const ESGCapPage = () => {
       return {
         ...prev,
         plan: prev.plan.map(item =>
-          item.id === updatedItem.id ? updatedItem : item
+          String(item.id) === String(updatedItem.id) ? updatedItem : item
         )
       };
     });

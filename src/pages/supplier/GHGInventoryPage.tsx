@@ -5,9 +5,9 @@ import { SupplierLayout } from '@/components/layout/SupplierLayout';
 import GHGInventory from '@/components/supplier/GHGInventory';
 
 const GHGInventoryPage = () => {
-  const { user, isAuthenticated, isSupplier } = useAuth();
+  const { user, isAuthenticated, isSupplier,isAuthenticatedStatus } = useAuth();
 
-  if (!isAuthenticated) {
+  if (!isAuthenticatedStatus) {
     return <Navigate to="/login" />;
   }
 

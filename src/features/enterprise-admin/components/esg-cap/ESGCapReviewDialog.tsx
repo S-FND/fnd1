@@ -27,7 +27,6 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
   const [actualCompletionDate, setActualCompletionDate] = useState<string>(
     item.status === 'completed' ? new Date().toISOString().split('T')[0] : ''
   );
-
   const { toast } = useToast();
 
   const isAccepted = item.status === 'completed';
@@ -48,7 +47,6 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
   };
 
   const handleSave = () => {
-    console.log('formData________', formData);
     onUpdate(formData);
     toast({
       title: "Changes saved",
@@ -64,16 +62,52 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
         </DialogHeader>
 
         <div className="space-y-4">
+          <div>
+            <Label htmlFor="item">Item *</Label>
+            <Textarea
+              id="item"
+              value={formData.item}
+              onChange={(e) => handleInputChange('item', e.target.value)}
+              disabled={isAccepted}
+              rows={3}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="measures">Measures *</Label>
+            <Textarea
+              id="measures"
+              value={formData.measures}
+              onChange={(e) => handleInputChange('measures', e.target.value)}
+              disabled={isAccepted}
+              rows={3}
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="item">Item *</Label>
-              <Input
-                id="item"
-                value={formData.item}
-                onChange={(e) => handleInputChange('item', e.target.value)}
+              <Label htmlFor="resource">Resource</Label>
+              <Textarea
+                id="resource"
+                value={formData.resource}
+                onChange={(e) => handleInputChange('resource', e.target.value)}
                 disabled={isAccepted}
+                rows={3}
               />
             </div>
+            <div>
+              <Label htmlFor="assignedTo">Assigned To</Label>
+              <Textarea
+                id="assignedTo"
+                value={formData.assignedTo}
+                onChange={(e) => handleInputChange('assignedTo', e.target.value)}
+                disabled={isAccepted}
+                rows={3}
+              />
+            </div>
+
+          </div>
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <Label htmlFor="category">Category</Label>
               <Select
@@ -91,31 +125,24 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
-          <div>
-            <Label htmlFor="measures">Measures</Label>
-            <Textarea
-              id="measures"
-              value={formData.measures}
-              onChange={(e) => handleInputChange('measures', e.target.value)}
-              disabled={isAccepted}
-              rows={3}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="resource">Resource</Label>
-            <Textarea
-              id="resource"
-              value={formData.resource}
-              onChange={(e) => handleInputChange('resource', e.target.value)}
-              disabled={isAccepted}
-              rows={3}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="CS">CP/CS</Label>
+              <Select
+                value={formData.CS}
+                onValueChange={(value: ESGCapDealCondition) => handleInputChange('CS', value)}
+                disabled={isAccepted}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CP">Condition Precedent (CP)</SelectItem>
+                  <SelectItem value="CS">Condition Subsequent (CS)</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <Label htmlFor="priority">Priority</Label>
               <Select
@@ -133,79 +160,50 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label htmlFor="CS">Deal Condition</Label>
-              <Select
-                value={formData.CS}
-                onValueChange={(value: ESGCapDealCondition) => handleInputChange('CS', value)}
-                disabled={isAccepted}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CP">Condition Precedent (CP)</SelectItem>
-                  <SelectItem value="CS">Condition Subsequent (CS)</SelectItem>
-                  <SelectItem value="none">None</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="targetDate">Target Date</Label>
+            <Input
+              id="targetDate"
+              type="date"
+              value={formData.targetDate}
+              onChange={(e) => handleInputChange('targetDate', e.target.value)}
+              disabled={isAccepted}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="status">Status *</Label>
+            <Select
+              value={formData.status}
+              onValueChange={(value: ESGCapStatus) => handleInputChange('status', value)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="in_review">In Review</SelectItem>
+                <SelectItem value="accepted">Accepted</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="delayed">Delayed</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {/* {(formData.status === 'completed' || isAccepted) && ( */}
             <div>
-              <Label htmlFor="deliverable">Deliverable</Label>
+              <Label htmlFor="actualDate">Actual Date</Label>
               <Input
-                id="deliverable"
-                value={formData.deliverable || ''}
-                onChange={(e) => handleInputChange('deliverable', e.target.value)}
-                disabled={isAccepted}
-              />
-            </div>
-            <div>
-              <Label htmlFor="targetDate">Target Date</Label>
-              <Input
-                id="targetDate"
+                id="actualDate"
                 type="date"
-                value={formData.targetDate}
-                onChange={(e) => handleInputChange('targetDate', e.target.value)}
-                disabled={isAccepted}
+                value={formData.actualDate || ''}
+                onChange={(e) => handleInputChange('actualDate', e.target.value)}
               />
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="status">Status *</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value: ESGCapStatus) => handleInputChange('status', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Open">Open</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="delayed">Delayed</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {(formData.status === 'completed' || isAccepted) && (
-              <div>
-                <Label htmlFor="actualDate">Actual Completion Date</Label>
-                <Input
-                  id="actualDate"
-                  type="date"
-                  value={formData.actualDate || ''}
-                  onChange={(e) => handleInputChange('actualDate', e.target.value)}
-                />
-              </div>
-            )}
-          </div>
+          {/* )} */}
 
           <div>
             <Label>Proof of Completion</Label>
