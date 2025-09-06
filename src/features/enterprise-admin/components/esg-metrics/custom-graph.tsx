@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { Chart } from "react-google-charts";
 
 
-const CustomDashboardTab = ({ graphData }) => {
+const CustomDashboardTab = ({ graphData,selectedMetric,selectedPeriod,selectedYear }) => {
     console.log("This is graphData", graphData)
     //   let {year,month,type}=componentParams
     const [metrics, setMetrics] = useState([])
@@ -26,13 +26,29 @@ const CustomDashboardTab = ({ graphData }) => {
                 {/* <Row> */}
                 {metrics.map((metric) => {
 
-                    if (graphData[metric]['graphType'] == 'pie') {
+                    if (graphData[metric]['graphType'] == 'pie' && selectedMetric && selectedPeriod && selectedYear && 
+                        graphData[metric]['data'] && graphData[metric]['data'].length > 0 && 
+                        graphData[metric]['data'].find(item => item.metricName === selectedMetric && item.period === selectedPeriod && item.financialYear === selectedYear)
+                    ) {
+                        let findData=graphData[metric]['data'].find(item => item.metricName === selectedMetric && item.period === selectedPeriod && item.financialYear === selectedYear);
+                        let labels = [selectedMetric,'Others'];
+                        let values=[findData.value,100-findData.value];
+                        // let data = {
+                        //     labels: graphData[metric]['graphData']?.labels,
+                        //     datasets: [
+                        //         {
+                        //             label: "#",
+                        //             data: graphData[metric]['graphData']?.data,
+                        //             borderWidth: 1,
+                        //         },
+                        //     ],
+                        // };
                         let data = {
-                            labels: graphData[metric]['graphData']?.labels,
+                            labels: labels,
                             datasets: [
                                 {
                                     label: "#",
-                                    data: graphData[metric]['graphData']?.data,
+                                    data: values,
                                     borderWidth: 1,
                                 },
                             ],
@@ -107,16 +123,37 @@ const CustomDashboardTab = ({ graphData }) => {
                             // </Col>
                         )
                     }
-                    else if (graphData[metric]['graphType'] == 'bar') {
-                        const datasets = graphData[metric]['graphData']?.xAxisLabels.map(
+                    else if (graphData[metric]['graphType'] == 'bar' && 
+                        selectedMetric && selectedPeriod && selectedYear && 
+                        graphData[metric]['data'] && graphData[metric]['data'].length > 0 && 
+                        graphData[metric]['data'].find(item => item.metricName === selectedMetric && item.period === selectedPeriod && item.financialYear === selectedYear)) {
+                        let findData=graphData[metric]['data'].find(item => item.metricName === selectedMetric && item.period === selectedPeriod && item.financialYear === selectedYear);
+                        let xAxisLabels=findData && findData.value?findData.value.reduce((acc, curr) => {
+                            acc.push(curr[0]);
+                            return acc;
+                        }, []):[];
+                        let dataSets=findData && findData.value?findData.value.reduce((acc, curr) => {
+                            acc.push(curr.slice(1));
+                            return acc;
+                        }, []):[];
+                        // console.log("This is xAxisLabels", xAxisLabels)
+                        // console.log("This is dataSets", dataSets)
+                        // const datasets = graphData[metric]['graphData']?.xAxisLabels.map(
+                        //     (label, index) => ({
+                        //         label: label,
+                        //         data: graphData[metric]['graphData']?.data[index].map(val => Number(val)),
+                        //         borderWidth: 1,
+                        //     })
+                        // );
+                        const datasets = xAxisLabels.map(
                             (label, index) => ({
                                 label: label,
-                                data: graphData[metric]['graphData']?.data[index].map(val => Number(val)),
+                                data: dataSets[index].map(val => Number(val)),
                                 borderWidth: 1,
                             })
                         );
                         let data = {
-                            labels: graphData[metric]['graphData']?.yAxisLabels,
+                            labels: graphData[metric]?.yAxisLabels,
                             datasets: datasets,
                         };
                         console.log("This is Bar graph data in custom dashboard tab", data)
