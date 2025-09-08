@@ -163,7 +163,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
     const remainingMetrics = [...customMetricsList, ...standardMetrics].filter(
       metric => !finalMetricsList.some(toRemove => toRemove.code === metric.code)
     );
-    console.log('remainingMetrics', remainingMetrics)
+    // console.log('remainingMetrics', remainingMetrics)
     // setSelectedMetrics(remainingMetrics);
     finalMetricsList.map((m) => {
       if (m.esg) {
@@ -215,7 +215,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
   }, [savedMetrics]);
 
   useEffect(() => {
-    console.log(`selectedMetrics => `, selectedMetrics)
+    // console.log(`selectedMetrics => `, selectedMetrics)
   }, [selectedMetrics]);
 
   // Load metrics when topic changes
@@ -271,7 +271,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
       let saveCustomMetric = [...customMetricsList].filter((cm) => cm.topic == topicData[0].topic && cm.industry == topicData[0].industry)
 
       let metricData = getMetricsByIndustryAndTopic(industryList, topicData[0].industry, topicData[0].topic, topicData[0].esg)
-      console.log(`metricData => `, metricData)
+      // console.log(`metricData => `, metricData)
       setAvailableMetrics([...metricData, ...customMetrics, ...saveCustomMetric])
     } else {
       // If no topic selected or "all-topics" selected, show all custom metrics as available
@@ -280,7 +280,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
   }, [selectedTopicId, customMetrics]);
 
   const handleSelectTopic = (topicId: string) => {
-    console.log("handleSelectTopic :: setSelectedMetrics",)
+    // console.log("handleSelectTopic :: setSelectedMetrics",)
     setSelectedTopicId(topicId);
     setSelectedMetrics([]);
   };
@@ -350,6 +350,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
   };
 
   const handleEditSavedMetric = (metric: ESGMetricWithTracking) => {
+    console.log(`handleEditSavedMetric :: handleEditSavedMetric :: metric => `, metric)
     setIsEditingConfig(true)
     setEditingMetric(metric);
     setCustomMetricForm({
@@ -406,9 +407,10 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
         dataType: customMetricForm.dataType,
         inputFormat: customMetricForm.inputFormat,
         collectionFrequency: customMetricForm.collectionFrequency,
+        showOnDashboard: customMetricForm.showOnDashboard || false
       };
-      console.log(`handleSaveEdit :: updatedMetric :: updatedMetric => `, updatedMetric)
-      console.log(`handleSaveEdit :: updatedMetric :: selectedMetrics => `, selectedMetrics)
+      // console.log(`handleSaveEdit :: updatedMetric :: updatedMetric => `, updatedMetric)
+      // console.log(`handleSaveEdit :: updatedMetric :: selectedMetrics => `, selectedMetrics)
 
       const index = selectedMetrics.findIndex(item =>
         Object.keys(editingMetric).every(key => item[key] === editingMetric[key])
@@ -477,64 +479,64 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
     }
   };
 
-  const handleSaveEditConfiguration = async () => {
-    debugger;
-    console.log(`handleSaveEdit :: handleSaveEdit `)
-    if (editingSavedMetric) {
-      const updatedMetric = {
-        ...editingMetric,
-        name: customMetricForm.name,
-        description: customMetricForm.description,
-        unit: customMetricForm.unit,
-        dataType: customMetricForm.dataType,
-        inputFormat: customMetricForm.inputFormat,
-        collectionFrequency: customMetricForm.collectionFrequency,
-      };
-      console.log(`handleSaveEdit :: updatedMetric :: updatedMetric => `, updatedMetric)
-      console.log(`handleSaveEdit :: updatedMetric :: selectedMetrics => `, selectedMetrics)
-      setSelectedMetrics(metrics =>
-        metrics.map(m => m.code === editingMetric.code ? updatedMetric : m)
-      );
+  // const handleSaveEditConfiguration = async () => {
+  //   debugger;
+  //   // console.log(`handleSaveEdit :: handleSaveEdit `)
+  //   if (editingSavedMetric) {
+  //     const updatedMetric = {
+  //       ...editingMetric,
+  //       name: customMetricForm.name,
+  //       description: customMetricForm.description,
+  //       unit: customMetricForm.unit,
+  //       dataType: customMetricForm.dataType,
+  //       inputFormat: customMetricForm.inputFormat,
+  //       collectionFrequency: customMetricForm.collectionFrequency,
+  //     };
+  //     // console.log(`handleSaveEdit :: updatedMetric :: updatedMetric => `, updatedMetric)
+  //     // console.log(`handleSaveEdit :: updatedMetric :: selectedMetrics => `, selectedMetrics)
+  //     setSelectedMetrics(metrics =>
+  //       metrics.map(m => m.code === editingMetric.code ? updatedMetric : m)
+  //     );
 
-      // Update in saved metrics if it exists there
-      setSavedMetrics(metrics =>
-        metrics.map(m => m.code === editingMetric.code ? updatedMetric : m)
-      );
-      let final = savedMetrics.map(m => m.code === editingMetric.code ? updatedMetric : m)
+  //     // Update in saved metrics if it exists there
+  //     setSavedMetrics(metrics =>
+  //       metrics.map(m => m.code === editingMetric.code ? updatedMetric : m)
+  //     );
+  //     let final = savedMetrics.map(m => m.code === editingMetric.code ? updatedMetric : m)
 
-      // Update in custom metrics if it's a custom metric
-      if (editingMetric.source === 'Custom') {
-        const updatedCustomMetrics = customMetrics.map(m =>
-          m.id === editingMetric.id ? updatedMetric : m
-        );
-        setCustomMetrics(updatedCustomMetrics);
-        // localStorage.setItem('customESGMetrics', JSON.stringify(updatedCustomMetrics));
-      }
+  //     // Update in custom metrics if it's a custom metric
+  //     if (editingMetric.source === 'Custom') {
+  //       const updatedCustomMetrics = customMetrics.map(m =>
+  //         m.id === editingMetric.id ? updatedMetric : m
+  //       );
+  //       setCustomMetrics(updatedCustomMetrics);
+  //       // localStorage.setItem('customESGMetrics', JSON.stringify(updatedCustomMetrics));
+  //     }
 
-      // let updateResponse = await httpClient.post("materiality/v1", {
-      //   entityId: JSON.parse(localStorage.getItem('fandoro-user')).entityId,
-      //   finalMetrics: final
-      // })
+  //     // let updateResponse = await httpClient.post("materiality/v1", {
+  //     //   entityId: JSON.parse(localStorage.getItem('fandoro-user')).entityId,
+  //     //   finalMetrics: final
+  //     // })
 
-      // if (updateResponse.status === 201) {
-      //   setSavedMetrics(prev => [
-      //     ...prev,
-      //     ...selectedMetrics.filter(
-      //       metric => !prev.some(m => m.code === metric.code)
-      //     )
-      //   ]);
+  //     // if (updateResponse.status === 201) {
+  //     //   setSavedMetrics(prev => [
+  //     //     ...prev,
+  //     //     ...selectedMetrics.filter(
+  //     //       metric => !prev.some(m => m.code === metric.code)
+  //     //     )
+  //     //   ]);
 
-      //   setSelectedMetrics([]);
-      //   toast.success(`${selectedMetrics.length} metrics saved successfully`);
-      //   getMaterialityData()
-      // }
+  //     //   setSelectedMetrics([]);
+  //     //   toast.success(`${selectedMetrics.length} metrics saved successfully`);
+  //     //   getMaterialityData()
+  //     // }
 
-      toast.success('Metric updated successfully');
-      setIsEditDialogOpen(false);
-      setEditingMetric(null);
-      resetCustomMetricForm();
-    }
-  };
+  //     toast.success('Metric updated successfully');
+  //     setIsEditDialogOpen(false);
+  //     setEditingMetric(null);
+  //     resetCustomMetricForm();
+  //   }
+  // };
 
   const handleAddCustomMetric = async () => {
     if (!customMetricForm.name.trim()) {
@@ -587,6 +589,8 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
         entityId: JSON.parse(localStorage.getItem('fandoro-user')).entityId,
         customMetrics: updatedCustomMetrics
       })
+      if(updateResponse.status){
+      }
       console.log('updateResponse', updateResponse)
       setSelectedMetrics(updatedSelectedMetrics);
       setIsAddDialogOpen(false);

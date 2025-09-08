@@ -136,6 +136,7 @@ export default function MetricsGraph1({ graphData, selectedMetric, selectedPerio
   const [chartType, setChartType] = useState("line");
   const [rawMetricsData, setRawMetricsData] = useState(null);
   const [dataType, setDataType] = useState(null);
+  const [units, setUnits] = useState(null)
   // const [inputData, setInputData] = useState([])
   const [yAxis, setYAxis] = useState([])
   const [xAxis, setXAxis] = useState([])
@@ -144,11 +145,12 @@ export default function MetricsGraph1({ graphData, selectedMetric, selectedPerio
     // console.log("Selected Metric:", selectedMetric);
     // console.log("Selected Period:", selectedPeriod);
     // console.log("Selected Year:", selectedYear);
-    // console.log("Initial Graph Data:", graphData);
+    console.log("Initial Graph Data:", graphData);
     if (graphData && Object.keys(graphData).length > 0) {
       // If a specific metric is selected, filter to that metric
       if (selectedMetric && graphData[selectedMetric]) {
         const metricData = graphData[selectedMetric].data
+        setUnits(graphData[selectedMetric]['units'])
         if (graphData[selectedMetric]['graphData']['xAxisLabels']) {
           setXAxis(graphData[selectedMetric]['graphData']['xAxisLabels'])
         }
@@ -241,93 +243,157 @@ export default function MetricsGraph1({ graphData, selectedMetric, selectedPerio
       if (dataType && dataType === "Table") {
         // console.log("Rendering table chart for metric:", metric, "with data:", data);
         // Detect genders dynamically from inputData
-        const inputData = data.map(e => ({
-          period: e.period,
-          value: e.value,
-          industry: e.industry,
-        }));
-        const detectedGenders = Array.from(
-          new Set(inputData?.flatMap((period) => period.value.flatMap((row) => row.slice(1).map((_, idx) => idx))))
-        ).map((idx:number) => {
-          return yAxis[idx] || ''
-
-        });
-
-        // Transform inputData dynamically
-        const chartData = inputData?.map((periodData) => {
-          const row: any = { period: periodData.period };
-          periodData.value.forEach((values) => {
-            const dept = values[0];
-            values.slice(1).forEach((val, idx) => {
-              row[`${dept}_${detectedGenders[idx]}`] = Number(val);
-            });
-          });
-          return row;
-        });
-
-        let colorIndex = 0;
-        chartElement = (
-          <BarChart
-                data={chartData}
-                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+        if (xAxis.length === 0) {
+          // alert("This has no xaxis")
+          const transformedData = data.map(item => ({
+            period: item.period,
+            Male: Number(item.value[0][0]),
+            Female: Number(item.value[0][1]),
+            Others: Number(item.value[0][2]),
+          }));
+          chartElement = (
+            <BarChart
+              data={transformedData}
+              margin={{ top: 20, right: 30, left: 40, bottom: 40 }}
             >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="period" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-
-                {xAxis.map((dept) =>
-                    detectedGenders.map((gender) => {
-                        const key = `${dept}_${gender}`;
-                        const fill = colors[colorIndex % colors.length];
-                        colorIndex++;
-                        return (
-                            <Bar
-                                key={key}
-                                dataKey={key}
-                                stackId={dept}
-                                fill={fill}
-                                name={`${dept} - ${gender}`}
-                            />
-                        );
-                    })
-                )}
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="period" angle={-45} textAnchor="end" height={60} />
+              <YAxis
+                label={{
+                  value: `${units}`, // <-- your unit
+                  angle: -90,
+                  position: "insideLeft",
+                  style: { textAnchor: "middle" }
+                }}
+              />
+              <Tooltip />
+              <Legend />
+              {/* Grouped Bars */}
+              {yAxis?.map((label, i) => (
+                <Bar
+                  key={label}
+                  dataKey={label}
+                  fill={colors[i % colors.length]}
+                />
+              ))}
+              {/* <Bar dataKey="Male" fill={colors[0]} />
+              <Bar dataKey="Female" fill={colors[1]} />
+              <Bar dataKey="Others" fill={colors[2]} /> */}
             </BarChart>
-        );
-        // const categoryLabels = ["Male", "Female", "Others"];
-        // const chartData = inputData.flatMap((dataset, idx) =>
-        //   dataset.value.map((row) => {
-        //     console.log("Processing row:", row);
-        //     const [department, male, female, others] = row;
-        //     return {
-        //       name: `${department} (${dataset.period})`, // differentiate by dataset index
-        //       Male: Number(male),
-        //       Female: Number(female),
-        //       Others: Number(others),
-        //     };
-        //   })
-        // );
-        // console.log("Transformed chart data:", chartData);
-        // chartElement = (
-        //   <LineChart data={chartData}>
-        //     <CartesianGrid strokeDasharray="3 3" />
-        //     <XAxis dataKey="name" />
-        //     <YAxis allowDecimals={false} />
-        //     <Tooltip />
-        //     <Legend />
-        //     <Line dataKey="Male" stroke="#8884d8" />
-        //     <Line dataKey="Female" stroke="#82ca9d" />
-        //     <Line dataKey="Others" stroke="#ffc658" />
-        //   </LineChart>
-        // );
+          )
+        }
+        else {
+          const inputData = data.map(e => ({
+            period: e.period,
+            value: e.value,
+            industry: e.industry,
+          }));
+          const detectedGenders = Array.from(
+            new Set(inputData?.flatMap((period) => period.value.flatMap((row) => row.slice(1).map((_, idx) => idx))))
+          ).map((idx: number) => {
+            return yAxis[idx] || ''
+
+          });
+
+          // Transform inputData dynamically
+          const chartData = inputData?.map((periodData) => {
+            const row: any = { period: periodData.period };
+            periodData.value.forEach((values) => {
+              const dept = values[0];
+              values.slice(1).forEach((val, idx) => {
+                row[`${dept}_${detectedGenders[idx]}`] = Number(val);
+              });
+            });
+            return row;
+          });
+
+          let colorIndex = 0;
+          chartElement = (
+            <BarChart
+              data={chartData}
+              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="period" />
+              {/* <YAxis /> */}
+              <YAxis
+                label={{
+                  value: `${units}`, // <-- your unit
+                  angle: -90,
+                  position: "insideLeft",
+                  style: { textAnchor: "middle" }
+                }}
+              />
+              <Tooltip />
+              <Legend />
+
+              {xAxis.map((dept) =>
+                detectedGenders.map((gender) => {
+                  const key = `${dept}_${gender}`;
+                  const fill = colors[colorIndex % colors.length];
+                  colorIndex++;
+                  return (
+                    <Bar
+                      key={key}
+                      dataKey={key}
+                      stackId={dept}
+                      fill={fill}
+                      name={`${dept} - ${gender}`}
+                    />
+                  );
+                })
+              )}
+            </BarChart>
+          );
+          // const categoryLabels = ["Male", "Female", "Others"];
+          // const chartData = inputData.flatMap((dataset, idx) =>
+          //   dataset.value.map((row) => {
+          //     console.log("Processing row:", row);
+          //     const [department, male, female, others] = row;
+          //     return {
+          //       name: `${department} (${dataset.period})`, // differentiate by dataset index
+          //       Male: Number(male),
+          //       Female: Number(female),
+          //       Others: Number(others),
+          //     };
+          //   })
+          // );
+          // console.log("Transformed chart data:", chartData);
+          // chartElement = (
+          //   <LineChart data={chartData}>
+          //     <CartesianGrid strokeDasharray="3 3" />
+          //     <XAxis dataKey="name" />
+          //     <YAxis allowDecimals={false} />
+          //     <Tooltip />
+          //     <Legend />
+          //     <Line dataKey="Male" stroke="#8884d8" />
+          //     <Line dataKey="Female" stroke="#82ca9d" />
+          //     <Line dataKey="Others" stroke="#ffc658" />
+          //   </LineChart>
+          // );
+        }
+
       }
       else {
         chartElement = (
-          <LineChart data={data}>
+          <LineChart data={data} margin={{ top: 20, right: 40, left: 30, bottom: 50 }}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="period" type="category" />
-            <YAxis />
+            {/* <XAxis dataKey="period" type="category" /> */}
+            {/* <XAxis dataKey="period" angle={-45} textAnchor="end" interval={0} /> */}
+            <XAxis
+              dataKey="period"
+              tickFormatter={(month) => month.substring(0, 3)} // Jan, Feb, Mar...
+              interval={0}
+            />
+            {/* <YAxis /> */}
+            <YAxis
+              label={{
+                value: `${units}`, // <-- your unit
+                angle: -90,
+                position: "insideLeft",
+                style: { textAnchor: "middle" }
+              }}
+            />
             <Tooltip />
             <Legend />
             {/* <ReferenceLine y={baseline} stroke="blue" label="Baseline" />
@@ -341,7 +407,15 @@ export default function MetricsGraph1({ graphData, selectedMetric, selectedPerio
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey={xKey} />
-          <YAxis />
+          {/* <YAxis /> */}
+          <YAxis
+            label={{
+              value: `${units}`, // <-- your unit
+              angle: -90,
+              position: "insideLeft",
+              style: { textAnchor: "middle" }
+            }}
+          />
           <Tooltip />
           <Legend />
           <ReferenceLine y={baseline} stroke="blue" label="Baseline" />
@@ -390,7 +464,7 @@ export default function MetricsGraph1({ graphData, selectedMetric, selectedPerio
       <Card className="mb-6 shadow-lg rounded-2xl" key={metric}>
         <CardContent>
           <h2 className="text-lg font-semibold mb-4">{metric}</h2>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" style={{ overflowX: 'auto' }} height={300}>
             {chartElement}
           </ResponsiveContainer>
         </CardContent>

@@ -4,7 +4,7 @@ import { Chart } from "react-google-charts";
 
 
 const CustomDashboardTab = ({ graphData,selectedMetric,selectedPeriod,selectedYear }) => {
-    console.log("This is graphData", graphData)
+    // console.log("This is graphData", graphData)
     //   let {year,month,type}=componentParams
     const [metrics, setMetrics] = useState([])
     //   const [graphData,setGraphData]=useState({})
@@ -53,7 +53,7 @@ const CustomDashboardTab = ({ graphData,selectedMetric,selectedPeriod,selectedYe
                                 },
                             ],
                         };
-                        console.log("This is Pie data in custom dashboard tab", data)
+                        // console.log("This is Pie data in custom dashboard tab", data)
                         return (
                             // <Col lg={6} md={6} sm={12} xxl={6}>
                             <Card>
