@@ -58,6 +58,7 @@ export interface ESGCapItem {
   deliverable?: string; // From your payload
   CS?: string;         // From your payload
   actualDate?: string;
+  remarks?: string;
 }
 
 export interface RegulatoryRequirement {

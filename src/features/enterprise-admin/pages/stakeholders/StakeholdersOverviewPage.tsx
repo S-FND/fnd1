@@ -14,7 +14,7 @@ const StakeholdersOverviewPage = () => {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isAuthenticatedStatus() || (user?.role !== 'admin' && user?.role !== 'manager')) {
+  if (!isAuthenticatedStatus()) {
     return <Navigate to="/" />;
   }
 

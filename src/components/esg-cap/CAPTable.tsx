@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Clock, Eye, ArrowLeft, ArrowRight, Undo } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { portfolioCompanies } from "@/features/edit-portfolio-company/portfolioCompanies";
-
 export type CAPStatus = "Pending" | "In Progress" | "Completed" | "Delayed" | "Rejected";
 export type CAPType = "CP" | "CS";
 export type CAPPriority = "High" | "Medium" | "Low";
@@ -28,7 +26,7 @@ export interface CAPItem {
 
 interface CAPTableProps {
   items: CAPItem[];
-  onReview: (item: CAPItem) => void;
+  onReview: (item: CAPItem,index: number) => void;
   onSendReminder: (item: CAPItem) => void;
   isHistoryView?: boolean;
   originalItems?: CAPItem[];
@@ -57,10 +55,10 @@ const getStatusBadge = (status: CAPStatus) => {
   }
 };
 
-const getCompanyName = (companyId: number) => {
-  const company = portfolioCompanies.find(company => company.id === companyId);
-  return company ? company.name : "Unknown Company";
-};
+// const getCompanyName = (companyId: number) => {
+//   const company = portfolioCompanies.find(company => company.id === companyId);
+//   return company ? company.name : "Unknown Company";
+// };
 
 const getPriorityBadge = (priority: CAPPriority) => {
   switch (priority) {
@@ -168,7 +166,7 @@ export function CAPTable({
               <TableHead>Item</TableHead>
               <TableHead>Measures and/or Corrective Actions</TableHead>
               <TableHead>Resource & Responsibility</TableHead>
-              <TableHead>Expected Deliverable</TableHead>
+              {/* <TableHead>Expected Deliverable</TableHead> */}
               <TableHead>Target Date</TableHead>
               <TableHead>CP/CS</TableHead>
               <TableHead>Priority</TableHead>
@@ -184,7 +182,7 @@ export function CAPTable({
               return (
                 <TableRow key={item.id} className={isHistoryView || isComparisonView ? "bg-muted/30" : ""}>
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell>{getCompanyName(item.companyId)}</TableCell>
+                  <TableCell>{item.companyId}</TableCell>
                   <TableCell className="font-medium">
                     {originalItem ? (
                       <RenderChangedField 
@@ -296,7 +294,7 @@ export function CAPTable({
                         </Button>
                       ) : (
                         <>
-                          <Button variant="outline" size="sm" onClick={() => onReview(item)}>
+                          <Button variant="outline" size="sm" onClick={() => onReview(item,index)}>
                             {isHistoryView ? <Eye className="h-4 w-4 mr-1" /> : null}
                             Review
                           </Button>

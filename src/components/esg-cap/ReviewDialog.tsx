@@ -15,7 +15,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useState, useEffect } from "react";
 import { CAPItem, CAPStatus, CAPType } from "./CAPTable";
 import { useToast } from "@/hooks/use-toast";
-import { http } from "@/utils/httpInterceptor";
 
 interface ReviewDialogProps {
   item: CAPItem | null;
@@ -210,7 +209,7 @@ export function ReviewDialog({
             )}
           </div>
 
-          <div>
+          {/* <div>
             <h4 className="font-semibold mb-1">Type</h4>
             {canEdit ? (
               <Select
@@ -233,7 +232,7 @@ export function ReviewDialog({
                 Original: {originalItem?.CS}
               </p>
             )}
-          </div>
+          </div> */}
 
           <div>
             <h4 className="font-semibold mb-1">Status</h4>
