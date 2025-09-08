@@ -109,11 +109,6 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
     }
   }
 
-  // const getGraph = () => {
-  //   let data = httpClient.get(`materiality/metrics/data-entry/dashboard?year=${selectedFinancialYear}`);
-  //   console.log("data", data)
-  // }
-
   // Load configured metrics from localStorage
   useEffect(() => {
     console.log('its hit when we change year ');
@@ -187,7 +182,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
       periodIndex: getAvailablePeriods(tempParsedMetric.code, tempParsedMetric.name).find(p => p.period === selectedPeriod)?.periodIndex || 0
     };
     let dataEntryResponse = await httpClient.post('materiality/metrics/data-entry', newEntry)
-    console.log(`dataEntryResponse`, dataEntryResponse)
+    // console.log(`dataEntryResponse`, dataEntryResponse)
     if (dataEntryResponse['data']['status']) {
       toast.success('Data entry submitted successfully');
       getMetricsKpiData(selectedFinancialYear);
@@ -327,7 +322,8 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
       const existingEntry = dataEntries.find(entry =>
         entry.metricId === metric.code &&
         entry.period === period.period &&
-        entry.financialYear === selectedFinancialYear
+        entry.financialYear === selectedFinancialYear &&
+        entry.metricName === metric.name
       );
 
       return {
@@ -337,7 +333,8 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
         periodIndex: period.periodIndex,
         value: existingEntry?.value || '',
         isCompleted: !!existingEntry,
-        dueDate: period.dueDate
+        dueDate: period.dueDate,
+        metricName: metric.name
       };
     });
   };
@@ -417,10 +414,10 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
       p => !checkEntries.some(e => e.period === p)
     );
     
-    
-    console.log(`allPeriodsTillDate ==> `, allPeriodsTillDate)
-    console.log(`checkEntries ==> `, checkEntries)
-    console.log(`missingPeriods ==> `, missingPeriods)
+    // console.log(`metric ==> `, metric.name)
+    // console.log(`allPeriodsTillDate ==> `, allPeriodsTillDate)
+    // console.log(`checkEntries ==> `, checkEntries)
+    // console.log(`missingPeriods ==> `, missingPeriods)
     // return isOverdue(lastEntry || '', metric.collectionFrequency);
     return missingPeriods.length>0;
   }) || [];
@@ -430,7 +427,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
   useEffect(() => {
     if (selectedPeriod && selectedMetric && selectedFinancialYear && dataEntries) {
       let checkExistingValue = dataEntries.filter((entry) => entry.financialYear == selectedFinancialYear && entry.period == selectedPeriod && entry.metricId == JSON.parse(selectedMetric).code && entry.metricName == JSON.parse(selectedMetric).name);
-      console.log(`selectedMetric == checkExistingValue => `, checkExistingValue)
+      // console.log(`selectedMetric == checkExistingValue => `, checkExistingValue)
       if (checkExistingValue && checkExistingValue.length > 0 && checkExistingValue[0]['value']) {
         setEntryValue(checkExistingValue[0]['value'])
       }
@@ -446,7 +443,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
   // }, [bulkEntries])
 
   useEffect(() => {
-    console.log(`configuredMetrics => `, configuredMetrics)
+    // console.log(`configuredMetrics => `, configuredMetrics)
   }, [configuredMetrics])
 
   return (
@@ -621,14 +618,14 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                               <div className="flex-1">
                                 <FlexibleDataInput
                                   metric={metric}
-                                  value={bulkEntries[`${metric.code}_${period.period}`] ??
+                                  value={bulkEntries[`${metric.code}_${metric.name}_${period.period}`] ??
                                     period.value ??
                                     ""}
                                   onChange={(value) => {
                                     // Update the period value in bulk entries
                                     setBulkEntries(prev => ({
                                       ...prev,
-                                      [`${metric.code}_${period.period}`]: value
+                                      [`${metric.code}_${metric.name}_${period.period}`]: value
                                     }));
                                   }}
                                 />
@@ -696,17 +693,19 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                       .forEach(([key, value]) => {
                         let metricId: string;
                         let period: string;
+                        let metricName:string;
 
                         // Extract metricId and period correctly
                         if (key.includes('_') && !key.startsWith('entry_')) {
                           const parts = key.split('_');
                           period = parts.pop()!;       // last part = "January"
+                          metricName=parts.pop()!;   // second last part = "Revenue"
                           metricId = parts.join('_');  // rest = "RR-BI-430a.1"
                         } else {
                           metricId = key;
                           period = 'Single Entry';
                         }
-
+                        console.log(`metricname => `, metricName) 
                         // Find matching metric
                         const metric = configuredMetrics?.find(m => m.code === metricId);
                         if (!metric) return;
@@ -743,14 +742,14 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                           periodIndex: periodData?.periodIndex || 1
                         };
 
-                        console.log(`entry =>`, entry);
+                        // console.log(`entry =>`, entry);
                         newEntries.push(entry);
                       });
 
 
                     if (newEntries.length > 0) {
                       let dataMultiEntryResponse = await httpClient.post('materiality/metrics/data-entry', newEntries)
-                      console.log(`dataMultiEntryResponse`, dataMultiEntryResponse)
+                      // console.log(`dataMultiEntryResponse`, dataMultiEntryResponse)
                       if (dataMultiEntryResponse['data']['status']) {
                         toast.success('Data entry submitted successfully');
                         // Update existing entries and add new ones

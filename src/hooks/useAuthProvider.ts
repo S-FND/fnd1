@@ -142,8 +142,8 @@ export const useAuthProvider = () => {
     const storedUser:User = JSON.parse(localStorage.getItem("fandoro-user"));
     const storedPermissions = localStorage.getItem("fandoro-permissions");
     const storedToken = localStorage.getItem("fandoro-token");
-    console.log('storedUser',storedUser)
-    console.log('storedUser role',storedUser.role)
+    // console.log('storedUser',storedUser)
+    // console.log('storedUser role',storedUser.role)
     if(storedUser && storedToken ){
       if(roles && roles.length>0){
         if(roles.includes(storedUser.role)){
