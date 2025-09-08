@@ -583,6 +583,8 @@ const ESGCapPage = () => {
     return false;
   };
 
+  console.log('shouldDisableAcceptButton',shouldDisableAcceptButton());
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -677,7 +679,7 @@ const ESGCapPage = () => {
               </div>
 
               <div className="flex justify-end gap-2 mt-4 flex-shrink-0">
-                {!esgCap?.finalPlan ? (
+                {/* {!esgCap?.finalPlan ? ( */}
                   <>
                     <Button
                       variant="outline"
@@ -693,14 +695,14 @@ const ESGCapPage = () => {
                       Accept CAP
                     </Button>
                   </>
-                ) : (
+                {/* ) : (
                   <Button
                     onClick={() => handleAction('update')}
                     disabled={loading}
                   >
                     Update
                   </Button>
-                )}
+                )} */}
               </div>
             </CardContent>
           </Card>
