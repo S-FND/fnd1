@@ -482,10 +482,11 @@ const ESGCapPage = () => {
   }, [entityId]);
 
   // Apply filters and search
-  const filteredItems = esgCap?.plan?.filter(item => {
-    const matchesSearch =
-      item.item?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
-      item.measures?.toLowerCase().includes(searchTerm?.toLowerCase());
+  const dummy: ESGCapItem[] = [];
+  const filteredItems = dummy.filter(item => {
+    const matchesSearch = 
+      item.issue.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
     const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
 
