@@ -8,6 +8,7 @@ import { Upload, Download, FileSpreadsheet, CheckCircle, AlertCircle } from 'luc
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { ESGMetricWithTracking } from '../../data/esgMetricsData';
+import { httpClient } from '@/lib/httpClient';
 
 interface ExcelUploadProps {
   onMetricsImported: (metrics: ESGMetricWithTracking[]) => void;
@@ -103,64 +104,75 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({ onMetricsImported, onDataImpo
     setUploadStatus('uploading');
     
     try {
-      const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data);
+      console.log("Uploading file:", file);
+      let formData = new FormData();
+      formData.append('file', file);
+      formData.append(`data`, 'data');
+        // formData.set('file', fileToUpload)
+
+        for (let [key, value] of formData.entries()) {
+          console.log('Console for Entries',key, value);
+        }
+      let fileUploadResponse = await httpClient.post('materiality/upload-metricsConfig-file', formData )
+      console.log("fileUploadResponse", fileUploadResponse);
+      // const data = await file.arrayBuffer();
+      // const workbook = XLSX.read(data);
       
-      let importedMetrics: ESGMetricWithTracking[] = [];
-      let importedEntries: any[] = [];
+      // let importedMetrics: ESGMetricWithTracking[] = [];
+      // let importedEntries: any[] = [];
       
       // Process Metrics Configuration sheet
-      if (workbook.SheetNames.includes('Metrics Configuration')) {
-        const metricsSheet = workbook.Sheets['Metrics Configuration'];
-        const metricsData = XLSX.utils.sheet_to_json(metricsSheet);
+      // if (workbook.SheetNames.includes('Metrics Configuration')) {
+      //   const metricsSheet = workbook.Sheets['Metrics Configuration'];
+      //   const metricsData = XLSX.utils.sheet_to_json(metricsSheet);
         
-        importedMetrics = metricsData.map((row: any, index: number) => ({
-          id: `imported_${Date.now()}_${index}`,
-          name: row['Metric Name'] || '',
-          description: row['Description'] || '',
-          unit: row['Unit'] || '',
-          source: row['Source'] || 'Custom',
-          framework: row['Framework'] || 'Custom',
-          relatedTopic: row['Material Topic'] || '',
-          category: row['Category'] || 'Environmental',
-          dataType: row['Data Type'] || 'Numeric',
-          collectionFrequency: row['Collection Frequency'] || 'Monthly',
-          dataPoints: [],
-          isSelected: true
-        })) as ESGMetricWithTracking[];
-      }
+      //   importedMetrics = metricsData.map((row: any, index: number) => ({
+      //     id: `imported_${Date.now()}_${index}`,
+      //     name: row['Metric Name'] || '',
+      //     description: row['Description'] || '',
+      //     unit: row['Unit'] || '',
+      //     source: row['Source'] || 'Custom',
+      //     framework: row['Framework'] || 'Custom',
+      //     relatedTopic: row['Material Topic'] || '',
+      //     category: row['Category'] || 'Environmental',
+      //     dataType: row['Data Type'] || 'Numeric',
+      //     collectionFrequency: row['Collection Frequency'] || 'Monthly',
+      //     dataPoints: [],
+      //     isSelected: true
+      //   })) as ESGMetricWithTracking[];
+      // }
       
       // Process Data Entries sheet
-      if (workbook.SheetNames.includes('Data Entries')) {
-        const dataSheet = workbook.Sheets['Data Entries'];
-        const entriesData = XLSX.utils.sheet_to_json(dataSheet);
+      // if (workbook.SheetNames.includes('Data Entries')) {
+      //   const dataSheet = workbook.Sheets['Data Entries'];
+      //   const entriesData = XLSX.utils.sheet_to_json(dataSheet);
         
-        importedEntries = entriesData.map((row: any, index: number) => ({
-          id: `imported_entry_${Date.now()}_${index}`,
-          metricName: row['Metric Name'] || '',
-          value: row['Value'] || '',
-          date: row['Date'] || new Date().toISOString().split('T')[0],
-          financialYear: row['Financial Year'] || new Date().getFullYear().toString(),
-          notes: row['Notes'] || ''
-        }));
-      }
+      //   importedEntries = entriesData.map((row: any, index: number) => ({
+      //     id: `imported_entry_${Date.now()}_${index}`,
+      //     metricName: row['Metric Name'] || '',
+      //     value: row['Value'] || '',
+      //     date: row['Date'] || new Date().toISOString().split('T')[0],
+      //     financialYear: row['Financial Year'] || new Date().getFullYear().toString(),
+      //     notes: row['Notes'] || ''
+      //   }));
+      // }
       
       // Import the data
-      if (importedMetrics.length > 0) {
-        onMetricsImported(importedMetrics);
-      }
+      // if (importedMetrics.length > 0) {
+      //   onMetricsImported(importedMetrics);
+      // }
       
-      if (importedEntries.length > 0) {
-        onDataImported(importedEntries);
-      }
+      // if (importedEntries.length > 0) {
+      //   onDataImported(importedEntries);
+      // }
       
-      setUploadResults({
-        metrics: importedMetrics.length,
-        entries: importedEntries.length
-      });
+      // setUploadResults({
+      //   metrics: importedMetrics.length,
+      //   entries: importedEntries.length
+      // });
       
-      setUploadStatus('success');
-      toast.success(`Successfully imported ${importedMetrics.length} metrics and ${importedEntries.length} data entries`);
+      // setUploadStatus('success');
+      // toast.success(`Successfully imported ${importedMetrics.length} metrics and ${importedEntries.length} data entries`);
       
     } catch (error) {
       console.error('Error processing Excel file:', error);

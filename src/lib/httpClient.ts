@@ -101,7 +101,12 @@ class HttpClient {
   private async handleRequest<T>(url: string, config: RequestConfig = {}): Promise<ApiResponse<T>> {
     const fullUrl = `${import.meta.env.VITE_API_URL}/${url}`
     // this.baseURL + url;
-    let headers={ ...this.defaultHeaders, ...config.headers }
+    let headers={}
+    if(!url.split('/').includes('upload-metricsConfig-file')){
+      // headers = { ...this.defaultHeaders };
+      headers={ ...this.defaultHeaders, ...config.headers }
+    }
+    console.log('headers',headers)
     if(!url.split('/').includes('auth')){
       // headers['authorization']=`Bearer ${localStorage.getItem('fandoro-token')}`
     }
@@ -129,11 +134,17 @@ class HttpClient {
       };
 
       if (requestConfig.body && requestConfig.method !== 'GET') {
-        fetchConfig.body = typeof requestConfig.body === 'string' 
-          ? requestConfig.body 
-          : JSON.stringify(requestConfig.body);
+        if (requestConfig.body instanceof FormData) {
+          fetchConfig.body = requestConfig.body; 
+          // don’t set Content-Type — browser will handle it with boundary
+          delete (fetchConfig.headers as any)["Content-Type"];
+        } else {
+          fetchConfig.body = typeof requestConfig.body === 'string'
+            ? requestConfig.body
+            : JSON.stringify(requestConfig.body);
+        }
       }
-
+      console.log('fetchConfig',fetchConfig)
       const response = await fetch(requestConfig.url, fetchConfig);
       
       if (timeoutId) clearTimeout(timeoutId);
