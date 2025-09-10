@@ -704,10 +704,11 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                         } else {
                           metricId = key;
                           period = 'Single Entry';
+                          metricName=key;
                         }
                         console.log(`metricname => `, metricName) 
                         // Find matching metric
-                        const metric = configuredMetrics?.find(m => m.code === metricId);
+                        const metric = configuredMetrics?.find(m => m.code === metricId && m.name == metricName);
                         if (!metric) return;
 
                         // Find matching period object if applicable
@@ -718,6 +719,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                         // Check for existing entry
                         const existingEntryIndex = dataEntries.findIndex(entry =>
                           entry.metricId === metricId &&
+                          entry.metricName === metric.name &&
                           entry.period === (period !== 'Single Entry' ? period : undefined) &&
                           entry.financialYear === selectedFinancialYear
                         );
@@ -758,6 +760,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                           newEntries.forEach(newEntry => {
                             const existingIndex = updated.findIndex(entry =>
                               entry.metricId === newEntry.metricId &&
+                              entry.metricName === newEntry.metricName &&
                               entry.period === newEntry.period &&
                               entry.financialYear === newEntry.financialYear
                             );
