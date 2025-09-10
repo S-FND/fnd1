@@ -84,6 +84,17 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
             />
           </div>
 
+          <div>
+            <Label htmlFor="deliverable">Expected Deliverable *</Label>
+            <Textarea
+              id="deliverable"
+              value={formData.deliverable}
+              onChange={(e) => handleInputChange('deliverable', e.target.value)}
+              disabled={isAccepted}
+              rows={3}
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="resource">Resource</Label>
@@ -162,17 +173,27 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="targetDate">Target Date</Label>
-            <Input
-              id="targetDate"
-              type="date"
-              value={formData.targetDate}
-              onChange={(e) => handleInputChange('targetDate', e.target.value)}
-              disabled={isAccepted}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="targetDate">Target Date</Label>
+              <Input
+                id="targetDate"
+                type="date"
+                value={formData.targetDate}
+                onChange={(e) => handleInputChange('targetDate', e.target.value)}
+                disabled={isAccepted}
+              />
+            </div>
+            <div>
+              <Label htmlFor="actualDate">Actual Date</Label>
+              <Input
+                id="actualDate"
+                type="date"
+                value={formData.actualDate || ''}
+                onChange={(e) => handleInputChange('actualDate', e.target.value)}
+              />
+            </div>
           </div>
-
           <div>
             <Label htmlFor="status">Status *</Label>
             <Select
@@ -193,17 +214,6 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
               </SelectContent>
             </Select>
           </div>
-          {/* {(formData.status === 'completed' || isAccepted) && ( */}
-            <div>
-              <Label htmlFor="actualDate">Actual Date</Label>
-              <Input
-                id="actualDate"
-                type="date"
-                value={formData.actualDate || ''}
-                onChange={(e) => handleInputChange('actualDate', e.target.value)}
-              />
-            </div>
-          {/* )} */}
 
           <div>
             <Label>Proof of Completion</Label>
