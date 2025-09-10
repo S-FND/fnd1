@@ -16,7 +16,7 @@ const EnhancedEmployeeDashboard = () => {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isAuthenticatedStatus() || user?.role !== 'employee') {
+  if (!isAuthenticatedStatus()) {
     return <Navigate to="/" />;
   }
 

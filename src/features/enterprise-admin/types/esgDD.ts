@@ -37,20 +37,28 @@ export interface ESGDDReport {
 }
 
 export interface ESGCapItem {
-  id: string;
-  reportId: string;
-  issue: string;
-  description: string;
+  id: string | number;  // Can be string or number based on your API
+  item: string;
+  measures: string;
+  reportId?: string;    // Make optional if not always present
+  issue?: string;       // Make optional if not always present
+  description?: string; // Make optional if not always present
   category: ESGCategory;
-  recommendation: string;
+  recommendation?: string;
   priority: ESGCapPriority;
   status: ESGCapStatus;
-  deadline: string;
+  deadline?: string;    // This might be your targetDate
+  targetDate?: string;  // Alternative to deadline
   assignedTo?: string;
   dealCondition: ESGCapDealCondition;
   createdAt: string;
-  actualCompletionDate?: string;
+  actualCompletionDate?: string;  // This might be your actualDate
   acceptedAt?: string;
+  resource?: string;    // From your payload
+  deliverable?: string; // From your payload
+  CS?: string;         // From your payload
+  actualDate?: string;
+  remarks?: string;
 }
 
 export interface RegulatoryRequirement {

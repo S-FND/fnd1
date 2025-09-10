@@ -10,12 +10,12 @@ import {
 } from 'recharts';
 import { TrendingUp, TrendingDown, BarChart3, PieChart as PieChartIcon, Building2 } from 'lucide-react';
 import { ESGMetricWithTracking } from '../../data/esgMetricsData';
-import ChartComponent from './graphShow';
 import { httpClient } from '@/lib/httpClient';
-import MetricsGraph from './graphShow';
-import MetricsGraph1 from './graphShow1';
-import { DynamicChart } from './dynamicCharts';
 import CustomDashboardTab from './custom-graph';
+import MetricsGraph1 from './graphShow1';
+import GroupedBarChart from './graphTemp1';
+import NestedStackedBarChart from './graphTemp1';
+// import { SmartChart } from '@/components/charts/SmartChart';
 
 interface MetricDataEntry {
   id: string;
@@ -33,6 +33,7 @@ interface MetricDataEntry {
 
 interface ESGDashboardProps {
   materialTopics: any[];
+  finalMetricsList: ESGMetricWithTracking[],
 }
 
 const financialYearList = [
@@ -44,21 +45,25 @@ const financialYearList = [
   { value: "2025-2026", label: "2025-2026" },
 ];
 
-const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
+const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics, finalMetricsList }) => {
   const [configuredMetrics, setConfiguredMetrics] = useState<ESGMetricWithTracking[]>([]);
   const [dataEntries, setDataEntries] = useState<MetricDataEntry[]>([]);
   const [selectedMetric, setSelectedMetric] = useState<string>('');
   const [selectedPeriod, setSelectedPeriod] = useState<string>('12months');
   const [selectedUnit, setSelectedUnit] = useState<string>('organization');
   const [viewMode, setViewMode] = useState<'charts' | 'trends' | 'comparison'>('charts');
-  const [selectedYear, setSelectedYear] = useState<string>(financialYearList.reverse()[0].value); // Default to current year
+  const [selectedTrendYear, setSelectedTrendYear] = useState<string>(new Date().getFullYear().toString());
+  const [selectedTrendMonth, setSelectedTrendMonth] = useState<string>('all');
+  const [activeTab, setActiveTab] = useState<string>('trends'); // 'charts', 'trends', 'comparison'
+
+  const [selectedYear, setSelectedYear] = useState<string>([...financialYearList].reverse()[0].value); // Default to current year
   const [graphData, setGraphData] = useState<any>({});
 
-  const getGraphData = async(year: string) => {
+  const getGraphData = async (year: string) => {
     // Filter data entries based on the selected year
-    let graphData=await httpClient.get(`materiality/metrics/graph-data?year=${year}`);
-    console.log("Graph Data", graphData);
-    if(graphData && graphData.data && graphData.data['status']) {
+    let graphData = await httpClient.get(`materiality/metrics/graph-data?year=${year}`);
+    // console.log("Graph Data", graphData);
+    if (graphData && graphData.data && graphData.data['status']) {
       // setConfiguredMetrics(graphData.data.metrics);
       // setDataEntries(graphData.data.entries);
       setGraphData(graphData.data['data']);
@@ -85,8 +90,119 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
     //     console.error('Error loading entries:', error);
     //   }
     // }
-    // getGraphData(selectedYear);
+    console.log('selectedYear', selectedYear);
+    getGraphData(selectedYear);
   }, []);
+
+  useEffect(() => {
+    console.log('selectedYear changed', selectedYear);
+    console.log('financialYearList', financialYearList);
+  }, [selectedYear]);
+
+  const generatePeriods = (frequency: string, financialYear: string) => {
+    if (!financialYear) return [];
+    const [startYearStr, endYearStr] = financialYear.split("-"); // e.g. "2025", "2026"
+    const startYear = parseInt(startYearStr);
+    const endYear = parseInt(endYearStr);
+
+    const periods: { period: string; periodIndex: number; dueDate: string }[] = [];
+
+    switch (frequency) {
+      case "Quarterly":
+        periods.push(
+          { period: "Q1", periodIndex: 1, dueDate: `${startYear}-06-30` }, // Apr–Jun
+          { period: "Q2", periodIndex: 2, dueDate: `${startYear}-09-30` }, // Jul–Sep
+          { period: "Q3", periodIndex: 3, dueDate: `${startYear}-12-31` }, // Oct–Dec
+          { period: "Q4", periodIndex: 4, dueDate: `${endYear}-03-31` } // Jan–Mar (next year)
+        );
+        break;
+
+      case "Monthly":
+        const months = [
+          { name: "April", year: startYear, month: 4 },
+          { name: "May", year: startYear, month: 5 },
+          { name: "June", year: startYear, month: 6 },
+          { name: "July", year: startYear, month: 7 },
+          { name: "August", year: startYear, month: 8 },
+          { name: "September", year: startYear, month: 9 },
+          { name: "October", year: startYear, month: 10 },
+          { name: "November", year: startYear, month: 11 },
+          { name: "December", year: startYear, month: 12 },
+          { name: "January", year: endYear, month: 1 },
+          { name: "February", year: endYear, month: 2 },
+          { name: "March", year: endYear, month: 3 },
+        ];
+
+        months.forEach((m, idx) => {
+          const daysInMonth = new Date(m.year, m.month, 0).getDate();
+          const monthNum = String(m.month).padStart(2, "0");
+          periods.push({
+            period: m.name,
+            periodIndex: idx + 1,
+            dueDate: `${m.year}-${monthNum}-${daysInMonth}`,
+          });
+        });
+        break;
+
+      case "Bi-Annually":
+        periods.push(
+          { period: "H1", periodIndex: 1, dueDate: `${startYear}-09-30` }, // Apr–Sep
+          { period: "H2", periodIndex: 2, dueDate: `${endYear}-03-31` } // Oct–Mar (next year)
+        );
+        break;
+
+      case "Annually":
+        periods.push({
+          period: "Annual",
+          periodIndex: 1,
+          dueDate: `${endYear}-03-31`, // End of financial year
+        });
+        break;
+
+      case "Weekly":
+        {
+          // Start = April 1st of startYear, End = March 31st of endYear
+          const startDate = new Date(startYear, 3, 1); // April = month 3 (0-based)
+          const endDate = new Date(endYear, 2, 31); // March
+          let weekIndex = 1;
+          for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 7)) {
+            periods.push({
+              period: `Week ${weekIndex}`,
+              periodIndex: weekIndex,
+              dueDate: new Date(d).toISOString().split("T")[0],
+            });
+            weekIndex++;
+          }
+        }
+        break;
+
+      case "Daily":
+        {
+          const startDate = new Date(startYear, 3, 1); // Apr 1
+          const endDate = new Date(endYear, 2, 31); // Mar 31
+          let dayIndex = 1;
+          for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            periods.push({
+              period: `Day ${dayIndex}`,
+              periodIndex: dayIndex,
+              dueDate: d.toISOString().split("T")[0],
+            });
+            dayIndex++;
+          }
+        }
+        break;
+
+      default:
+        periods.push({
+          period: "Single Entry",
+          periodIndex: 1,
+          dueDate: `${endYear}-03-31`,
+        });
+    }
+
+    return periods;
+  };
+
 
   // Process data for charts
   const processedData = useMemo(() => {
@@ -131,7 +247,21 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
 
   // Month-on-month trend data
   const monthlyTrends = useMemo(() => {
-    const monthly = processedData.reduce((acc, entry) => {
+    let filteredData = processedData;
+
+    // Filter by selected year and month
+    if (selectedTrendYear) {
+      filteredData = processedData.filter(entry => entry.year.toString() === selectedTrendYear);
+    }
+
+    if (selectedTrendMonth !== 'all') {
+      filteredData = filteredData.filter(entry => {
+        const entryMonth = new Date(entry.date).getMonth();
+        return entryMonth.toString() === selectedTrendMonth;
+      });
+    }
+
+    const monthly = filteredData.reduce((acc, entry) => {
       const monthKey = entry.month;
       if (!acc[monthKey]) {
         acc[monthKey] = { month: monthKey, values: [], count: 0 };
@@ -148,26 +278,30 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
         count: item.count
       }))
       .sort((a, b) => new Date(a.month).getTime() - new Date(b.month).getTime());
-  }, [processedData]);
+  }, [processedData, selectedTrendYear, selectedTrendMonth]);
 
-  // Year-on-year comparison
+  // Year-on-year comparison with enhanced trend analysis
   const yearlyComparison = useMemo(() => {
+    const currentYear = new Date().getFullYear();
     const yearly = processedData.reduce((acc, entry) => {
       const year = entry.year.toString();
       if (!acc[year]) {
-        acc[year] = { year, values: [], count: 0 };
+        acc[year] = { year, values: [], count: 0, isCurrentYear: entry.year === currentYear };
       }
       acc[year].values.push(Number(entry.value) || 0);
       acc[year].count++;
       return acc;
-    }, {} as Record<string, { year: string; values: number[]; count: number }>);
+    }, {} as Record<string, { year: string; values: number[]; count: number; isCurrentYear: boolean }>);
 
-    return Object.values(yearly).map(item => ({
-      year: item.year,
-      value: item.values.reduce((sum, val) => sum + val, 0) / item.count,
-      total: item.values.reduce((sum, val) => sum + val, 0),
-      count: item.count
-    }));
+    return Object.values(yearly)
+      .map(item => ({
+        year: item.isCurrentYear ? `${item.year} (YTD)` : item.year,
+        value: item.values.reduce((sum, val) => sum + val, 0) / item.count,
+        total: item.values.reduce((sum, val) => sum + val, 0),
+        count: item.count,
+        isCurrentYear: item.isCurrentYear
+      }))
+      .sort((a, b) => parseInt(a.year) - parseInt(b.year));
   }, [processedData]);
 
   // Category-wise breakdown
@@ -209,7 +343,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
   const renderMetricOverview = () => (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {configuredMetrics.slice(0, 4).map((metric, index) => {
-        const metricEntries = dataEntries.filter(entry => entry.metricId === metric.code);
+        const metricEntries = dataEntries.filter(entry => entry.metricId === metric.id);
         const latestEntry = metricEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
         const previousEntry = metricEntries[1];
 
@@ -221,7 +355,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
         }
 
         return (
-          <Card key={metric.code}>
+          <Card key={metric.id}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">{metric.name}</CardTitle>
               <div className="text-2xl font-bold">
@@ -254,14 +388,36 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
 
   return (
     <div className="space-y-6">
-      {/* Header Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
+      {/* Metrics Overview */}
+      {/* {renderMetricOverview()} */}
+
+      {/* Main Dashboard Tabs */}
+      <Tabs value={viewMode} onValueChange={(value: any) => setViewMode(value)}>
+        {/* Centered Title above Charts & Trends tabs */}
+        <div className="text-center py-6">
           <h2 className="text-2xl font-bold tracking-tight">ESG Metrics Dashboard</h2>
           <p className="text-muted-foreground">Monitor and analyze your ESG performance</p>
         </div>
 
-        <div className="flex gap-2">
+        <TabsList>
+          <TabsTrigger value="charts" onClick={()=> setActiveTab('trends')}>Charts & Trends</TabsTrigger>
+          <TabsTrigger value="trends" onClick={()=> setActiveTab('timeline')}>Timeline Analysis</TabsTrigger>
+          <TabsTrigger value="comparison">Category Comparison</TabsTrigger>
+        </TabsList>
+
+        {/* Header Controls */}
+        <div className="flex justify-end gap-2 mb-6">
+          <Select value={selectedMetric} onValueChange={setSelectedMetric}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Select Metric" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.keys(graphData).map(metric => (
+                <SelectItem key={metric} disabled={activeTab == 'trends' && graphData[metric].graphType == 'Numeric'} value={metric}>{metric}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Select value={selectedUnit} onValueChange={setSelectedUnit}>
             <SelectTrigger className="w-40">
               <SelectValue />
@@ -297,85 +453,75 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="3months">3 Months</SelectItem>
-              <SelectItem value="6months">6 Months</SelectItem>
-              <SelectItem value="12months">12 Months</SelectItem>
-              <SelectItem value="24months">24 Months</SelectItem>
+              {generatePeriods(
+                finalMetricsList?.find((m) => m.name === selectedMetric)?.collectionFrequency || 'Monthly',
+                selectedYear
+              ).map((period) => (
+                <SelectItem key={period.periodIndex} value={period.period}>
+                  {period.period}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
+
         </div>
-      </div>
-
-      {/* Metrics Overview */}
-      {/* {renderMetricOverview()} */}
-
-      {/* Main Dashboard Tabs */}
-      <Tabs value={viewMode} onValueChange={(value: any) => setViewMode(value)}>
-        <TabsList>
-          <TabsTrigger value="charts">Charts & Trends</TabsTrigger>
-          <TabsTrigger value="trends">Timeline Analysis</TabsTrigger>
-          <TabsTrigger value="comparison">Category Comparison</TabsTrigger>
-        </TabsList>
 
         <TabsContent value="charts" className="space-y-6">
-          <div className="grid gap-4">
-            {/* <Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Metric Analysis</CardTitle>
+              <CardDescription>Charts for metrics configured to display on dashboard</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CustomDashboardTab graphData={graphData} selectedMetric={selectedMetric} selectedPeriod={selectedPeriod} selectedYear={selectedYear} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="trends" className="space-y-6">
+          {/* <NestedStackedBarChart graphData={graphData} /> */}
+          <MetricsGraph1 graphData={graphData} selectedMetric={selectedMetric} selectedPeriod={selectedPeriod} selectedYear={selectedYear} />
+          {/* <div className="grid gap-6 md:grid-cols-2">
+          
+            <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Metric Analysis</CardTitle>
-                  <Select value={selectedMetric} onValueChange={setSelectedMetric}>
-                    <SelectTrigger className="w-64">
-                      <SelectValue placeholder="Select a metric" />
+                <CardTitle>Monthly Trends</CardTitle>
+                <CardDescription>Month-on-month performance</CardDescription>
+                <div className="flex gap-2 mt-4">
+                  <Select value={selectedTrendYear} onValueChange={setSelectedTrendYear}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="Select Year" />
                     </SelectTrigger>
                     <SelectContent>
-                      {configuredMetrics.map(metric => (
-                        <SelectItem key={metric.id} value={metric.id}>
-                          {metric.name}
+                      {(() => {
+                        // Sample years + years from data
+                        const currentYear = new Date().getFullYear();
+                        const sampleYears = [currentYear, currentYear - 1, currentYear - 2, currentYear - 3, currentYear - 4];
+                        const dataYears = Array.from(new Set(processedData.map(entry => entry.year.toString())));
+                        const allYears = Array.from(new Set([...sampleYears.map(y => y.toString()), ...dataYears]))
+                          .sort((a, b) => Number(b) - Number(a));
+
+                        return allYears.map(year => (
+                          <SelectItem key={year} value={year}>{year}</SelectItem>
+                        ));
+                      })()}
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={selectedTrendMonth} onValueChange={setSelectedTrendMonth}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="Month" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Months</SelectItem>
+                      {Array.from({ length: 12 }, (_, i) => (
+                        <SelectItem key={i} value={i.toString()}>
+                          {new Date(2000, i).toLocaleDateString('en-US', { month: 'long' })}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-              </CardHeader>
-              <CardContent>
-                {selectedMetric && processedData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={processedData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line 
-                        type="monotone" 
-                        dataKey="value" 
-                        stroke="#8884d8" 
-                        strokeWidth={2}
-                        dot={{ fill: '#8884d8', strokeWidth: 2, r: 4 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>Select a metric to view its trend analysis</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card> */}
-            {/* <MetricsGraph /> */}
-            {/* <MetricsGraph1 /> */}
-            {/* <DynamicChart /> */}
-            {/* <CustomDashboardTab graphData={graphData} /> */}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="trends" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Monthly Trends</CardTitle>
-                <CardDescription>Month-on-month performance</CardDescription>
               </CardHeader>
               <CardContent>
                 {monthlyTrends.length > 0 ? (
@@ -399,7 +545,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
             <Card>
               <CardHeader>
                 <CardTitle>Year-on-Year Comparison</CardTitle>
-                <CardDescription>Annual performance comparison</CardDescription>
+                <CardDescription>Trend from data collection start to current year till date</CardDescription>
               </CardHeader>
               <CardContent>
                 {yearlyComparison.length > 0 ? (
@@ -408,8 +554,16 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="year" />
                       <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="value" fill="#ffc658" />
+                      <Tooltip formatter={(value, name, props) => [
+                        value,
+                        props.payload.isCurrentYear ? 'Current Year (YTD)' : 'Full Year'
+                      ]} />
+                      <Bar
+                        dataKey="value"
+                        fill="#ffc658"
+                        stroke="#f39c12"
+                        strokeWidth={1}
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
@@ -419,11 +573,12 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
                 )}
               </CardContent>
             </Card>
-          </div>
+          </div> */}
         </TabsContent>
 
         <TabsContent value="comparison" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
+
             <Card>
               <CardHeader>
                 <CardTitle>ESG Category Breakdown</CardTitle>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TableCell, TableRow } from "@/components/ui/table";
 import { ESGCapItem } from '../../types/esgDD';
@@ -11,10 +10,10 @@ import { ESGCapRowActions } from './ESGCapRowActions';
 // Helper function to determine the effective status
 const getEffectiveStatus = (item: ESGCapItem): ESGCapItem['status'] => {
   const today = new Date();
-  const deadline = new Date(item.deadline);
+  const targetDate = new Date(item.targetDate);
   
-  // If deadline has passed and status is not completed and no actual completion date, mark as delayed
-  if (deadline < today && item.status !== 'completed' && !item.actualCompletionDate) {
+  // If target date has passed and status is not completed and no actual date, mark as delayed
+  if (targetDate < today && item.status !== 'completed' && !item.actualDate) {
     return 'delayed';
   }
   
@@ -29,12 +28,11 @@ interface ESGCapTableRowProps {
 
 export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onUpdate }) => {
   const effectiveStatus = getEffectiveStatus(item);
-  
   return (
     <TableRow>
       <TableCell className="text-center font-medium">{index + 1}</TableCell>
       <TableCell className="font-medium">
-        {item.issue}
+        {item.item}
       </TableCell>
       <TableCell>
         <CategoryBadge category={item.category} />
@@ -42,19 +40,19 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
       <TableCell>
         <PriorityBadge priority={item.priority} />
       </TableCell>
-      <TableCell>{item.description}</TableCell>
-      <TableCell>{item.assignedTo || 'Not assigned'}</TableCell>
-      <TableCell>{item.recommendation}</TableCell>
-      <TableCell>{new Date(item.deadline).toLocaleDateString()}</TableCell>
+      <TableCell>{item.measures}</TableCell> {/* Changed from description to measures */}
+      {/* <TableCell>{item.assignedTo || 'Not assigned'}</TableCell> */}
+      <TableCell>{item.resource}</TableCell> {/* Changed from recommendation to resource */}
+      <TableCell>{new Date(item.targetDate).toLocaleDateString()}</TableCell> {/* Changed from deadline to targetDate */}
       <TableCell>
-        {item.dealCondition !== 'none' && (
+        {item.CS !== 'none' && (
           <Badge variant="outline" className="font-bold">
-            {item.dealCondition}
+            {item.CS}
           </Badge>
         )}
       </TableCell>
       <TableCell>
-        {item.actualCompletionDate ? new Date(item.actualCompletionDate).toLocaleDateString() : '-'}
+        {item.actualDate ? new Date(item.actualDate).toLocaleDateString() : '-'} {/* Changed from actualCompletionDate to actualDate */}
       </TableCell>
       <TableCell>
         <StatusBadge status={effectiveStatus} />
