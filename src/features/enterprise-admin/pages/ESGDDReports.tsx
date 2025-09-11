@@ -106,7 +106,7 @@ const ESGDDReportsPage = () => {
   return (
     <UnifiedSidebarLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        {/* <div className="flex justify-between items-center">
           <div>
             <Link to="/esg-dd" className="text-sm text-muted-foreground hover:text-foreground flex items-center mb-2">
               <ArrowLeft className="h-4 w-4 mr-1" /> Back to ESG DD
@@ -123,7 +123,7 @@ const ESGDDReportsPage = () => {
               New ESG DD
             </Link>
           </Button>
-        </div>
+        </div> */}
         
         <Card>
           <CardHeader>

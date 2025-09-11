@@ -39,57 +39,42 @@ export const ESGDDReportsList: React.FC<ESGDDReportsListProps> = ({ reports, onV
   };
 
   const handleView = (reportId: string) => {
-    if (onViewReport) {
-      onViewReport(reportId);
+    const report = reports.find(r => r.id === reportId);
+    if (report?.fileUrl) {
+      window.open(report.fileUrl, "_blank", "noopener,noreferrer");
     } else {
-      // Default view behavior if no handler provided
-      console.log('Viewing report:', reportId);
       toast({
-        title: "Report View",
-        description: `Opening report ${reportId}`,
-      });
-    }
-  };
-
-  const handleDownload = async (report: ESGDDReport) => {
-    try {
-      setDownloading(report.id);
-      
-      // Simulate download - replace with actual API call
-      console.log('Downloading report:', report.id);
-      
-      // Example of actual download implementation:
-      if (report.fileUrl) {
-        const response = await fetch(report.fileUrl);
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = report.title || `report-${report.id}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-      } else {
-        throw new Error('No file URL available');
-      }
-
-      toast({
-        title: "Download Successful",
-        description: `${report.title} has been downloaded`,
-      });
-    } catch (error) {
-      console.error('Download failed:', error);
-      toast({
-        title: "Download Failed",
-        description: "Could not download the report",
+        title: "View Failed",
+        description: "No file available to view",
         variant: "destructive",
       });
-    } finally {
-      setDownloading(null);
     }
   };
+  
+
+  const handleDownload = (report: ESGDDReport) => {
+    if (!report.fileUrl) {
+      toast({
+        title: "Download Failed",
+        description: "No file URL available",
+        variant: "destructive",
+      });
+      return;
+    }
+  
+    const a = document.createElement("a");
+    a.href = report.fileUrl;
+    a.download = report.title || `report-${report.id}.pdf`; // browser may ignore this if S3 doesn't send Content-Disposition
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  
+    toast({
+      title: "Download Started",
+      description: `${report.title} is being downloaded`,
+    });
+  };
+  
 
   return (
     <div className="rounded-md border overflow-hidden">
