@@ -52,7 +52,7 @@ export const ESGDDReportsList: React.FC<ESGDDReportsListProps> = ({ reports, onV
   };
   
 
-  const handleDownload = (report: ESGDDReport) => {
+  const handleDownload = async (report: ESGDDReport) => {
     if (!report.fileUrl) {
       toast({
         title: "Download Failed",
@@ -62,19 +62,40 @@ export const ESGDDReportsList: React.FC<ESGDDReportsListProps> = ({ reports, onV
       return;
     }
   
-    const a = document.createElement("a");
-    a.href = report.fileUrl;
-    a.download = report.title || `report-${report.id}.pdf`; // browser may ignore this if S3 doesn't send Content-Disposition
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    try {
+      // 🔹 Step 1: Fetch and force download
+      const response = await fetch(report.fileUrl);
+      if (!response.ok) throw new Error("Failed to fetch file");
   
-    toast({
-      title: "Download Started",
-      description: `${report.title} is being downloaded`,
-    });
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+  
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = report.title || `report-${report.id}.pdf`; // ✅ forces download
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+  
+      // 🔹 Step 2: Open original file in new tab
+      window.open(report.fileUrl, "_blank", "noopener,noreferrer");
+  
+      // Clean up blob URL
+      window.URL.revokeObjectURL(url);
+  
+      toast({
+        title: "Download + View",
+        description: `${report.title} downloaded and opened in a new tab`,
+      });
+    } catch (error) {
+      console.error(error);
+      toast({
+        title: "Download Failed",
+        description: "Could not download the report",
+        variant: "destructive",
+      });
+    }
   };
-  
 
   return (
     <div className="rounded-md border overflow-hidden">
@@ -155,7 +176,7 @@ export const ESGDDReportsList: React.FC<ESGDDReportsListProps> = ({ reports, onV
                   >
                     View
                   </Button>
-                  <Button 
+                  {/* <Button 
                     variant="outline" 
                     size="sm"
                     onClick={() => handleDownload(report)}
@@ -172,7 +193,7 @@ export const ESGDDReportsList: React.FC<ESGDDReportsListProps> = ({ reports, onV
                     ) : (
                       <Download className="h-4 w-4" />
                     )}
-                  </Button>
+                  </Button> */}
                 </div>
               </TableCell>
             </TableRow>
