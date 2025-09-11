@@ -42,7 +42,7 @@ export const ESGCapTableHeader: React.FC<ESGCapTableHeaderProps> = ({
         </TableHead>
         <TableHead>Measures and/or Corrective Actions</TableHead>
         <TableHead>Resource & Responsibility</TableHead>
-        {/* <TableHead>Expected Deliverable***</TableHead> */}
+        <TableHead>Expected Deliverable</TableHead>
         <TableHead 
           className="cursor-pointer hover:bg-muted/50"
           onClick={() => requestSort('deadline')}

@@ -39,55 +39,61 @@ export const ESGDDReportsList: React.FC<ESGDDReportsListProps> = ({ reports, onV
   };
 
   const handleView = (reportId: string) => {
-    if (onViewReport) {
-      onViewReport(reportId);
+    const report = reports.find(r => r.id === reportId);
+    if (report?.fileUrl) {
+      window.open(report.fileUrl, "_blank", "noopener,noreferrer");
     } else {
-      // Default view behavior if no handler provided
-      console.log('Viewing report:', reportId);
       toast({
-        title: "Report View",
-        description: `Opening report ${reportId}`,
+        title: "View Failed",
+        description: "No file available to view",
+        variant: "destructive",
       });
     }
   };
+  
 
   const handleDownload = async (report: ESGDDReport) => {
-    try {
-      setDownloading(report.id);
-      
-      // Simulate download - replace with actual API call
-      console.log('Downloading report:', report.id);
-      
-      // Example of actual download implementation:
-      if (report.fileUrl) {
-        const response = await fetch(report.fileUrl);
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = report.title || `report-${report.id}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-      } else {
-        throw new Error('No file URL available');
-      }
-
+    if (!report.fileUrl) {
       toast({
-        title: "Download Successful",
-        description: `${report.title} has been downloaded`,
+        title: "Download Failed",
+        description: "No file URL available",
+        variant: "destructive",
+      });
+      return;
+    }
+  
+    try {
+      // 🔹 Step 1: Fetch and force download
+      const response = await fetch(report.fileUrl);
+      if (!response.ok) throw new Error("Failed to fetch file");
+  
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+  
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = report.title || `report-${report.id}.pdf`; // ✅ forces download
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+  
+      // 🔹 Step 2: Open original file in new tab
+      window.open(report.fileUrl, "_blank", "noopener,noreferrer");
+  
+      // Clean up blob URL
+      window.URL.revokeObjectURL(url);
+  
+      toast({
+        title: "Download + View",
+        description: `${report.title} downloaded and opened in a new tab`,
       });
     } catch (error) {
-      console.error('Download failed:', error);
+      console.error(error);
       toast({
         title: "Download Failed",
         description: "Could not download the report",
         variant: "destructive",
       });
-    } finally {
-      setDownloading(null);
     }
   };
 
@@ -170,7 +176,7 @@ export const ESGDDReportsList: React.FC<ESGDDReportsListProps> = ({ reports, onV
                   >
                     View
                   </Button>
-                  <Button 
+                  {/* <Button 
                     variant="outline" 
                     size="sm"
                     onClick={() => handleDownload(report)}
@@ -187,7 +193,7 @@ export const ESGDDReportsList: React.FC<ESGDDReportsListProps> = ({ reports, onV
                     ) : (
                       <Download className="h-4 w-4" />
                     )}
-                  </Button>
+                  </Button> */}
                 </div>
               </TableCell>
             </TableRow>

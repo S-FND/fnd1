@@ -41,7 +41,7 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
         <PriorityBadge priority={item.priority} />
       </TableCell>
       <TableCell>{item.measures}</TableCell> {/* Changed from description to measures */}
-      {/* <TableCell>{item.assignedTo || 'Not assigned'}</TableCell> */}
+      <TableCell>{item.deliverable}</TableCell>
       <TableCell>{item.resource}</TableCell> {/* Changed from recommendation to resource */}
       <TableCell>{new Date(item.targetDate).toLocaleDateString()}</TableCell> {/* Changed from deadline to targetDate */}
       <TableCell>
