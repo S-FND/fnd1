@@ -518,3 +518,33 @@ export const deleteFile = async (payload: { filesToDelete: string[] }, type: str
     throw error;
   }
 };
+
+// Create or update company feature access
+export const updateCompanyFeatures = async (
+  entityId: string,
+  featurePage: { feature: string; adminEnabled: boolean; url: string }[]
+) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/auth/feature-access`,
+      {
+        entityId,
+        featurePage,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("fandoro-token")}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return {
+      _id: response?.data?._id,
+      companyFeaturePageAccess: response?.data?.companyFeaturePageAccess || [],
+    };
+  } catch (error) {
+    console.error("Error updating company features:", error);
+    throw error;
+  }
+};
