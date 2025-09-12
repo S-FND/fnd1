@@ -8,15 +8,15 @@ interface PriorityBadgeProps {
 
 export const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority = 'low' }) => {
   const getPriorityStyles = (priority: ESGCapPriority) => {
-    switch (priority) {
+    switch (priority.toLowerCase()) {
       case 'high':
-        return 'bg-destructive/10 text-destructive border-destructive/20';
+        return 'bg-red-500 text-white';      // destructive
       case 'medium':
-        return 'bg-warning/10 text-warning border-warning/20';
+        return 'bg-yellow-400 text-black';   // warning
       case 'low':
-        return 'bg-muted/50 text-muted-foreground border-muted/20';
+        return 'bg-gray-300 text-black';     // muted
       default:
-        return 'bg-muted/50 text-muted-foreground border-muted/20';
+        return 'bg-gray-300 text-black';
     }
   };
 
