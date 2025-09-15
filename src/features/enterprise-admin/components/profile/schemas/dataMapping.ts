@@ -30,7 +30,9 @@ const fieldMapping = {
     }
     // Include _id from the API response (optional field)
     mappedData.user_id = apiResponse?.user_id?._id || '';
-    mappedData.entityId = apiResponse?._id;
+    if (apiResponse?.cin) {
+      mappedData.entityId = apiResponse?._id;
+    }
     return mappedData as CompanyFormData;
   };
   
