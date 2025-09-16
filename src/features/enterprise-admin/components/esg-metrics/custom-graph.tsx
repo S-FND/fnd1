@@ -26,7 +26,7 @@ const CustomDashboardTab = ({ graphData,selectedMetric,selectedPeriod,selectedYe
                 {/* <Row> */}
                 {metrics.map((metric) => {
 
-                    if (graphData[metric]['graphType'] == 'pie' && selectedMetric && selectedPeriod && selectedYear && 
+                    if (graphData[metric]?.['graphType'] == 'pie' && selectedMetric && selectedPeriod && selectedYear && 
                         graphData[metric]['data'] && graphData[metric]['data'].length > 0 && 
                         graphData[metric]['data'].find(item => item.metricName === selectedMetric && item.period === selectedPeriod && item.financialYear === selectedYear)
                     ) {
@@ -123,7 +123,7 @@ const CustomDashboardTab = ({ graphData,selectedMetric,selectedPeriod,selectedYe
                             // </Col>
                         )
                     }
-                    else if (graphData[metric]['graphType'] == 'bar' && 
+                    else if (graphData[metric]?.['graphType'] == 'bar' && 
                         selectedMetric && selectedPeriod && selectedYear && 
                         graphData[metric]['data'] && graphData[metric]['data'].length > 0 && 
                         graphData[metric]['data'].find(item => item.metricName === selectedMetric && item.period === selectedPeriod && item.financialYear === selectedYear)) {
