@@ -60,15 +60,6 @@ const EditableCompanyProfile = () => {
     loadData();
   }, []);
 
-  const getUserEntityId = () => {
-    try {
-      const user = localStorage.getItem("fandoro-user");
-      return user ? JSON.parse(user)?.entityId || null : null;
-    } catch {
-      return null;
-    }
-  };
-  
   const handleNewCompanySetup = async (entityId: string) => {
     try {
       const features = await updateCompanyFeatures(entityId, [
@@ -83,21 +74,6 @@ const EditableCompanyProfile = () => {
       console.error("Failed to set up company features:", err);
     }
   };
-  
-  useEffect(() => {
-    const userAccess = localStorage.getItem("fandoro-access");
-    const isEmpty = (val: string | null) =>
-      !val || val === "null" || val === "undefined" || val === "[]" || val === "";
-    if (isEmpty(userAccess)) {
-      const entityId = getUserEntityId();
-      console.log("entityId", entityId);
-
-      if (entityId) {
-        handleNewCompanySetup(entityId);
-      }
-    }
-  }, []);
-
   const onSubmit = async (data: CompanyFormData) => {
     if (!currentUser) {
       toast.error('User information not available');
@@ -110,13 +86,18 @@ const EditableCompanyProfile = () => {
         ...data,
         user_id: currentUser._id // Use the currentUser state
       };
-      
-      const updatedData = await updateProfileData(submissionData);
+      const entityId = currentUser?.entityId || null;
+      const updatedData = await updateProfileData(submissionData,entityId);
       const response = await fetchProfileData();
-      
+
       // Update localStorage if needed
       if (response) {
         localStorage.setItem("fandoro-user", JSON.stringify(response));
+        const storedAccess = localStorage.getItem("fandoro-access");
+        const isEmpty = !storedAccess || storedAccess === "null" || storedAccess === "undefined" || storedAccess === "[]" || storedAccess === "";
+        if (isEmpty && response?.entityId) {
+          await handleNewCompanySetup(response.entityId);
+        }
       }
       
       setApiData(response);
