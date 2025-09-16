@@ -6,7 +6,7 @@ import { companySchema, CompanyFormData } from './schemas/companySchema';
 import { defaultCompanyData } from './data/defaultCompanyData';
 import CompanyEditForm from './CompanyEditForm';
 import CompanyDisplay from './CompanyDisplay';
-import { fetchProfileData, updateProfileData } from '../../services/companyApi';
+import { fetchProfileData, updateProfileData,updateCompanyFeatures } from '../../services/companyApi';
 import { defaultPermissions } from '@/config/permissions'; // Make sure to import this
 
 const EditableCompanyProfile = () => {
@@ -60,6 +60,44 @@ const EditableCompanyProfile = () => {
     loadData();
   }, []);
 
+  const getUserEntityId = () => {
+    try {
+      const user = localStorage.getItem("fandoro-user");
+      return user ? JSON.parse(user)?.entityId || null : null;
+    } catch {
+      return null;
+    }
+  };
+  
+  const handleNewCompanySetup = async (entityId: string) => {
+    try {
+      const features = await updateCompanyFeatures(entityId, [
+        { feature: "ESG DD", adminEnabled: true, url: "/esg-dd" },
+      ]);
+
+      localStorage.setItem(
+        "fandoro-access",
+        JSON.stringify(features || [])
+      );
+    } catch (err) {
+      console.error("Failed to set up company features:", err);
+    }
+  };
+  
+  useEffect(() => {
+    const userAccess = localStorage.getItem("fandoro-access");
+    const isEmpty = (val: string | null) =>
+      !val || val === "null" || val === "undefined" || val === "[]" || val === "";
+    if (isEmpty(userAccess)) {
+      const entityId = getUserEntityId();
+      console.log("entityId", entityId);
+
+      if (entityId) {
+        handleNewCompanySetup(entityId);
+      }
+    }
+  }, []);
+
   const onSubmit = async (data: CompanyFormData) => {
     if (!currentUser) {
       toast.error('User information not available');
@@ -105,6 +143,8 @@ const EditableCompanyProfile = () => {
   if (isLoading) {
     return <div className="flex justify-center p-8">Loading...</div>;
   }
+
+  
 
   return (
     <div className="space-y-6">
