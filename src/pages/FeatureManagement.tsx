@@ -62,7 +62,17 @@ const FeatureManagementPage = () => {
   }, [pageAccessData])
 
   useEffect(() => {
-    let featureAccess=JSON.parse(localStorage.getItem('fandoro-access') || 'null');
+    // let featureAccess=JSON.parse(localStorage.getItem('fandoro-access') || 'null');
+    let featureAccess = null;
+    try {
+      const storedData = localStorage.getItem('fandoro-access');
+      if (storedData) {
+        featureAccess = JSON.parse(storedData);
+      }
+    } catch (error) {
+      console.error('Error parsing stored feature access data:', error);
+      featureAccess = null;
+    }
     if(featureAccess){
       setPageAccessData(featureAccess['companyFeaturePageAccess'])
       // setPageList(featureAccess)

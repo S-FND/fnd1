@@ -92,7 +92,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics, finalMetric
     // }
     console.log('selectedYear', selectedYear);
     getGraphData(selectedYear);
-  }, []);
+  }, [selectedYear]);
 
   useEffect(() => {
     console.log('selectedYear changed', selectedYear);
