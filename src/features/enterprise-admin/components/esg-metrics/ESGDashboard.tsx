@@ -90,7 +90,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics, finalMetric
     //   }
     // }
     getGraphData(selectedYear);
-  }, []);
+  }, [selectedYear]);
 
   const generatePeriods = (frequency: string, financialYear: string) => {
     if (!financialYear) return [];
