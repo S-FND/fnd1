@@ -88,14 +88,21 @@ export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
     else {
       for (let i = 0; i < pageAccessData?.length; i++) {
         // console.log('pageAccessData',pageAccessData[i]['url'].split('/'))
+        // console.log('pageAccessData2',pageAccessData[i].url.replace(/^\//, '').split('/'))
         // console.log(`location.pathname.split('/')`,location.pathname.split('/'))
-        if (location.pathname.split('/').includes(pageAccessData[i]['url'].split('/')[1])) {
-          // console.log("Overlay",pageAccessData[i]['enabled'])
+        // console.log(`location.pathname.split('/')2`,location.pathname.replace(/^\//, '').split('/'))
+
+        const accessPart = pageAccessData[i].url.replace(/^\//, '').split('/')[0];
+        const currentPart = location.pathname.replace(/^\//, '').split('/')[0];
+        // if (location.pathname.split('/').includes(pageAccessData[i]['url'].split('/')[1])) {
+        if (currentPart === accessPart) {
+          // console.log("Overlay",pageAccessData[i]['adminEnabled'])
           setShouldShowOverlay(!pageAccessData[i]['adminEnabled'])
           break;
         }
         else {
-          setShouldShowOverlay(!pageAccessData[i]['adminEnabled'])
+          // setShouldShowOverlay(!pageAccessData[i]['adminEnabled'])
+            setShouldShowOverlay(true)
         }
       }
     }

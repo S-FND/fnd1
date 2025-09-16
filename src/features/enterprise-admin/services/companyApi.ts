@@ -40,12 +40,12 @@ export const fetchProfileData = async (): Promise<CompanyFormData> => {
   }
 };
 
-export const updateProfileData = async (formData: CompanyFormData) => {
+export const updateProfileData = async (formData: CompanyFormData,UserEntityId) => {
   try {
     // Map frontend data to backend payload
     const apiPayload = mapFormDataToApiPayload(formData);
     // Determine HTTP method based on the presence of user_id in the payload
-    const httpMethod = entityId ? "put" : "post";
+    const httpMethod = UserEntityId ? "put" : "post"; 
     const endpoint = `${API_URL}/company/entity`;
 
     const response = await axios({
