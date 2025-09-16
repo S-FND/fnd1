@@ -529,7 +529,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
                             value={item.isApplicable}
                             onChange={(e) => handleStatusChange(item.id, e.target.value)}
                             placeholder="Enter details"
-                            className="w-full min-w-[300px] p-2 border rounded-md"
+                            className="w-full min-w p-2 border rounded-md"
                           />
                         ) : TEXTAREA_KEYS.includes(item.key) ? (
                           <Textarea
