@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Loader2, UserPlus, Search, Edit, Users, Check, X } from 'lucide-react';
@@ -14,7 +14,8 @@ import {
   updateEmployee,
   assignEmployeeUrls,
   fetchUrlList,
-  fetchUserAccess
+  // fetchUserAccess,
+  updateCompanyFeatures
 } from '../../services/employeeManagementAPI';
 
 interface Employee {
@@ -64,6 +65,23 @@ interface AccessHistory {
   updatedOn: string;
 }
 
+const COMPANY_FEATURES = [
+  { feature: "Dashboard", adminEnabled: false, url: "/dashboard" },
+  { feature: "ESG Management", adminEnabled: false, url: "/esg" },
+  { feature: "Materiality", adminEnabled: false, url: "/materiality" },
+  { feature: "ESG DD", adminEnabled: true, url: "/esg-dd" },
+  { feature: "GHG Accounting", adminEnabled: false, url: "/ghg-accounting" },
+  { feature: "Compliance", adminEnabled: false, url: "/compliance" },
+  { feature: "Audit", adminEnabled: false, url: "/audit" },
+  { feature: "LMS", adminEnabled: false, url: "/lms" },
+  { feature: "EHS Trainings", adminEnabled: false, url: "/ehs-trainings" },
+  { feature: "Reports", adminEnabled: false, url: "/reports" },
+  { feature: "Stakeholders", adminEnabled: false, url: "/stakeholders" },
+  { feature: "Units", adminEnabled: false, url: "/units" },
+  { feature: "Team Management", adminEnabled: false, url: "/team-management" },
+  { feature: "Settings", adminEnabled: false, url: "/settings" },
+  { feature: "Company Profile", adminEnabled: false, url: "/company" },
+];
 const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
   employees: Employee[];
   locations: Location[];
@@ -80,6 +98,8 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [locationNameMap, setLocationNameMap] = useState<Map<string, string>>(new Map());
+  const [isAssignmentDialogOpen, setIsAssignmentDialogOpen] = useState(false);
+
   const getLocationName = (locationId: string) => {
     if (!locationId) return 'Unassigned';
     return locationNameMap.get(locationId) || 'Unassigned';
@@ -199,35 +219,35 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
     }
   };
 
-  const handleSaveAssignment = async () => {
-    if (!selectedEmployee) return;
+  // const handleSaveAssignment = async () => {
+  //   if (!selectedEmployee) return;
 
-    try {
-      // Create the complete update object following your example pattern
-      const updateObj = {
-        ...selectedEmployee, // Include all existing employee data
-        accessUrls: selectedUrls, // Update only the accessUrls
-        updatedAt: new Date().toISOString() // Add current timestamp
-      };
+  //   try {
+  //     // Create the complete update object following your example pattern
+  //     const updateObj = {
+  //       ...selectedEmployee, // Include all existing employee data
+  //       accessUrls: selectedUrls, // Update only the accessUrls
+  //       updatedAt: new Date().toISOString() // Add current timestamp
+  //     };
 
-      console.log('Sending to /subuser/activate:', updateObj);
+  //     console.log('Sending to /subuser/activate:', updateObj);
 
-      const [response, error] = await updateEmployee(updateObj);
+  //     const [response, error] = await updateEmployee(updateObj);
 
-      console.log('API Response:', response);
+  //     console.log('API Response:', response);
 
-      if (response?.status === true || response?._id) {
-        toast.success('Access URLs assigned successfully');
-        refreshData();
-        setIsAssignDialogOpen(false);
-      } else {
-        toast.error(error || 'Failed to assign access URLs');
-      }
-    } catch (err) {
-      toast.error('An error occurred while assigning access URLs');
-      console.error(err);
-    }
-  };
+  //     if (response?.status === true || response?._id) {
+  //       toast.success('Access URLs assigned successfully');
+  //       refreshData();
+  //       setIsAssignDialogOpen(false);
+  //     } else {
+  //       toast.error(error || 'Failed to assign access URLs');
+  //     }
+  //   } catch (err) {
+  //     toast.error('An error occurred while assigning access URLs');
+  //     console.error(err);
+  //   }
+  // };
 
   // const handleActivateEmployee = async (employee: Employee, active: boolean) => {
   //   try {
@@ -314,6 +334,57 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
       </div>
     );
   }
+
+  // toggle handler for COMPANY_FEATURES assignment
+  const handleToggleUrl = (url: string) => {
+    setSelectedUrls((prev) =>
+      prev.includes(url) ? prev.filter((u) => u !== url) : [...prev, url]
+    );
+  };
+
+  const handleEnableAll = () => setSelectedUrls(COMPANY_FEATURES.map(f => f.url));
+  const handleDisableAll = () => setSelectedUrls([]);
+
+  const handleSaveAssignment = async () => {
+    try {
+      const payload = COMPANY_FEATURES.map((f) => ({
+        feature: f.feature,
+        url: f.url,
+        adminEnabled: selectedUrls.includes(f.url),
+      }));
+
+      const storedUser = JSON.parse(localStorage.getItem("fandoro-user") || "{}");
+      const entityId = storedUser.entityId;
+
+      if (entityId) {
+        const features = await updateCompanyFeatures(entityId, payload);
+        if (features) {
+          toast.success("Features updated successfully");
+          setIsAssignmentDialogOpen(false);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update features");
+    }
+  };
+
+  const handleNewCompanySetup = async (entityId: string) => {
+    try {
+      const features = await updateCompanyFeatures(entityId, [
+        { feature: "ESG DD", adminEnabled: true, url: "/esg-dd" },
+      ]);
+
+      localStorage.setItem(
+        "fandoro-access",
+        JSON.stringify(features || [])
+      );
+    } catch (err) {
+      console.error("Failed to set up company features:", err);
+    }
+  };
+
+
   return (
     <Card>
       <CardHeader>
@@ -406,7 +477,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleAssignEmployee(employee)}
+                      onClick={() => setIsAssignmentDialogOpen(true)}
                     >
                       <Users className="h-3 w-3 mr-1" />
                       Assign
@@ -513,9 +584,9 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
           </div>
         </DialogContent>
       </Dialog>
-
+      {/* old access method */}
       {/* Assignment Dialog */}
-      <Dialog open={isAssignDialogOpen} onOpenChange={(open) => {
+      {/* <Dialog open={isAssignDialogOpen} onOpenChange={(open) => {
         setIsAssignDialogOpen(open);
         if (!open) {
           setSelectedUrls([]);
@@ -596,7 +667,44 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
             </div>
           </div>
         </DialogContent>
+      </Dialog> */}
+      <Dialog open={isAssignmentDialogOpen} onOpenChange={setIsAssignmentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>Assign Access</DialogHeader>
+
+          {/* Enable/Disable All */}
+          <div className="flex justify-end space-x-2 mb-3">
+            <Button size="sm" variant="outline" onClick={handleEnableAll}>
+              Enable All
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleDisableAll}>
+              Disable All
+            </Button>
+          </div>
+
+          {/* Feature checkboxes */}
+          <div className="space-y-2 max-h-80 overflow-y-auto border rounded-md p-3">
+            {COMPANY_FEATURES.map((item) => (
+              <div key={item.url} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={selectedUrls.includes(item.url)}
+                  onChange={() => handleToggleUrl(item.url)}
+                />
+                <span>{item.feature}</span>
+              </div>
+            ))}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAssignmentDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveAssignment}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
       </Dialog>
+
 
       {/* Add Employee Dialog (Placeholder) */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>

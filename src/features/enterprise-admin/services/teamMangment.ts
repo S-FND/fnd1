@@ -127,3 +127,24 @@ export const createSubsidiary = async (params: any) => {
     return [null, errorMessage];
   }
 };
+
+export const updateSubsidiary = async (id: string, params: any) => {
+  try {
+    const url = `${API_URL}/company/subsidiary-company/${id}`;
+    const response = await axios.put(url, params, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("fandoro-token")}`,
+      },
+    });
+    return [response.data, null];
+  } catch (error: any) {
+    let errorMessage = "An unexpected error occurred";
+    if (error?.response?.data?.message) {
+      const raw = error.response.data.message;
+      errorMessage = raw.includes(":") ? raw.split(":").pop()?.trim() : raw;
+    } else if (axios.isAxiosError(error)) {
+      errorMessage = error.message;
+    }
+    return [null, errorMessage];
+  }
+};

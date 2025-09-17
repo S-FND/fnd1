@@ -14,7 +14,7 @@ const TeamManagementPage = () => {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isAuthenticatedStatus() || user?.role !== 'admin') {
+  if (!isAuthenticatedStatus()) {
     return <Navigate to="/" />;
   }
 
