@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import { fetchSubsidiaries, createSubsidiary } from '../../services/teamMangment';
+import { fetchSubsidiaries, createSubsidiary, updateSubsidiary } from '../../services/teamMangment';
 
 const SubsidiaryCompany = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -17,6 +17,8 @@ const SubsidiaryCompany = () => {
   const [subsidiaries, setSubsidiaries] = useState([]);
   // Form state
   const [formData, setFormData] = useState({
+    _id: '',
+    entityId: '',
     companyName: '',
     address: '',
     gstNumber: '',
@@ -27,6 +29,7 @@ const SubsidiaryCompany = () => {
     facilityType: '',
     otherFacilityType: '',
     unitId: '',
+    cin: '',
     category: '',
     categoryDescription: '',
     userName: '',
@@ -63,35 +66,46 @@ const SubsidiaryCompany = () => {
   };
 
   // Add new company
-  const handleAddCompany = async () => {
-    if (!formData.companyName || !formData.address || !formData.userEmail) {
-      toast.error("Please fill in all required fields.");
+  const handleSaveCompany = async () => {
+    if (!formData.companyName || !formData.userEmail || !formData.gstNumber || !formData.cin) {
+      toast.error("Please fill in Company Name required fields.");
       return;
     }
 
     setLoading(true);
 
     const payload = {
+      _id: formData._id || undefined, // only include when editing
       companyName: formData.companyName,
       address: formData.address,
       userName: formData.userName,
       domain: formData.domain,
       designation: formData.designation,
       gst: formData.gstNumber,
-    //   cin: formData.cin,
+      cin: formData.cin,
       userEmail: formData.userEmail,
       active: true
     };
 
     try {
-      const [result, error] = await createSubsidiary(payload);
+      let result, error;
+      if (formData._id) {
+        [result, error] = await updateSubsidiary(formData.entityId, {
+          ...payload,
+          _id: formData._id,
+          entityId: formData.entityId,
+        });
+      } else {
+        [result, error] = await createSubsidiary(payload);
+      }
+      // const [result, error] = await createSubsidiary(payload);
       if (result) {
-        toast.success("Subsidiary company added successfully");
+        toast.success(formData._id ? "Subsidiary updated successfully" : "Subsidiary added successfully");
         setIsAddDialogOpen(false);
         resetForm();
         getSubsidiaries(); // Refresh list
       } else {
-        toast.error("Failed to add company");
+        toast.error(error);
       }
     } catch (err) {
       toast.error("Something went wrong");
@@ -103,6 +117,8 @@ const SubsidiaryCompany = () => {
   // Reset form
   const resetForm = () => {
     setFormData({
+      _id: '',
+      entityId: '',
       companyName: '',
       address: '',
       gstNumber: '',
@@ -113,6 +129,7 @@ const SubsidiaryCompany = () => {
       facilityType: '',
       otherFacilityType: '',
       unitId: '',
+      cin: '',
       category: '',
       categoryDescription: '',
       userName: '',
@@ -130,6 +147,53 @@ const SubsidiaryCompany = () => {
       company?.address?.toLowerCase().includes(searchValue)
     );
   });
+
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const handleRemoveCompany = async (id: string,entityId: string) => {
+    setRemovingId(id);
+    try {
+      const [result, error] = await updateSubsidiary(entityId, {
+        _id: id,
+        softDelete: true, // soft delete / deactivate
+      });
+      if (result) {
+        toast.success("Subsidiary removed successfully");
+        getSubsidiaries();
+      } else {
+        toast.error(error);
+      }
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setRemovingId(null);
+    }
+  };
+
+  const handleEditCompany = (company: any) => {
+    setFormData({
+      _id: company._id,
+      entityId: company.entityId || "",
+      companyName: company.companyName || "",
+      address: company.address || "",
+      gstNumber: company.gst || "",
+      cin: company.cin || "",
+      userName: company.userName || "",
+      domain: company.domain || "",
+      designation: company.designation || "",
+      userEmail: company.userEmail || "",
+      geotag: company.geotag || "",
+      country: company.country || "India",
+      state: company.state || "",
+      city: company.city || "",
+      facilityType: company.facilityType || "",
+      otherFacilityType: company.otherFacilityType || "",
+      unitId: company.unitId || "",
+      category: company.category || "",
+      categoryDescription: company.categoryDescription || ""
+    });
+    setIsAddDialogOpen(true);
+  };
 
   return (
     <Card>
@@ -152,46 +216,105 @@ const SubsidiaryCompany = () => {
               </DialogTrigger>
               <DialogContent className="max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Add New Subsidiary Company</DialogTitle>
+                  <DialogTitle>
+                    {formData._id ? "Edit Subsidiary Company" : "Add New Subsidiary Company"}
+                  </DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4">
+                <div className="space-y-8">
                   {/* Basic Info */}
-                  <div>
-                    <Label htmlFor="companyName">Company Name *</Label>
-                    <Input
-                      id="companyName"
-                      placeholder="Enter company name"
-                      value={formData.companyName}
-                      onChange={handleInputChange}
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="userName">Full Name</Label>
+                      <Input
+                        id="userName"
+                        placeholder="Enter Full Name"
+                        value={formData.userName}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="userEmail">Email Address *</Label>
+                      <Input
+                        id="userEmail"
+                        placeholder="Enter Email "
+                        value={formData.userEmail}
+                        onChange={handleInputChange}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="unitId">Unit ID *</Label>
-                    <Input
-                      id="unitId"
-                      placeholder="Enter unit ID"
-                      value={formData.unitId}
-                      onChange={handleInputChange}
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <div>
+                      <Label htmlFor="designation">Designation</Label>
+                      <Input
+                        id="designation"
+                        placeholder="Enter Designation"
+                        value={formData.designation}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="companyName">Company Name *</Label>
+                      <Input
+                        id="companyName"
+                        placeholder="Enter Company Name"
+                        value={formData.companyName}
+                        onChange={handleInputChange}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label>Category</Label>
-                    <Select
-                      value={formData.category}
-                      onValueChange={(value) => handleSelectChange(value, 'category')}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem key="product" value="Product">Product</SelectItem>
-                        <SelectItem key="function" value="Function">Function</SelectItem>
-                        <SelectItem key="department" value="Department">Department</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <div>
+                      <Label htmlFor="domain">Registered Domain</Label>
+                      <Input
+                        id="domain"
+                        placeholder="Enter Registered Domain"
+                        value={formData.domain}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="gstNumber">GST Number *</Label>
+                      <Input
+                        id="gstNumber"
+                        placeholder="Enter GST Number"
+                        value={formData.gstNumber}
+                        onChange={handleInputChange}
+                      />
+                    </div>
                   </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                    <div>
+                      <Label htmlFor="cin">CIN *</Label>
+                      <Input
+                        id="cin"
+                        placeholder="Enter CIN Number"
+                        value={formData.cin}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                    {/* <div>
+                      <Label>Category</Label>
+                      <Select
+                        value={formData.category}
+                        onValueChange={(value) => handleSelectChange(value, 'category')}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem key="product" value="Product">Product</SelectItem>
+                          <SelectItem key="function" value="Function">Function</SelectItem>
+                          <SelectItem key="department" value="Department">Department</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div> */}
+                  </div>
+
                   <div>
-                    <Label htmlFor="address">Registered Office Address *</Label>
+                    <Label htmlFor="address">Registered Office Address</Label>
                     <Input
                       id="address"
                       placeholder="Enter full address"
@@ -203,9 +326,10 @@ const SubsidiaryCompany = () => {
                     <Button onClick={() => setIsAddDialogOpen(false)} variant="outline" className="flex-1">
                       Cancel
                     </Button>
-                    <Button onClick={handleAddCompany} className="flex-1" disabled={loading}>
-                      {loading ? "Adding..." : "Add Company"}
+                    <Button onClick={handleSaveCompany} className="flex-1" disabled={loading}>
+                      {loading ? (formData._id ? "Updating..." : "Adding...") : (formData._id ? "Update Company" : "Add Company")}
                     </Button>
+
                   </div>
                 </div>
               </DialogContent>
@@ -252,11 +376,23 @@ const SubsidiaryCompany = () => {
                       ))}
                     </div>
                     <div className="flex gap-2 mt-3">
-                      <Button size="sm" variant="outline" className="flex-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => handleEditCompany(company)}
+                      >
                         Edit
                       </Button>
-                      <Button size="sm" variant="destructive" className="flex-1" disabled={loading}>
-                        {loading ? "Removing..." : "Remove"}
+
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        className="flex-1"
+                        disabled={removingId === company._id}
+                        onClick={() => handleRemoveCompany(company._id,company.entityId)}
+                      >
+                        {removingId === company._id ? "Removing..." : "Remove"}
                       </Button>
                     </div>
                   </div>
