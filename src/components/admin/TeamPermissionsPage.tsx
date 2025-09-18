@@ -33,10 +33,54 @@ const TeamPermissionsPage: React.FC = () => {
 
   // Fetch team members
   const fetchTeamMembers = async () => {
-    if (!profile?.portfolio_company_id) return;
-
     try {
       setLoading(true);
+      
+      // If no portfolio company ID, use mock data for testing
+      if (!profile?.portfolio_company_id) {
+        const mockUsers: UserProfile[] = [
+          {
+            id: 'mock-1',
+            user_id: 'mock-user-1',
+            full_name: 'John Admin',
+            email: 'admin@example.com',
+            role: 'portfolio_company_admin',
+            is_active: true,
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'mock-2',
+            user_id: 'mock-user-2',
+            full_name: 'Sarah Editor',
+            email: 'editor@example.com',
+            role: 'portfolio_team_editor',
+            is_active: true,
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'mock-3',
+            user_id: 'mock-user-3',
+            full_name: 'Mike Viewer',
+            email: 'viewer@example.com',
+            role: 'portfolio_team_viewer',
+            is_active: true,
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'mock-4',
+            user_id: 'mock-user-4',
+            full_name: 'Jane Supplier',
+            email: 'supplier@example.com',
+            role: 'supplier',
+            is_active: true,
+            created_at: new Date().toISOString()
+          }
+        ];
+        setUsers(mockUsers);
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
@@ -45,7 +89,51 @@ const TeamPermissionsPage: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setUsers(data || []);
+      
+      // If no real users found, use mock data for testing
+      if (!data || data.length === 0) {
+        const mockUsers: UserProfile[] = [
+          {
+            id: 'mock-1',
+            user_id: 'mock-user-1',
+            full_name: 'John Admin',
+            email: 'admin@example.com',
+            role: 'portfolio_company_admin',
+            is_active: true,
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'mock-2',
+            user_id: 'mock-user-2',
+            full_name: 'Sarah Editor',
+            email: 'editor@example.com',
+            role: 'portfolio_team_editor',
+            is_active: true,
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'mock-3',
+            user_id: 'mock-user-3',
+            full_name: 'Mike Viewer',
+            email: 'viewer@example.com',
+            role: 'portfolio_team_viewer',
+            is_active: true,
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'mock-4',
+            user_id: 'mock-user-4',
+            full_name: 'Jane Supplier',
+            email: 'supplier@example.com',
+            role: 'supplier',
+            is_active: true,
+            created_at: new Date().toISOString()
+          }
+        ];
+        setUsers(mockUsers);
+      } else {
+        setUsers(data);
+      }
     } catch (error) {
       toast({
         title: "Error",
