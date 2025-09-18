@@ -9,14 +9,14 @@ import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { Users, Shield } from 'lucide-react';
 
 const TeamManagementPage = () => {
-  const { isLoading } = useRouteProtection(['admin']);
+  const { isLoading } = useRouteProtection(['portfolio_company_admin']);
   const { user, isAuthenticated } = useAuth();
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isAuthenticated || user?.role !== 'admin') {
+  if (!isAuthenticated || user?.role !== 'portfolio_company_admin') {
     return <Navigate to="/login" />;
   }
 
