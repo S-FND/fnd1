@@ -361,13 +361,13 @@ const UserPermissionManager: React.FC<UserPermissionManagerProps> = ({ targetUse
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ScrollArea className="h-[500px]">
+                <ScrollArea className="h-[600px] w-full rounded-md border p-4">
                   {previewNavigation.length > 0 ? (
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {renderPreviewTree(previewNavigation)}
                     </div>
                   ) : (
-                    <div className="text-center text-muted-foreground py-8">
+                    <div className="text-center text-muted-foreground py-12">
                       No accessible pages selected. User will only see the dashboard.
                     </div>
                   )}
