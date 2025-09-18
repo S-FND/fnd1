@@ -30,20 +30,76 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({ onMetricsImported, onDataImpo
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [uploadResults, setUploadResults] = useState<{ metrics: number; entries: number } | null>(null);
   const [showHistory, setShowHistory] = useState(false);
-  const [uploadHistory, setUploadHistory] = useState<UploadHistory[]>([]);
+  
+  // Initialize with sample data
+  const [uploadHistory, setUploadHistory] = useState<UploadHistory[]>([
+    {
+      id: 'sample_001',
+      fileName: 'ESG_Q4_2024_Final.xlsx',
+      uploadDate: '2024-01-15T14:30:00Z',
+      metricsCount: 25,
+      entriesCount: 120,
+      status: 'success'
+    },
+    {
+      id: 'sample_002',
+      fileName: 'Environmental_Metrics_Dec2024.xlsx',
+      uploadDate: '2024-01-10T09:15:00Z',
+      metricsCount: 12,
+      entriesCount: 85,
+      status: 'success'
+    },
+    {
+      id: 'sample_003',
+      fileName: 'Social_Governance_Data.xlsx',
+      uploadDate: '2024-01-08T16:45:00Z',
+      metricsCount: 18,
+      entriesCount: 67,
+      status: 'success'
+    },
+    {
+      id: 'sample_004',
+      fileName: 'GHG_Emissions_Q3_2024.xlsx',
+      uploadDate: '2024-01-05T11:20:00Z',
+      metricsCount: 8,
+      entriesCount: 45,
+      status: 'success'
+    },
+    {
+      id: 'sample_005',
+      fileName: 'Incomplete_Data_Template.xlsx',
+      uploadDate: '2024-01-03T13:10:00Z',
+      metricsCount: 0,
+      entriesCount: 0,
+      status: 'error'
+    },
+    {
+      id: 'sample_006',
+      fileName: 'Diversity_Inclusion_Metrics.xlsx',
+      uploadDate: '2023-12-28T10:30:00Z',
+      metricsCount: 15,
+      entriesCount: 92,
+      status: 'success'
+    }
+  ]);
 
   // Load upload history from localStorage on component mount
   useEffect(() => {
     const savedHistory = localStorage.getItem('esgUploadHistory');
+    let historyToLoad: UploadHistory[] = [];
+    
     if (savedHistory) {
       try {
         const history = JSON.parse(savedHistory);
-        setUploadHistory(history);
+        historyToLoad = Array.isArray(history) && history.length > 0 ? history : [];
       } catch (error) {
         console.error('Error loading upload history:', error);
+        historyToLoad = [];
       }
-    } else {
-      // Initialize with sample data if no history exists
+    }
+    
+    // If no existing history or empty history, load sample data
+    if (historyToLoad.length === 0) {
       const sampleHistory: UploadHistory[] = [
         {
           id: 'sample_001',
@@ -110,13 +166,17 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({ onMetricsImported, onDataImpo
           status: 'success'
         }
       ];
-      setUploadHistory(sampleHistory);
+      historyToLoad = sampleHistory;
     }
+    
+    setUploadHistory(historyToLoad);
   }, []);
 
-  // Save upload history to localStorage whenever it changes
+  // Save upload history to localStorage whenever it changes (but not for sample data)
   useEffect(() => {
-    localStorage.setItem('esgUploadHistory', JSON.stringify(uploadHistory));
+    if (uploadHistory.length > 0 && !uploadHistory[0].id.startsWith('sample_')) {
+      localStorage.setItem('esgUploadHistory', JSON.stringify(uploadHistory));
+    }
   }, [uploadHistory]);
 
   const addToHistory = (fileName: string, metricsCount: number, entriesCount: number, status: 'success' | 'error') => {
