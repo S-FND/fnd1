@@ -27,6 +27,11 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   const { user } = useAuth();
 
   const visibleItems = getNavigationItems(role);
+  
+  // Debug logging
+  console.log('🔍 Navigation Debug - Role:', role);
+  console.log('🔍 Navigation Debug - Visible items:', visibleItems);
+  console.log('🔍 Navigation Debug - ESG Management item:', visibleItems.find(item => item.name === 'ESG Management'));
 
   return (
     <SidebarGroup>
