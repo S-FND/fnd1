@@ -4,6 +4,7 @@ import { useLocation, Link } from 'react-router-dom';
 import { ChevronDown, ChevronRight, BarChart3, FileText, LineChart } from 'lucide-react';
 import { SidebarMenuItem, SidebarMenuButton, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { usePermissionBasedNavigation } from '@/hooks/usePermissionBasedNavigation';
 
 interface ESGManagementSubmenuProps {
   isExpanded: boolean;
@@ -15,12 +16,21 @@ export const ESGManagementSubmenu: React.FC<ESGManagementSubmenuProps> = ({
   onToggle
 }) => {
   const location = useLocation();
+  const { hasPermission } = usePermissionBasedNavigation();
 
   const submenuItems = [
-    { name: "Overview", href: "/esg", icon: BarChart3 },
-    { name: "ESMS", href: "/esg/esms", icon: FileText },
-    { name: "ESG Metrics", href: "/esg/metrics", icon: LineChart }
+    { name: "Overview", href: "/esg", icon: BarChart3, permissionId: "esg-management.overview" },
+    { name: "ESMS", href: "/esg/esms", icon: FileText, permissionId: "esg-management.esms" },
+    { name: "ESG Metrics", href: "/esg/metrics", icon: LineChart, permissionId: "esg-management.metrics" }
   ];
+
+  // Filter items based on permissions
+  const accessibleItems = submenuItems.filter(item => hasPermission(item.permissionId));
+
+  // Don't render if no accessible items
+  if (accessibleItems.length === 0) {
+    return null;
+  }
 
   return (
     <SidebarMenuItem>
@@ -40,7 +50,7 @@ export const ESGManagementSubmenu: React.FC<ESGManagementSubmenuProps> = ({
         </CollapsibleTrigger>
         <CollapsibleContent>
           <SidebarMenuSub>
-            {submenuItems.map((item) => {
+            {accessibleItems.map((item) => {
               const isActive = location.pathname === item.href;
               return (
                 <SidebarMenuSubItem key={item.name}>

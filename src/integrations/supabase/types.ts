@@ -468,6 +468,47 @@ export type Database = {
         }
         Relationships: []
       }
+      user_menu_permissions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          granted: boolean
+          id: string
+          menu_item_id: string
+          portfolio_company_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          granted?: boolean
+          id?: string
+          menu_item_id: string
+          portfolio_company_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          granted?: boolean
+          id?: string
+          menu_item_id?: string
+          portfolio_company_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_user_menu_permissions_portfolio_company"
+            columns: ["portfolio_company_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_profiles: {
         Row: {
           approved_at: string | null

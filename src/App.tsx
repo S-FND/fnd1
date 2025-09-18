@@ -39,6 +39,7 @@ import ManualESGDDPage from './features/enterprise-admin/pages/ManualESGDD';
 import AutomatedESGDDPage from './features/enterprise-admin/pages/AutomatedESGDD';
 import ESGCapPage from './features/enterprise-admin/pages/ESGCap';
 import IRLPage from './features/enterprise-admin/pages/IRLPage';
+import ProtectedIRLPage from './components/protected/ProtectedIRLPage';
 import AdvancedIRLPage from './features/enterprise-admin/pages/AdvancedIRLPage';
 import ReportsPage from './features/enterprise-admin/pages/Reports';
 import BRSRReport from './features/enterprise-admin/pages/BRSRReport';
@@ -85,7 +86,7 @@ function App() {
               <Route path="/esg-dd/manual" element={<ManualESGDDPage />} />
               <Route path="/esg-dd/automated" element={<AutomatedESGDDPage />} />
               <Route path="/esg-dd/cap" element={<ESGCapPage />} />
-              <Route path="/esg-dd/irl" element={<IRLPage />} />
+              <Route path="/esg-dd/irl" element={<ProtectedIRLPage />} />
               <Route path="/esg-dd/advanced" element={<AdvancedIRLPage />} />
               <Route path="/ghg-accounting" element={<GHGAccountingPage />} />
               <Route path="/compliance" element={<Compliance />} />
