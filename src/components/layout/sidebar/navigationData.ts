@@ -17,22 +17,22 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
       href: "/dashboard",
       icon: LayoutDashboard,
       featureId: 'dashboard'
+    },
+    {
+      name: "ESG Management",
+      href: "/esg",
+      icon: BarChart3,
+      featureId: 'esg-management',
+      submenu: [
+        { name: "Overview", href: "/esg", icon: BarChart3 },
+        { name: "ESMS", href: "/esg/esms", icon: FileText },
+        { name: "ESG Metrics", href: "/esg/metrics", icon: LineChart }
+      ]
     }
   ];
 
   if (role === 'admin' || role === 'manager') {
     baseItems.push(
-      {
-        name: "ESG Management",
-        href: "/esg",
-        icon: BarChart3,
-        featureId: 'esg-management',
-        submenu: [
-          { name: "Overview", href: "/esg", icon: BarChart3 },
-          { name: "ESMS", href: "/esg/esms", icon: FileText },
-          { name: "ESG Metrics", href: "/esg/metrics", icon: LineChart }
-        ]
-      },
       {
         name: "Materiality",
         href: "/materiality",

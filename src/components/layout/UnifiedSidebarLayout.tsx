@@ -42,11 +42,6 @@ const UnifiedSidebar: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const role = user?.role || 'employee';
-  
-  // Debug logging
-  console.log('🔍 Debug - Current user:', user);
-  console.log('🔍 Debug - Current role:', role);
-  console.log('🔍 Debug - User role from object:', user?.role);
   const sidebarContentRef = useRef<HTMLDivElement>(null);
   const [scrollPosition, setScrollPosition] = useState(0);
   
