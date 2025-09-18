@@ -1,13 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Download, FileSpreadsheet, CheckCircle, AlertCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Upload, Download, FileSpreadsheet, CheckCircle, AlertCircle, History, Calendar, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { ESGMetricWithTracking } from '../../data/esgMetricsData';
+
+interface UploadHistory {
+  id: string;
+  fileName: string;
+  uploadDate: string;
+  metricsCount: number;
+  entriesCount: number;
+  status: 'success' | 'error';
+}
 
 interface ExcelUploadProps {
   onMetricsImported: (metrics: ESGMetricWithTracking[]) => void;
@@ -18,6 +29,39 @@ interface ExcelUploadProps {
 const ExcelUpload: React.FC<ExcelUploadProps> = ({ onMetricsImported, onDataImported, materialTopics }) => {
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [uploadResults, setUploadResults] = useState<{ metrics: number; entries: number } | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [uploadHistory, setUploadHistory] = useState<UploadHistory[]>([]);
+
+  // Load upload history from localStorage on component mount
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('esgUploadHistory');
+    if (savedHistory) {
+      try {
+        const history = JSON.parse(savedHistory);
+        setUploadHistory(history);
+      } catch (error) {
+        console.error('Error loading upload history:', error);
+      }
+    }
+  }, []);
+
+  // Save upload history to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('esgUploadHistory', JSON.stringify(uploadHistory));
+  }, [uploadHistory]);
+
+  const addToHistory = (fileName: string, metricsCount: number, entriesCount: number, status: 'success' | 'error') => {
+    const historyEntry: UploadHistory = {
+      id: `upload_${Date.now()}`,
+      fileName,
+      uploadDate: new Date().toISOString(),
+      metricsCount,
+      entriesCount,
+      status
+    };
+    
+    setUploadHistory(prev => [historyEntry, ...prev].slice(0, 50)); // Keep last 50 uploads
+  };
 
   const downloadTemplate = () => {
     // Create sample Excel template
@@ -162,10 +206,16 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({ onMetricsImported, onDataImpo
       setUploadStatus('success');
       toast.success(`Successfully imported ${importedMetrics.length} metrics and ${importedEntries.length} data entries`);
       
+      // Add to upload history
+      addToHistory(file.name, importedMetrics.length, importedEntries.length, 'success');
+      
     } catch (error) {
       console.error('Error processing Excel file:', error);
       setUploadStatus('error');
       toast.error('Error processing Excel file. Please check the format and try again.');
+      
+      // Add to upload history
+      addToHistory(file?.name || 'Unknown file', 0, 0, 'error');
     }
     
     // Reset file input
@@ -192,6 +242,15 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({ onMetricsImported, onDataImpo
           >
             <Download className="h-4 w-4 mr-2" />
             Download Template
+          </Button>
+          
+          <Button 
+            onClick={() => setShowHistory(true)}
+            variant="outline"
+            className="flex-1"
+          >
+            <History className="h-4 w-4 mr-2" />
+            View Upload History
           </Button>
           
           <div className="flex-1">
@@ -240,6 +299,93 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({ onMetricsImported, onDataImpo
           <p>• Data entries will be matched to metrics by name</p>
         </div>
       </CardContent>
+
+      {/* Upload History Dialog */}
+      <Dialog open={showHistory} onOpenChange={setShowHistory}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Upload History Archive
+            </DialogTitle>
+            <DialogDescription>
+              View all previous Excel file uploads and their import results
+            </DialogDescription>
+          </DialogHeader>
+          
+          <ScrollArea className="h-[400px] w-full">
+            {uploadHistory.length === 0 ? (
+              <div className="text-center py-8">
+                <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">No upload history found</p>
+                <p className="text-sm text-muted-foreground">Upload an Excel file to see it appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {uploadHistory.map((upload) => (
+                  <div 
+                    key={upload.id}
+                    className={`p-4 border rounded-lg ${
+                      upload.status === 'success' 
+                        ? 'border-green-200 bg-green-50' 
+                        : 'border-red-200 bg-red-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <FileSpreadsheet className="h-4 w-4" />
+                          <span className="font-medium">{upload.fileName}</span>
+                          <Badge 
+                            variant={upload.status === 'success' ? 'default' : 'destructive'}
+                            className="text-xs"
+                          >
+                            {upload.status}
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {new Date(upload.uploadDate).toLocaleDateString()} at{' '}
+                            {new Date(upload.uploadDate).toLocaleTimeString()}
+                          </div>
+                        </div>
+                        
+                        {upload.status === 'success' && (
+                          <div className="flex gap-2 mt-2">
+                            <Badge variant="secondary">
+                              {upload.metricsCount} metrics imported
+                            </Badge>
+                            <Badge variant="secondary">
+                              {upload.entriesCount} data entries imported
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {upload.status === 'success' ? (
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                      ) : (
+                        <AlertCircle className="h-5 w-5 text-red-600" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+          
+          <div className="flex justify-between items-center pt-4 border-t">
+            <p className="text-sm text-muted-foreground">
+              Showing {uploadHistory.length} upload{uploadHistory.length !== 1 ? 's' : ''}
+            </p>
+            <Button onClick={() => setShowHistory(false)}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
