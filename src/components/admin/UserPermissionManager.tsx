@@ -27,9 +27,12 @@ interface UserPermissionManagerProps {
 }
 
 const UserPermissionManager: React.FC<UserPermissionManagerProps> = ({ targetUser }) => {
+  console.log('UserPermissionManager rendering with targetUser:', targetUser);
   const { toast } = useToast();
   const { profile } = usePortfolioAuth();
   const { getPermissionsTree, updatePermissions, loading } = useUserPermissions(targetUser.user_id);
+  
+  console.log('UserPermissionManager - loading:', loading, 'profile:', profile);
   
   const [selectedPermissions, setSelectedPermissions] = useState<Record<string, boolean>>({});
   const [previewMode, setPreviewMode] = useState(false);
