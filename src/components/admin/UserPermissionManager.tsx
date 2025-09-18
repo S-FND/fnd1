@@ -38,6 +38,8 @@ const UserPermissionManager: React.FC<UserPermissionManagerProps> = ({ targetUse
 
   // Initialize selected permissions
   useEffect(() => {
+    if (loading) return; // Don't initialize until permissions are loaded
+    
     const permissionsTree = getPermissionsTree();
     const initialPermissions: Record<string, boolean> = {};
     
@@ -52,10 +54,12 @@ const UserPermissionManager: React.FC<UserPermissionManagerProps> = ({ targetUse
     
     collectPermissions(permissionsTree);
     setSelectedPermissions(initialPermissions);
-  }, [targetUser.user_id, loading]);
+  }, [targetUser.user_id, loading, getPermissionsTree]);
 
   // Check if there are unsaved changes
   useEffect(() => {
+    if (loading) return; // Don't check changes until permissions are loaded
+    
     const permissionsTree = getPermissionsTree();
     const currentPermissions: Record<string, boolean> = {};
     
@@ -75,7 +79,7 @@ const UserPermissionManager: React.FC<UserPermissionManagerProps> = ({ targetUse
     );
     
     setHasChanges(changed);
-  }, [selectedPermissions, loading]);
+  }, [selectedPermissions, loading, getPermissionsTree]);
 
   const handlePermissionChange = (menuItemId: string, granted: boolean) => {
     setSelectedPermissions(prev => ({
