@@ -42,6 +42,75 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({ onMetricsImported, onDataImpo
       } catch (error) {
         console.error('Error loading upload history:', error);
       }
+    } else {
+      // Initialize with sample data if no history exists
+      const sampleHistory: UploadHistory[] = [
+        {
+          id: 'sample_001',
+          fileName: 'ESG_Q4_2024_Final.xlsx',
+          uploadDate: '2024-01-15T14:30:00Z',
+          metricsCount: 25,
+          entriesCount: 120,
+          status: 'success'
+        },
+        {
+          id: 'sample_002',
+          fileName: 'Environmental_Metrics_Dec2024.xlsx',
+          uploadDate: '2024-01-10T09:15:00Z',
+          metricsCount: 12,
+          entriesCount: 85,
+          status: 'success'
+        },
+        {
+          id: 'sample_003',
+          fileName: 'Social_Governance_Data.xlsx',
+          uploadDate: '2024-01-08T16:45:00Z',
+          metricsCount: 18,
+          entriesCount: 67,
+          status: 'success'
+        },
+        {
+          id: 'sample_004',
+          fileName: 'GHG_Emissions_Q3_2024.xlsx',
+          uploadDate: '2024-01-05T11:20:00Z',
+          metricsCount: 8,
+          entriesCount: 45,
+          status: 'success'
+        },
+        {
+          id: 'sample_005',
+          fileName: 'Incomplete_Data_Template.xlsx',
+          uploadDate: '2024-01-03T13:10:00Z',
+          metricsCount: 0,
+          entriesCount: 0,
+          status: 'error'
+        },
+        {
+          id: 'sample_006',
+          fileName: 'Diversity_Inclusion_Metrics.xlsx',
+          uploadDate: '2023-12-28T10:30:00Z',
+          metricsCount: 15,
+          entriesCount: 92,
+          status: 'success'
+        },
+        {
+          id: 'sample_007',
+          fileName: 'Corrupted_File_Upload.xlsx',
+          uploadDate: '2023-12-25T14:00:00Z',
+          metricsCount: 0,
+          entriesCount: 0,
+          status: 'error'
+        },
+        {
+          id: 'sample_008',
+          fileName: 'Energy_Consumption_Annual.xlsx',
+          uploadDate: '2023-12-20T09:45:00Z',
+          metricsCount: 22,
+          entriesCount: 156,
+          status: 'success'
+        }
+      ];
+      setUploadHistory(sampleHistory);
     }
   }, []);
 
