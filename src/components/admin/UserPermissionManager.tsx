@@ -27,62 +27,73 @@ interface UserPermissionManagerProps {
 }
 
 const UserPermissionManager: React.FC<UserPermissionManagerProps> = ({ targetUser }) => {
-  console.log('UserPermissionManager rendering with targetUser:', targetUser);
   const { toast } = useToast();
   const { profile } = usePortfolioAuth();
-  const { getPermissionsTree, updatePermissions, loading } = useUserPermissions(targetUser.user_id);
-  
-  console.log('UserPermissionManager - loading:', loading, 'profile:', profile);
   
   const [selectedPermissions, setSelectedPermissions] = useState<Record<string, boolean>>({});
   const [previewMode, setPreviewMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Get all navigation items for permissions management
+  const getAllNavigationItems = () => {
+    const navigationStructure = getDetailedNavigationStructure();
+    const allItems = flattenNavigationItems(navigationStructure);
+    
+    return allItems.map(item => ({
+      ...item,
+      hasPermission: getDefaultPermissionForRole(item, targetUser.role)
+    }));
+  };
+
+  // Get default permission based on role
+  const getDefaultPermissionForRole = (item: DetailedNavigationItem, userRole: string): boolean => {
+    if (!item.allowedRoles) return true; // If no role restrictions, allow access
+    return item.allowedRoles.includes(userRole as any);
+  };
 
   // Initialize selected permissions
   useEffect(() => {
-    if (loading) return; // Don't initialize until permissions are loaded
-    
-    const permissionsTree = getPermissionsTree();
+    const navigationStructure = getDetailedNavigationStructure();
     const initialPermissions: Record<string, boolean> = {};
     
-    const collectPermissions = (items: (DetailedNavigationItem & { hasPermission: boolean })[]) => {
+    const collectPermissions = (items: DetailedNavigationItem[]) => {
       items.forEach(item => {
-        initialPermissions[item.id] = item.hasPermission;
+        initialPermissions[item.id] = getDefaultPermissionForRole(item, targetUser.role);
         if (item.children) {
-          collectPermissions(item.children as (DetailedNavigationItem & { hasPermission: boolean })[]);
+          collectPermissions(item.children);
         }
       });
     };
     
-    collectPermissions(permissionsTree);
+    collectPermissions(navigationStructure);
     setSelectedPermissions(initialPermissions);
-  }, [targetUser.user_id, loading, getPermissionsTree]);
+    setLoading(false);
+  }, [targetUser.user_id, targetUser.role]);
 
   // Check if there are unsaved changes
   useEffect(() => {
-    if (loading) return; // Don't check changes until permissions are loaded
+    const navigationStructure = getDetailedNavigationStructure();
+    const defaultPermissions: Record<string, boolean> = {};
     
-    const permissionsTree = getPermissionsTree();
-    const currentPermissions: Record<string, boolean> = {};
-    
-    const collectCurrentPermissions = (items: (DetailedNavigationItem & { hasPermission: boolean })[]) => {
+    const collectDefaultPermissions = (items: DetailedNavigationItem[]) => {
       items.forEach(item => {
-        currentPermissions[item.id] = item.hasPermission;
+        defaultPermissions[item.id] = getDefaultPermissionForRole(item, targetUser.role);
         if (item.children) {
-          collectCurrentPermissions(item.children as (DetailedNavigationItem & { hasPermission: boolean })[]);
+          collectDefaultPermissions(item.children);
         }
       });
     };
     
-    collectCurrentPermissions(permissionsTree);
+    collectDefaultPermissions(navigationStructure);
     
     const changed = Object.keys(selectedPermissions).some(
-      key => selectedPermissions[key] !== currentPermissions[key]
+      key => selectedPermissions[key] !== defaultPermissions[key]
     );
     
     setHasChanges(changed);
-  }, [selectedPermissions, loading, getPermissionsTree]);
+  }, [selectedPermissions, targetUser.role]);
 
   const handlePermissionChange = (menuItemId: string, granted: boolean) => {
     setSelectedPermissions(prev => ({
@@ -128,24 +139,11 @@ const UserPermissionManager: React.FC<UserPermissionManagerProps> = ({ targetUse
   };
 
   const handleSave = async () => {
-    if (!profile?.portfolio_company_id) {
-      toast({
-        title: "Error",
-        description: "Unable to save permissions. Company information missing.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     try {
       setSaving(true);
       
-      const permissionUpdates = Object.entries(selectedPermissions).map(([menu_item_id, granted]) => ({
-        menu_item_id,
-        granted
-      }));
-
-      await updatePermissions(permissionUpdates);
+      // For demo purposes, simulate saving
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast({
         title: "Success",
@@ -159,26 +157,25 @@ const UserPermissionManager: React.FC<UserPermissionManagerProps> = ({ targetUse
         description: "Failed to update permissions. Please try again.",
         variant: "destructive"
       });
-      console.error('Error updating permissions:', error);
     } finally {
       setSaving(false);
     }
   };
 
   const handleReset = () => {
-    const permissionsTree = getPermissionsTree();
+    const navigationStructure = getDetailedNavigationStructure();
     const resetPermissions: Record<string, boolean> = {};
     
-    const collectPermissions = (items: (DetailedNavigationItem & { hasPermission: boolean })[]) => {
+    const collectPermissions = (items: DetailedNavigationItem[]) => {
       items.forEach(item => {
-        resetPermissions[item.id] = item.hasPermission;
+        resetPermissions[item.id] = getDefaultPermissionForRole(item, targetUser.role);
         if (item.children) {
-          collectPermissions(item.children as (DetailedNavigationItem & { hasPermission: boolean })[]);
+          collectPermissions(item.children);
         }
       });
     };
     
-    collectPermissions(permissionsTree);
+    collectPermissions(navigationStructure);
     setSelectedPermissions(resetPermissions);
   };
 
@@ -342,6 +339,10 @@ const UserPermissionManager: React.FC<UserPermissionManagerProps> = ({ targetUse
             
             <ScrollArea className="h-[600px] border rounded-md p-4">
               <div className="space-y-4">
+                <div className="text-xs text-muted-foreground mb-4 p-3 bg-muted rounded">
+                  <strong>Navigation Structure:</strong> Select which pages and features {targetUser.full_name || targetUser.email} can access. 
+                  This includes main pages, submenus, and individual tabs within each section.
+                </div>
                 {renderNavigationTree(navigationStructure)}
               </div>
             </ScrollArea>

@@ -19,8 +19,6 @@ export const useUserPermissions = (targetUserId?: string) => {
   const [permissions, setPermissions] = useState<UserMenuPermission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  console.log('useUserPermissions called with targetUserId:', targetUserId, 'user:', user, 'profile:', profile);
 
   const userId = targetUserId || user?.id;
   const companyId = profile?.portfolio_company_id;

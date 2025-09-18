@@ -162,10 +162,8 @@ const TeamPermissionsPage: React.FC = () => {
   });
 
   const handleManagePermissions = (user: UserProfile) => {
-    console.log('handleManagePermissions called with user:', user);
     setSelectedUser(user);
     setPermissionDialogOpen(true);
-    console.log('Dialog should open now - permissionDialogOpen set to true');
   };
 
   const getRoleBadgeVariant = (role: string) => {
