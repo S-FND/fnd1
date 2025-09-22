@@ -314,7 +314,17 @@ export default function MetricsGraph1({ graphData, selectedMetric, selectedPerio
               margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="period" />
+              <XAxis dataKey="period" 
+              tickFormatter={(value) => {
+                // Handle month abbreviations
+                const monthMap = {
+                  'January': 'Jan', 'February': 'Feb', 'March': 'Mar',
+                  'April': 'Apr', 'May': 'May', 'June': 'Jun',
+                  'July': 'Jul', 'August': 'Aug', 'September': 'Sep',
+                  'October': 'Oct', 'November': 'Nov', 'December': 'Dec'
+                };
+                return monthMap[value] || value;
+              }}/>
               {/* <YAxis /> */}
               <YAxis
                 label={{
