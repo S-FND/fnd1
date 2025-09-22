@@ -31,6 +31,7 @@ const LocationManagement = ({ locations, refreshData }) => {
   ];
   // Form state
   const [formData, setFormData] = useState({
+    _id: '',
     name: '',
     address: '',
     gstNumber: '',
@@ -63,16 +64,20 @@ const LocationManagement = ({ locations, refreshData }) => {
   // };
 
   // Add new location
-  const handleAddLocation = async () => {
+  const handleAddOrEditLocation = async () => {
     setLoading(true);
-    const [result, error] = await createLocation({
-      ...formData,
-      active: true
-    });
+
+    const payload = formData._id
+      ? { ...formData } // update existing
+      : { ...formData, active: true }; // create new
+
+    const [result, error] = await createLocation(payload);
+
     if (result) {
-      toast.success("Location successfully added");
+      toast.success(formData._id ? "Location updated successfully" : "Location added successfully");
       setIsAddDialogOpen(false);
       setFormData({
+        _id: '',
         name: '',
         address: '',
         gstNumber: '',
@@ -89,31 +94,35 @@ const LocationManagement = ({ locations, refreshData }) => {
       });
       refreshData();
     } else {
-      toast.error("Error adding location");
+      toast.error(formData._id ? "Error updating location" : "Error adding location");
     }
+
     setLoading(false);
   };
 
+
+
   // Remove location
-  // const handleRemoveLocation = async (locationId) => {
-  //   setLoading(true);
-  //   const locationToRemove = locations.find(loc => loc._id === locationId);
+  const handleRemoveLocation = async (locationId) => {
+    setLoading(true);
+    const locationToRemove = locations.find(loc => loc._id === locationId);
 
-  //   if (locationToRemove) {
-  //     const [result, error] = await createLocation({
-  //       ...locationToRemove,
-  //       active: false
-  //     });
+    if (locationToRemove) {
+      const [result, error] = await createLocation({
+        ...locationToRemove,
+        active: false
+      });
 
-  //     if (result) {
-  //       toast.success("Location successfully removed");
-  //       getLocations();
-  //     } else {
-  //       toast.error("error");
-  //     }
-  //   }
-  //   setLoading(false);
-  // };
+      if (result) {
+        toast.success("Location successfully removed");
+        // getLocations();
+        refreshData();
+      } else {
+        toast.error("error");
+      }
+    }
+    setLoading(false);
+  };
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -287,11 +296,13 @@ const LocationManagement = ({ locations, refreshData }) => {
                       Cancel
                     </Button>
                     <Button
-                      onClick={handleAddLocation}
+                      onClick={handleAddOrEditLocation}
                       className="flex-1"
                       disabled={loading}
                     >
-                      {loading ? "Adding..." : "Add Location"}
+                      {loading
+                        ? (formData._id ? "Updating..." : "Adding...")
+                        : (formData._id ? "Update Location" : "Add Location")}
                     </Button>
                   </div>
                 </div>
@@ -336,14 +347,22 @@ const LocationManagement = ({ locations, refreshData }) => {
                       ))}
                     </div>
                     <div className="flex gap-2 mt-3">
-                      <Button size="sm" variant="outline" className="flex-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                          setFormData({ ...location });
+                          setIsAddDialogOpen(true);
+                        }}
+                      >
                         Edit
                       </Button>
                       <Button
                         size="sm"
                         variant="destructive"
                         className="flex-1"
-                        // onClick={() => handleRemoveLocation(location._id)}
+                        onClick={() => handleRemoveLocation(location._id)}
                         disabled={loading}
                       >
                         {loading ? "Removing..." : "Remove"}
