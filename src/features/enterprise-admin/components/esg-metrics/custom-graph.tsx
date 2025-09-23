@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { Chart } from "react-google-charts";
 
 
-const CustomDashboardTab = ({ graphData,selectedMetric,selectedPeriod,selectedYear }) => {
+const CustomDashboardTab = ({ graphData, selectedMetric, selectedPeriod, selectedYear }) => {
     // console.log("This is graphData", graphData)
     //   let {year,month,type}=componentParams
     const [metrics, setMetrics] = useState([])
@@ -30,9 +30,9 @@ const CustomDashboardTab = ({ graphData,selectedMetric,selectedPeriod,selectedYe
                         graphData[metric]['data'] && graphData[metric]['data'].length > 0 && 
                         graphData[metric]['data'].find(item => item.metricName === selectedMetric && item.period === selectedPeriod && item.financialYear === selectedYear)
                     ) {
-                        let findData=graphData[metric]['data'].find(item => item.metricName === selectedMetric && item.period === selectedPeriod && item.financialYear === selectedYear);
-                        let labels = [selectedMetric,'Others'];
-                        let values=[findData.value,100-findData.value];
+                        let findData = graphData[metric]['data'].find(item => item.metricName === selectedMetric && item.period === selectedPeriod && item.financialYear === selectedYear);
+                        let labels = [selectedMetric, 'Others'];
+                        let values = [findData.value, 100 - findData.value];
                         // let data = {
                         //     labels: graphData[metric]['graphData']?.labels,
                         //     datasets: [
@@ -127,110 +127,175 @@ const CustomDashboardTab = ({ graphData,selectedMetric,selectedPeriod,selectedYe
                         selectedMetric && selectedPeriod && selectedYear && 
                         graphData[metric]['data'] && graphData[metric]['data'].length > 0 && 
                         graphData[metric]['data'].find(item => item.metricName === selectedMetric && item.period === selectedPeriod && item.financialYear === selectedYear)) {
-                        let findData=graphData[metric]['data'].find(item => item.metricName === selectedMetric && item.period === selectedPeriod && item.financialYear === selectedYear);
-                        let xAxisLabels=findData && findData.value?findData.value.reduce((acc, curr) => {
-                            acc.push(curr[0]);
-                            return acc;
-                        }, []):[];
-                        let dataSets=findData && findData.value?findData.value.reduce((acc, curr) => {
-                            acc.push(curr.slice(1));
-                            return acc;
-                        }, []):[];
-                        // console.log("This is xAxisLabels", xAxisLabels)
-                        // console.log("This is dataSets", dataSets)
-                        // const datasets = graphData[metric]['graphData']?.xAxisLabels.map(
-                        //     (label, index) => ({
-                        //         label: label,
-                        //         data: graphData[metric]['graphData']?.data[index].map(val => Number(val)),
-                        //         borderWidth: 1,
-                        //     })
-                        // );
-                        const datasets = xAxisLabels.map(
-                            (label, index) => ({
-                                label: label,
-                                data: dataSets[index].map(val => Number(val)),
-                                borderWidth: 1,
-                            })
-                        );
-                        let data = {
-                            labels: graphData[metric]?.yAxisLabels,
-                            datasets: datasets,
-                        };
-                        console.log("This is Bar graph data in custom dashboard tab", data)
-                        return (
-                            // <Col lg={12} md={12} sm={12} xxl={12}>
-                            <Card>
+                        let findData = graphData[metric]['data'].find(item => item.metricName === selectedMetric && item.period === selectedPeriod && item.financialYear === selectedYear);
+                        debugger;
+                        if (graphData[metric]['graphData']['xAxisLabels'] && graphData[metric]['graphData']['xAxisLabels'].length > 0) {
+                            let xAxisLabels = findData && findData.value ? findData.value.reduce((acc, curr) => {
+                                acc.push(curr[0]);
+                                return acc;
+                            }, []) : [];
+                            let dataSets = findData && findData.value ? findData.value.reduce((acc, curr) => {
+                                acc.push(curr.slice(1));
+                                return acc;
+                            }, []) : [];
+                            // console.log("This is xAxisLabels", xAxisLabels)
+                            // console.log("This is dataSets", dataSets)
+                            // const datasets = graphData[metric]['graphData']?.xAxisLabels.map(
+                            //     (label, index) => ({
+                            //         label: label,
+                            //         data: graphData[metric]['graphData']?.data[index].map(val => Number(val)),
+                            //         borderWidth: 1,
+                            //     })
+                            // );
+                            const datasets = xAxisLabels.map(
+                                (label, index) => ({
+                                    label: label,
+                                    data: dataSets[index].map(val => Number(val)),
+                                    borderWidth: 1,
+                                })
+                            );
+                            let data = {
+                                labels: graphData[metric]?.yAxisLabels,
+                                datasets: datasets,
+                            };
+                            console.log("This is Bar graph data in custom dashboard tab", data)
+                            return (
+                                // <Col lg={12} md={12} sm={12} xxl={12}>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>
+                                            {metric}
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="chart-container">
+                                            {data?.datasets?.some((dataset) =>
+                                                dataset?.data?.some((value) => value !== 0)
+                                            ) ? (
+                                                <Chart
+                                                    chartType="ColumnChart"
+                                                    width="100%"
+                                                    height="300px"
+                                                    data={(() => {
+                                                        const headerRow = [
+                                                            "Category",
+                                                            ...(data?.labels || []),
+                                                        ];
+                                                        const dataRows = data.datasets.map(
+                                                            (dataset) => [
+                                                                dataset.label,
+                                                                ...(dataset?.data || []),
+                                                            ]
+                                                        );
+                                                        return [headerRow, ...dataRows];
+                                                    })()}
+                                                    options={{
+                                                        legend: { position: "top" },
+                                                        bar: { groupWidth: "80%" },
+                                                        isStacked: false,
+                                                        hAxis: {
+                                                            slantedText: false,
+                                                            textStyle: {
+                                                                fontSize: 9,
+                                                            },
+                                                        },
+                                                        vAxis: {
+                                                            scaleType: 'log'
+                                                        },
+                                                        chartArea: {
+                                                            width: "90%",
+                                                            height: "80%",
+                                                        },
+                                                        colors: ["#537D5D", "#73946B", "#9EBC8A", "#D2D0A0"],
+                                                    }}
+                                                    loader={<div>Loading Chart...</div>}
+                                                    rootProps={{ "data-testid": "1" }}
+                                                />
+                                            ) : (
+                                                <div
+                                                    className="chart-container Chart"
+                                                    style={{
+                                                        width: "100%",
+                                                        height: "300px",
+                                                        display: "flex",
+                                                        justifyContent: "center",
+                                                        alignItems: "center",
+                                                        fontFamily: "Arial",
+                                                        color: "black",
+                                                        fontSize: "smaller",
+                                                    }}
+                                                >
+                                                    No data
+                                                </div>
+                                            )}
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                                //   </Col>
+                            )
+                        }
+                        else{
+                            const yAxis = graphData[metric]['yAxisLabels'];
+                            const numericCols = findData.value[0].length;
+                            if (yAxis.length !== numericCols) {
+                              throw new Error(
+                                `yAxis length (${yAxis.length}) does not match numeric columns length (${numericCols}) for period ${metric.period}`
+                              );
+                            }
+                          
+                            // Transform data for Google Charts
+                            const chartRows = [
+                              ["Category", findData.metricName],
+                              ...yAxis.map((label, idx) => [label, findData.value[0][idx]]),
+                            ];
+                          
+                            return (
+                              <Card>
                                 <CardHeader>
-                                    <CardTitle>
-                                        {metric}
-                                    </CardTitle>
+                                  <CardTitle>{findData.metricName} - {findData.period}</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="chart-container">
-                                        {data?.datasets?.some((dataset) =>
-                                            dataset?.data?.some((value) => value !== 0)
-                                        ) ? (
-                                            <Chart
-                                                chartType="ColumnChart"
-                                                width="100%"
-                                                height="300px"
-                                                data={(() => {
-                                                    const headerRow = [
-                                                        "Category",
-                                                        ...(data?.labels || []),
-                                                    ];
-                                                    const dataRows = data.datasets.map(
-                                                        (dataset) => [
-                                                            dataset.label,
-                                                            ...(dataset?.data || []),
-                                                        ]
-                                                    );
-                                                    return [headerRow, ...dataRows];
-                                                })()}
-                                                options={{
-                                                    legend: { position: "top" },
-                                                    bar: { groupWidth: "80%" },
-                                                    isStacked: false,
-                                                    hAxis: {
-                                                        slantedText: false,
-                                                        textStyle: {
-                                                            fontSize: 9,
-                                                        },
-                                                    },
-                                                    vAxis: {
-                                                        scaleType: 'log'
-                                                    },
-                                                    chartArea: {
-                                                        width: "90%",
-                                                        height: "80%",
-                                                    },
-                                                    colors: ["#537D5D", "#73946B", "#9EBC8A", "#D2D0A0"],
-                                                }}
-                                                loader={<div>Loading Chart...</div>}
-                                                rootProps={{ "data-testid": "1" }}
-                                            />
-                                        ) : (
-                                            <div
-                                                className="chart-container Chart"
-                                                style={{
-                                                    width: "100%",
-                                                    height: "300px",
-                                                    display: "flex",
-                                                    justifyContent: "center",
-                                                    alignItems: "center",
-                                                    fontFamily: "Arial",
-                                                    color: "black",
-                                                    fontSize: "smaller",
-                                                }}
-                                            >
-                                                No data
-                                            </div>
-                                        )}
-                                    </div>
+                                  <div className="chart-container">
+                                    {findData.value[0].some((val) => val !== 0) ? (
+                                      <Chart
+                                        chartType="ColumnChart"
+                                        width="100%"
+                                        height="300px"
+                                        data={chartRows}
+                                        options={{
+                                          legend: { position: "top" },
+                                          bar: { groupWidth: "80%" },
+                                          isStacked: false,
+                                          hAxis: { slantedText: false, textStyle: { fontSize: 12 } },
+                                          vAxis: { scaleType: "linear" },
+                                          chartArea: { width: "90%", height: "80%" },
+                                          colors: ["#537D5D", "#73946B", "#9EBC8A"],
+                                        }}
+                                        loader={<div>Loading Chart...</div>}
+                                        rootProps={{ "data-testid": "chart" }}
+                                      />
+                                    ) : (
+                                      <div
+                                        className="chart-container Chart"
+                                        style={{
+                                          width: "100%",
+                                          height: "300px",
+                                          display: "flex",
+                                          justifyContent: "center",
+                                          alignItems: "center",
+                                          fontFamily: "Arial",
+                                          color: "black",
+                                          fontSize: "smaller",
+                                        }}
+                                      >
+                                        No data
+                                      </div>
+                                    )}
+                                  </div>
                                 </CardContent>
-                            </Card>
-                            //   </Col>
-                        )
+                              </Card>
+                            );
+                        }
                     }
 
                 })}
