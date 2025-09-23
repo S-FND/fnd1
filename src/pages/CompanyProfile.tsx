@@ -13,7 +13,7 @@ const CompanyProfilePage = () => {
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
-
+  console.log('isAuthenticatedStatus',isAuthenticatedStatus);
   if (!isAuthenticatedStatus(['admin', 'manager'])) {
     return <Navigate to="/" />;
   }

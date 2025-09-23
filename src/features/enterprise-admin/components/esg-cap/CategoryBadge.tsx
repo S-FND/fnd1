@@ -10,11 +10,11 @@ interface CategoryBadgeProps {
 export const CategoryBadge: React.FC<CategoryBadgeProps> = ({ category }) => {
   switch (category) {
     case 'environmental':
-      return <Badge className="bg-green-500">Environmental</Badge>;
+      return <Badge className="bg-green-500 hover:bg-green-600">Environmental</Badge>;
     case 'social':
-      return <Badge className="bg-blue-500">Social</Badge>;
+      return <Badge className="bg-blue-500 hover:bg-blue-600">Social</Badge>;
     case 'governance':
-      return <Badge className="bg-purple-500">Governance</Badge>;
+      return <Badge className="bg-purple-500 hover:bg-purple-600">Governance</Badge>;
     default:
       return null;
   }

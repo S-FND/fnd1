@@ -40,12 +40,12 @@ export const fetchProfileData = async (): Promise<CompanyFormData> => {
   }
 };
 
-export const updateProfileData = async (formData: CompanyFormData) => {
+export const updateProfileData = async (formData: CompanyFormData,UserEntityId) => {
   try {
     // Map frontend data to backend payload
     const apiPayload = mapFormDataToApiPayload(formData);
     // Determine HTTP method based on the presence of user_id in the payload
-    const httpMethod = entityId ? "put" : "post";
+    const httpMethod = UserEntityId ? "put" : "post"; 
     const endpoint = `${API_URL}/company/entity`;
 
     const response = await axios({
@@ -515,6 +515,36 @@ export const deleteFile = async (payload: { filesToDelete: string[] }, type: str
     return response.data;
   } catch (error) {
     console.error("Error deleting file:", error);
+    throw error;
+  }
+};
+
+// Create or update company feature access
+export const updateCompanyFeatures = async (
+  entityId: string,
+  featurePage: { feature: string; adminEnabled: boolean; url: string }[]
+) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/auth/feature-access`,
+      {
+        entityId,
+        featurePage,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("fandoro-token")}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return {
+      _id: response?.data?._id,
+      companyFeaturePageAccess: response?.data?.companyFeaturePageAccess || [],
+    };
+  } catch (error) {
+    console.error("Error updating company features:", error);
     throw error;
   }
 };

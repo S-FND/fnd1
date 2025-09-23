@@ -54,11 +54,10 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics, finalMetric
   const [viewMode, setViewMode] = useState<'charts' | 'trends' | 'comparison'>('charts');
   const [selectedTrendYear, setSelectedTrendYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedTrendMonth, setSelectedTrendMonth] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState<string>('trends'); // 'charts', 'trends', 'comparison'
 
   const [selectedYear, setSelectedYear] = useState<string>([...financialYearList].reverse()[0].value); // Default to current year
   const [graphData, setGraphData] = useState<any>({});
-
+console.log('activeTab',viewMode,"viewMode");
   const getGraphData = async (year: string) => {
     // Filter data entries based on the selected year
     let graphData = await httpClient.get(`materiality/metrics/graph-data?year=${year}`);
@@ -92,7 +91,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics, finalMetric
     // }
     console.log('selectedYear', selectedYear);
     getGraphData(selectedYear);
-  }, []);
+  }, [selectedYear]);
 
   useEffect(() => {
     console.log('selectedYear changed', selectedYear);
@@ -400,8 +399,8 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics, finalMetric
         </div>
 
         <TabsList>
-          <TabsTrigger value="charts" onClick={()=> setActiveTab('trends')}>Charts & Trends</TabsTrigger>
-          <TabsTrigger value="trends" onClick={()=> setActiveTab('timeline')}>Timeline Analysis</TabsTrigger>
+          <TabsTrigger value="charts">Charts & Trends</TabsTrigger>
+          <TabsTrigger value="trends">Timeline Analysis</TabsTrigger>
           <TabsTrigger value="comparison">Category Comparison</TabsTrigger>
         </TabsList>
 
@@ -413,7 +412,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics, finalMetric
             </SelectTrigger>
             <SelectContent>
               {Object.keys(graphData).map(metric => (
-                <SelectItem key={metric} disabled={activeTab == 'trends' && graphData[metric].graphType == 'Numeric'} value={metric}>{metric}</SelectItem>
+                <SelectItem key={metric} disabled={viewMode !== 'trends' && graphData[metric].graphType == 'Numeric'} value={metric}>{metric}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -447,23 +446,23 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics, finalMetric
               <SelectItem value="24months">24 Months</SelectItem> */}
             </SelectContent>
           </Select>
-
-          <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {generatePeriods(
-                finalMetricsList?.find((m) => m.name === selectedMetric)?.collectionFrequency || 'Monthly',
-                selectedYear
-              ).map((period) => (
-                <SelectItem key={period.periodIndex} value={period.period}>
-                  {period.period}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
+          {viewMode !== 'trends' && (
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {generatePeriods(
+                  finalMetricsList?.find((m) => m.name === selectedMetric)?.collectionFrequency || 'Monthly',
+                  selectedYear
+                ).map((period) => (
+                  <SelectItem key={period.periodIndex} value={period.period}>
+                    {period.period}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         <TabsContent value="charts" className="space-y-6">

@@ -11,6 +11,12 @@ import { ESGCapFilters } from '../components/esg-cap/ESGCapFilters';
 import { ESGCapTable } from '../components/esg-cap/ESGCapTable';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/table";
+import { CategoryBadge } from '../components/esg-cap/CategoryBadge';
+import { HighlightDiff } from '@/components/esg-cap/HighlightDiff';
+import { Badge } from '@/components/ui/badge';
+import { ESGCapPriority } from '../types/esgDD';
+
 import {
   fetchEsgCap,
   esgddChangePlan,
@@ -129,124 +135,182 @@ const ComparePlanView = ({
       return dateString;
     }
   };
+  const ExpandableText = ({ text, length = 50 }: { text: string; length?: number }) => {
+    const [expanded, setExpanded] = useState(false);
 
-  const SortableHeader = ({
-    field,
-    title
-  }: {
-    field: keyof ESGCapItem;
-    title: string;
-  }) => (
-    <th
-      className="p-3 text-left cursor-pointer hover:bg-muted/50"
+    if (!text) return null;
+
+    if (text.length <= length) {
+      return <span>{text}</span>;
+    }
+
+    return (
+      <span>
+        {expanded ? text : text.slice(0, length) + "..."}
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="ml-1 text-blue-600 hover:underline text-xs"
+        >
+          {expanded ? "View less" : "View full"}
+        </button>
+      </span>
+    );
+  };
+
+  const StatusBadge: React.FC<{ status: string; highlight?: boolean }> = ({ status, highlight }) => {
+    const statusColor = {
+      completed: "bg-green-100 text-green-800",
+      in_progress: "bg-blue-100 text-blue-800",
+      delayed: "bg-red-100 text-red-800",
+      accepted: "bg-emerald-100 text-emerald-800",
+      in_review: "bg-gray-100 text-gray-800",
+      pending: "bg-amber-100 text-amber-800"
+    }[status] || "bg-gray-100 text-gray-800";
+
+    return <Badge className={`${statusColor} ${highlight ? "border-2 border-yellow-500" : ""}`}>{status}</Badge>;
+  };
+
+
+  interface PriorityBadgeProps {
+    priority?: ESGCapPriority;
+  }
+
+  const getPriorityStyles = (priority: ESGCapPriority) => {
+    switch (priority.toLowerCase()) {
+      case 'high':
+        return 'bg-red-500 text-white';      // destructive
+      case 'medium':
+        return 'bg-yellow-400 text-black';   // warning
+      case 'low':
+        return 'bg-gray-300 text-black';     // muted
+      default:
+        return 'bg-gray-300 text-black';
+    }
+  };
+
+
+  const SortableHeader = ({ field, title }: { field: keyof ESGCapItem; title: string }) => (
+    <TableHead
+      className="cursor-pointer hover:bg-muted/50"
       onClick={() => requestSort(field)}
     >
       {title}
       {sortConfig?.key === field && (
-        sortConfig.direction === 'asc' ?
-          <ArrowUp className="h-4 w-4 inline ml-1" /> :
+        sortConfig.direction === "asc" ? (
+          <ArrowUp className="h-4 w-4 inline ml-1" />
+        ) : (
           <ArrowDown className="h-4 w-4 inline ml-1" />
+        )
       )}
-    </th>
+    </TableHead>
   );
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-gray-100" style={{ fontWeight: 500 }}>
-            <th className="p-3 text-left w-[60px]" style={{ fontWeight: 500 }}>S. No</th>
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-gray-100 font-medium">
+            <TableHead className="w-[60px] text-center">S. No</TableHead>
             <SortableHeader field="item" title="Item" />
-            <th className="p-3 text-left">Category</th>
+            <TableHead>Category</TableHead>
             <SortableHeader field="priority" title="Priority" />
-            <th className="p-3 text-left">Measures and/or Corrective Actions</th>
-            <th className="p-3 text-left">Resource & Responsibility</th>
-            {/* <th className="p-3 text-left">Expected Deliverable</th> */}
+            <TableHead>Measures and/or Corrective Actions</TableHead>
+            <TableHead>Resource & Responsibility</TableHead>
+            <TableHead>Expected Deliverable</TableHead>
             <SortableHeader field="targetDate" title="Target Date" />
-            <th className="p-3 text-left">CP/CS</th>
-            <th className="p-3 text-left">Actual Date</th>
-            <th className="p-3 text-left">Status</th>
-            <th className="p-3 text-left">Changes</th>
-            <th className="p-3 text-left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
+            <TableHead>CP/CS</TableHead>
+            <TableHead>Actual Date</TableHead>
+            <TableHead>Status</TableHead>
+            {/* <TableHead>Changes</TableHead> */}
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+
+        <TableBody>
           {sortedItems.map((item, index) => {
-            // Ensure we have a proper ID for comparison
             const itemId = item.id || `temp-${index}`;
             const originalItem = originalPlan.find(i => i.id === item.id);
             const changedFields = getChangedFields(item, originalItem);
             const hasChanges = Object.values(changedFields).some(Boolean);
 
             return (
-              <tr
+              <TableRow
                 key={itemId}
-                className={`border-t ${hasChanges ? "bg-yellow-50" : ""}`}
+                className={hasChanges ? "bg-yellow-50" : ""}
               >
-                <td className="p-3 text-center">{index + 1}</td>
+                <TableCell className="text-center">{index + 1}</TableCell>
 
-                <td className={`p-3 ${changedFields.item ? "border-l-4 border-yellow-500" : ""} check`}>
-                  {item.item}
-                </td>
+                <TableCell className={changedFields.item ? "border-l-4 border-yellow-500" : ""}>
+                  <ExpandableText text={item.item || ""} />
+                </TableCell>
 
-                <td className={`p-3 ${changedFields.category ? "border-l-4 border-yellow-500" : ""}`}>
-                  {item.category || ''}
-                </td>
+                <TableCell>
+                  <CategoryBadge
+                    category={item.category}
+                  // HighlightDiff={changedFields.category}
+                  />
+                </TableCell>
 
-                <td className={`p-3 ${changedFields.priority ? "border-l-4 border-yellow-500" : ""}`}>
-                  {item.priority || ''}
-                </td>
+                <TableCell className={`${changedFields.priority ? "border-l-4 border-yellow-500" : ""} px-2 py-1 text-center`}>
+                  <span className={`${getPriorityStyles(item.priority)} px-2 py-1 rounded`}>
+                    {item.priority || ""}
+                  </span>
+                </TableCell>
 
-                <td className={`p-3 ${changedFields.measures ? "border-l-4 border-yellow-500" : ""}`}>
-                  {item.measures || ''}
-                </td>
+                <TableCell className={changedFields.measures ? "border-l-4 border-yellow-500" : ""}>
+                  <ExpandableText text={item.measures || ""} />
+                </TableCell>
 
-                <td className={`p-3 ${changedFields.resource ? "border-l-4 border-yellow-500" : ""}`}>
-                  {item.resource || ''}
-                </td>
+                <TableCell className={changedFields.resource ? "border-l-4 border-yellow-500" : ""}>
+                  <ExpandableText text={item.resource || ""} />
+                </TableCell>
 
-                {/* <td className={`p-3 ${changedFields.deliverable ? "border-l-4 border-yellow-500" : ""}`}>
-                  {item.deliverable || ''}
-                </td> */}
+                <TableCell className={changedFields.deliverable ? "border-l-4 border-yellow-500" : ""}>
+                  <ExpandableText text={item.deliverable || ""} />
 
-                <td className={`p-3 ${changedFields.targetDate ? "border-l-4 border-yellow-500" : ""}`}>
-                  {formatDate(item.targetDate)}
-                </td>
+                </TableCell>
 
-                <td className={`p-3 ${changedFields.CS ? "border-l-4 border-yellow-500" : ""}`}>
-                  {item.CS || ''}
-                </td>
+                <TableCell className={changedFields.targetDate ? "border-l-4 border-yellow-500" : ""}>
+                  {formatDate(item.targetDate) || `Invalid Date`}
+                </TableCell>
 
-                <td className={`p-3 ${changedFields.actualDate ? "border-l-4 border-yellow-500" : ""}`}>
+                <TableCell className={changedFields.CS ? "border-l-4 border-yellow-500" : ""}>
+                  {item.CS || ""}
+                </TableCell>
+
+                <TableCell className={changedFields.actualDate ? "border-l-4 border-yellow-500" : ""}>
                   {formatDate(item.actualDate)}
-                </td>
+                </TableCell>
 
-                <td className={`p-3 ${changedFields.status ? "border-l-4 border-yellow-500" : ""}`}>
+                {/* <TableCell className={changedFields.status ? "border-l-4 border-yellow-500" : ""}>
                   {item.status}
-                </td>
+                </TableCell> */}
+                <TableCell style={{ padding: "0.3rem" }}>
+                  <StatusBadge status={item.status} highlight={changedFields.status} />
+                </TableCell>
 
-                <td className="p-3">
+
+                <TableCell>
                   {hasChanges ? (
                     <div className="flex flex-wrap gap-1">
-                      {Object.entries(changedFields).map(([field, hasChanged]) => (
+                      {Object.entries(changedFields).map(([field, hasChanged]) =>
                         hasChanged && (
                           <button
                             key={field}
                             onClick={() => onRevertField(String(itemId), field as keyof ESGCapItem)}
                             className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-colors"
-                            title={`Revert ${field} to original`}
                           >
                             {field}
                           </button>
                         )
-                      ))}
+                      )}
                     </div>
                   ) : (
                     <span className="text-gray-400 text-sm">No changes</span>
                   )}
-                </td>
+                </TableCell>
 
-                <td className="p-3 space-x-2">
+                <TableCell>
                   {hasChanges && (
                     <Button
                       variant="outline"
@@ -256,12 +320,12 @@ const ComparePlanView = ({
                       Revert
                     </Button>
                   )}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             );
           })}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 };
@@ -482,11 +546,10 @@ const ESGCapPage = () => {
   }, [entityId]);
 
   // Apply filters and search
-  const dummy: ESGCapItem[] = [];
-  const filteredItems = dummy.filter(item => {
-    const matchesSearch = 
-      item.issue.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredItems = esgCap?.plan?.filter(item => {
+    const matchesSearch =
+      item.item?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
+      item.measures?.toLowerCase().includes(searchTerm?.toLowerCase());
     const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
     const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
 
@@ -584,7 +647,7 @@ const ESGCapPage = () => {
     return false;
   };
 
-  console.log('shouldDisableAcceptButton',shouldDisableAcceptButton());
+  console.log('shouldDisableAcceptButton', shouldDisableAcceptButton());
 
   if (authLoading || loading) {
     return (
@@ -681,21 +744,21 @@ const ESGCapPage = () => {
 
               <div className="flex justify-end gap-2 mt-4 flex-shrink-0">
                 {/* {!esgCap?.finalPlan ? ( */}
-                  <>
-                    <Button
-                      variant="outline"
-                      onClick={() => handleAction('requestChange')}
-                      disabled={loading}
-                    >
-                      Request CAP Change
-                    </Button>
-                    <Button
-                      onClick={() => handleAction('accept')}
-                      disabled={loading || shouldDisableAcceptButton()}
-                    >
-                      Accept CAP
-                    </Button>
-                  </>
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleAction('requestChange')}
+                    disabled={loading}
+                  >
+                    Request CAP Change
+                  </Button>
+                  <Button
+                    onClick={() => handleAction('accept')}
+                    disabled={loading || shouldDisableAcceptButton()}
+                  >
+                    Accept CAP
+                  </Button>
+                </>
                 {/* ) : (
                   <Button
                     onClick={() => handleAction('update')}

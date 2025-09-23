@@ -26,8 +26,8 @@ const CustomDashboardTab = ({ graphData, selectedMetric, selectedPeriod, selecte
                 {/* <Row> */}
                 {metrics.map((metric) => {
 
-                    if (graphData[metric]['graphType'] == 'pie' && selectedMetric && selectedPeriod && selectedYear &&
-                        graphData[metric]['data'] && graphData[metric]['data'].length > 0 &&
+                    if (graphData[metric]?.['graphType'] == 'pie' && selectedMetric && selectedPeriod && selectedYear && 
+                        graphData[metric]['data'] && graphData[metric]['data'].length > 0 && 
                         graphData[metric]['data'].find(item => item.metricName === selectedMetric && item.period === selectedPeriod && item.financialYear === selectedYear)
                     ) {
                         let findData = graphData[metric]['data'].find(item => item.metricName === selectedMetric && item.period === selectedPeriod && item.financialYear === selectedYear);
@@ -123,9 +123,9 @@ const CustomDashboardTab = ({ graphData, selectedMetric, selectedPeriod, selecte
                             // </Col>
                         )
                     }
-                    else if (graphData[metric]['graphType'] == 'bar' &&
-                        selectedMetric && selectedPeriod && selectedYear &&
-                        graphData[metric]['data'] && graphData[metric]['data'].length > 0 &&
+                    else if (graphData[metric]?.['graphType'] == 'bar' && 
+                        selectedMetric && selectedPeriod && selectedYear && 
+                        graphData[metric]['data'] && graphData[metric]['data'].length > 0 && 
                         graphData[metric]['data'].find(item => item.metricName === selectedMetric && item.period === selectedPeriod && item.financialYear === selectedYear)) {
                         let findData = graphData[metric]['data'].find(item => item.metricName === selectedMetric && item.period === selectedPeriod && item.financialYear === selectedYear);
                         debugger;

@@ -6,7 +6,7 @@ import { companySchema, CompanyFormData } from './schemas/companySchema';
 import { defaultCompanyData } from './data/defaultCompanyData';
 import CompanyEditForm from './CompanyEditForm';
 import CompanyDisplay from './CompanyDisplay';
-import { fetchProfileData, updateProfileData } from '../../services/companyApi';
+import { fetchProfileData, updateProfileData,updateCompanyFeatures } from '../../services/companyApi';
 import { defaultPermissions } from '@/config/permissions'; // Make sure to import this
 
 const EditableCompanyProfile = () => {
@@ -60,6 +60,20 @@ const EditableCompanyProfile = () => {
     loadData();
   }, []);
 
+  const handleNewCompanySetup = async (entityId: string) => {
+    try {
+      const features = await updateCompanyFeatures(entityId, [
+        { feature: "ESG DD", adminEnabled: true, url: "/esg-dd" },
+      ]);
+
+      localStorage.setItem(
+        "fandoro-access",
+        JSON.stringify(features || [])
+      );
+    } catch (err) {
+      console.error("Failed to set up company features:", err);
+    }
+  };
   const onSubmit = async (data: CompanyFormData) => {
     if (!currentUser) {
       toast.error('User information not available');
@@ -72,13 +86,18 @@ const EditableCompanyProfile = () => {
         ...data,
         user_id: currentUser._id // Use the currentUser state
       };
-      
-      const updatedData = await updateProfileData(submissionData);
+      const entityId = currentUser?.entityId || null;
+      const updatedData = await updateProfileData(submissionData,entityId);
       const response = await fetchProfileData();
-      
+
       // Update localStorage if needed
       if (response) {
         localStorage.setItem("fandoro-user", JSON.stringify(response));
+        const storedAccess = localStorage.getItem("fandoro-access");
+        const isEmpty = !storedAccess || storedAccess === "null" || storedAccess === "undefined" || storedAccess === "[]" || storedAccess === "";
+        if (isEmpty && response?.entityId) {
+          await handleNewCompanySetup(response.entityId);
+        }
       }
       
       setApiData(response);
@@ -105,6 +124,8 @@ const EditableCompanyProfile = () => {
   if (isLoading) {
     return <div className="flex justify-center p-8">Loading...</div>;
   }
+
+  
 
   return (
     <div className="space-y-6">
