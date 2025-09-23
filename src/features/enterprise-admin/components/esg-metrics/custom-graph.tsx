@@ -128,7 +128,7 @@ const CustomDashboardTab = ({ graphData, selectedMetric, selectedPeriod, selecte
                         graphData[metric]['data'] && graphData[metric]['data'].length > 0 && 
                         graphData[metric]['data'].find(item => item.metricName === selectedMetric && item.period === selectedPeriod && item.financialYear === selectedYear)) {
                         let findData = graphData[metric]['data'].find(item => item.metricName === selectedMetric && item.period === selectedPeriod && item.financialYear === selectedYear);
-                        debugger;
+                        // debugger;
                         if (graphData[metric]['graphData']['xAxisLabels'] && graphData[metric]['graphData']['xAxisLabels'].length > 0) {
                             let xAxisLabels = findData && findData.value ? findData.value.reduce((acc, curr) => {
                                 acc.push(curr[0]);

@@ -293,7 +293,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
   };
 
   const handleCreateTopic = (newTopic: MaterialTopic) => {
-    debugger;
+    // debugger;
     const topicWithSelection = { ...newTopic, selected: true };
     // const updatedTopics = [...topicsWithSelection, topicWithSelection];
     // setTopicsWithSelection(updatedTopics);
