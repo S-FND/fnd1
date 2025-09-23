@@ -85,7 +85,7 @@ const FeatureManagementPage = () => {
   }
 
   if (!isAuthenticatedStatus(['admin'])) {
-    debugger;
+    // debugger;
     return <Navigate to="/" />;
   }
 
