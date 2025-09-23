@@ -21,6 +21,7 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
+import ManualESGDDPage from "../../pages/ManualESGDD";
 
 // let rawMetricsData = {
 //   "Percentage of hazardous waste recycled": [
@@ -157,6 +158,9 @@ export default function MetricsGraph1({ graphData, selectedMetric, selectedPerio
         if (graphData[selectedMetric]['graphData']['yAxisLabels']) {
           setYAxis(graphData[selectedMetric]['graphData']['yAxisLabels'])
         }
+        else{
+          setYAxis(['Male','Female','Others'])
+        }
         // If a specific year is selected, filter to that year
         // console.log("Metric Data for selected metric:", metricData);
         // console.log("Filtering data for metric:", selectedMetric, "and year:", selectedYear);
@@ -241,16 +245,30 @@ export default function MetricsGraph1({ graphData, selectedMetric, selectedPerio
 
     if (chartType === "line") {
       if (dataType && dataType === "Table") {
-        // console.log("Rendering table chart for metric:", metric, "with data:", data);
+        console.log("Rendering table chart for metric:", metric, "with data:", data);
         // Detect genders dynamically from inputData
         if (xAxis.length === 0) {
           // alert("This has no xaxis")
-          const transformedData = data.map(item => ({
-            period: item.period,
-            Male: Number(item.value[0][0]),
-            Female: Number(item.value[0][1]),
-            Others: Number(item.value[0][2]),
-          }));
+          console.log('yAxis', yAxis)
+          data.forEach(item => {
+            const numericCols = item.value[0].length; // since there’s no label, all are numbers
+            if (yAxis.length !== numericCols) {
+              throw new Error(
+                `yAxis length (${yAxis.length}) does not match numeric columns length (${numericCols}) for period ${item.period}`
+              );
+            }
+          });
+          const transformedData = data.map(item => {
+            const obj: any = { period: item.period };
+          
+            // Map each numeric column to corresponding yAxis key
+            item.value[0].forEach((val, idx) => {
+              obj[yAxis[idx]] = val;
+            });
+          
+            return obj;
+          });
+          console.log('tansformedData', transformedData)
           chartElement = (
             <BarChart
               data={transformedData}
@@ -288,13 +306,15 @@ export default function MetricsGraph1({ graphData, selectedMetric, selectedPerio
             value: e.value,
             industry: e.industry,
           }));
-          const detectedGenders = Array.from(
+          let detectedGenders = Array.from(
             new Set(inputData?.flatMap((period) => period.value.flatMap((row) => row.slice(1).map((_, idx) => idx))))
           ).map((idx: number) => {
             return yAxis[idx] || ''
 
           });
-
+          console.log('detectedGenders',detectedGenders)
+          //Testing
+          // detectedGenders = ['Column1', 'Column2', 'Column3'];
           // Transform inputData dynamically
           const chartData = inputData?.map((periodData) => {
             const row: any = { period: periodData.period };
