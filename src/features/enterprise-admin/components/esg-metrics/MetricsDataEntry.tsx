@@ -265,8 +265,8 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
         );
         break;
       case 'Monthly':
-        const months = ['January', 'February', 'March', 'April', 'May', 'June',
-          'July', 'August', 'September', 'October', 'November', 'December'];
+        const months = ['April', 'May', 'June', 'July', 'August', 'September',
+        'October', 'November', 'December', 'January', 'February', 'March'];
         months.forEach((month, index) => {
           const monthNum = String(index + 1).padStart(2, '0');
           const daysInMonth = new Date(year, index + 1, 0).getDate();
@@ -360,9 +360,11 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
     switch (type) {
       case "monthly": {
         const monthNames = [
-          "January", "February", "March", "April", "May", "June",
-          "July", "August", "September", "October", "November", "December"
+          "April", "May", "June", "July", "August", "September",
+          "October", "November", "December", "January", "February", "March"
         ];
+        const fyMonthIndex = (month + 9) % 12;
+        
         for (let m = 0; m <= month; m++) {
           periods.push(`${monthNames[m]}`);
         }
