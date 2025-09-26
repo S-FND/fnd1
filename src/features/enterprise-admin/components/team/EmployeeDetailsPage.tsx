@@ -119,12 +119,22 @@ const EmployeeDetailsPage = () => {
   const handleSubmitPermissions = () => {
     console.log('Page Permissions:', accessLevels.map(access => {
       const menuItem = allMenuItems.find(item => item.id === access.menuItemId);
-      const getItemType = (level: string) => {
-        switch (level) {
-          case 'main': return 'Page';
-          case 'submenu': return 'Subpage';
-          case 'tab': return 'Tab';
-          default: return 'Unknown';
+      
+      const getNavigationHierarchy = (item: any) => {
+        if (!item) return 'Unknown';
+        
+        // Determine the type based on the navigation structure
+        const isMainMenu = !item.parentId;
+        const hasChildren = item.children && item.children.length > 0;
+        const parentItem = allMenuItems.find(parent => parent.id === item.parentId);
+        const isTab = parentItem && !parentItem.parentId === false; // Has grandparent
+        
+        if (isMainMenu) {
+          return hasChildren ? 'Main Menu (with submenus)' : 'Main Menu (standalone)';
+        } else if (isTab) {
+          return 'Tab';
+        } else {
+          return 'Submenu';
         }
       };
       
@@ -132,7 +142,10 @@ const EmployeeDetailsPage = () => {
         menuItem: menuItem?.name,
         menuItemId: access.menuItemId,
         url: menuItem?.href || 'N/A',
-        type: getItemType(menuItem?.level || ''),
+        navigationType: getNavigationHierarchy(menuItem),
+        level: menuItem?.level || 'unknown',
+        parentId: menuItem?.parentId || null,
+        hasChildren: menuItem?.children ? menuItem.children.length > 0 : false,
         accessLevel: access.level
       };
     }));
