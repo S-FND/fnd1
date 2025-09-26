@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, User, Shield, MapPin, Edit, Save } from 'lucide-react';
 import { getDetailedNavigationStructure, flattenNavigationItems } from '@/data/navigation/detailedNavigation';
 
@@ -26,6 +27,7 @@ const EmployeeDetailsPage = () => {
   const { employeeId } = useParams();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState('permissions');
 
   // Mock employee data - in real app, fetch based on employeeId
   const employee = {
@@ -112,6 +114,19 @@ const EmployeeDetailsPage = () => {
       locationAssignments
     });
     setIsEditing(false);
+  };
+
+  const handleSubmitPermissions = () => {
+    console.log('Page Permissions:', accessLevels.map(access => ({
+      menuItem: allMenuItems.find(item => item.id === access.menuItemId)?.name,
+      menuItemId: access.menuItemId,
+      accessLevel: access.level
+    })));
+  };
+
+  const handleSubmitLocations = () => {
+    const selectedLocations = locationAssignments.filter(location => location.assigned);
+    console.log('Selected Locations:', selectedLocations);
   };
 
   const renderNavigationAccess = () => {
@@ -362,58 +377,69 @@ const EmployeeDetailsPage = () => {
           </CardContent>
         </Card>
 
-        {/* Access & Locations Section */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Access Control Section */}
+        {/* Permissions & Locations Section */}
+        <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Access Control
-              </CardTitle>
+              <CardTitle>Access Management</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Configure access levels for each menu item and feature
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {renderNavigationAccess()}
-            </CardContent>
-          </Card>
-
-          {/* Location Assignment Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MapPin className="h-5 w-5" />
-                Location Assignments
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Assign employee to specific locations for data entry and access
+                Configure page permissions and location assignments for this employee
               </p>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-3 md:grid-cols-2">
-                {locationAssignments.map(location => (
-                  <div key={location.locationId} className="flex items-center space-x-3 p-3 border rounded-lg">
-                    <Checkbox
-                      id={`location-${location.locationId}`}
-                      checked={location.assigned}
-                      onCheckedChange={() => toggleLocationAssignment(location.locationId)}
-                    />
-                    <Label 
-                      htmlFor={`location-${location.locationId}`}
-                      className="flex-1 cursor-pointer"
-                    >
-                      {location.locationName}
-                    </Label>
-                    {location.assigned && (
-                      <Badge variant="default" className="text-xs">
-                        Assigned
-                      </Badge>
-                    )}
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="permissions" className="flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Page Permissions
+                  </TabsTrigger>
+                  <TabsTrigger value="locations" className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Location Assignments
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="permissions" className="space-y-6">
+                  <div className="space-y-6">
+                    {renderNavigationAccess()}
                   </div>
-                ))}
-              </div>
+                  <div className="flex justify-end pt-4 border-t">
+                    <Button onClick={handleSubmitPermissions}>
+                      Submit Page Permissions
+                    </Button>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="locations" className="space-y-6">
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {locationAssignments.map(location => (
+                      <div key={location.locationId} className="flex items-center space-x-3 p-3 border rounded-lg">
+                        <Checkbox
+                          id={`location-${location.locationId}`}
+                          checked={location.assigned}
+                          onCheckedChange={() => toggleLocationAssignment(location.locationId)}
+                        />
+                        <Label 
+                          htmlFor={`location-${location.locationId}`}
+                          className="flex-1 cursor-pointer"
+                        >
+                          {location.locationName}
+                        </Label>
+                        {location.assigned && (
+                          <Badge variant="default" className="text-xs">
+                            Assigned
+                          </Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-end pt-4 border-t">
+                    <Button onClick={handleSubmitLocations}>
+                      Submit Location Assignments
+                    </Button>
+                  </div>
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
         </div>
