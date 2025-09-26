@@ -17,7 +17,11 @@ interface UnifiedSidebarLayoutProps {
 export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({
   children
 }) => {
+  console.log('🔵 UnifiedSidebarLayout: Starting to render');
   const { user, logout } = useAuth();
+  console.log('🔵 UnifiedSidebarLayout: User data:', user);
+  
+  console.log('🔵 UnifiedSidebarLayout: About to return JSX');
   
   return (
     <SidebarProvider defaultOpen={true}>

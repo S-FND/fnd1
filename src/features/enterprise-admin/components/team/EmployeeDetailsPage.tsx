@@ -24,6 +24,7 @@ interface LocationAssignment {
 }
 
 const EmployeeDetailsPage = () => {
+  console.log('🟢 EmployeeDetailsPage: Component starting to render');
   const { employeeId } = useParams();
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
