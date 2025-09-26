@@ -117,11 +117,15 @@ const EmployeeDetailsPage = () => {
   };
 
   const handleSubmitPermissions = () => {
-    console.log('Page Permissions:', accessLevels.map(access => ({
-      menuItem: allMenuItems.find(item => item.id === access.menuItemId)?.name,
-      menuItemId: access.menuItemId,
-      accessLevel: access.level
-    })));
+    console.log('Page Permissions:', accessLevels.map(access => {
+      const menuItem = allMenuItems.find(item => item.id === access.menuItemId);
+      return {
+        menuItem: menuItem?.name,
+        menuItemId: access.menuItemId,
+        url: menuItem?.href || 'N/A',
+        accessLevel: access.level
+      };
+    }));
   };
 
   const handleSubmitLocations = () => {
