@@ -119,10 +119,20 @@ const EmployeeDetailsPage = () => {
   const handleSubmitPermissions = () => {
     console.log('Page Permissions:', accessLevels.map(access => {
       const menuItem = allMenuItems.find(item => item.id === access.menuItemId);
+      const getItemType = (level: string) => {
+        switch (level) {
+          case 'main': return 'Page';
+          case 'submenu': return 'Subpage';
+          case 'tab': return 'Tab';
+          default: return 'Unknown';
+        }
+      };
+      
       return {
         menuItem: menuItem?.name,
         menuItemId: access.menuItemId,
         url: menuItem?.href || 'N/A',
+        type: getItemType(menuItem?.level || ''),
         accessLevel: access.level
       };
     }));
