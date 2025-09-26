@@ -56,6 +56,7 @@ import EHSAuditsPage from './pages/audit/EHSAuditsPage';
 import InternalAuditsPage from './pages/audit/InternalAuditsPage';
 import LMSPage from './pages/LMS';
 import { Toaster } from 'sonner';
+import EmployeeDetailsPage from './features/enterprise-admin/components/team/EmployeeDetailsPage';
 
 function App() {
   return (
@@ -102,6 +103,7 @@ function App() {
         
         <Route path="/units" element={<Units />} />
         <Route path="/team-management" element={<TeamManagementPage />} />
+        <Route path="/team-management/employee/:employeeId" element={<EmployeeDetailsPage />} />
         <Route path="/ehs-trainings" element={<EHSTrainings />} />
         <Route path="/ehs-trainings/:id" element={<EHSTrainingDetails />} />
         

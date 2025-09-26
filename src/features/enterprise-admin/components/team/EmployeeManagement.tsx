@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Loader2, UserPlus, Search, Edit, Users, Check, X } from 'lucide-react';
+import { Loader2, UserPlus, Search, Edit, Users, Check, X, Eye } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   updateEmployee,
@@ -17,6 +17,7 @@ import {
   // fetchUserAccess,
   updateCompanyFeatures
 } from '../../services/employeeManagementAPI';
+import { useNavigate } from 'react-router-dom';
 
 interface Employee {
   _id: string;
@@ -88,6 +89,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
   refreshData: () => void;
   loading: boolean;
 }) => {
+  const navigate = useNavigate();
   const [urlList, setUrlList] = useState<string[]>([]);
   const [isUrlLoading, setIsUrlLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -369,6 +371,10 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
     }
   };
 
+  const handleViewDetails = (employee: any) => {
+    navigate(`/team-management/employee/${employee._id}`);
+  }
+
   const handleNewCompanySetup = async (entityId: string) => {
     try {
       const features = await updateCompanyFeatures(entityId, [
@@ -466,6 +472,14 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleViewDetails(employee)}
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      Details
+                    </Button>
                     <Button
                       size="sm"
                       variant="outline"

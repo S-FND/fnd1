@@ -18,7 +18,7 @@ export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({
   children
 }) => {
   const { user, logout } = useAuth();
-  
+  console.log('User in Layout:', user);
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">

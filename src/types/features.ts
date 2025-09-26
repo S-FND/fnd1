@@ -12,6 +12,7 @@ export type FeatureId =
   | 'team-management'
   | 'company-profile'
   | 'settings'
+  | 'sdg'
   | 'dashboard'
   | 'stakeholder-management'
   | 'stakeholder-Materiality-Assessment';
