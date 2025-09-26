@@ -9,9 +9,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { UserPlus, Search, Filter, Edit, Users } from 'lucide-react';
+import { UserPlus, Search, Filter, Edit, Users, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const EmployeeManagement = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('all');
   const [filterLocation, setFilterLocation] = useState('all');
@@ -115,6 +117,10 @@ const EmployeeManagement = () => {
   const handleAssignEmployee = (employee: any) => {
     setSelectedEmployee(employee);
     setIsAssignDialogOpen(true);
+  };
+
+  const handleViewDetails = (employee: any) => {
+    navigate(`/team-management/employee/${employee.id}`);
   };
 
   const handleSaveEdit = () => {
@@ -283,6 +289,14 @@ const EmployeeManagement = () => {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => handleViewDetails(employee)}
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      Details
+                    </Button>
                     <Button 
                       size="sm" 
                       variant="outline"

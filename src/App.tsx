@@ -53,6 +53,7 @@ import EngagementPlanPage from './features/enterprise-admin/pages/stakeholders/E
 import StakeholderLoginPage from './features/stakeholder/pages/StakeholderLoginPage';
 import ESGManagementPage from './features/enterprise-admin/pages/ESGManagement';
 import TeamManagementPage from './features/enterprise-admin/pages/TeamManagement';
+import EmployeeDetailsPage from './features/enterprise-admin/components/team/EmployeeDetailsPage';
 import CompanyProfilePage from './pages/CompanyProfile';
 import FeatureManagementPage from './pages/FeatureManagement';
 import SupplierAuditsPage from './pages/audit/SupplierAuditsPage';
@@ -106,6 +107,7 @@ function App() {
               
               <Route path="/units" element={<Units />} />
               <Route path="/team-management" element={<TeamManagementPage />} />
+              <Route path="/team-management/employee/:employeeId" element={<EmployeeDetailsPage />} />
               <Route path="/action-log" element={<ActionLogPage />} />
               <Route path="/ehs-trainings" element={<EHSTrainings />} />
               <Route path="/ehs-trainings/:id" element={<EHSTrainingDetails />} />
