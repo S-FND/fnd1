@@ -202,7 +202,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
           reason: item.notes || '',
           file_path: [
             ...(filePaths[key]?.map(path => path.replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/', '')) || []),
-            ...item.attachment.map(file => file.name)
+            ...item.attachment.map(file => sanitizeFileName(file.name))
           ],
           fileChange: item.attachment.length > 0
         };
@@ -266,7 +266,8 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
 
         if (item.attachment.length > 0) {
           item.attachment.forEach(file => {
-            formData.append(`${key}_file`, file);
+            const sanitizedFileName = sanitizeFileName(file.name);
+            formData.append(`${key}_file`, file,sanitizedFileName);
           });
         }
       });
@@ -320,14 +321,41 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
     );
   };
 
+  const sanitizeFileName = (fileName) => {
+    if (!fileName || typeof fileName !== 'string') {
+      return fileName || '';
+    }
+    
+    // Split by last dot to preserve extension
+    const lastDotIndex = fileName.lastIndexOf('.');
+    if (lastDotIndex <= 0 || lastDotIndex === fileName.length - 1) {
+      // No extension or just a dot at end
+      return fileName
+        .replace(/\./g, '_')
+        .replace(/\s+/g, '_');
+    }
+    
+    // Split name and extension
+    const namePart = fileName.substring(0, lastDotIndex);
+    const extension = fileName.substring(lastDotIndex);
+    
+    // Sanitize name part (convert dots/spaces to underscores)
+    const sanitizedBaseName = namePart
+      .replace(/\./g, '_')  // Convert dots in name to underscores
+      .replace(/\s+/g, '_'); // Convert spaces to underscores
+    
+    return sanitizedBaseName + extension;
+  };
+
   const renderAttachmentCell = (item: ComplianceItem) => {
     const key = item.key;
     const error = errors[key];
-
+  
     const shortenFileName = (name: string) => {
       if (name.length <= 20) return name;
-      return `${name.substring(0, 5)}...${name.substring(name.length - 7)}`;
+      return `${name.substring(0, 9)}...${name.substring(name.length - 5)}`;
     };
+  
     return (
       <div className="space-y-2">
         <div className="flex items-center gap-2">
@@ -348,59 +376,77 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
             Upload Files
           </label>
         </div>
-
+  
         {/* Existing file from server */}
-        {filePaths[key]?.map((fileUrl, i) => (
-          <div key={`existing-${i}`} className="flex items-center justify-between bg-gray-50 p-1 py-0.5 rounded text-sx">
-            <div className="flex items-center gap-2">
-              <a
-                href={fileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="truncate flex-1 underline text-blue-600 hover:text-blue-800"
-              >
-                View File
-              </a>
-              <button
-                type="button"
-                onClick={() => handleDeleteExistingFile(key, i, fileUrl)}
-                className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <X className="h-3 w-3" />
-                )}
-              </button>
+        {filePaths[key]?.map((fileUrl, i) => {
+          const fileName = fileUrl.split('/').pop() || '';
+          
+          return (
+            <div key={`existing-${i}`} className="flex items-center justify-between bg-gray-50 p-1 py-0.5 rounded text-sx">
+              <div className="flex items-center gap-2">
+                <a
+                  href={fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="truncate flex-1 text-blue-600 hover:text-blue-800 underline"
+                  title={fileName}
+                  onClick={(e) => {
+                    // Ensure it opens in new tab, not download
+                    e.preventDefault();
+                    window.open(fileUrl, '_blank');
+                  }}
+                >
+                  {shortenFileName(fileName)}
+                </a>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteExistingFile(key, i, fileUrl)}
+                  className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <X className="h-3 w-3" />
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
-
+          );
+        })}
+  
         {/* Newly uploaded file */}
-        {item.attachment.map((file, fileIndex) => (
-          <div key={fileIndex} className="flex items-center justify-between bg-gray-50 p-1 py-0.5 rounded text-sx">
-            <div className="flex items-center gap-2">
-              <span 
-              className="truncate flex-1" 
-              title={file.name} // Full name on hover
-            >
-              {shortenFileName(file.name)}
-            </span>
-            <div className="absolute bottom-full left-0 mb-1 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-              {file.name}
+        {item.attachment.map((file, fileIndex) => {
+          return (
+            <div key={fileIndex} className="flex items-center justify-between bg-gray-50 p-1 py-0.5 rounded text-sx">
+              <div className="flex items-center gap-2">
+                <a
+                  href={URL.createObjectURL(file)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="truncate flex-1 text-blue-600 hover:text-blue-800 underline"
+                  title={file.name}
+                  onClick={(e) => {
+                    // Ensure it opens in new tab, not download
+                    e.preventDefault();
+                    const url = URL.createObjectURL(file);
+                    window.open(url, '_blank');
+                  }}
+                >
+                  {shortenFileName(file.name)}
+                </a>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveFile(item.id, fileIndex)}
+                  className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
             </div>
-              <button
-                type="button"
-                onClick={() => handleRemoveFile(item.id, fileIndex)}
-                className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          </div>
-        ))}
-
+          );
+        })}
+  
         {error && error.includes('upload') && (
           <p className="text-xs text-red-500">{error}</p>
         )}
