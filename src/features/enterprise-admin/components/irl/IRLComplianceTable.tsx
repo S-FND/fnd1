@@ -365,6 +365,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
             onChange={(e) => handleFileUpload(item.id, e.target.files)}
             className="hidden"
             id={`file-upload-${item.id}`}
+            multiple
           />
           <label
             htmlFor={`file-upload-${item.id}`}

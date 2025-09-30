@@ -118,6 +118,7 @@ const TableRowQuestion = ({
             accept=".ppt,.pptx,.pdf,.png,.jpg,.jpeg"
             onChange={handleFileChange}
             className="text-xs"
+            multiple
           />
 
           {/* Existing files */}
