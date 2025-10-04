@@ -19,6 +19,8 @@ import {
 } from '../../services/employeeManagementAPI';
 import { useNavigate } from 'react-router-dom';
 
+// import { UserPlus, Search, Filter, Edit, Users, Eye } from 'lucide-react';
+
 interface Employee {
   _id: string;
   name: string;
@@ -192,6 +194,8 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
       setSelectAll(false);
     }
   }, [selectedUrls, urlList]);
+
+
   const handleSaveEdit = async () => {
     try {
       if (!selectedEmployee) return;
@@ -219,7 +223,16 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
       console.error('Error in handleSaveEdit:', err);
       toast.error('An error occurred while updating employee');
     }
+  }
+  const handleViewDetails = (employee: any) => {
+    navigate(`/team-management/employee/${employee._id}`);
   };
+
+  // const handleSaveEdit = () => {
+  //   // Here you would normally update the employee data
+  //   console.log('Saving employee edit:', editForm);
+  //   setIsEditDialogOpen(false);
+  // };
 
   // const handleSaveAssignment = async () => {
   //   if (!selectedEmployee) return;
@@ -371,9 +384,9 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
     }
   };
 
-  const handleViewDetails = (employee: any) => {
-    navigate(`/team-management/employee/${employee._id}`);
-  }
+  // const handleViewDetails = (employee: any) => {
+  //   navigate(`/team-management/employee/${employee._id}`);
+  // }
 
   const handleNewCompanySetup = async (entityId: string) => {
     try {

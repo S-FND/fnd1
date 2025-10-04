@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Sidebar, SidebarContent, SidebarProvider } from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { PageOverlay } from '@/components/ui/page-overlay';
 import { SidebarHeaderComponent } from './sidebar/SidebarHeader';
 import { SidebarNavigation } from './sidebar/SidebarNavigation';
@@ -17,10 +17,15 @@ interface UnifiedSidebarLayoutProps {
 export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({
   children
 }) => {
+  console.log('🔵 UnifiedSidebarLayout: Starting to render');
   const { user, logout } = useAuth();
   console.log('User in Layout:', user);
+  console.log('🔵 UnifiedSidebarLayout: User data:', user);
+  
+  console.log('🔵 UnifiedSidebarLayout: About to return JSX');
+  
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen w-full bg-background">
         <UnifiedSidebar />
         <div className="flex-1 flex flex-col min-w-0">
@@ -50,6 +55,7 @@ const UnifiedSidebar: React.FC = () => {
     esgdd: location.pathname.startsWith('/esg-dd'),
     reports: location.pathname.startsWith('/reports'),
     stakeholders: location.pathname.startsWith('/stakeholders'),
+    sdg: location.pathname.startsWith('/sdg'),
     audit: location.pathname.startsWith('/audit')
   });
   

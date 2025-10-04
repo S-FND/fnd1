@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, BarChart3, FileSearch, LineChart, ClipboardCheck, GraduationCap, Calendar, Users, Building2, Settings, FileText, TreePine } from 'lucide-react';
+import { LayoutDashboard, BarChart3, FileSearch, LineChart, ClipboardCheck, GraduationCap, Calendar, Users, Building2, Settings, FileText, TreePine, Target, Activity } from 'lucide-react';
 import { FeatureId } from '@/types/features';
 
 export interface NavigationItem {
@@ -17,27 +17,37 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
       href: "/dashboard",
       icon: LayoutDashboard,
       featureId: 'dashboard'
+    },
+    {
+      name: "ESG Management",
+      href: "/esg",
+      icon: BarChart3,
+      featureId: 'esg-management',
+      submenu: [
+        { name: "Overview", href: "/esg", icon: BarChart3 },
+        { name: "ESMS", href: "/esg/esms", icon: FileText },
+        { name: "ESG Metrics", href: "/esg/metrics", icon: LineChart }
+      ]
     }
   ];
 
   if (role === 'admin' || role === 'manager') {
     baseItems.push(
       {
-        name: "ESG Management",
-        href: "/esg",
-        icon: BarChart3,
-        featureId: 'esg-management',
-        submenu: [
-          { name: "Overview", href: "/esg", icon: BarChart3 },
-          { name: "ESMS", href: "/esg/esms", icon: FileText },
-          { name: "ESG Metrics", href: "/esg/metrics", icon: LineChart }
-        ]
-      },
-      {
         name: "Materiality",
         href: "/materiality",
         icon: TreePine,
         featureId: 'materiality'
+      },
+      {
+        name: "SDG",
+        href: "/sdg",
+        icon: Target,
+        featureId: 'sdg',
+        submenu: [
+          { name: "Overview", href: "/sdg", icon: Target },
+          { name: "Strategy Setting", href: "/sdg/strategy", icon: FileText }
+        ]
       },
       {
         name: "ESG DD",
@@ -124,6 +134,12 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
         href: "/team-management",
         icon: Users,
         featureId: 'team-management'
+      },
+      {
+        name: "Action Log",
+        href: "/action-log",
+        icon: Activity,
+        featureId: 'action-log'
       }
     );
 

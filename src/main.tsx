@@ -6,6 +6,7 @@ import App from './App.tsx'
 import './index.css'
 import { AuthProvider } from './context/AuthContext'
 import { OverlayProvider } from './context/OverlayContext'
+import { PageAccessProvider } from './context/PageAccessContext.tsx'
 
 // Create a client
 const queryClient = new QueryClient()
@@ -15,7 +16,9 @@ createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <OverlayProvider>
-          <App />
+          <PageAccessProvider>
+            <App />
+          </PageAccessProvider>
         </OverlayProvider>
       </AuthProvider>
     </QueryClientProvider>

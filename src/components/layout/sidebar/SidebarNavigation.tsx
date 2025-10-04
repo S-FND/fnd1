@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useContext, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { SidebarGroup, SidebarGroupContent, SidebarMenu } from '@/components/ui/sidebar';
 import { SidebarNavItem } from './SidebarNavItem';
@@ -8,8 +8,10 @@ import { ESGManagementSubmenu } from './ESGManagementSubmenu';
 import { ReportsSubmenu } from './ReportsSubmenu';
 import { StakeholdersSubmenu } from './StakeholdersSubmenu';
 import { AuditSubmenu } from './AuditSubmenu';
+// import { SDGSubmenu } from './SDGSubmenu';
 import { getNavigationItems } from './navigationData';
 import { useAuth } from '@/context/AuthContext';
+import { PageAccessContext } from '@/context/PageAccessContext';
 
 interface SidebarNavigationProps {
   role: string;
@@ -24,8 +26,20 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 }) => {
   const location = useLocation();
   const { user } = useAuth();
-
+  const { pageAccessList, checkPageAccess ,setPageAccessList } = useContext(PageAccessContext);
   const visibleItems = getNavigationItems(role);
+  
+  useEffect(() => {
+    console.log("🔵 SidebarNavigation: Checking page access for role:", pageAccessList);
+    console.log("🔵 SidebarNavigation: Current user checkPageAccess:", checkPageAccess('/admin'));
+  }, []);
+
+  useEffect(() => {
+    let userData = user;
+    console.log('🔵 SidebarNavigation: User data:', userData);
+    let localStorageData = JSON.parse(localStorage.getItem('fandoro-user'));
+    console.log('🔵 SidebarNavigation: LocalStorage user data:', localStorageData);
+  }, []);
 
   return (
     <SidebarGroup>
@@ -86,6 +100,16 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 />
               );
             }
+
+            // if (item.name === 'SDG') {
+            //   return (
+            //     <SDGSubmenu
+            //       key={item.name}
+            //       isExpanded={expandedMenus.sdg}
+            //       onToggle={() => toggleMenu('sdg')}
+            //     />
+            //   );
+            // }
 
             // Regular menu items
             return (
