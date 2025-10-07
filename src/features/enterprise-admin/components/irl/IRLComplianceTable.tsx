@@ -300,8 +300,30 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   };
 
   const handleFileUpload = (id: number, files: FileList | null) => {
-    if (!files) return;
+    if (!files || files.length === 0) return;
+  
+    // Get current total file count for this item
+    const currentItem = complianceItems.find(item => item.id === id);
+    const existingFiles = currentItem?.attachment.length || 0;
     const newFiles = Array.from(files);
+    const totalFiles = existingFiles + newFiles.length;
+  
+    // ✅ Enforce max 10 files TOTAL (existing + new)
+    if (totalFiles > 10) {
+      toast.error('You can upload a maximum of 10 files.');
+      
+      // ⚠️ CRITICAL: Reset the file input IMMEDIATELY
+      setTimeout(() => {
+        const input = document.getElementById(`file-upload-${id}`) as HTMLInputElement | null;
+        if (input) {
+          input.value = ''; // Clear selected files
+        }
+      }, 0);
+      
+      return; // ❌ Do NOT update state
+    }
+  
+    // ✅ Only update state if valid
     setComplianceItems(items =>
       items.map(item =>
         item.id === id
