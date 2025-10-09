@@ -28,8 +28,8 @@ interface ESMSDocument {
   subItems?: string[];
   fileChange: boolean;
   isApplicable: string;
-  fileName?: string;
-  fileUrl?: string;
+  fileNames?: string[];
+  fileUrls?: string[];
 }
 
 interface ESMSDocumentSection {
@@ -40,20 +40,38 @@ interface ESMSDocumentSection {
 }
 
 const ESMSPage: React.FC = () => {
-  const [deleteDialog, setDeleteDialog] = useState<{
+  const [deleteFileDialog, setDeleteFileDialog] = useState<{
     open: boolean;
     sectionId: string;
     documentId: string;
-    documentTitle: string;
-    fileUrl?: string;
+    fileName: string;
+    fileUrl: string;
+    fileIndex: number;
   }>({
     open: false,
     sectionId: '',
     documentId: '',
-    documentTitle: '',
-    fileUrl: ''
+    fileName: '',
+    fileUrl: '',
+    fileIndex: 0
   });
 
+  const handleDeleteSingleFile = (
+    sectionId: string,
+    documentId: string,
+    fileName: string,
+    fileUrl: string,
+    fileIndex: number
+  ) => {
+    setDeleteFileDialog({
+      open: true,
+      sectionId,
+      documentId,
+      fileName,
+      fileUrl,
+      fileIndex
+    });
+  };
   const [documentSections, setDocumentSections] = useState<ESMSDocumentSection[]>([
     {
       id: 'compliance',
@@ -229,16 +247,18 @@ const ESMSPage: React.FC = () => {
                 const savedDoc = savedData[fieldName];
 
                 if (Array.isArray(savedDoc.file_path) && savedDoc.file_path.length > 0) {
-                  const fileUrl = savedDoc.file_path[0];
-                  const transformedUrl = `https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/${fileUrl}`;
+                  const fileUrls = savedDoc.file_path.map(fp => {
+                    const cleanPath = fp.trim();
+                    return `https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/${cleanPath}`;
+                  });
                   return {
                     id: doc.id,
                     title: doc.title,
                     subItems: doc.subItems,
                     fileChange: true,
                     isApplicable: "yes",
-                    fileName: savedDoc.file_path[0].split('/').pop() || '',
-                    fileUrl: transformedUrl
+                    fileNames: savedDoc.file_path.map(fp => fp.split('/').pop() || ''),
+                    fileUrls: fileUrls
                   };
                 }
                 else if (savedDoc.isApplicable === "no") {
@@ -246,8 +266,8 @@ const ESMSPage: React.FC = () => {
                     ...doc, // Keep all existing doc properties
                     isApplicable: "no",
                     fileChange: false,
-                    fileName: undefined,
-                    fileUrl: undefined
+                    fileNames: undefined,
+                    fileUrls: undefined
                   };
                 }
               }
@@ -347,49 +367,61 @@ const ESMSPage: React.FC = () => {
 
   const handleFileUpload = async (sectionId: string, documentId: string, event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (files && files.length > 0) {
-      try {
-        const fileName = files[0].name;
-        const formData = new FormData();
+    if (!files || files.length === 0) return;
 
-        const fieldName = documentId.replace(/-/g, '_') + '_file';
-        formData.append(fieldName, files[0]);
+    const currentDoc = documentSections
+      .flatMap(s => s.documents)
+      .find(d => d.id === documentId);
 
-        const dataToSave = {
-          entityId: entityId,
-          [documentId.replace(/-/g, '_')]: {
-            file_path: [fileName],
-            fileChange: true
-          }
-        };
+    const currentCount = currentDoc?.fileNames?.length || 0;
+    if (currentCount + files.length > 10) {
+      toast.error('Maximum 10 files allowed per document.');
+      event.target.value = '';
+      return;
+    }
 
-        formData.append('data', JSON.stringify(dataToSave));
+    try {
+      const formData = new FormData();
+      const fieldNameBase = documentId.replace(/-/g, '_');
 
-        for (let [key, value] of formData.entries()) {
-          console.log(key, value.constructor.name, value);
-        }
-        const response = await fetch(`${API_URL}/document/esms`, {
-          method: 'POST',
-          body: formData,
-          headers: {
-            Authorization: `Bearer ${token}`
-          },
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Server error:', errorText);
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        
-        await loadESMSData();
-        toast.success(`Document "${fileName}" uploaded successfully`);
-      } catch (error) {
-        console.error('Error uploading file:', error);
-        toast.error('Failed to upload document');
+      // Append ALL selected files under the same field name (backend will get array)
+      for (let i = 0; i < files.length; i++) {
+        formData.append(`${fieldNameBase}_file`, files[i]);
       }
+
+      // Send file names as array
+      const fileNames = Array.from(files).map(file => file.name);
+      const dataToSave = {
+        entityId: entityId,
+        [fieldNameBase]: {
+          file_path: fileNames, // array
+          fileChange: true
+        }
+      };
+
+      formData.append('data', JSON.stringify(dataToSave));
+
+      const response = await fetch(`${API_URL}/document/esms`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      await loadESMSData();
+      toast.success(`${files.length} file(s) uploaded successfully`);
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      toast.error('Failed to upload document(s)');
+      // Reset input
+      event.target.value = '';
     }
   };
 
@@ -406,7 +438,7 @@ const ESMSPage: React.FC = () => {
                     ...doc,
                     isApplicable: checked ? "no" : "yes",
                     fileChange: checked ? false : doc.fileChange,
-                    fileName: checked ? undefined : doc.fileName
+                    fileName: checked ? undefined : doc.fileNames
                   };
                 }
                 return doc;
@@ -434,65 +466,6 @@ const ESMSPage: React.FC = () => {
     } catch (error) {
       console.error('Error updating document status:', error);
       toast.error('Failed to update document status');
-    }
-  };
-
-  const handleDeleteDocument = async (sectionId: string, documentId: string, documentTitle: string, fileUrl?: string) => {
-    try {
-      setDeleteDialog({
-        open: true,
-        sectionId,
-        documentId,
-        documentTitle,
-        fileUrl
-      });
-    } catch (error) {
-      console.error('Error initiating document deletion:', error);
-      toast.error('Failed to initiate document deletion');
-    }
-  };
-
-  const confirmDeleteDocument = async () => {
-    try {
-      const { sectionId, documentId, documentTitle, fileUrl } = deleteDialog;
-
-      if (fileUrl) {
-        const filePath = fileUrl.replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/', '');
-
-        const payload :any = {
-          filesToDelete: [filePath]
-        };
-
-        const response = await fetch(`${API_URL}/document/esms`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            filesToDelete: [filePath],
-          })
-        });
-      }
-      
-      setDocumentSections(prev => prev.map(section =>
-        section.id === sectionId
-          ? {
-            ...section,
-            documents: section.documents.map(doc =>
-              doc.id === documentId
-                ? { ...doc, fileChange: false, fileName: undefined, fileUrl: undefined }
-                : doc
-            )
-          }
-          : section
-      ));
-
-      toast.success(`Document "${documentTitle}" has been archived`);
-      setDeleteDialog({ open: false, sectionId: '', documentId: '', documentTitle: '', fileUrl: '' });
-    } catch (error) {
-      console.error('Error deleting document:', error);
-      toast.error('Failed to archive document');
     }
   };
 
@@ -530,8 +503,8 @@ const ESMSPage: React.FC = () => {
           dataToSave[fieldKey] = {
             fileChange: doc.fileChange,
             isApplicable: doc.isApplicable,
-            fileName: doc.fileName,
-            fileUrl: doc.fileUrl
+            fileName: doc.fileNames,
+            fileUrl: doc.fileUrls
           };
         });
       });
@@ -549,6 +522,55 @@ const ESMSPage: React.FC = () => {
     }
   };
 
+  const confirmDeleteSingleFile = async () => {
+    const { sectionId, documentId, fileName, fileUrl, fileIndex } = deleteFileDialog;
+
+    try {
+      // Extract S3 path (fix extra spaces!)
+      const filePath = fileUrl
+        .replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/', '')
+        .trim();
+
+      // Delete from backend/S3
+      await fetch(`${API_URL}/document/esms`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          filesToDelete: [filePath]
+        })
+      });
+
+      // Update local state
+      setDocumentSections(prev =>
+        prev.map(section =>
+          section.id === sectionId
+            ? {
+              ...section,
+              documents: section.documents.map(doc =>
+                doc.id === documentId
+                  ? {
+                    ...doc,
+                    fileNames: doc.fileNames?.filter((_, i) => i !== fileIndex),
+                    fileUrls: doc.fileUrls?.filter((_, i) => i !== fileIndex),
+                    fileChange: !!(doc.fileNames && doc.fileNames.length > 1)
+                  }
+                  : doc
+              )
+            }
+            : section
+        )
+      );
+
+      toast.success(`File "${fileName}" deleted`);
+      setDeleteFileDialog({ ...deleteFileDialog, open: false });
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      toast.error('Failed to delete file');
+    }
+  };
   return (
     <div className="space-y-6">
       <div>
@@ -643,15 +665,6 @@ const ESMSPage: React.FC = () => {
                           </ul>
                         </div>
                       )}
-
-                      {document.fileName && (
-                        <div className="mt-2">
-                          <Badge variant="outline">
-                            <FileText className="w-3 h-3 mr-1" />
-                            {document.fileName}
-                          </Badge>
-                        </div>
-                      )}
                     </div>
 
                     <div className="flex items-center gap-4 ml-4">
@@ -676,6 +689,7 @@ const ESMSPage: React.FC = () => {
                               handleFileUpload(section.id, document.id, e);
                             }}
                             accept=".pdf,.doc,.docx,.xlsx,.xls"
+                            multiple
                           />
 
                           <Button
@@ -690,29 +704,43 @@ const ESMSPage: React.FC = () => {
                             disabled={isLoading}
                           >
                             <Upload className="w-4 h-4 mr-2" />
-                            {document.fileChange ? 'Replace' : 'Upload'}
+                            {document.fileChange ? 'Add More' : 'Upload'}
                           </Button>
-                          {document.fileChange && (
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleViewFile(document.fileUrl)}
-                                className="text-blue-600 hover:text-blue-800"
-                                disabled={isLoading}
-                              >
-                                <FileText className="w-4 h-4 mr-1" />
-                                View
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDeleteDocument(section.id, document.id, document.title, document.fileUrl)}
-                                className="text-destructive hover:text-destructive"
-                                disabled={isLoading}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
+                          {document.fileNames && document.fileNames.length > 0 && (
+                            <div className="mt-2 space-y-1">
+                              {document.fileNames.map((name, idx) => {
+                                const url = document.fileUrls?.[idx];
+                                return (
+                                  <div key={idx} className="flex items-center gap-2">
+                                    <Badge variant="outline" className="max-w-[180px] truncate">
+                                      <FileText className="w-3 h-3 mr-1 flex-shrink-0" />
+                                      {name}
+                                    </Badge>
+                                    {url && (
+                                      <>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 w-6 p-0 text-blue-600 hover:bg-blue-100"
+                                          onClick={() => window.open(url, '_blank')}
+                                          title="View file"
+                                        >
+                                          <FileText className="w-3 h-3" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 w-6 p-0 text-destructive hover:bg-red-100"
+                                          onClick={() => handleDeleteSingleFile(section.id, document.id, name, url, idx)}
+                                          title="Delete file"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </Button>
+                                      </>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
                           )}
                         </div>
@@ -736,19 +764,23 @@ const ESMSPage: React.FC = () => {
         </Button>
       </div>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog(prev => ({ ...prev, open }))}>
+      {/* Single File Delete Confirmation Dialog */}
+      <AlertDialog
+        open={deleteFileDialog.open}
+        onOpenChange={(open) => setDeleteFileDialog(prev => ({ ...prev, open }))}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Document</AlertDialogTitle>
+            <AlertDialogTitle>Delete File</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{deleteDialog.documentTitle}"? This action cannot be undone.
+              Are you sure you want to delete the file "<strong>{deleteFileDialog.fileName}</strong>"?
+              This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmDeleteDocument}
+              onClick={confirmDeleteSingleFile}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
