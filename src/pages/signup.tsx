@@ -129,9 +129,9 @@ const Signup = ({ onBackToLogin }) => {
       });
 
       toast.success('Account created successfully!');
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-    //   setTimeout(() => (window.location.href = '/'), 1500);
+      localStorage.setItem('fandoro-token', res.data.token);
+      localStorage.setItem('fandoro-user', JSON.stringify(res.data.user));
+      setTimeout(() => (window.location.href = '/'), 1500);
     } catch (err: any) {
       const message = err.response?.data?.message || 'Registration failed';
       toast.error(message);
@@ -165,7 +165,7 @@ const Signup = ({ onBackToLogin }) => {
           {step === 'account' && 'Create Your Account'}
         </h2>
         <p className="text-sm text-muted-foreground">
-          {step === 'role-email' && 'Select your role and enter your official email'}
+          {step === 'role-email' && ''}
           {step === 'otp' && `Enter the 6-digit code sent to ${email}`}
           {step === 'account' && 'Complete your profile to get started'}
         </p>
@@ -193,7 +193,7 @@ const Signup = ({ onBackToLogin }) => {
             <TabsContent value="company" className="pt-4">
               <form onSubmit={handleEmailSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Work Email</Label>
+                  <Label htmlFor="email">Enter your work email</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -317,7 +317,7 @@ const Signup = ({ onBackToLogin }) => {
       {step === 'account' && (
         <form onSubmit={handleRegister} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Full Name</Label>
+            <Label htmlFor="name">Name of the Comapny</Label>
             <Input
               id="name"
               name="name"
@@ -328,7 +328,7 @@ const Signup = ({ onBackToLogin }) => {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Create Password</Label>
             <Input
               id="password"
               name="password"
@@ -352,11 +352,11 @@ const Signup = ({ onBackToLogin }) => {
             </div>
             <label htmlFor="terms" className="text-sm text-muted-foreground">
               I agree to the{' '}
-              <a href="/terms-of-service" className="text-primary hover:underline">
+              <a href="https://sustainability.fandoro.com/terms-of-service/" target="_blank" className="text-primary hover:underline">
                 Terms of Service
               </a>{' '}
               and{' '}
-              <a href="/privacy-policy" className="text-primary hover:underline">
+              <a href="https://sustainability.fandoro.com/privacy-policy/" target="_blank" className="text-primary hover:underline">
                 Privacy Policy
               </a>
               .
