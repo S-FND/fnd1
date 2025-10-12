@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calendar as CalendarIcon, Save, TrendingUp, Plus, Edit3, CalendarDays } from 'lucide-react';
+import { Calendar as CalendarIcon, Save, TrendingUp, Plus, Edit3, CalendarDays, MapPin } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { ESGMetricWithTracking } from '../../data/esgMetricsData';
 import FlexibleDataInput from './FlexibleDataInput';
 import { AutosaveForm } from '@/components/portfolio/AutosaveForm';
+import { useAuth } from '@/context/AuthContext';
 
 interface MaterialTopic {
   id: string;
@@ -41,6 +42,7 @@ interface MetricDataEntry {
   financialYear: string;
   period?: string; // e.g., "Q1", "January", "Week 1", etc.
   periodIndex?: number; // For ordering periods
+  location?: string; // Location where data was entered
 }
 
 interface MetricPeriod {
@@ -58,6 +60,7 @@ interface MetricsDataEntryProps {
 }
 
 const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) => {
+  const { isEmployeeUser } = useAuth();
   const [configuredMetrics, setConfiguredMetrics] = useState<ESGMetricWithTracking[]>([]);
   const [dataEntries, setDataEntries] = useState<MetricDataEntry[]>([]);
   const [selectedMetric, setSelectedMetric] = useState<string>('');
@@ -68,6 +71,10 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
   const [bulkEntries, setBulkEntries] = useState<{[key: string]: any}>({});
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
   const [selectedMonth, setSelectedMonth] = useState<Date | undefined>(new Date());
+  const [selectedLocation, setSelectedLocation] = useState<string>('');
+
+  // Available locations
+  const locations = ['Mumbai Office', 'Delhi Warehouse', 'Bangalore Manufacturing', 'Chennai Office'];
 
   // Load configured metrics from localStorage
   useEffect(() => {
@@ -106,6 +113,12 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
       return;
     }
 
+    // Validate location for employee users
+    if (isEmployeeUser() && !selectedLocation) {
+      toast.error('Please select a location');
+      return;
+    }
+
     const metric = configuredMetrics.find(m => m.id === selectedMetric);
     if (!metric) return;
 
@@ -113,7 +126,8 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
     const existingEntryIndex = dataEntries.findIndex(entry => 
       entry.metricId === selectedMetric && 
       entry.period === selectedPeriod && 
-      entry.financialYear === selectedFinancialYear
+      entry.financialYear === selectedFinancialYear &&
+      (!isEmployeeUser() || entry.location === selectedLocation)
     );
 
     const newEntry: MetricDataEntry = {
@@ -128,7 +142,8 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
       dataType: metric.dataType,
       financialYear: selectedFinancialYear,
       period: selectedPeriod,
-      periodIndex: getAvailablePeriods(selectedMetric).find(p => p.period === selectedPeriod)?.periodIndex || 0
+      periodIndex: getAvailablePeriods(selectedMetric).find(p => p.period === selectedPeriod)?.periodIndex || 0,
+      ...(isEmployeeUser() && { location: selectedLocation })
     };
 
     if (existingEntryIndex >= 0) {
@@ -150,6 +165,9 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
     setEntryValue('');
     setSelectedPeriod('');
     setEntryDate(new Date().toISOString().split('T')[0]);
+    if (isEmployeeUser()) {
+      setSelectedLocation('');
+    }
   };
 
   const getFrequencyColor = (frequency: string) => {
@@ -325,9 +343,27 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
               <CardTitle>ESG Data Entry</CardTitle>
               <CardDescription>
                 Enter data for your configured ESG metrics for financial year {selectedFinancialYear}
+                {isEmployeeUser() && selectedLocation && ` at ${selectedLocation}`}
               </CardDescription>
             </div>
             <div className="flex gap-2">
+              {isEmployeeUser() && (
+                <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Select Location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locations.map(location => (
+                      <SelectItem key={location} value={location}>
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4" />
+                          {location}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               <Select value={selectedFinancialYear} onValueChange={setSelectedFinancialYear}>
                 <SelectTrigger className="w-32">
                   <SelectValue />
