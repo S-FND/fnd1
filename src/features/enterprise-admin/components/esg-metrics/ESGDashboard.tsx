@@ -8,7 +8,7 @@ import {
   LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
 } from 'recharts';
-import { TrendingUp, TrendingDown, BarChart3, PieChart as PieChartIcon, Building2 } from 'lucide-react';
+import { TrendingUp, TrendingDown, BarChart3, PieChart as PieChartIcon, Building2, MapPin } from 'lucide-react';
 import { ESGMetricWithTracking } from '../../data/esgMetricsData';
 import { SmartChart } from '@/components/charts/SmartChart';
 
@@ -24,6 +24,7 @@ interface MetricDataEntry {
   dataType: string;
   financialYear: string;
   unitLevel?: string; // For unit-level tracking
+  location?: string; // Location where data was entered
 }
 
 interface ESGDashboardProps {
@@ -39,6 +40,10 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
   const [viewMode, setViewMode] = useState<'charts' | 'trends' | 'comparison'>('charts');
   const [selectedTrendYear, setSelectedTrendYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedTrendMonth, setSelectedTrendMonth] = useState<string>('all');
+  const [selectedLocation, setSelectedLocation] = useState<string>('all');
+
+  // Available locations
+  const locations = ['Mumbai Office', 'Delhi Warehouse', 'Bangalore Manufacturing', 'Chennai Office'];
 
   // Load data on component mount
   useEffect(() => {
@@ -72,9 +77,15 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
     const metric = configuredMetrics.find(m => m.id === selectedMetric);
     if (!metric) return [];
     
-    const metricEntries = dataEntries
-      .filter(entry => entry.metricId === selectedMetric)
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    let metricEntries = dataEntries
+      .filter(entry => entry.metricId === selectedMetric);
+    
+    // Filter by location if selected
+    if (selectedLocation !== 'all') {
+      metricEntries = metricEntries.filter(entry => entry.location === selectedLocation);
+    }
+    
+    metricEntries = metricEntries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     
     return metricEntries.map(entry => ({
       date: entry.date,
@@ -84,9 +95,10 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
       month: new Date(entry.date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
       year: new Date(entry.date).getFullYear(),
       financialYear: entry.financialYear,
-      unitLevel: entry.unitLevel || 'organization'
+      unitLevel: entry.unitLevel || 'organization',
+      location: entry.location
     }));
-  }, [selectedMetric, dataEntries, configuredMetrics]);
+  }, [selectedMetric, dataEntries, configuredMetrics, selectedLocation]);
 
   // Aggregate data by unit level
   const aggregatedData = useMemo(() => {
@@ -279,6 +291,28 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
             </SelectContent>
           </Select>
           
+          <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="All Locations" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  All Locations
+                </div>
+              </SelectItem>
+              {locations.map(location => (
+                <SelectItem key={location} value={location}>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    {location}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
           <Select value={selectedUnit} onValueChange={setSelectedUnit}>
             <SelectTrigger className="w-40">
               <SelectValue />
@@ -312,9 +346,15 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics }) => {
               {configuredMetrics.length > 0 ? (
                 <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
                   {configuredMetrics.map(metric => {
-                    const metricEntries = dataEntries
-                      .filter(entry => entry.metricId === metric.id)
-                      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                    let metricEntries = dataEntries
+                      .filter(entry => entry.metricId === metric.id);
+                    
+                    // Filter by location if selected
+                    if (selectedLocation !== 'all') {
+                      metricEntries = metricEntries.filter(entry => entry.location === selectedLocation);
+                    }
+                    
+                    metricEntries = metricEntries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
                     
                     const chartData = metricEntries.map(entry => ({
                       date: entry.date,

@@ -113,8 +113,8 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
       return;
     }
 
-    // Validate location for employee users
-    if (isEmployeeUser() && !selectedLocation) {
+    // Validate location selection
+    if (!selectedLocation) {
       toast.error('Please select a location');
       return;
     }
@@ -122,12 +122,12 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
     const metric = configuredMetrics.find(m => m.id === selectedMetric);
     if (!metric) return;
 
-    // Check if entry already exists for this period
+    // Check if entry already exists for this period and location
     const existingEntryIndex = dataEntries.findIndex(entry => 
       entry.metricId === selectedMetric && 
       entry.period === selectedPeriod && 
       entry.financialYear === selectedFinancialYear &&
-      (!isEmployeeUser() || entry.location === selectedLocation)
+      entry.location === selectedLocation
     );
 
     const newEntry: MetricDataEntry = {
@@ -143,7 +143,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
       financialYear: selectedFinancialYear,
       period: selectedPeriod,
       periodIndex: getAvailablePeriods(selectedMetric).find(p => p.period === selectedPeriod)?.periodIndex || 0,
-      ...(isEmployeeUser() && { location: selectedLocation })
+      location: selectedLocation
     };
 
     if (existingEntryIndex >= 0) {
@@ -165,9 +165,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
     setEntryValue('');
     setSelectedPeriod('');
     setEntryDate(new Date().toISOString().split('T')[0]);
-    if (isEmployeeUser()) {
-      setSelectedLocation('');
-    }
+    setSelectedLocation('');
   };
 
   const getFrequencyColor = (frequency: string) => {
@@ -343,27 +341,25 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics }) =
               <CardTitle>ESG Data Entry</CardTitle>
               <CardDescription>
                 Enter data for your configured ESG metrics for financial year {selectedFinancialYear}
-                {isEmployeeUser() && selectedLocation && ` at ${selectedLocation}`}
+                {selectedLocation && ` at ${selectedLocation}`}
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              {isEmployeeUser() && (
-                <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Select Location" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locations.map(location => (
-                      <SelectItem key={location} value={location}>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
-                          {location}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+              <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Select Location" />
+                </SelectTrigger>
+                <SelectContent>
+                  {locations.map(location => (
+                    <SelectItem key={location} value={location}>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        {location}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Select value={selectedFinancialYear} onValueChange={setSelectedFinancialYear}>
                 <SelectTrigger className="w-32">
                   <SelectValue />
