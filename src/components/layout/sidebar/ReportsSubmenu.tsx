@@ -40,23 +40,9 @@ export const ReportsSubmenu: React.FC<ReportsSubmenuProps> = ({
         </SidebarMenuButton>
       </SidebarMenuItem>
       <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={location.pathname === '/reports/gri'} tooltip="GRI Report">
-          <Link to="/reports/gri" className="w-full">
-            <span>GRI Report</span>
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={location.pathname === '/reports/tcfd'} tooltip="TCFD Report">
-          <Link to="/reports/tcfd" className="w-full">
-            <span>TCFD Report</span>
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={location.pathname === '/reports/impact'} tooltip="Impact Assessment">
-          <Link to="/reports/impact" className="w-full">
-            <span>Impact Assessment</span>
+        <SidebarMenuButton asChild isActive={location.pathname === '/reports/esrs'} tooltip="ESRS Report">
+          <Link to="/reports/esrs" className="w-full">
+            <span>ESRS Report</span>
           </Link>
         </SidebarMenuButton>
       </SidebarMenuItem>
