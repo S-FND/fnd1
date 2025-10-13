@@ -102,26 +102,13 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
         name: "Reports",
         href: "/reports",
         icon: FileText,
-        featureId: 'reports',
-        submenu: [
-          { name: "Overview", href: "/reports", icon: FileText },
-          { name: "BRSR Report", href: "/reports/brsr", icon: FileText },
-          { name: "GRI Report", href: "/reports/gri", icon: FileText },
-          { name: "TCFD Report", href: "/reports/tcfd", icon: FileText },
-          { name: "Impact Report", href: "/reports/impact", icon: FileText }
-        ]
+        featureId: 'reports'
       },
       {
         name: "Stakeholders",
         href: "/stakeholders",
         icon: Users,
-        featureId: 'stakeholder-management',
-        submenu: [
-          { name: "Overview", href: "/stakeholders", icon: Users },
-          { name: "Manage Stakeholders", href: "/stakeholders/manage", icon: Users },
-          { name: "Categories", href: "/stakeholders/categories", icon: Users },
-          { name: "Engagement Plan", href: "/stakeholders/engagement", icon: Users }
-        ]
+        featureId: 'stakeholder-management'
       },
       {
         name: "Units",
