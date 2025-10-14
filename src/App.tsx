@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { FeaturesProvider } from '@/context/FeaturesContext';
 import './App.css';
 import Index from './pages/Index';
@@ -69,6 +69,7 @@ function App() {
       <Routes>
         {/* Public Routes */}
         {/* <Route path="/" element={<Index />} /> */}
+        <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="/" element={<Login />} />
         
         {/* Company / Enterprise Admin Routes */}
