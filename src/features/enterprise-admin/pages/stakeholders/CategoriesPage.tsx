@@ -1,7 +1,6 @@
 
 import React from 'react';
 import CategoryManagement from '../../components/stakeholders/CategoryManagement';
-import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
@@ -18,11 +17,7 @@ const CategoriesPage = () => {
     return <Navigate to="/login" />;
   }
 
-  return (
-    <UnifiedSidebarLayout>
-      <CategoryManagement />
-    </UnifiedSidebarLayout>
-  );
+  return <CategoryManagement />;
 };
 
 export default CategoriesPage;

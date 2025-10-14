@@ -1,7 +1,6 @@
 
 import React from 'react';
 import EngagementPlan from '../../components/stakeholders/EngagementPlan';
-import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
@@ -18,11 +17,7 @@ const EngagementPlanPage = () => {
     return <Navigate to="/login" />;
   }
 
-  return (
-    <UnifiedSidebarLayout>
-      <EngagementPlan />
-    </UnifiedSidebarLayout>
-  );
+  return <EngagementPlan />;
 };
 
 export default EngagementPlanPage;
