@@ -6,11 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Building, User, FileCheck } from 'lucide-react';
 import ForgotPasswordFlow from '@/components/auth/ForgotPasswordFlow';
 import { useOverlay } from '@/context/OverlayContext';
+import Signup from '@/pages/signup';
 
 const Login = () => {
   const [loginType, setLoginType] = useState<string>('company');
   const [showForgotPassword, setShowForgotPassword] = useState<boolean>(false);
   const { setOverlayForUrl, clearOverlay } = useOverlay();
+  const [showSignup, setShowSignup] = useState<boolean>(false);
   
   // const handleOverlayDemo = () => {
   //   // Demo: Set overlay for dashboard page
@@ -74,6 +76,8 @@ const Login = () => {
                 onBackToLogin={() => setShowForgotPassword(false)} 
                 loginType={loginType} 
               />
+            ) : showSignup ? (
+              <Signup onBackToLogin={() => setShowSignup(false)} />
             ) : (
               <Tabs defaultValue="company" onValueChange={setLoginType}>
                 <TabsList className="grid w-full grid-cols-3">
@@ -98,6 +102,7 @@ const Login = () => {
                     <LoginForm 
                       onForgotPassword={() => setShowForgotPassword(true)} 
                     />
+                    <div className="mt-4 text-center"> <p className="text-sm text-muted-foreground"> Don't have an account?{' '} <button type="button" onClick={() => setShowSignup(true)} className="text-primary hover:underline font-medium" > Sign up </button> </p> </div>
                     {import.meta.env.VITE_ENV_NAME !== 'Production' && <div className="mt-4 pt-4 border-t text-sm text-muted-foreground">
                       <p>Demo accounts:</p>
                       <ul className="mt-2 list-disc pl-5 space-y-1">

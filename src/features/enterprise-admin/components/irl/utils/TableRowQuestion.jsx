@@ -1,7 +1,7 @@
 import React from 'react';
 import { produce } from 'immer';
 import { X } from 'lucide-react';
-
+import { toast } from 'sonner';
 const TableRowQuestion = ({
   op,
   index,
@@ -46,14 +46,20 @@ const TableRowQuestion = ({
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files || []);
-    let totalSize = files.reduce((sum, f) => sum + f.size, 0);
-
-    if (totalSize > 50 * 1024 * 1024) {
-      alert("Total file size exceeds 50 MB");
+    
+    if (files.length > 10) {
+      toast.error("You can upload a maximum of 10 files.");
       e.target.value = null;
       return;
     }
-
+  
+    let totalSize = files.reduce((sum, f) => sum + f.size, 0);
+    if (totalSize > 50 * 1024 * 1024) {
+      toast.error("Total file size exceeds 50 MB");
+      e.target.value = null;
+      return;
+    }
+  
     setSelectedValues(
       produce((draft) => {
         draft[key].file = files;
