@@ -5,8 +5,11 @@ import EmployeeDashboard from '@/features/employee/components/Dashboard';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
+import { log } from 'console';
+import { logger } from '@/hooks/logger';
 
 const EmployeeDashboardPage = () => {
+  logger.debug('Rendering EmployeeDashboardPage component');
   const { isLoading } = useRouteProtection(['employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
@@ -14,7 +17,8 @@ const EmployeeDashboardPage = () => {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isAuthenticatedStatus() || user?.role !== 'employee') {
+  // || user?.role !== 'employee'
+  if (!isAuthenticatedStatus(['employee']) ) {
     return <Navigate to="/" />;
   }
 

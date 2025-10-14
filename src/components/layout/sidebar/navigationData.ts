@@ -31,7 +31,7 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
     }
   ];
 
-  if (role === 'admin' || role === 'manager') {
+  if (role === 'admin' || role === 'manager' || role == 'all-access') {
     baseItems.push(
       {
         name: "Materiality",
@@ -154,7 +154,7 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
     // }
   }
 
-  if (role === 'employee') {
+  if (role === 'employee' || role == 'all-access') {
     baseItems.push(
       {
         name: "Personal GHG",
@@ -162,18 +162,18 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
         icon: LineChart,
         featureId: 'ghg-accounting'
       },
-      {
-        name: "LMS",
-        href: "/lms",
-        icon: GraduationCap,
-        featureId: 'lms'
-      },
-      {
-        name: "EHS Trainings",
-        href: "/ehs-trainings",
-        icon: Calendar,
-        featureId: 'ehs-trainings'
-      }
+      // {
+      //   name: "LMS",
+      //   href: "/lms",
+      //   icon: GraduationCap,
+      //   featureId: 'lms'
+      // },
+      // {
+      //   name: "EHS Trainings",
+      //   href: "/ehs-trainings",
+      //   icon: Calendar,
+      //   featureId: 'ehs-trainings'
+      // }
     );
   }
 

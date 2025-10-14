@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { toast } from 'sonner';
+import { logger } from '@/hooks/logger';
 
 const LMSPage = () => {
   const { isLoading } = useRouteProtection('enterprise_admin');
@@ -32,7 +33,7 @@ const LMSPage = () => {
         const { data } = jsondata;
         setTrainings(data);
       } catch (error) {
-        console.error("API call:", error);
+        logger.error("API call:", error);
         toast.error("API Call failed. Please try again.");
       }
     };

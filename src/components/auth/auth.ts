@@ -1,5 +1,6 @@
 import axios from "axios";
 import { ENV } from "@/config/env";
+import { logger } from "@/hooks/logger";
 
 const API_URL = ENV.API_URL;
 
@@ -35,13 +36,13 @@ const getAuthHeader = () => {
 
 const handleApiError = (error: unknown): ApiResponse<never> => {
   if (axios.isAxiosError(error)) {
-    console.error("API Error:", error.response?.data || error.message);
+    logger.error("API Error:", error.response?.data || error.message);
     return {
       error: error.response?.data?.message || error.message,
       status: false,
     };
   }
-  console.error("Unexpected error:", error);
+  logger.error("Unexpected error:", error);
   return {
     error: "An unexpected error occurred",
     status: false,

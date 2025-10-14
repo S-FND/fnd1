@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import OutsourcedServicesSection from './OutsourcedServicesSection';
 import { OutsourcedService } from './types';
 import { Loader2 } from 'lucide-react';
+import { logger } from '@/hooks/logger';
 
 interface EmployeeData {
   function: string;
@@ -35,7 +36,7 @@ interface DifferentlyAbledData {
   contractFemale: string;
 }
 
-const IRLHRInformation = () => {
+const IRLHRInformation = ({buttonEnabled:boolean}) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -156,7 +157,7 @@ const IRLHRInformation = () => {
           setKeyManagerial(hrData.keyManagerial || { male: '', female: '', total: '' });
         }
       } catch (err) {
-        console.error('Error loading HR data:', err);
+        logger.error('Error loading HR data:', err);
         // setError('Failed to load HR data');
         // toast.error('Failed to load HR data');
       } finally {
@@ -299,7 +300,7 @@ const IRLHRInformation = () => {
       await updateHrData(payload);
       toast.success('Draft saved successfully!');
     } catch (err) {
-      console.error('Error saving HR data:', err);
+      logger.error('Error saving HR data:', err);
       setError('Failed to save HR data');
       toast.error('Failed to save HR data');
     } finally {
@@ -365,7 +366,7 @@ const IRLHRInformation = () => {
       await updateHrData(payload);
       toast.success('Form submitted successfully!');
     } catch (err) {
-      console.error('Error submitting HR data:', err);
+      logger.error('Error submitting HR data:', err);
       setError('Failed to submit HR data');
       toast.error('Failed to submit HR data');
     } finally {

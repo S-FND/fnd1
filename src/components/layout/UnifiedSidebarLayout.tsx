@@ -9,6 +9,7 @@ import { SidebarNavigation } from './sidebar/SidebarNavigation';
 import { SidebarAdminSettings } from './sidebar/SidebarAdminSettings';
 import { SidebarUserProfile } from './sidebar/SidebarUserProfile';
 import { Navbar } from './Navbar';
+import { logger } from '@/hooks/logger';
 
 interface UnifiedSidebarLayoutProps {
   children: React.ReactNode;
@@ -17,12 +18,12 @@ interface UnifiedSidebarLayoutProps {
 export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({
   children
 }) => {
-  console.log('🔵 UnifiedSidebarLayout: Starting to render');
+  logger.log('🔵 UnifiedSidebarLayout: Starting to render');
   const { user, logout } = useAuth();
-  console.log('User in Layout:', user);
-  console.log('🔵 UnifiedSidebarLayout: User data:', user);
-  
-  console.log('🔵 UnifiedSidebarLayout: About to return JSX');
+  logger.log('User in Layout:', user);
+  logger.log('🔵 UnifiedSidebarLayout: User data:', user);
+
+  logger.log('🔵 UnifiedSidebarLayout: About to return JSX');
   
   return (
     <SidebarProvider defaultOpen={true}>

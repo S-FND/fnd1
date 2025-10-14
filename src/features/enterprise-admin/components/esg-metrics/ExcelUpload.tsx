@@ -12,6 +12,7 @@ import { httpClient } from '@/lib/httpClient';
 // import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@radix-ui/react-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { logger } from '@/hooks/logger';
 
 interface ExcelUploadProps {
   onMetricsImported: (metrics: ESGMetricWithTracking[]) => void;
@@ -56,7 +57,7 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({ onMetricsImported, onDataImpo
         const history = JSON.parse(savedHistory);
         historyToLoad = Array.isArray(history) && history.length > 0 ? history : [];
       } catch (error) {
-        console.error('Error loading upload history:', error);
+        logger.error('Error loading upload history:', error);
         historyToLoad = [];
       }
     }
@@ -276,13 +277,13 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({ onMetricsImported, onDataImpo
       if (dataType === "table") {
         // 3. Validate table sheet
         const sheet = workbook.Sheets[sheetName];
-        console.log("sheet", sheet);
+        logger.log("sheet", sheet);
         if (!sheet) {
           rowErrors.push(`Sheet "${sheetName}" not found`);
         } else {
           const sheetData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
           const actualRows = sheetData.length;
-          console.log("sheetData", sheetData);
+          logger.log("sheetData", sheetData);
           const actualCols = 2
           //sheetData[0]?.length || 0;
 
@@ -362,24 +363,24 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({ onMetricsImported, onDataImpo
     setUploadStatus('uploading');
     const errors = await validateExcelFile(file);
     if (errors.length > 0) {
-      console.error("❌ Validation Errors", errors);
+      logger.error("❌ Validation Errors", errors);
       setValidationErrors(errors);
       // alert("File has validation issues. Check console for details.");
       setUploadStatus('error');
       return;
     }
     try {
-      console.log("Uploading file:", file);
+      logger.log("Uploading file:", file);
       let formData = new FormData();
       formData.append('file', file);
       formData.append(`data`, 'data');
       // formData.set('file', fileToUpload)
 
-      for (let [key, value] of formData.entries()) {
-        console.log('Console for Entries', key, value);
-      }
+      // for (let [key, value] of formData.entries()) {
+      //   console.log('Console for Entries', key, value);
+      // }
       let fileUploadResponse = await httpClient.post('materiality/upload-metricsConfig-file', formData)
-      console.log("fileUploadResponse", fileUploadResponse);
+      // console.log("fileUploadResponse", fileUploadResponse);
       if (fileUploadResponse.status == 201) {
         setUploadStatus('success');
         toast.success('File uploaded successfully');
@@ -445,7 +446,7 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({ onMetricsImported, onDataImpo
       // toast.success(`Successfully imported ${importedMetrics.length} metrics and ${importedEntries.length} data entries`);
 
     } catch (error) {
-      console.error('Error processing Excel file:', error);
+      logger.error('Error processing Excel file:', error);
       setUploadStatus('error');
       toast.error('Error processing Excel file. Please check the format and try again.');
     }
@@ -460,13 +461,13 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({ onMetricsImported, onDataImpo
 
     try {
       let fileUploadHistory = await httpClient.get('materiality/metrics-config-file-list');
-      console.log("fileUploadHistory", fileUploadHistory);
+      logger.log("fileUploadHistory", fileUploadHistory);
       if (fileUploadHistory.status == 200) {
         setData(fileUploadHistory['data']['data']);
         setUploadHistory(fileUploadHistory['data']['data']['files']);
       }
     } catch (error) {
-      console.error('Error fetching upload history:', error);
+      logger.error('Error fetching upload history:', error);
       toast.error('Failed to load upload history');
 
     }
@@ -501,7 +502,7 @@ const ExcelUpload: React.FC<ExcelUploadProps> = ({ onMetricsImported, onDataImpo
           entryCount
         };
       });
-      console.log("result", result);
+      logger.log("result", result);
       setFileCountData(result);
     }
 

@@ -1,6 +1,7 @@
 // services/employeeManagementAPI.ts
 import axios from "axios";
 import { ENV } from "@/config/env";
+import { logger } from "@/hooks/logger";
 const API_URL = ENV.API_URL;
 
 // Get Employee Data
@@ -14,7 +15,7 @@ export const fetchEmployeeData = async (userId?: string) => {
     });
     return response.data;
   } catch (error) {
-    console.error("Error fetching employee data:", error);
+    logger.error("Error fetching employee data:", error);
     throw error;
   }
 };
@@ -41,7 +42,7 @@ export const updateEmployee = async (employeeData: any) => {
       errorMessage = error.message;
     }
   
-    console.error("Error updating employee:", errorMessage);
+    logger.error("Error updating employee:", errorMessage);
     return [null, errorMessage];
   }
 };
@@ -70,7 +71,7 @@ export const assignEmployeeUrls = async (subUserId: string, accessList: string[]
       errorMessage = error.message;
     }
   
-    console.error("Error assigning URLs:", errorMessage);
+    logger.error("Error assigning URLs:", errorMessage);
     return [null, errorMessage];
   }
 };
@@ -86,7 +87,7 @@ export const fetchUrlList = async (entityType?: string) => {
     });
     return response.data;
   } catch (error) {
-    console.error("Error fetching URL list:", error);
+    logger.error("Error fetching URL list:", error);
     throw error;
   }
 };
@@ -102,7 +103,7 @@ export const fetchUserAccess = async (employeeId: string) => {
     });
     return response.data;
   } catch (error) {
-    console.error("Error fetching user access:", error);
+    logger.error("Error fetching user access:", error);
     throw error;
   }
 };
@@ -118,7 +119,7 @@ export const fetchLocationData = async () => {
     });
     return response.data;
   } catch (error) {
-    console.error("Error fetching location data:", error);
+    logger.error("Error fetching location data:", error);
     throw error;
   }
 };
@@ -144,7 +145,7 @@ export const createEmployee = async (employeeData: any) => {
       errorMessage = error.message;
     }
   
-    console.error("Error creating employee:", errorMessage);
+    logger.error("Error creating employee:", errorMessage);
     return [null, errorMessage];
   }
 };
@@ -174,7 +175,7 @@ export const updateCompanyFeatures = async (
       companyFeaturePageAccess: response?.data?.companyFeaturePageAccess || [],
     };
   } catch (error) {
-    console.error("Error updating company features:", error);
+    logger.error("Error updating company features:", error);
     throw error;
   }
 };

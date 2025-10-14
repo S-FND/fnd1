@@ -14,13 +14,15 @@ const queryClient = new QueryClient()
 createRoot(document.getElementById("root")!).render(
   <Router>
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <OverlayProvider>
-          <PageAccessProvider>
+      <PageAccessProvider>
+        <AuthProvider>
+          <OverlayProvider>
+
             <App />
-          </PageAccessProvider>
-        </OverlayProvider>
-      </AuthProvider>
+
+          </OverlayProvider>
+        </AuthProvider>
+      </PageAccessProvider>
     </QueryClientProvider>
   </Router>
 );

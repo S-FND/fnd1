@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { FeatureId, CompanyFeatures } from '@/types/features';
 import { getDefaultFeatures } from '@/data/features';
 import { useAuth } from './AuthContext';
+import { logger } from '@/hooks/logger';
 
 interface FeaturesContextType {
   companyFeatures: CompanyFeatures | null;
@@ -46,7 +47,7 @@ export const FeaturesProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         localStorage.setItem(`company-features-${companyId}`, JSON.stringify(newCompanyFeatures));
       }
     } catch (error) {
-      console.error('Error loading company features:', error);
+      logger.error('Error loading company features:', error);
     } finally {
       setIsLoading(false);
     }

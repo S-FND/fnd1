@@ -9,8 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, Download, Plus, Calendar, Shield, AlertTriangle, CheckCircle } from 'lucide-react';
+import { logger } from '@/hooks/logger';
 
 const EHSAuditsPage = () => {
+  logger.debug('Rendering EHSAuditsPage component');
   const { isAuthenticated, isCompanyUser,isAuthenticatedStatus } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
 

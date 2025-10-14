@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/hooks/logger';
 
 interface MaterialTopic {
   id: string;
@@ -30,7 +31,7 @@ const InternalFinalization: React.FC<InternalFinalizationProps> = ({
   onBack
 }) => {
   const [selectedTopicIds, setSelectedTopicIds] = useState<string[]>([]);
-  console.log('materialTopics',materialTopics)
+  logger.log('materialTopics',materialTopics)
   const handleTopicToggle = (topicId: string, checked: boolean) => {
     if (checked) {
       setSelectedTopicIds(prev => [...prev, topicId]);

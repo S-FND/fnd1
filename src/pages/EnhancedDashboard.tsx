@@ -5,8 +5,10 @@ import OverviewDashboard from '@/components/dashboard/OverviewDashboard';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
+import { logger } from '@/hooks/logger';
 
 const EnhancedDashboard = () => {
+  logger.debug('Rendering EnhancedDashboard component');
   const { isLoading } = useRouteProtection(['admin', 'manager']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 

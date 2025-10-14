@@ -5,6 +5,7 @@ import {
   mapFormDataToApiPayload,
 } from "../components/profile/schemas/dataMapping";
 import { CompanyFormData } from "../components/profile/schemas/companySchema";
+import { logger } from "@/hooks/logger";
 
 const API_URL = ENV.API_URL;
 
@@ -17,7 +18,7 @@ const getUserEntityId = () => {
     }
     return null;
   } catch (error) {
-    console.error("Error parsing user data:", error);
+    logger.error("Error parsing user data:", error);
     return null;
   }
 };
@@ -35,7 +36,7 @@ export const fetchProfileData = async (): Promise<CompanyFormData> => {
     // Map API response to frontend schema
     return mapApiResponseToFormData(response.data.data);
   } catch (error) {
-    console.error("Error fetching company data:", error);
+    logger.error("Error fetching company data:", error);
     throw error;
   }
 };
@@ -64,7 +65,7 @@ export const updateProfileData = async (formData: CompanyFormData,UserEntityId) 
 
     return response.data;
   } catch (error) {
-    console.error("Error updating company data:", error);
+    logger.error("Error updating company data:", error);
     throw error;
   }
 };
@@ -80,7 +81,7 @@ export const fetchCompanyData = async (): Promise<CompanyFormData> => {
     // Map API response to frontend schema
     return response?.data?.data;
   } catch (error) {
-    console.error("Error fetching company data:", error);
+    logger.error("Error fetching company data:", error);
     throw error;
   }
 };
@@ -108,7 +109,7 @@ export const updateCompanyData = async (formData: any) => {
 
     return response.data;
   } catch (error) {
-    console.error("Error updating company data:", error);
+    logger.error("Error updating company data:", error);
     throw error;
   }
 };
@@ -128,7 +129,7 @@ export const fetchHrData = async (
 
     return response?.data;
   } catch (error) {
-    console.error("Error fetching company data:", error);
+    logger.error("Error fetching company data:", error);
     throw error;
   }
 };
@@ -150,7 +151,7 @@ export const updateHrData = async (
 
     return response.data;
   } catch (error) {
-    console.error("Error updating HR data:", error);
+    logger.error("Error updating HR data:", error);
     throw error;
   }
 };
@@ -170,7 +171,7 @@ export const fetchBoData = async (
 
     return response?.data;
   } catch (error) {
-    console.error("Error fetching Document data:", error);
+    logger.error("Error fetching Document data:", error);
     throw error;
   }
 };
@@ -195,7 +196,7 @@ export const updateBoData = async (
 
     return response.data;
   } catch (error) {
-    console.error("Error updating BO data:", error);
+    logger.error("Error updating BO data:", error);
     throw error;
   }
 };
@@ -213,7 +214,7 @@ export const fetchfacilitiesData = async (): Promise<CompanyFormData> => {
 
     return response?.data;
   } catch (error) {
-    console.error("Error fetching company data:", error);
+    logger.error("Error fetching company data:", error);
     throw error;
   }
 };
@@ -239,7 +240,7 @@ export const fetchComplianceData = async (
 
     return response?.data;
   } catch (error) {
-    console.error("Error fetching Document data:", error);
+    logger.error("Error fetching Document data:", error);
     throw error;
   }
 };
@@ -257,7 +258,7 @@ export const updateComplianceData = async (formData: FormData) => {
 
     return response.data;
   } catch (error) {
-    console.error("Error fetching Document data:", error);
+    logger.error("Error fetching Document data:", error);
     throw error;
   }
 };
@@ -276,7 +277,7 @@ export const fetchManagementData = async (
 
     return response?.data;
   } catch (error) {
-    console.error("Error fetching Document data:", error);
+    logger.error("Error fetching Document data:", error);
     throw error;
   }
 };
@@ -294,7 +295,7 @@ export const updateManagementData = async (formData: FormData) => {
 
     return response.data;
   } catch (error) {
-    console.error("Error fetching Document data:", error);
+    logger.error("Error fetching Document data:", error);
     throw error;
   }
 };
@@ -313,7 +314,7 @@ export const fetchITSecurityData = async (
 
     return response?.data;
   } catch (error) {
-    console.error("Error fetching Document data:", error);
+    logger.error("Error fetching Document data:", error);
     throw error;
   }
 };
@@ -330,7 +331,7 @@ export const updateITSecurityData = async (formData: FormData) => {
 
     return response.data;
   } catch (error) {
-    console.error("Error fetching Document data:", error);
+    logger.error("Error fetching Document data:", error);
     throw error;
   }
 };
@@ -349,7 +350,7 @@ export const fetchFacilityData = async (
 
     return response?.data;
   } catch (error) {
-    console.error("Error fetching Document data:", error);
+    logger.error("Error fetching Document data:", error);
     throw error;
   }
 };
@@ -367,7 +368,7 @@ export const updateFacilityData = async (formData: FormData) => {
 
     return response.data;
   } catch (error) {
-    console.error("Error fetching Document data:", error);
+    logger.error("Error fetching Document data:", error);
     throw error;
   }
 };
@@ -386,7 +387,7 @@ export const fetchHoPhotographs = async (
 
     return response?.data;
   } catch (error) {
-    console.error("Error fetching Document data:", error);
+    logger.error("Error fetching Document data:", error);
     throw error;
   }
 };
@@ -404,7 +405,7 @@ export const updateHoPhotographs = async (formData: FormData) => {
 
     return response.data;
   } catch (error) {
-    console.error("Error fetching Document data:", error);
+    logger.error("Error fetching Document data:", error);
     throw error;
   }
 };
@@ -423,7 +424,7 @@ export const fetchProductPhotographs = async (
 
     return response?.data;
   } catch (error) {
-    console.error("Error fetching Document data:", error);
+    logger.error("Error fetching Document data:", error);
     throw error;
   }
 };
@@ -441,7 +442,7 @@ export const updateProductPhotographs = async (formData: FormData) => {
 
     return response.data;
   } catch (error) {
-    console.error("Error fetching Document data:", error);
+    logger.error("Error fetching Document data:", error);
     throw error;
   }
 };
@@ -461,7 +462,7 @@ export const fetchGovernanceData = async (
 
     return response?.data;
   } catch (error) {
-    console.error("Error fetching Document data:", error);
+    logger.error("Error fetching Document data:", error);
     throw error;
   }
 };
@@ -479,7 +480,7 @@ export const updateGovernanceData = async (formData: FormData) => {
 
     return response.data;
   } catch (error) {
-    console.error("Error fetching Document data:", error);
+    logger.error("Error fetching Document data:", error);
     throw error;
   }
 };
@@ -514,7 +515,7 @@ export const deleteFile = async (payload: { filesToDelete: string[] }, type: str
 
     return response.data;
   } catch (error) {
-    console.error("Error deleting file:", error);
+    logger.error("Error deleting file:", error);
     throw error;
   }
 };
@@ -544,7 +545,7 @@ export const updateCompanyFeatures = async (
       companyFeaturePageAccess: response?.data?.companyFeaturePageAccess || [],
     };
   } catch (error) {
-    console.error("Error updating company features:", error);
+    logger.error("Error updating company features:", error);
     throw error;
   }
 };

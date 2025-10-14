@@ -24,6 +24,7 @@ import { sampleStakeholders } from '../../data/stakeholders';
 import { Stakeholder as ManageStakeholder } from '../stakeholders/types';
 import { httpClient } from '@/lib/httpClient';
 import { API_ENDPOINTS } from '@/lib/apiEndpoints';
+import { logger } from '@/hooks/logger';
 
 interface StakeholderEngagementProps {
   selectedIndustries: string[];
@@ -75,13 +76,13 @@ const StakeholderEngagement: React.FC<StakeholderEngagementProps> = ({
         if (stakeHolderList?.data && Array.isArray(stakeHolderList.data)) {
           let data: Stakeholder[] = stakeHolderList.data;
           data=data.map((d)=> {return {...d,type:d['subcategoryId'].split("|")[1]}})
-          console.log('handleFetchStakeholders :: data',data)
+          logger.log('handleFetchStakeholders :: data',data)
           setStakeholders(data);
         }
       }
     } catch (error) {
       // Error already handled by interceptors, using local data
-      console.log('Fallback to local data');
+      logger.log('Fallback to local data');
     }
   };
 
@@ -118,7 +119,7 @@ const StakeholderEngagement: React.FC<StakeholderEngagementProps> = ({
     // Simulate sending emails
     newInvitations.forEach(invitation => {
       const stakeholder = availableStakeholders.find(s => s.id === invitation.stakeholderId);
-      console.log(`
+      logger.log(`
         Sending email to: ${invitation.email}
         Subject: Invitation to Participate in Materiality Assessment
         
@@ -146,7 +147,7 @@ const StakeholderEngagement: React.FC<StakeholderEngagementProps> = ({
 
   // Handle creating a new stakeholder group
   const handleCreateGroup = async (newGroup: StakeholderGroup) => {
-    console.log('newGroup',newGroup)
+    logger.log('newGroup',newGroup)
     let topicStructure=[]
     newGroup.topics.forEach((t)=>topicStructure.push({
       metric: null,
@@ -157,7 +158,7 @@ const StakeholderEngagement: React.FC<StakeholderEngagementProps> = ({
     // delete newGroup._id
     delete newGroup['id']
     let groupCreateResponse=await httpClient.post('stakeholder-engagement-group',newGroup);
-    console.log('groupCreateResponse',groupCreateResponse)
+    logger.log('groupCreateResponse',groupCreateResponse)
     setStakeholderGroups([...stakeholderGroups, newGroup]);
     // setShowAddGroupForm(false);
   };
@@ -238,7 +239,7 @@ const StakeholderEngagement: React.FC<StakeholderEngagementProps> = ({
   };
 
   useEffect(()=>{
-    console.log('stakeholders',stakeholders)
+    logger.log('stakeholders',stakeholders)
   },[stakeholders])
 
   return (
@@ -395,14 +396,14 @@ const StakeholderEngagement: React.FC<StakeholderEngagementProps> = ({
                                     <div
                                       className="w-2 h-2 rounded-full"
                                       style={{ 
-                                        backgroundColor: topic.category === 'Environment' 
+                                        backgroundColor: topic['category'] === 'Environment' 
                                           ? '#22c55e' 
-                                          : topic.category === 'Social' 
+                                          : topic['category'] === 'Social' 
                                             ? '#60a5fa' 
                                             : '#f59e0b'
                                       }}
                                     />
-                                    <span className="font-medium">{topic.name}</span>
+                                    <span className="font-medium">{topic['name']}</span>
                                   </div>
                                   <div className="text-xs text-muted-foreground">{topic.description}</div>
                                   <div className="mt-1 text-xs">

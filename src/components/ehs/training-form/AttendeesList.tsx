@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { isExistingEmployee } from '@/data/ehs/employees';
 import { TrainingFormData } from './types';
+import { logger } from '@/hooks/logger';
 
 interface AttendeesListProps {
   formData: TrainingFormData;
@@ -48,7 +49,7 @@ export const AttendeesList: React.FC<AttendeesListProps> = ({ formData, updateFo
 
   const handleInviteNew = (index: number) => {
     // TODO: Implement invitation logic
-    console.log('Invite new attendee at index:', index);
+    logger.log('Invite new attendee at index:', index);
   };
 
   return (

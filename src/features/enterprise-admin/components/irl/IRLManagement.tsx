@@ -189,7 +189,7 @@ const managementItems = [
   }
 ];
 
-const IRLManagement = () => {
+const IRLManagement = ({buttonEnabled:boolean}) => {
   return (
     <IRLComplianceTable
       title="Management"

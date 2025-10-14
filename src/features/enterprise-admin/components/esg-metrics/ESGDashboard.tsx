@@ -15,6 +15,7 @@ import CustomDashboardTab from './custom-graph';
 import MetricsGraph1 from './graphShow1';
 import GroupedBarChart from './graphTemp1';
 import NestedStackedBarChart from './graphTemp1';
+import { logger } from '@/hooks/logger';
 // import { SmartChart } from '@/components/charts/SmartChart';
 
 interface MetricDataEntry {
@@ -57,7 +58,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics, finalMetric
 
   const [selectedYear, setSelectedYear] = useState<string>([...financialYearList].reverse()[0].value); // Default to current year
   const [graphData, setGraphData] = useState<any>({});
-console.log('activeTab',viewMode,"viewMode");
+logger.info('activeTab',viewMode,"viewMode");
   const getGraphData = async (year: string) => {
     // Filter data entries based on the selected year
     let graphData = await httpClient.get(`materiality/metrics/graph-data?year=${year}`);
@@ -89,13 +90,13 @@ console.log('activeTab',viewMode,"viewMode");
     //     console.error('Error loading entries:', error);
     //   }
     // }
-    console.log('selectedYear', selectedYear);
+    logger.log('selectedYear', selectedYear);
     getGraphData(selectedYear);
   }, [selectedYear]);
 
   useEffect(() => {
-    console.log('selectedYear changed', selectedYear);
-    console.log('financialYearList', financialYearList);
+    logger.log('selectedYear changed', selectedYear);
+    logger.log('financialYearList', financialYearList);
   }, [selectedYear]);
 
   const generatePeriods = (frequency: string, financialYear: string) => {

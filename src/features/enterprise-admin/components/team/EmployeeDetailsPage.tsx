@@ -16,6 +16,8 @@ import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { httpClient } from '@/lib/httpClient';
+import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
+import { logger } from '@/hooks/logger';
 
 interface AccessLevel {
   menuItemId: string;
@@ -33,13 +35,14 @@ interface LocationAssignment {
   locationName: string;
   assigned: boolean;
   unitId: string;
+  _id:string;
 }
 
 const EmployeeDetailsPage = () => {
 
-  console.log('🟢 EmployeeDetailsPage: Component starting to render');
+  logger.log('🟢 EmployeeDetailsPage: Component starting to render');
   const { employeeId } = useParams();
-  console.log('🟢 EmployeeDetailsPage: Retrieved employeeId from params:', employeeId);
+  logger.log('🟢 EmployeeDetailsPage: Retrieved employeeId from params:', employeeId);
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('permissions');
@@ -55,8 +58,8 @@ const EmployeeDetailsPage = () => {
   // Get all navigation items for access control
   const navigationStructure = getDetailedNavigationStructure();
   const allMenuItems = flattenNavigationItems(navigationStructure);
-  console.log('🟢 EmployeeDetailsPage: Flattened navigation items:', allMenuItems);
-  console.log('🟢 EmployeeDetailsPage: Navigation structure:', navigationStructure);
+  logger.log('🟢 EmployeeDetailsPage: Flattened navigation items:', allMenuItems);
+  logger.log('🟢 EmployeeDetailsPage: Navigation structure:', navigationStructure);
   // Mock access levels - in real app, fetch from user_menu_permissions table
   const [accessLevels, setAccessLevels] = useState<AccessLevel[]>(
     allMenuItems.map(item => ({
@@ -93,7 +96,7 @@ const EmployeeDetailsPage = () => {
     setAccessLevels(prev =>
       prev.map(item =>
         item.menuItemId === menuItemId
-          ? { ...item, accessLevel:level }
+          ? { ...item, accessLevel: level }
           : item
       )
     );
@@ -102,7 +105,7 @@ const EmployeeDetailsPage = () => {
   const toggleLocationAssignment = (locationId: string) => {
     setLocationAssignments(prev =>
       prev.map(location =>
-        location.locationId === locationId
+        location._id === locationId
           ? { ...location, assigned: !location.assigned }
           : location
       )
@@ -111,7 +114,7 @@ const EmployeeDetailsPage = () => {
 
   const handleSave = () => {
     // Here you would save the changes to the database
-    console.log('Saving employee changes:', {
+    logger.log('Saving employee changes:', {
       employee: editForm,
       accessLevels,
       locationAssignments
@@ -122,8 +125,8 @@ const EmployeeDetailsPage = () => {
   const handleSubmitPermissions = () => {
     let accessLevelData = accessLevels.map(access => {
       const menuItem = allMenuItems.find(item => item.id === access.menuItemId);
-      console.log('Processing access for menuItemId:', access.menuItemId, 'Found menuItem:', menuItem);
-      console.log('Current access level:', access);
+      logger.log('Processing access for menuItemId:', access.menuItemId, 'Found menuItem:', menuItem);
+      logger.log('Current access level:', access);
       const getNavigationHierarchy = (item: any) => {
         if (!item) return 'Unknown';
 
@@ -153,13 +156,32 @@ const EmployeeDetailsPage = () => {
         accessLevel: access.level
       };
     })
-    console.log('Page Permissions:', accessLevelData);
+    logger.log('Page Permissions:', accessLevelData);
     saveTeamPageAccess(employeeId, accessLevels);
   };
 
-  const handleSubmitLocations = () => {
+  const handleSubmitLocations = async () => {
     const selectedLocations = locationAssignments.filter(location => location.assigned);
-    console.log('Selected Locations:', selectedLocations);
+    logger.debug('Selected Locations:', selectedLocations);
+    try {
+      let payload = {
+        subuserId: employeeId,
+        email: employee?.email || null,
+        locations: selectedLocations.map(loc => loc.locationId)
+      };
+      let response = await httpClient.post('subuser/activate', payload);
+      logger.log('Save Team Page Access Response:', response);
+      if (response.status === 201) {
+        toast.success('Page permissions updated successfully.');
+        getEmployeeDetails(employeeId);
+      } else {
+        toast.error('Failed to update page permissions.');
+      }
+    } catch (error) {
+      logger.error('Error saving location assignments:', error);
+      toast.error('Failed to update location assignments.');
+      
+    }
   };
 
   const saveTeamPageAccess = async (employeeId: string, accessLevels: AccessLevel[]) => {
@@ -201,7 +223,7 @@ const EmployeeDetailsPage = () => {
         })
       };
       let response = await httpClient.post('subuser/activate', payload);
-      console.log('Save Team Page Access Response:', response);
+      logger.log('Save Team Page Access Response:', response);
       if (response.status === 201) {
         toast.success('Page permissions updated successfully.');
         getEmployeeDetails(employeeId);
@@ -209,7 +231,7 @@ const EmployeeDetailsPage = () => {
         toast.error('Failed to update page permissions.');
       }
     } catch (error) {
-      console.error('Error saving page permissions:', error);
+      logger.error('Error saving page permissions:', error);
       toast.error('Failed to update page permissions.');
     }
   }
@@ -305,14 +327,14 @@ const EmployeeDetailsPage = () => {
   const getEmployeeDetails = async (id: string) => {
     try {
       let employeeDataResponse = await httpClient.get(`subuser?id=${employeeId}`);
-      console.log('Employee Details Response:', employeeDataResponse);
+      logger.log('Employee Details Response:', employeeDataResponse);
       if (employeeDataResponse.status === 200) {
         if (employeeDataResponse.data['data'] && employeeDataResponse.data['data'].length > 0
           && employeeDataResponse.data['data'][0]['subuser']
           && employeeDataResponse.data['data'][0]['subuser'].length > 0) {
           let subUser = employeeDataResponse.data['data'][0]['subuser'][0];
           let existingAccessLevels = subUser.accessUrls || [];
-          console.log('Existing Access Levels:', existingAccessLevels);
+          logger.log('Existing Access Levels:', existingAccessLevels);
           if (existingAccessLevels.length === 0) {
             // If no existing access levels, initialize with no_access
             existingAccessLevels = allMenuItems.map(item => ({
@@ -327,7 +349,7 @@ const EmployeeDetailsPage = () => {
             }));
           }
           setAccessLevels(existingAccessLevels)
-          console.log('Setting employee state with:', subUser);
+          logger.log('Setting employee state with:', subUser);
           setEmployee(subUser);
         }
 
@@ -343,7 +365,7 @@ const EmployeeDetailsPage = () => {
         toast.error('Failed to fetch employee details.');
       }
     } catch (error) {
-      console.error('Error fetching employee details:', error);
+      logger.error('Error fetching employee details:', error);
       toast.error('Failed to fetch employee details.');
     }
 
@@ -352,13 +374,14 @@ const EmployeeDetailsPage = () => {
   const getCompanyLocations = async () => {
     try {
       let locationsResponse = await httpClient.get(`company/locations`);
-      console.log('Company Locations Response:', locationsResponse);
+      logger.log('Company Locations Response:', locationsResponse);
       if (locationsResponse.status === 200) {
         if (locationsResponse.data['data'] && locationsResponse.data['data'].length > 0) {
           let locationsData = locationsResponse.data['data'];
-          console.log('Setting locationAssignments state with:', locationsData);
+          logger.log('Setting locationAssignments state with:', locationsData);
           let updatedLocations = locationsData.map(location => ({
-            locationId: location.id,
+            locationId: location._id,
+            _id:location._id,
             locationName: location.name,
             assigned: false, // Default to unassigned, will update based on employee data
             unitId: location.unitId
@@ -370,7 +393,7 @@ const EmployeeDetailsPage = () => {
         toast.error('Failed to fetch company locations.');
       }
     } catch (error) {
-      console.error('Error fetching company locations:', error);
+      logger.error('Error fetching company locations:', error);
       toast.error('Failed to fetch company locations.');
     }
   }
@@ -381,237 +404,244 @@ const EmployeeDetailsPage = () => {
   }, [employeeId]);
 
   useEffect(() => {
+    logger.debug('Location assignments updated:', locationAssignments);
+  }, [locationAssignments]);
+
+  useEffect(() => {
     getCompanyLocations();
   }, []);
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/team-management')}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Team Management
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">{employee?.name}</h1>
-            <p className="text-muted-foreground">Employee Details & Access Management</p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          {isEditing ? (
-            <>
-              <Button variant="outline" onClick={() => setIsEditing(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handleSave}>
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
-              </Button>
-            </>
-          ) : (
-            <Button onClick={() => setIsEditing(true)}>
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Details
+    <UnifiedSidebarLayout>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/team-management')}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Team Management
             </Button>
-          )}
-        </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Employee Details Section */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Employee Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            <div>
+              <h1 className="text-2xl font-bold">{employee?.name}</h1>
+              <p className="text-muted-foreground">Employee Details & Access Management</p>
+            </div>
+          </div>
+          <div className="flex gap-2">
             {isEditing ? (
               <>
-                <div>
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    value={editForm.name}
-                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    value={editForm.email}
-                    onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    value={editForm.phone}
-                    onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="emergency">Emergency Contact</Label>
-                  <Input
-                    id="emergency"
-                    value={editForm.emergencyContact}
-                    onChange={(e) => setEditForm({ ...editForm, emergencyContact: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="department">Department</Label>
-                  <Select value={editForm.department} onValueChange={(value) => setEditForm({ ...editForm, department: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Finance">Finance</SelectItem>
-                      <SelectItem value="HR">HR</SelectItem>
-                      <SelectItem value="Operations">Operations</SelectItem>
-                      <SelectItem value="Admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="role">Role</Label>
-                  <Select value={editForm.role} onValueChange={(value) => setEditForm({ ...editForm, role: value })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Maker">Maker</SelectItem>
-                      <SelectItem value="Checker">Checker</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <Button variant="outline" onClick={() => setIsEditing(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSave}>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Changes
+                </Button>
               </>
             ) : (
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Employee ID:</span>
-                  <span className="font-medium">{employee?.employeeId}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Email:</span>
-                  <span className="font-medium">{employee?.email}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Phone:</span>
-                  <span className="font-medium">{employee?.mobile || 'N/A'}</span>
-                </div>
-                {/* <div className="flex justify-between">
+              <Button onClick={() => setIsEditing(true)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Details
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Employee Details Section */}
+          <Card className="lg:col-span-1">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <User className="h-5 w-5" />
+                Employee Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {isEditing ? (
+                <>
+                  <div>
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input
+                      id="name"
+                      value={editForm.name}
+                      onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      value={editForm.email}
+                      onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="phone">Phone</Label>
+                    <Input
+                      id="phone"
+                      value={editForm.phone}
+                      onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="emergency">Emergency Contact</Label>
+                    <Input
+                      id="emergency"
+                      value={editForm.emergencyContact}
+                      onChange={(e) => setEditForm({ ...editForm, emergencyContact: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="department">Department</Label>
+                    <Select value={editForm.department} onValueChange={(value) => setEditForm({ ...editForm, department: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Finance">Finance</SelectItem>
+                        <SelectItem value="HR">HR</SelectItem>
+                        <SelectItem value="Operations">Operations</SelectItem>
+                        <SelectItem value="Admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="role">Role</Label>
+                    <Select value={editForm.role} onValueChange={(value) => setEditForm({ ...editForm, role: value })}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Maker">Maker</SelectItem>
+                        <SelectItem value="Checker">Checker</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Employee ID:</span>
+                    <span className="font-medium">{employee?.employeeId}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Email:</span>
+                    <span className="font-medium">{employee?.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Phone:</span>
+                    <span className="font-medium">{employee?.mobile || 'N/A'}</span>
+                  </div>
+                  {/* <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Emergency:</span>
                   <span className="font-medium">{employee?.emergencyContact}</span>
                 </div> */}
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Department:</span>
-                  <span className="font-medium">{employee?.department}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Role:</span>
-                  <Badge variant={employee?.role === 'Maker' ? 'default' : 'secondary'}>
-                    {employee?.role || 'N/A'}
-                  </Badge>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Status:</span>
-                  <Badge variant={employee?.active ? 'default' : 'destructive'}>
-                    {employee?.active ? 'Active' : 'Inactive'}
-                  </Badge>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">CreatedAt Date:</span>
-                  <span className="font-medium">{new Date(employee?.createdAt).toLocaleDateString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Manager:</span>
-                  <span className="font-medium">{employee?.manager}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Location:</span>
-                  <span className="font-medium">{employee?.location}</span>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Permissions & Locations Section */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Access Management</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Configure page permissions and location assignments for this employee
-              </p>
-            </CardHeader>
-            <CardContent>
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="permissions" className="flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
-                    Page Permissions
-                  </TabsTrigger>
-                  <TabsTrigger value="locations" className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    Location Assignments
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="permissions" className="space-y-6">
-                  <div className="space-y-6">
-                    {renderNavigationAccess()}
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Department:</span>
+                    <span className="font-medium">{employee?.department}</span>
                   </div>
-                  <div className="flex justify-end pt-4 border-t">
-                    <Button onClick={handleSubmitPermissions}>
-                      Submit Page Permissions
-                    </Button>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Role:</span>
+                    <Badge variant={employee?.role === 'Maker' ? 'default' : 'secondary'}>
+                      {employee?.role || 'N/A'}
+                    </Badge>
                   </div>
-                </TabsContent>
-
-                <TabsContent value="locations" className="space-y-6">
-                  <div className="grid gap-3 md:grid-cols-2">
-                    {locationAssignments && locationAssignments.map(location => (
-                      <div key={location.locationId} className="flex items-center space-x-3 p-3 border rounded-lg">
-                        <Checkbox
-                          id={`location-${location.locationId}`}
-                          checked={location.assigned}
-                          onCheckedChange={() => toggleLocationAssignment(location.locationId)}
-                        />
-                        <Label
-                          htmlFor={`location-${location.locationId}`}
-                          className="flex-1 cursor-pointer"
-                        >
-                          {location.locationName} ({location.unitId})
-                        </Label>
-                        {location.assigned && (
-                          <Badge variant="default" className="text-xs">
-                            Assigned
-                          </Badge>
-                        )}
-                      </div>
-                    ))}
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Status:</span>
+                    <Badge variant={employee?.active ? 'default' : 'destructive'}>
+                      {employee?.active ? 'Active' : 'Inactive'}
+                    </Badge>
                   </div>
-                  <div className="flex justify-end pt-4 border-t">
-                    <Button onClick={handleSubmitLocations}>
-                      Submit Location Assignments
-                    </Button>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">CreatedAt Date:</span>
+                    <span className="font-medium">{new Date(employee?.createdAt).toLocaleDateString()}</span>
                   </div>
-                </TabsContent>
-              </Tabs>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Manager:</span>
+                    <span className="font-medium">{employee?.manager}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">Location:</span>
+                    <span className="font-medium">{employee?.location}</span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
+
+          {/* Permissions & Locations Section */}
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Access Management</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Configure page permissions and location assignments for this employee
+                </p>
+              </CardHeader>
+              <CardContent>
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="permissions" className="flex items-center gap-2">
+                      <Shield className="h-4 w-4" />
+                      Page Permissions
+                    </TabsTrigger>
+                    <TabsTrigger value="locations" className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      Location Assignments
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="permissions" className="space-y-6">
+                    <div className="space-y-6">
+                      {renderNavigationAccess()}
+                    </div>
+                    <div className="flex justify-end pt-4 border-t">
+                      <Button onClick={handleSubmitPermissions}>
+                        Submit Page Permissions
+                      </Button>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="locations" className="space-y-6">
+                    <div className="grid gap-3 md:grid-cols-2">
+                      {locationAssignments && locationAssignments.map(location => (
+                        <div key={location.locationId} className="flex items-center space-x-3 p-3 border rounded-lg">
+                          <Checkbox
+                            id={`location-${location._id}`}
+                            checked={location.assigned}
+                            onCheckedChange={() => toggleLocationAssignment(location._id)}
+                          />
+                          <Label
+                            htmlFor={`location-${location._id}`}
+                            className="flex-1 cursor-pointer"
+                          >
+                            {location.locationName} ({location.unitId})
+                          </Label>
+                          {location.assigned && (
+                            <Badge variant="default" className="text-xs">
+                              Assigned
+                            </Badge>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-end pt-4 border-t">
+                      <Button onClick={handleSubmitLocations}>
+                        Submit Location Assignments
+                      </Button>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-    </div>
+    </UnifiedSidebarLayout>
+
   );
 };
 

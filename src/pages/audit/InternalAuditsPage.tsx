@@ -9,8 +9,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, Download, Plus, Building2, FileText, Users, TrendingUp } from 'lucide-react';
+import { logger } from '@/hooks/logger';
 
 const InternalAuditsPage = () => {
+  logger.debug('Rendering InternalAuditsPage component');
   const { isAuthenticated, isCompanyUser,isAuthenticatedStatus } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
 

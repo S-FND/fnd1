@@ -7,8 +7,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import EHSTrainingsList from '@/components/ehs/EHSTrainingsList';
 import EHSTrainingsCalendar from '@/components/ehs/EHSTrainingsCalendar';
 import EHSTrainingForm from '@/components/ehs/EHSTrainingForm';
+import { logger } from '@/hooks/logger';
 
 const EHSTrainingsPage = () => {
+  logger.debug('Rendering EHSTrainingsPage component');
   const { isAuthenticated, user,isAuthenticatedStatus } = useAuth();
   const [activeTab, setActiveTab] = useState('list');
 

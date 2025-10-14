@@ -7,6 +7,7 @@ import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 
 const EnterpriseAdminDashboardPage = () => {
+  logger.debug('Rendering EnterpriseAdminDashboardPage component');
   const { isLoading } = useRouteProtection(['admin']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 

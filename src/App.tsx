@@ -76,13 +76,13 @@ function App() {
       />
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<Index />} />
-        <Route path="/login" element={<Login />} />
+        {/* <Route path="/" element={<Index />} /> */}
+        <Route path="/" element={<Login />} />
 
         {/* All other routes wrapped with sidebar */}
-        <Route path="*" element={
+        {/* <Route path="*" element={
           <UnifiedSidebarLayout>
-            <Routes>
+            <Routes> */}
               {/* Company / Enterprise Admin Routes */}
               {/* Company / Enterprise Admin Routes */}
               <Route path="/enhanced-dashboard" element={<EnhancedDashboard />} />
@@ -150,9 +150,9 @@ function App() {
               <Route path="/vendor/trainings" element={<VendorTrainings />} />
 
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </UnifiedSidebarLayout>
-        } />
+            {/* </Routes>
+          </UnifiedSidebarLayout> */}
+        {/* } /> */}
       </Routes>
       {/* </SDGProvider> */}
     </FeaturesProvider>

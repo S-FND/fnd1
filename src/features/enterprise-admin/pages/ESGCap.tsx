@@ -23,6 +23,7 @@ import {
   esgddAcceptPlan,
   updatePlan
 } from '../services/esgdd';
+import { logger } from '@/hooks/logger';
 
 interface PlanHistory {
   updateByUserId: string;
@@ -353,7 +354,7 @@ const ESGCapPage = () => {
       }
       return null;
     } catch (error) {
-      console.error("Error parsing user ", error);
+      logger.error("Error parsing user ", error);
       return null;
     }
   };
@@ -388,7 +389,7 @@ const ESGCapPage = () => {
       }
     } catch (error) {
       toast.error("Error loading CAP data");
-      console.error(error);
+      logger.error(error);
     } finally {
       setLoading(false);
     }
@@ -444,7 +445,7 @@ const ESGCapPage = () => {
             comparePlan: updatedComparePlan
           };
 
-          console.log("RequestChange Payload:", finalData);
+          logger.log("RequestChange Payload:", finalData);
           response = await esgddChangePlan(finalData);
           break;
 
@@ -485,7 +486,7 @@ const ESGCapPage = () => {
             plan: esgCap.plan,
             comparePlan: acceptComparePlan
           };
-          console.log("Accept Payload:", finalData);
+          logger.log("Accept Payload:", finalData);
           response = await esgddAcceptPlan(finalData);
           break;
 
@@ -525,7 +526,7 @@ const ESGCapPage = () => {
             plan: esgCap.plan,
             comparePlan: updateComparePlan
           };
-          // console.log("Update Payload:", finalData);
+          // logger.log("Update Payload:", finalData);
           response = await updatePlan(finalData);
           break;
       }
@@ -535,7 +536,7 @@ const ESGCapPage = () => {
       }
     } catch (error) {
       toast.error("An error occurred during submission");
-      console.error(error);
+      logger.error(error);
     } finally {
       setLoading(false);
     }
@@ -647,7 +648,7 @@ const ESGCapPage = () => {
     return false;
   };
 
-  console.log('shouldDisableAcceptButton', shouldDisableAcceptButton());
+  logger.log('shouldDisableAcceptButton', shouldDisableAcceptButton());
 
   if (authLoading || loading) {
     return (

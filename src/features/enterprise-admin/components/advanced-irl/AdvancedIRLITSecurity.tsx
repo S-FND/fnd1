@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2 } from 'lucide-react';
+import { logger } from '@/hooks/logger';
 
 interface DataBreach {
   date: string;
@@ -52,11 +53,11 @@ const AdvancedIRLITSecurity = () => {
   };
 
   const handleSave = () => {
-    console.log('Saving Advanced IRL IT Security data:', { formData, dataBreaches });
+    logger.log('Saving Advanced IRL IT Security data:', { formData, dataBreaches });
   };
 
   const handleSubmit = () => {
-    console.log('Submitting Advanced IRL IT Security data:', { formData, dataBreaches });
+    logger.log('Submitting Advanced IRL IT Security data:', { formData, dataBreaches });
   };
 
   return (

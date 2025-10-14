@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Upload, X } from 'lucide-react';
+import { logger } from '@/hooks/logger';
 
 const AdvancedIRLPhotos = () => {
   const [formData, setFormData] = useState({
@@ -36,11 +37,11 @@ const AdvancedIRLPhotos = () => {
   };
 
   const handleSave = () => {
-    console.log('Saving Advanced IRL Photos data:', formData);
+    logger.log('Saving Advanced IRL Photos data:', formData);
   };
 
   const handleSubmit = () => {
-    console.log('Submitting Advanced IRL Photos data:', formData);
+    logger.log('Submitting Advanced IRL Photos data:', formData);
   };
 
   return (

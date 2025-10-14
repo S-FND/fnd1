@@ -12,7 +12,7 @@ const IRLBusinessOperationsItems = [
   }
 ];
 
-const IRLITSecurity = () => {
+const IRLITSecurity = ({buttonEnabled:boolean}) => {
   return (
     <IRLComplianceTable
       title="Business Operations"

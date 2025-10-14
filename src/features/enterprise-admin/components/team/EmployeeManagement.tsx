@@ -18,6 +18,7 @@ import {
   updateCompanyFeatures
 } from '../../services/employeeManagementAPI';
 import { useNavigate } from 'react-router-dom';
+import { logger } from '@/hooks/logger';
 
 // import { UserPlus, Search, Filter, Edit, Users, Eye } from 'lucide-react';
 
@@ -143,7 +144,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
         }
       } catch (error) {
         toast.error('Failed to load URL list');
-        console.error(error);
+        logger.error(error);
       } finally {
         setIsUrlLoading(false);
       }
@@ -207,10 +208,10 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
         updatedAt: new Date().toISOString() // Update timestamp
       };
 
-      console.log('Sending complete payload to /subuser/activate:', completePayload);
+      logger.log('Sending complete payload to /subuser/activate:', completePayload);
 
       const [response, error] = await updateEmployee(completePayload);
-      console.log('API Response:', response);
+      logger.log('API Response:', response);
 
       if (response && (response.status === true || response._id)) {
         toast.success('Employee updated successfully');
@@ -220,7 +221,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
         toast.error(error || 'Failed to update employee');
       }
     } catch (err) {
-      console.error('Error in handleSaveEdit:', err);
+      logger.error('Error in handleSaveEdit:', err);
       toast.error('An error occurred while updating employee');
     }
   }
@@ -230,7 +231,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
 
   // const handleSaveEdit = () => {
   //   // Here you would normally update the employee data
-  //   console.log('Saving employee edit:', editForm);
+  //   logger.log('Saving employee edit:', editForm);
   //   setIsEditDialogOpen(false);
   // };
 
@@ -245,11 +246,11 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
   //       updatedAt: new Date().toISOString() // Add current timestamp
   //     };
 
-  //     console.log('Sending to /subuser/activate:', updateObj);
+  //     logger.log('Sending to /subuser/activate:', updateObj);
 
   //     const [response, error] = await updateEmployee(updateObj);
 
-  //     console.log('API Response:', response);
+  //     logger.log('API Response:', response);
 
   //     if (response?.status === true || response?._id) {
   //       toast.success('Access URLs assigned successfully');
@@ -260,7 +261,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
   //     }
   //   } catch (err) {
   //     toast.error('An error occurred while assigning access URLs');
-  //     console.error(err);
+  //     logger.error(err);
   //   }
   // };
 
@@ -272,10 +273,10 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
   //       active,
   //       updatedAt: new Date().toISOString()
   //     };
-  //     console.log('activationPayload',activationPayload);
+  //     logger.log('activationPayload',activationPayload);
   //     const [response, error] = await updateEmployee(activationPayload);
 
-  //     console.log('Activation response:', response);
+  //     logger.log('Activation response:', response);
 
   //     if (response && (response.status === true || response._id)) {
   //       toast.success(`Employee ${active ? 'activated' : 'deactivated'} successfully`);
@@ -285,7 +286,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
   //     }
   //   } catch (err) {
   //     toast.error('An error occurred while updating employee status');
-  //     console.error(err);
+  //     logger.error(err);
   //   }
   // };
 
@@ -379,7 +380,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
         }
       }
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       toast.error("Failed to update features");
     }
   };
@@ -399,7 +400,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
         JSON.stringify(features || [])
       );
     } catch (err) {
-      console.error("Failed to set up company features:", err);
+      logger.error("Failed to set up company features:", err);
     }
   };
 

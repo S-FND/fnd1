@@ -15,7 +15,8 @@ export type FeatureId =
   | 'sdg'
   | 'dashboard'
   | 'stakeholder-management'
-  | 'stakeholder-Materiality-Assessment';
+  | 'stakeholder-Materiality-Assessment'
+  | 'action-log';
 
 export interface Feature {
   id: FeatureId;

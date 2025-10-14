@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,8 @@ import { Upload, FileText, Check, X, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { httpClient } from '@/lib/httpClient';
 import { ENV } from "@/config/env";
+import { logger } from '@/hooks/logger';
+import { PageAccessContext } from '@/context/PageAccessContext';
 const API_URL = ENV.API_URL;
 
 interface ESMSDocument {
@@ -40,6 +42,10 @@ interface ESMSDocumentSection {
 }
 
 const ESMSPage: React.FC = () => {
+  logger.debug('Rendering ESMSPage component');
+  const {checkPageButtonAccess}=useContext(PageAccessContext);
+  const [buttonEnabled, setButtonEnabled] = useState(false);
+  
   const [deleteDialog, setDeleteDialog] = useState<{
     open: boolean;
     sectionId: string;
@@ -199,7 +205,7 @@ const ESMSPage: React.FC = () => {
       }
       return null;
     } catch (error) {
-      console.error("Error parsing user data:", error);
+      logger.error("Error parsing user data:", error);
       return null;
     }
   };
@@ -257,7 +263,7 @@ const ESMSPage: React.FC = () => {
         );
       }
     } catch (error) {
-      console.error('Error loading ESMS ', error);
+      logger.error('Error loading ESMS ', error);
       // toast.error('Failed to load ESMS data');
     } finally {
       setIsLoading(false);
@@ -366,7 +372,7 @@ const ESMSPage: React.FC = () => {
         formData.append('data', JSON.stringify(dataToSave));
 
         for (let [key, value] of formData.entries()) {
-          console.log(key, value.constructor.name, value);
+          logger.log(key, value.constructor.name, value);
         }
         const response = await fetch(`${API_URL}/document/esms`, {
           method: 'POST',
@@ -378,7 +384,7 @@ const ESMSPage: React.FC = () => {
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('Server error:', errorText);
+          logger.error('Server error:', errorText);
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
@@ -387,7 +393,7 @@ const ESMSPage: React.FC = () => {
         await loadESMSData();
         toast.success(`Document "${fileName}" uploaded successfully`);
       } catch (error) {
-        console.error('Error uploading file:', error);
+        logger.error('Error uploading file:', error);
         toast.error('Failed to upload document');
       }
     }
@@ -432,7 +438,7 @@ const ESMSPage: React.FC = () => {
 
       toast.success('Status updated successfully');
     } catch (error) {
-      console.error('Error updating document status:', error);
+      logger.error('Error updating document status:', error);
       toast.error('Failed to update document status');
     }
   };
@@ -447,7 +453,7 @@ const ESMSPage: React.FC = () => {
         fileUrl
       });
     } catch (error) {
-      console.error('Error initiating document deletion:', error);
+      logger.error('Error initiating document deletion:', error);
       toast.error('Failed to initiate document deletion');
     }
   };
@@ -491,7 +497,7 @@ const ESMSPage: React.FC = () => {
       toast.success(`Document "${documentTitle}" has been archived`);
       setDeleteDialog({ open: false, sectionId: '', documentId: '', documentTitle: '', fileUrl: '' });
     } catch (error) {
-      console.error('Error deleting document:', error);
+      logger.error('Error deleting document:', error);
       toast.error('Failed to archive document');
     }
   };
@@ -542,12 +548,18 @@ const ESMSPage: React.FC = () => {
 
       toast.success('Data saved successfully');
     } catch (error) {
-      console.error('Error saving documents:', error);
+      logger.error('Error saving documents:', error);
       toast.error('Failed to save documents');
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    const hasAccess = checkPageButtonAccess('enterprise-admin');
+    logger.debug("ESMS access:", hasAccess);
+    setButtonEnabled(hasAccess);
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -672,6 +684,7 @@ const ESMSPage: React.FC = () => {
                             type="file"
                             id={`upload-${section.id}-${document.id}`}
                             className="hidden"
+                            disabled={isLoading || !buttonEnabled}
                             onChange={(e) => {
                               handleFileUpload(section.id, document.id, e);
                             }}
@@ -687,7 +700,7 @@ const ESMSPage: React.FC = () => {
                                 fileInput.click();
                               }
                             }}
-                            disabled={isLoading}
+                            disabled={isLoading || !buttonEnabled}
                           >
                             <Upload className="w-4 h-4 mr-2" />
                             {document.fileChange ? 'Replace' : 'Upload'}
@@ -709,7 +722,7 @@ const ESMSPage: React.FC = () => {
                                 size="sm"
                                 onClick={() => handleDeleteDocument(section.id, document.id, document.title, document.fileUrl)}
                                 className="text-destructive hover:text-destructive"
-                                disabled={isLoading}
+                                disabled={isLoading || !buttonEnabled}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -729,7 +742,7 @@ const ESMSPage: React.FC = () => {
       <div className="flex justify-end">
         <Button
           onClick={saveAllDocuments}
-          disabled={isLoading}
+          disabled={isLoading || !buttonEnabled}
           className="bg-blue-600 hover:bg-blue-700"
         >
           {isLoading ? 'Saving...' : 'Save All Documents'}

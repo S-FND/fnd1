@@ -1,5 +1,6 @@
 import React from 'react';
 import IRLComplianceTable from './IRLComplianceTable';
+import { logger } from '@/hooks/logger';
 
 const itSecurityItems = [
   {
@@ -40,7 +41,8 @@ const itSecurityItems = [
   }
 ];
 
-const IRLITSecurity = () => {
+const IRLITSecurity = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
+  logger.debug('Rendering IRLITSecurity component :: buttonEnabled =', buttonEnabled);
   return (
     <IRLComplianceTable
       title="IT Security & Data Privacy"
