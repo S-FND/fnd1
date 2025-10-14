@@ -108,7 +108,7 @@ const complianceItems = [
   }
 ];
 
-const IRLCompliance = () => {
+const IRLCompliance = ({buttonEnabled:boolean}) => {
   return (
     <IRLComplianceTable
       title="Compliance"

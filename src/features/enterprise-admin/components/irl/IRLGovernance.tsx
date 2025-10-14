@@ -1,6 +1,7 @@
 
 import React from 'react';
 import IRLComplianceTable from './IRLComplianceTable';
+import { logger } from '@/hooks/logger';
 
 const governanceItems = [
   {
@@ -245,7 +246,8 @@ const governanceItems = [
   }
 ];
 
-const IRLGovernance = () => {
+const IRLGovernance = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
+  logger.debug("Rendering IRLGovernance component :: buttonEnabled =", buttonEnabled);
   return (
     <IRLComplianceTable
       title="Governance"

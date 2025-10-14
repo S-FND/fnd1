@@ -4,8 +4,10 @@ import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import UnitsManagement from '@/components/units/UnitsManagement';
+import { logger } from '@/hooks/logger';
 
 const UnitsPage = () => {
+  logger.debug('Rendering UnitsPage component');
   const { isAuthenticated, user,isAuthenticatedStatus } = useAuth();
 
   if (!isAuthenticatedStatus()) {

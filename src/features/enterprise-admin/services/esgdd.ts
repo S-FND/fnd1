@@ -1,5 +1,6 @@
 import axios from "axios";
 import { ENV } from "@/config/env";
+import { logger } from "@/hooks/logger";
 const API_URL = ENV.API_URL;
 
 const getUserEntityId = () => {
@@ -11,7 +12,7 @@ const getUserEntityId = () => {
       }
       return null;
     } catch (error) {
-      console.error("Error parsing user data:", error);
+      logger.error("Error parsing user data:", error);
       return null;
     }
   };
@@ -30,7 +31,7 @@ export const fetchEsgDDReport = async (entityId: string) => {
     });
     return response.data;
   } catch (error) {
-    console.error("Error fetching ESG DD report:", error);
+    logger.error("Error fetching ESG DD report:", error);
     throw error;
   }
 };
@@ -47,7 +48,7 @@ export const fetchEsgCap = async (entityId: string) => {
 
       return response.data;
     } catch (error) {
-      console.error("Error fetching ESG DD report:", error);
+      logger.error("Error fetching ESG DD report:", error);
       throw error;
     }
   };
@@ -67,7 +68,7 @@ export const esgddChangePlan = async (
 
     return response.data;
     } catch (error) {
-    console.error("Error updating HR data:", error);
+    logger.error("Error updating HR data:", error);
     throw error;
     }
 };
@@ -86,7 +87,7 @@ export const esgddAcceptPlan = async (
 
     return response.data;
     } catch (error) {
-    console.error("Error updating HR data:", error);
+    logger.error("Error updating HR data:", error);
     throw error;
     }
 };
@@ -105,7 +106,7 @@ export const updatePlan = async (
 
     return response.data;
     } catch (error) {
-    console.error("Error updating HR data:", error);
+    logger.error("Error updating HR data:", error);
     throw error;
     }
 };

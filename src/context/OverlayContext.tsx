@@ -1,4 +1,5 @@
 
+import { logger } from '@/hooks/logger';
 import { httpClient } from '@/lib/httpClient';
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
@@ -60,14 +61,15 @@ export const OverlayProvider: React.FC<OverlayProviderProps> = ({ children }) =>
 
   const getPageAccess = async () => {
     try {
-      console.log("Calling from Overlay cintext")
+      logger.log("Calling from Overlay cintext")
       let pageAccessResponse = await httpClient.get('company/settings/access');
       if (pageAccessResponse['status'] == 200) {
         let pageAccess = pageAccessResponse['data']['data']['data'];
         setPageActiveList(pageAccess)
       }
     } catch (error) {
-
+      logger.error("Error fetching page access", error);
+      setPageActiveList([]) 
     }
   }
 
@@ -78,7 +80,7 @@ export const OverlayProvider: React.FC<OverlayProviderProps> = ({ children }) =>
   },[pageActiveList])
 
   useEffect(()=>{
-    console.log('pageActiveList',pageActiveList)
+    logger.log('pageActiveList',pageActiveList)
   },[pageActiveList])
 
   return (

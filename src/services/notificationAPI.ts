@@ -1,6 +1,7 @@
 
 import axios from 'axios';
 import { ENV } from '@/config/env';
+import { logger } from '@/hooks/logger';
 
 const API_URL = ENV.API_URL;
 
@@ -13,7 +14,7 @@ export const fetchNotifications = async () => {
     });
     return response.data;
   } catch (error) {
-    console.error('Error fetching notifications:', error);
+    logger.error('Error fetching notifications:', error);
     throw error;
   }
 };
@@ -31,7 +32,7 @@ export const markNotificationAsRead = async (notificationId: string) => {
     );
     return response.data;
   } catch (error) {
-    console.error('Error marking notification as read:', error);
+    logger.error('Error marking notification as read:', error);
     throw error;
   }
 };
@@ -49,7 +50,7 @@ export const markAllNotificationsAsRead = async () => {
     );
     return response.data;
   } catch (error) {
-    console.error('Error marking all notifications as read:', error);
+    logger.error('Error marking all notifications as read:', error);
     throw error;
   }
 };

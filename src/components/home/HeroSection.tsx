@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { logger } from '@/hooks/logger';
 
 const HeroSection = () => {
+  logger.debug('Rendering HeroSection component');
   const { isAuthenticated, user,isAuthenticatedStatus } = useAuth();
   const navigate = useNavigate();
   

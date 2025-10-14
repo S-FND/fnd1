@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -15,9 +15,14 @@ import IRLITSecurity from '../components/irl/IRLITSecurity';
 import IRLWarehouse from '../components/irl/IRLWarehouse';
 import IRLAdditionalFacility from '../components/irl/IRLAdditionalFacility';
 import IRLGovernance from '../components/irl/IRLGovernance';
+import { logger } from '@/hooks/logger';
+import { PageAccessContext } from '@/context/PageAccessContext';
 
 const IRLPage = () => {
-  const { isLoading } = useRouteProtection(['admin', 'manager']);
+  logger.debug('Rendering IRLPage component');
+  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
+  const {checkPageButtonAccess}=useContext(PageAccessContext);
+  const [buttonEnabled, setButtonEnabled] = useState(false);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {
@@ -27,6 +32,13 @@ const IRLPage = () => {
   if (!isAuthenticatedStatus()) {
     return <Navigate to="/" />;
   }
+
+  useEffect(() => {
+    const hasAccess = checkPageButtonAccess('enterprise-admin');
+    logger.debug("ESMS access:", hasAccess);
+    setButtonEnabled(hasAccess);
+  }, []);
+
 
   return (
     <UnifiedSidebarLayout>
@@ -53,31 +65,31 @@ const IRLPage = () => {
           </TabsList>
           
           <TabsContent value="company">
-            <IRLCompanyInformation />
+            <IRLCompanyInformation buttonEnabled={buttonEnabled} />
           </TabsContent>
           
           <TabsContent value="hr">
-            <IRLHRInformation />
+            <IRLHRInformation buttonEnabled={buttonEnabled} />
           </TabsContent>
 
           <TabsContent value="business">
-            <IRLBusinessOperations />
+            <IRLBusinessOperations buttonEnabled={buttonEnabled} />
           </TabsContent>
 
           <TabsContent value="photographs">
-            <IRLPhotographs />
+            <IRLPhotographs buttonEnabled={buttonEnabled} />
           </TabsContent>
 
           <TabsContent value="compliance">
-            <IRLCompliance />
+            <IRLCompliance buttonEnabled={buttonEnabled} />
           </TabsContent>
 
           <TabsContent value="management">
-            <IRLManagement />
+            <IRLManagement buttonEnabled={buttonEnabled}/>
           </TabsContent>
 
           <TabsContent value="itsecurity">
-            <IRLITSecurity />
+            <IRLITSecurity buttonEnabled={buttonEnabled} />
           </TabsContent>
 
           {/* <TabsContent value="warehouse">
@@ -85,11 +97,11 @@ const IRLPage = () => {
           </TabsContent> */}
 
           <TabsContent value="facility">
-            <IRLAdditionalFacility />
+            <IRLAdditionalFacility buttonEnabled={buttonEnabled} />
           </TabsContent>
 
           <TabsContent value="governance">
-            <IRLGovernance />
+            <IRLGovernance buttonEnabled={buttonEnabled} />
           </TabsContent>
         </Tabs>
       </div>

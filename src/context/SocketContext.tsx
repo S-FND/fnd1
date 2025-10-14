@@ -1,8 +1,9 @@
 
+import { logger } from "@/hooks/logger"
 import openSocket,{ Socket, io, } from "socket.io-client"
 
 export const socketConnect=(token)=>{
-  console.log('process.env.SOCKET_BASE_URL',process.env.SOCKET_BASE_URL)
+  logger.log('process.env.SOCKET_BASE_URL',process.env.SOCKET_BASE_URL)
   const socket=openSocket(`wss://sustainability-api.fandoro.com`, {
     auth:{
       token:`Bearer ${token}`
@@ -11,6 +12,6 @@ export const socketConnect=(token)=>{
       "authorization": `Bearer ${token}`
     }
   })
-  console.log('socket.connected',socket.connected)
+  logger.log('socket.connected',socket.connected)
   return socket;
 }

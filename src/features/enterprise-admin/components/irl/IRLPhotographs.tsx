@@ -16,6 +16,7 @@ import {
   updateProductPhotographs,deleteFile
 } from '../../services/companyApi';
 import TableRowQuestion from './utils/TableRowQuestion';
+import { logger } from '@/hooks/logger';
 
 interface OfficePhotograph {
   id: number;
@@ -133,7 +134,7 @@ const initialProductPhotographs: ProductPhotograph[] = [
   }
 ];
 
-const IRLPhotographs = () => {
+const IRLPhotographs = ({buttonEnabled:boolean}) => {
   const [officePhotographs, setOfficePhotographs] = useState<OfficePhotograph[]>(initialOfficePhotographs);
   const [productPhotographs, setProductPhotographs] = useState<ProductPhotograph[]>(initialProductPhotographs);
   const [isLoading, setIsLoading] = useState(true);
@@ -149,7 +150,7 @@ const IRLPhotographs = () => {
       const user = localStorage.getItem('fandoro-user');
       return user ? JSON.parse(user)?.entityId || null : null;
     } catch (error) {
-      console.error("Error parsing user data:", error);
+      logger.error("Error parsing user data:", error);
       return null;
     }
   };
@@ -242,7 +243,7 @@ const IRLPhotographs = () => {
   
       toast.success('File deleted successfully');
     } catch (err) {
-      console.error('Error deleting file:', err);
+      logger.error('Error deleting file:', err);
       toast.error('Failed to delete file');
     } finally {
       setIsSubmitting(false);
@@ -273,7 +274,7 @@ const IRLPhotographs = () => {
   
       toast.success('File deleted successfully');
     } catch (err) {
-      console.error('Error deleting file:', err);
+      logger.error('Error deleting file:', err);
       toast.error('Failed to delete file');
     } finally {
       setIsSubmitting(false);
@@ -424,7 +425,7 @@ const IRLPhotographs = () => {
       toast.success(isDraft ? 'Draft saved successfully!' : 'Photographs submitted successfully!');
       await loadData();
     } catch (err) {
-      console.error('Submission error:', err);
+      logger.error('Submission error:', err);
       toast.error('Failed to submit photographs. Please try again.');
     } finally {
       setIsSubmitting(false);

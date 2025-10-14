@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,11 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Calendar, Save, TrendingUp, Plus, Edit3 } from 'lucide-react';
+import { Calendar, Save, TrendingUp, Plus, Edit3, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { ESGMetricWithTracking } from '../../data/esgMetricsData';
 import FlexibleDataInput from './FlexibleDataInput';
 import { httpClient } from '@/lib/httpClient';
+import { logger } from '@/hooks/logger';
+import { PageAccessContext } from '@/context/PageAccessContext';
 
 
 interface MaterialTopic {
@@ -40,6 +42,7 @@ interface MetricDataEntry {
   industry: string;
   period?: string; // e.g., "Q1", "January", "Week 1", etc.
   periodIndex?: number; // For ordering periods
+  locationId?: string; // Location identifier
 }
 
 interface MetricPeriod {
@@ -65,6 +68,11 @@ const financialYearList = [
   { value: "2024-2025", label: "2024-2025" },
   { value: "2025-2026", label: "2025-2026" },
 ];
+export interface LocationData {
+  _id: string; // use string if you serialize from backend
+  name: string;
+  unitId: string;
+}
 
 const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, finalMetrics }) => {
   const [configuredMetrics, setConfiguredMetrics] = useState<ESGMetricWithTracking[]>([]);
@@ -77,10 +85,22 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
   const [bulkEntries, setBulkEntries] = useState<{ [key: string]: any }>({});
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
 
+  const [selectedLocation, setSelectedLocation] = useState<string>('');
+
+  const {userRole}=useContext(PageAccessContext)
+  const [locations, setLocations] = useState<LocationData[]>([]);
+
+  // Available locations
+  // const locations = ['Mumbai Office', 'Delhi Warehouse', 'Bangalore Manufacturing', 'Chennai Office'];
+
 
   const getMetricsKpiData = async (selectedYear) => {
     try {
-      let metricDataResponse = await httpClient.get(`materiality/metrics/data-entry?year=${selectedYear}`)
+      let subQuery = `?year=${selectedYear}`;
+      if(userRole == 'employee' && selectedLocation){
+        subQuery += `&locationId=${selectedLocation}`
+      }
+      let metricDataResponse = await httpClient.get(`materiality/metrics/data-entry${subQuery}`);
       if (metricDataResponse['data']['status']) {
         const metricsEntries = metricDataResponse['data']['data']['metricsEntries'];
         
@@ -104,27 +124,12 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
         setDataEntries([]);
       }
     } catch (error) {
-      console.error("Error fetching metrics KPI data:", error);
+      logger.error("Error fetching metrics KPI data:", error);
       setDataEntries([]); 
     }
   }
 
-  // Load configured metrics from localStorage
-  useEffect(() => {
-    console.log('its hit when we change year ');
-    // const saved = localStorage.getItem('savedESGMetrics');
-    // if (saved) {
-    //   try {
-    //     const parsedMetrics = JSON.parse(saved);
-    //     setConfiguredMetrics(parsedMetrics);
-    //   } catch (error) {
-    //     console.error('Error loading saved metrics:', error);
-    //   }
-    // }
-    // getGraph()
-    getMetricsKpiData(selectedFinancialYear);
-    setConfiguredMetrics(finalMetrics)
-  }, [finalMetrics,selectedFinancialYear]);
+  
 
 
 
@@ -152,10 +157,17 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
       toast.error('Please fill in all required fields');
       return;
     }
+
+    // Validate location selection. put a check if location is selected if logged user is employee
+    if (!selectedLocation && userRole == 'employee') {
+      toast.error('Please select a location');
+      return;
+    }
+
     let tempParsedMetric: ESGMetricWithTracking = JSON.parse(selectedMetric);
     const metric = configuredMetrics?.find(m => m.code === tempParsedMetric.code && m.name === tempParsedMetric.name);
     if (!metric) return;
-    console.log(`metric ==> `, metric)
+    logger.log(`metric ==> `, metric)
 
     // Check if entry already exists for this period
     const existingEntryIndex = dataEntries.findIndex(entry =>
@@ -163,6 +175,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
       entry.metricName === tempParsedMetric.name &&
       entry.period === selectedPeriod &&
       entry.financialYear === selectedFinancialYear
+      // entry.location === selectedLocation
     );
 
     const newEntry: MetricDataEntry = {
@@ -179,7 +192,8 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
       industry: metric.industry ? metric.industry : '',
       esg: metric.esg,
       period: selectedPeriod,
-      periodIndex: getAvailablePeriods(tempParsedMetric.code, tempParsedMetric.name).find(p => p.period === selectedPeriod)?.periodIndex || 0
+      periodIndex: getAvailablePeriods(tempParsedMetric.code, tempParsedMetric.name).find(p => p.period === selectedPeriod)?.periodIndex || 0,
+      locationId: selectedLocation
     };
     let dataEntryResponse = await httpClient.post('materiality/metrics/data-entry', newEntry)
     // console.log(`dataEntryResponse`, dataEntryResponse)
@@ -206,6 +220,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
     setEntryValue('');
     setSelectedPeriod('');
     setEntryDate(new Date().toISOString().split('T')[0]);
+    setSelectedLocation('');
   };
 
   const getFrequencyColor = (frequency: string) => {
@@ -424,6 +439,25 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
     return missingPeriods.length>0;
   }) || [];
 
+  const getUserAccessLevel = async() => {
+    try {
+      let accessData=await httpClient.get('subuser/access');
+      if(accessData['data']['status']){
+        if(accessData['data']['locationsData'] && accessData['data']['locationsData'].length>0){
+          // let locs=accessData['locationsData'].map((loc) => loc.name)
+          setLocations(accessData['data']['locationsData'])
+          setSelectedLocation(accessData['data']['locationsData'][0]._id)
+          // if(locs.length==1){
+          //   setSelectedLocation(locs[0])
+          // }
+        }
+      }
+    } catch (error) {
+      logger.error("Error fetching user access level:", error);
+      throw new Error('Failed to fetch user access level');
+    }
+  }
+
 
 
   useEffect(() => {
@@ -444,9 +478,28 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
   //   console.log(`dataEntries => `, dataEntries)
   // }, [bulkEntries])
 
+
+
   useEffect(() => {
-    // console.log(`configuredMetrics => `, configuredMetrics)
-  }, [configuredMetrics])
+    if(userRole){
+      if(userRole == 'employee'){
+        getUserAccessLevel()
+      }
+    }
+  }, [userRole])
+
+  useEffect(() => {
+    if(userRole !== 'employee'){
+      getMetricsKpiData(selectedFinancialYear);
+      setConfiguredMetrics(finalMetrics)
+    }
+    else{
+      if(selectedLocation){
+        getMetricsKpiData(selectedFinancialYear);
+        setConfiguredMetrics(finalMetrics)
+      }
+    }
+  }, [finalMetrics,selectedFinancialYear,userRole,selectedLocation]);
 
   return (
     <div className="space-y-6">
@@ -458,9 +511,26 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
               <CardTitle>ESG Data Entry</CardTitle>
               <CardDescription>
                 Enter data for your configured ESG metrics for financial year {selectedFinancialYear}
+                {selectedLocation && ` at ${locations.find(loc => loc._id === selectedLocation)?.name}`}
               </CardDescription>
             </div>
             <div className="flex gap-2">
+            {userRole == 'employee' && <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Select Location" />
+                </SelectTrigger>
+                <SelectContent>
+                  
+                  {locations && locations.map(location => (
+                    <SelectItem key={location._id} value={location._id}>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        {location.name} ({location.unitId})
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>}
               <Select value={selectedFinancialYear} onValueChange={setSelectedFinancialYear}>
                 <SelectTrigger className="w-32">
                   <SelectValue />

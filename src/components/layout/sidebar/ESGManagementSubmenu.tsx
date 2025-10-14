@@ -4,18 +4,25 @@ import { useLocation, Link } from 'react-router-dom';
 import { ChevronDown, ChevronRight, BarChart3, FileText, LineChart } from 'lucide-react';
 import { SidebarMenuItem, SidebarMenuButton, SidebarMenuSub, SidebarMenuSubItem, SidebarMenuSubButton } from '@/components/ui/sidebar';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { logger } from '@/hooks/logger';
+import { NavigationItem } from './navigationData';
 
 interface ESGManagementSubmenuProps {
+  submenu?: NavigationItem[];
   isExpanded: boolean;
+  allowedUrls?: string[];
   onToggle: () => void;
+  
 }
 
 export const ESGManagementSubmenu: React.FC<ESGManagementSubmenuProps> = ({
+  submenu,
   isExpanded,
+  allowedUrls=[],
   onToggle
 }) => {
   const location = useLocation();
-
+  logger.log("Allowed URLs in ESGManagementSubmenu:", allowedUrls);
   const submenuItems = [
     { name: "Overview", href: "/esg", icon: BarChart3 },
     { name: "ESMS", href: "/esg/esms", icon: FileText },
@@ -40,7 +47,9 @@ export const ESGManagementSubmenu: React.FC<ESGManagementSubmenuProps> = ({
         </CollapsibleTrigger>
         <CollapsibleContent>
           <SidebarMenuSub>
-            {submenuItems.map((item) => {
+            
+            {/* .filter((item) => allowedUrls.includes(item.href)) */}
+            {submenu.map((item) => {
               const isActive = location.pathname === item.href;
               return (
                 <SidebarMenuSubItem key={item.name}>

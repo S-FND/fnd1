@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Building2, MapPin, Users, TrendingUp, Calendar, DollarSign, Mail, Phone, Globe } from 'lucide-react';
 import { fetchProfileData } from '../../services/companyApi';
+import { logger } from '@/hooks/logger';
 
 const CompanyProfile = () => {
   const [companyData, setCompanyData] = useState(null);
@@ -15,7 +16,7 @@ const CompanyProfile = () => {
         const data = await fetchProfileData();
         setCompanyData(data);
       } catch (error) {
-        console.error('Error loading company data:', error);
+        logger.error('Error loading company data:', error);
       } finally {
         setIsLoading(false);
       }

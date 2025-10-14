@@ -21,6 +21,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { logger } from '@/hooks/logger';
 
 const TEXT_INPUT_KEYS = ['type_of_servers_used', 'cloud_servers_used', 'scope_data_stored_servers', 'name_of_contractors',
   'name_of_refrigerants',
@@ -81,7 +82,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       }
       return null;
     } catch (error) {
-      console.error("Error parsing user data:", error);
+      logger.error("Error parsing user data:", error);
       return null;
     }
   };
@@ -277,7 +278,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       await loadData();
       toast.success(isDraft ? 'Draft saved successfully!' : 'Form submitted successfully!');
     } catch (err) {
-      console.error('Submission failed:', err);
+      logger.error('Submission failed:', err);
       toast.error('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
@@ -542,7 +543,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       await loadData();
       toast.success('File deleted successfully');
     } catch (err) {
-      console.error('Error deleting file:', err);
+      logger.error('Error deleting file:', err);
       toast.error(err.message || 'Failed to delete file');
     } finally {
       setIsLoading(false);

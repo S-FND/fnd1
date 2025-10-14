@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { User, Permissions } from '@/types/auth';
 import { defaultPermissions } from '@/config/permissions';
+import { logger } from './logger';
+import { PageAccessContext } from '@/context/PageAccessContext';
 
 export const useAuthProvider = () => {
+  const {setPageAccessList,setUserRole,pageAccessList}=useContext(PageAccessContext)
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [permissions, setPermissions] = useState<Permissions>({});
@@ -44,7 +47,7 @@ export const useAuthProvider = () => {
         setIsLoading(false);
         return;
       }
-      const { user, token,access } = data;
+      const { user, token,access,roleMenu=[] } = data;
 
       // 👇 Assign _id to companyId if role is company-type and companyId is missing
       if (
@@ -62,11 +65,18 @@ export const useAuthProvider = () => {
       localStorage.setItem("fandoro-token", token);
       localStorage.setItem("fandoro-permissions", JSON.stringify(rolePermissions));
       localStorage.setItem("fandoro-access", JSON.stringify(access));
+      logger.debug("Login successful, user:", user);
+      setUserRole(user.role);
+      if(!user.isParent) {
+        logger.debug("Individual user detected, setting roleMenu:", roleMenu);
+        localStorage.setItem("fandoro-team-access", JSON.stringify(roleMenu));
+        setPageAccessList(roleMenu);
+      }
       
       toast.success("Login successful!");
       redirectBasedOnRole(user.role);
     } catch (error) {
-      console.error("Login error:", error);
+      logger.error("Login error:", error);
       toast.error("Login failed. Please try again.");
     } finally {
       setIsLoading(false);
@@ -76,6 +86,17 @@ export const useAuthProvider = () => {
   const redirectBasedOnRole = (role: string) => {
     // Check if there's a redirect from location state
     const from = location.state?.from;
+    let employeeNavigateUrl = "/employee/dashboard"; // Default for employee
+    if(role == 'employee'){
+      let teamAccess = localStorage.getItem("fandoro-team-access");
+      if(teamAccess){
+        let teamAccessList = JSON.parse(teamAccess);
+        let dashboardAccess = teamAccessList.find((item) => item.accessLevel !== 'no_access');
+        if(dashboardAccess && dashboardAccess.url){
+          employeeNavigateUrl = dashboardAccess.url;
+        }
+      }
+    }
     
     switch(role) {
       case "fandoro_admin":
@@ -92,7 +113,7 @@ export const useAuthProvider = () => {
         navigate(from || "/unit-admin/dashboard");
         break;
       case "employee":
-        navigate(from || "/employee/dashboard");
+        navigate(from || employeeNavigateUrl);
         break;
       case "supplier":
         navigate(from || "/supplier/dashboard");
@@ -109,6 +130,8 @@ export const useAuthProvider = () => {
 
   const logout = () => {
     // alert("Log out")
+    setUserRole(null);
+    setPageAccessList([]);
     setUser(null);
     setToken(null);
     setPermissions({});
@@ -117,7 +140,8 @@ export const useAuthProvider = () => {
     localStorage.removeItem("fandoro-token");
     localStorage.removeItem("fandoro-permissions");
     toast.info("You have been logged out");
-    navigate("/");
+    // navigate("/");
+    setTimeout(() => navigate("/"), 0);
   };
 
   const isCompanyUser = () => user?.role === "admin" || user?.role === "manager" || user?.role === "unit_admin";
@@ -144,6 +168,7 @@ export const useAuthProvider = () => {
     const storedToken = localStorage.getItem("fandoro-token");
     // console.log('storedUser',storedUser)
     // console.log('storedUser role',storedUser.role)
+    // debugger;
     if(storedUser && storedToken ){
       if(roles && roles.length>0){
         if(roles.includes(storedUser.role)){

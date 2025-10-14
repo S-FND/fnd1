@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useApiGet, useApiPost } from '@/hooks/useApi';
 import { companyService, authService } from '@/services/apiService';
 import { toast } from 'sonner';
+import { logger } from '@/hooks/logger';
 
 // Example component showing how to use the HTTP interceptor system
 const ApiUsageExample: React.FC = () => {
@@ -20,16 +21,16 @@ const ApiUsageExample: React.FC = () => {
     try {
       await get('/company/profile', {
         onSuccess: (data) => {
-          console.log('Company profile loaded:', data);
+          logger.log('Company profile loaded:', data);
           toast.success('Company profile loaded successfully');
         },
         onError: (error) => {
-          console.error('Failed to load company profile:', error);
+          logger.error('Failed to load company profile:', error);
         }
       });
     } catch (error) {
       // Error is already handled by interceptors
-      console.log('Error caught in component:', error);
+      logger.error('Error caught in component:', error);
     }
   };
 

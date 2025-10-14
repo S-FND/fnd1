@@ -5,8 +5,10 @@ import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
+import { logger } from '@/hooks/logger';
 
 const StakeholdersOverviewPage = () => {
+  logger.debug('Rendering StakeholdersOverviewPage component');
   const { isLoading } = useRouteProtection(['admin', 'manager']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 

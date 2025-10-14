@@ -10,8 +10,10 @@ import { Link } from 'react-router-dom';
 import { FileText, FileSearch, Database, Plus } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { logger } from '@/hooks/logger';
 
 const ESGDDPage = () => {
+  logger.debug('Rendering ESGDDPage component');
   const { isLoading } = useRouteProtection(['admin', 'manager']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const navigate = useNavigate();

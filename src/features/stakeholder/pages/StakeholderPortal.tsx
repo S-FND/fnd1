@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import StakeholderLogin from './StakeholderLogin';
 import StakeholderMaterialityDashboard from './StakeholderMaterialityDashboard';
 import { MaterialTopic, sasbTopics, griTopics } from '../../enterprise-admin/data/frameworkTopics';
+import { logger } from '@/hooks/logger';
 
 // Mock data for demonstration
 const mockStakeholderSession = {
@@ -21,12 +22,12 @@ const StakeholderPortal: React.FC = () => {
   const handleLogin = (credentials: { username: string; password: string }) => {
     // In a real implementation, validate credentials against the database
     // For now, we'll simulate a successful login
-    console.log('Login attempt with:', credentials);
+    logger.log('Login attempt with:', credentials);
     setIsAuthenticated(true);
   };
 
   const handleSavePrioritizations = (prioritizations: any[]) => {
-    console.log('Saving prioritizations:', prioritizations);
+    logger.log('Saving prioritizations:', prioritizations);
     // In a real implementation, save to database
   };
 

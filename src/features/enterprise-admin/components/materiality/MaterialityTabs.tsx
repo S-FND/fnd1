@@ -7,6 +7,7 @@ import MaterialityMatrix from './MaterialityMatrix';
 import MaterialTopicsTab from './MaterialTopicsTab';
 import TopicsByPriority from './TopicsByPriority';
 import MethodologyTab from './MethodologyTab';
+import { logger } from '@/hooks/logger';
 
 // Define allowed framework types
 type Framework = 'SASB' | 'GRI' | 'Custom';
@@ -71,7 +72,7 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
   // setTimeout(()=>{
   //   getMaterialityData()
   // },4000)
-  console.log(`selectedMaterialTopics ========> `,selectedMaterialTopics)
+  logger.log(`selectedMaterialTopics ========> `,selectedMaterialTopics)
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
       <div className="flex items-center justify-between">

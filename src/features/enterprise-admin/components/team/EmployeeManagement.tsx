@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Loader2, UserPlus, Search, Edit, Users, Check, X } from 'lucide-react';
+import { Loader2, UserPlus, Search, Edit, Users, Check, X, Eye } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   updateEmployee,
@@ -17,6 +17,10 @@ import {
   // fetchUserAccess,
   updateCompanyFeatures
 } from '../../services/employeeManagementAPI';
+import { useNavigate } from 'react-router-dom';
+import { logger } from '@/hooks/logger';
+
+// import { UserPlus, Search, Filter, Edit, Users, Eye } from 'lucide-react';
 
 interface Employee {
   _id: string;
@@ -88,6 +92,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
   refreshData: () => void;
   loading: boolean;
 }) => {
+  const navigate = useNavigate();
   const [urlList, setUrlList] = useState<string[]>([]);
   const [isUrlLoading, setIsUrlLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -139,7 +144,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
         }
       } catch (error) {
         toast.error('Failed to load URL list');
-        console.error(error);
+        logger.error(error);
       } finally {
         setIsUrlLoading(false);
       }
@@ -190,6 +195,8 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
       setSelectAll(false);
     }
   }, [selectedUrls, urlList]);
+
+
   const handleSaveEdit = async () => {
     try {
       if (!selectedEmployee) return;
@@ -201,10 +208,10 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
         updatedAt: new Date().toISOString() // Update timestamp
       };
 
-      console.log('Sending complete payload to /subuser/activate:', completePayload);
+      logger.log('Sending complete payload to /subuser/activate:', completePayload);
 
       const [response, error] = await updateEmployee(completePayload);
-      console.log('API Response:', response);
+      logger.log('API Response:', response);
 
       if (response && (response.status === true || response._id)) {
         toast.success('Employee updated successfully');
@@ -214,10 +221,19 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
         toast.error(error || 'Failed to update employee');
       }
     } catch (err) {
-      console.error('Error in handleSaveEdit:', err);
+      logger.error('Error in handleSaveEdit:', err);
       toast.error('An error occurred while updating employee');
     }
+  }
+  const handleViewDetails = (employee: any) => {
+    navigate(`/team-management/employee/${employee._id}`);
   };
+
+  // const handleSaveEdit = () => {
+  //   // Here you would normally update the employee data
+  //   logger.log('Saving employee edit:', editForm);
+  //   setIsEditDialogOpen(false);
+  // };
 
   // const handleSaveAssignment = async () => {
   //   if (!selectedEmployee) return;
@@ -230,11 +246,11 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
   //       updatedAt: new Date().toISOString() // Add current timestamp
   //     };
 
-  //     console.log('Sending to /subuser/activate:', updateObj);
+  //     logger.log('Sending to /subuser/activate:', updateObj);
 
   //     const [response, error] = await updateEmployee(updateObj);
 
-  //     console.log('API Response:', response);
+  //     logger.log('API Response:', response);
 
   //     if (response?.status === true || response?._id) {
   //       toast.success('Access URLs assigned successfully');
@@ -245,7 +261,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
   //     }
   //   } catch (err) {
   //     toast.error('An error occurred while assigning access URLs');
-  //     console.error(err);
+  //     logger.error(err);
   //   }
   // };
 
@@ -257,10 +273,10 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
   //       active,
   //       updatedAt: new Date().toISOString()
   //     };
-  //     console.log('activationPayload',activationPayload);
+  //     logger.log('activationPayload',activationPayload);
   //     const [response, error] = await updateEmployee(activationPayload);
 
-  //     console.log('Activation response:', response);
+  //     logger.log('Activation response:', response);
 
   //     if (response && (response.status === true || response._id)) {
   //       toast.success(`Employee ${active ? 'activated' : 'deactivated'} successfully`);
@@ -270,7 +286,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
   //     }
   //   } catch (err) {
   //     toast.error('An error occurred while updating employee status');
-  //     console.error(err);
+  //     logger.error(err);
   //   }
   // };
 
@@ -364,10 +380,14 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
         }
       }
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       toast.error("Failed to update features");
     }
   };
+
+  // const handleViewDetails = (employee: any) => {
+  //   navigate(`/team-management/employee/${employee._id}`);
+  // }
 
   const handleNewCompanySetup = async (entityId: string) => {
     try {
@@ -380,7 +400,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
         JSON.stringify(features || [])
       );
     } catch (err) {
-      console.error("Failed to set up company features:", err);
+      logger.error("Failed to set up company features:", err);
     }
   };
 
@@ -466,6 +486,14 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleViewDetails(employee)}
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      Details
+                    </Button>
                     <Button
                       size="sm"
                       variant="outline"

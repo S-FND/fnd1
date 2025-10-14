@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,8 @@ import { Upload, FileText, Check, X, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { httpClient } from '@/lib/httpClient';
 import { ENV } from "@/config/env";
+import { logger } from '@/hooks/logger';
+import { PageAccessContext } from '@/context/PageAccessContext';
 const API_URL = ENV.API_URL;
 
 interface ESMSDocument {
@@ -40,6 +42,9 @@ interface ESMSDocumentSection {
 }
 
 const ESMSPage: React.FC = () => {
+  logger.debug('Rendering ESMSPage component');
+  const {checkPageButtonAccess}=useContext(PageAccessContext);
+  const [buttonEnabled, setButtonEnabled] = useState(false);
   const [deleteFileDialog, setDeleteFileDialog] = useState<{
     open: boolean;
     sectionId: string;
@@ -217,7 +222,7 @@ const ESMSPage: React.FC = () => {
       }
       return null;
     } catch (error) {
-      console.error("Error parsing user data:", error);
+      logger.error("Error parsing user data:", error);
       return null;
     }
   };
@@ -277,7 +282,7 @@ const ESMSPage: React.FC = () => {
         );
       }
     } catch (error) {
-      console.error('Error loading ESMS ', error);
+      logger.error('Error loading ESMS ', error);
       // toast.error('Failed to load ESMS data');
     } finally {
       setIsLoading(false);
@@ -464,7 +469,7 @@ const ESMSPage: React.FC = () => {
 
       toast.success('Status updated successfully');
     } catch (error) {
-      console.error('Error updating document status:', error);
+      logger.error('Error updating document status:', error);
       toast.error('Failed to update document status');
     }
   };
@@ -515,62 +520,22 @@ const ESMSPage: React.FC = () => {
 
       toast.success('Data saved successfully');
     } catch (error) {
-      console.error('Error saving documents:', error);
+      logger.error('Error saving documents:', error);
       toast.error('Failed to save documents');
     } finally {
       setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    const hasAccess = checkPageButtonAccess('enterprise-admin');
+    logger.debug("ESMS access:", hasAccess);
+    setButtonEnabled(hasAccess);
+  }, []);
+
   const confirmDeleteSingleFile = async () => {
-    const { sectionId, documentId, fileName, fileUrl, fileIndex } = deleteFileDialog;
-
-    try {
-      // Extract S3 path (fix extra spaces!)
-      const filePath = fileUrl
-        .replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/', '')
-        .trim();
-
-      // Delete from backend/S3
-      await fetch(`${API_URL}/document/esms`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          filesToDelete: [filePath]
-        })
-      });
-
-      // Update local state
-      setDocumentSections(prev =>
-        prev.map(section =>
-          section.id === sectionId
-            ? {
-              ...section,
-              documents: section.documents.map(doc =>
-                doc.id === documentId
-                  ? {
-                    ...doc,
-                    fileNames: doc.fileNames?.filter((_, i) => i !== fileIndex),
-                    fileUrls: doc.fileUrls?.filter((_, i) => i !== fileIndex),
-                    fileChange: !!(doc.fileNames && doc.fileNames.length > 1)
-                  }
-                  : doc
-              )
-            }
-            : section
-        )
-      );
-
-      toast.success(`File "${fileName}" deleted`);
-      setDeleteFileDialog({ ...deleteFileDialog, open: false });
-    } catch (error) {
-      console.error('Error deleting file:', error);
-      toast.error('Failed to delete file');
-    }
   };
+
   return (
     <div className="space-y-6">
       <div>
@@ -685,6 +650,7 @@ const ESMSPage: React.FC = () => {
                             type="file"
                             id={`upload-${section.id}-${document.id}`}
                             className="hidden"
+                            disabled={isLoading || !buttonEnabled}
                             onChange={(e) => {
                               handleFileUpload(section.id, document.id, e);
                             }}
@@ -701,7 +667,7 @@ const ESMSPage: React.FC = () => {
                                 fileInput.click();
                               }
                             }}
-                            disabled={isLoading}
+                            disabled={isLoading || !buttonEnabled}
                           >
                             <Upload className="w-4 h-4 mr-2" />
                             {document.fileChange ? 'Add More' : 'Upload'}
@@ -757,7 +723,7 @@ const ESMSPage: React.FC = () => {
       <div className="flex justify-end">
         <Button
           onClick={saveAllDocuments}
-          disabled={isLoading}
+          disabled={isLoading || !buttonEnabled}
           className="bg-blue-600 hover:bg-blue-700"
         >
           {isLoading ? 'Saving...' : 'Save All Documents'}

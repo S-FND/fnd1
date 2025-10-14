@@ -9,6 +9,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { socketConnect } from '@/context/SocketContext'; // Import your socket function
 import { toast } from 'sonner'; // Import toast for notifications
+import { logger } from '@/hooks/logger';
 
 interface Notification {
   _id: string;
@@ -36,21 +37,21 @@ export const Navbar: React.FC = () => {
         const socket = socketConnect(JSON.parse(token));
         
         socket.on("connect", () => {
-          console.log("✅ Socket connected successfully!");
+          logger.log("✅ Socket connected successfully!");
           sessionStorage.setItem('socketId', socket.id);
         });
 
         socket.on("disconnect", (reason) => {
-          console.log('❌ Socket disconnected. Reason:', reason);
+          logger.log('❌ Socket disconnected. Reason:', reason);
         });
 
         socket.on("connect_error", (error) => {
-          console.error('🔥 Socket connection error:', error.message);
+          logger.error('🔥 Socket connection error:', error.message);
         });
 
         // Handle notifications
         socket.on('notification', (data: any) => {
-          console.log('📨 Received notification:', data);
+          logger.log('📨 Received notification:', data);
           if (data?.data?.data) {
             const newNotifications = data.data.data;
             setNotifications(prev => [...newNotifications, ...prev]);
@@ -58,7 +59,7 @@ export const Navbar: React.FC = () => {
         });
 
         socket.on('toast/notification', (data: any) => {
-          console.log('💬 Received toast notification:', data);
+          logger.log('💬 Received toast notification:', data);
           if (data?.data?.message) {
             toast.info(data.data.message);
           }
@@ -69,7 +70,7 @@ export const Navbar: React.FC = () => {
           socket.disconnect();
         };
       } catch (error) {
-        console.error('💥 Failed to create socket:', error);
+        logger.error('💥 Failed to create socket:', error);
       }
     }
   }, [user]);

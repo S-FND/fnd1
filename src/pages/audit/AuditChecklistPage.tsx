@@ -6,8 +6,10 @@ import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import AuditChecklist from '@/components/audit/AuditChecklist';
 import AuditSupplierSharing from '@/components/audit/AuditSupplierSharing';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { logger } from '@/hooks/logger';
 
 const AuditChecklistPage = () => {
+  logger.debug('Rendering AuditChecklistPage component');
   const { isAuthenticated, isCompanyUser,isAuthenticatedStatus } = useAuth();
 
   if (!isAuthenticatedStatus()) {

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import { logger } from '@/hooks/logger';
 
 const AdvancedIRLManagement = () => {
   const [formData, setFormData] = useState({
@@ -37,11 +38,11 @@ const AdvancedIRLManagement = () => {
   });
 
   const handleSave = () => {
-    console.log('Saving Advanced IRL Management data:', formData);
+    logger.log('Saving Advanced IRL Management data:', formData);
   };
 
   const handleSubmit = () => {
-    console.log('Submitting Advanced IRL Management data:', formData);
+    logger.log('Submitting Advanced IRL Management data:', formData);
   };
 
   return (

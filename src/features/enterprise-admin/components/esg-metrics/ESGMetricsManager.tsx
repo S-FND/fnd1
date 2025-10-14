@@ -14,6 +14,7 @@ import CustomMetricDialog from './CustomMetricDialog';
 import ExcelUpload from './ExcelUpload';
 import industryList from "../../data/industryBychatgtp.json";
 import { httpClient } from '@/lib/httpClient';
+import { logger } from '@/hooks/logger';
 
 interface MaterialTopic {
   id: string;
@@ -221,7 +222,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
   // Load metrics when topic changes
   useEffect(() => {
     if (selectedTopicId && selectedTopicId !== 'all-topics') {
-      console.log(`selectedTopicId ===> `, selectedTopicId)
+      logger.log(`selectedTopicId ===> `, selectedTopicId)
       // Check if this is a standard material topic with IRIS+ metrics
       // if (isStandardMaterialTopic(selectedTopicId)) {
       //   // Get IRIS+ metrics for this topic
@@ -308,7 +309,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
       if (metric) {
         setSelectedMetrics(prev => [...prev, metric]);
       } else {
-        console.error('Metric not found:', { code, name });
+        logger.error('Metric not found:', { code, name });
       }
     }
   };
@@ -322,7 +323,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
     const index = tempSelectedMetrics.findIndex(item =>
       Object.keys(metric).every(key => item[key] === metric[key])
     );
-    console.log(`handleRemoveMetric :: index => `, index)
+    logger.log(`handleRemoveMetric :: index => `, index)
     if (index > -1) {
       tempSelectedMetrics.splice(index, 1); // remove it
     }
@@ -331,7 +332,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
   };
 
   const handleEditMetric = (metric: ESGMetricWithTracking) => {
-    console.log(`handleEditMetric :: handleEditMetric :: metric => `, metric)
+    logger.log(`handleEditMetric :: handleEditMetric :: metric => `, metric)
     setEditingMetric(metric);
     setCustomMetricForm({
       name: metric.name,
@@ -350,7 +351,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
   };
 
   const handleEditSavedMetric = (metric: ESGMetricWithTracking) => {
-    console.log(`handleEditSavedMetric :: handleEditSavedMetric :: metric => `, metric)
+    logger.log(`handleEditSavedMetric :: handleEditSavedMetric :: metric => `, metric)
     setIsEditingConfig(true)
     setEditingMetric(metric);
     setCustomMetricForm({
@@ -397,7 +398,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
   };
 
   const handleSaveEdit = async () => {
-    console.log(`handleSaveEdit :: handleSaveEdit `)
+    logger.log(`handleSaveEdit :: handleSaveEdit `)
     if (editingMetric) {
       const updatedMetric = {
         ...editingMetric,
@@ -543,7 +544,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
       toast.error('Please enter a metric name');
       return;
     }
-    console.log("handleAddCustomMetric :: Entry")
+    logger.log("handleAddCustomMetric :: Entry")
     // Determine category based on selected topic or default
     let category: 'Environmental' | 'Social' | 'Governance' = 'Environmental';
     let selectedTopic: MaterialTopic = null;
@@ -591,13 +592,13 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
       })
       if(updateResponse.status){
       }
-      console.log('updateResponse', updateResponse)
+      logger.log('updateResponse', updateResponse)
       setSelectedMetrics(updatedSelectedMetrics);
       setIsAddDialogOpen(false);
       resetCustomMetricForm();
       toast.success('Custom metric added and available for all topics');
     } catch (error) {
-      console.log("error :: updateMatrixData => ", error)
+      logger.log("error :: updateMatrixData => ", error)
     }
 
   };
@@ -643,7 +644,7 @@ const ESGMetricsManager: React.FC<ESGMetricsManagerProps> = ({ materialTopics, f
         getMaterialityData()
       }
     } catch (error) {
-      console.log("error :: updateMatrixData => ", error)
+      logger.log("error :: updateMatrixData => ", error)
     }
     setSelectedMetrics([]);
   };

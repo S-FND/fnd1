@@ -1,5 +1,6 @@
 import React from 'react';
 import IRLComplianceTable from './IRLComplianceTable';
+import { logger } from '@/hooks/logger';
 
 const facilityItems = [
   {
@@ -120,7 +121,8 @@ const facilityItems = [
   }
 ];
 
-const IRLAdditionalFacility = () => {
+const IRLAdditionalFacility = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
+  logger.debug('Rendering IRLAdditionalFacility component :: buttonEnabled =', buttonEnabled);
   return (
     <IRLComplianceTable
       title="Facility Information"

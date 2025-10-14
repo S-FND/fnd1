@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import jsPDF from 'jspdf';
+import { logger } from '@/hooks/logger';
 
 interface ReportCardProps {
   id: string;
@@ -128,7 +129,7 @@ const ReportCard: React.FC<ReportCardProps> = ({
       setIsDownloading(false);
       toast.success(`${title} downloaded successfully`);
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      logger.error('Error generating PDF:', error);
       setIsDownloading(false);
       toast.error(`Failed to download report: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }

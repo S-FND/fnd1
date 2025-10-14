@@ -11,8 +11,10 @@ import { mockESGDDReports } from '../data/esgDD';
 import { ESGDDReportsList } from '../components/esg-dd/ESGDDReportsList';
 import { ESGDDWizard } from '../components/esg-dd/ESGDDWizard';
 import { ArrowLeft, FileSearch, Plus } from 'lucide-react';
+import { logger } from '@/hooks/logger';
 
 const AutomatedESGDDPage = () => {
+  logger.debug('Rendering AutomatedESGDDPage component');
   const { isLoading } = useRouteProtection(['admin', 'unit_admin']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('reports');

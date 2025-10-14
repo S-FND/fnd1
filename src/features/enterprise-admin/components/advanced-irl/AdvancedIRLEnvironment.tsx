@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { logger } from '@/hooks/logger';
 
 const AdvancedIRLEnvironment = () => {
   const [formData, setFormData] = useState({
@@ -46,11 +47,11 @@ const AdvancedIRLEnvironment = () => {
   });
 
   const handleSave = () => {
-    console.log('Saving Advanced IRL Environment data:', formData);
+    logger.log('Saving Advanced IRL Environment data:', formData);
   };
 
   const handleSubmit = () => {
-    console.log('Submitting Advanced IRL Environment data:', formData);
+    logger.log('Submitting Advanced IRL Environment data:', formData);
   };
 
   return (

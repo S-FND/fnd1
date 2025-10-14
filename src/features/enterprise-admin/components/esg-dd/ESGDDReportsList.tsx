@@ -5,6 +5,7 @@ import { ESGDDReport } from '../../types/esgDD';
 import { Badge } from '@/components/ui/badge';
 import { FileText, Download, ArrowDown, ArrowUp } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { logger } from '@/hooks/logger';
 
 interface ESGDDReportsListProps {
   reports: ESGDDReport[];
@@ -88,7 +89,7 @@ export const ESGDDReportsList: React.FC<ESGDDReportsListProps> = ({ reports, onV
         description: `${report.title} downloaded and opened in a new tab`,
       });
     } catch (error) {
-      console.error(error);
+      logger.error(error);
       toast({
         title: "Download Failed",
         description: "Could not download the report",
