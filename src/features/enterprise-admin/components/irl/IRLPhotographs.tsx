@@ -317,6 +317,32 @@ const IRLPhotographs = ({buttonEnabled:boolean}) => {
     setErrors(newErrors);
     return isValid;
   };
+  // Helper function to sanitize file names
+  const sanitizeFileName = (fileName) => {
+    if (!fileName || typeof fileName !== 'string') {
+      return fileName || '';
+    }
+    
+    // Split by last dot to preserve extension
+    const lastDotIndex = fileName.lastIndexOf('.');
+    if (lastDotIndex <= 0 || lastDotIndex === fileName.length - 1) {
+      // No extension or just a dot at end
+      return fileName
+        .replace(/\./g, '_')
+        .replace(/\s+/g, '_');
+    }
+    
+    // Split name and extension
+    const namePart = fileName.substring(0, lastDotIndex);
+    const extension = fileName.substring(lastDotIndex);
+    
+    // Sanitize name part (convert dots/spaces to underscores)
+    const sanitizedBaseName = namePart
+      .replace(/\./g, '_')  // Convert dots in name to underscores
+      .replace(/\s+/g, '_'); // Convert spaces to underscores
+    
+    return sanitizedBaseName + extension;
+  };
 
   const handleSubmit = async (isDraft = false) => {
     if (!entityId) {
@@ -354,7 +380,8 @@ const IRLPhotographs = ({buttonEnabled:boolean}) => {
       officePhotographs.forEach(photo => {
         if (photo.attachment?.length > 0) {
           photo.attachment.forEach(file => {
-            hoFormData.append(`${photo.key}_file`, file);
+            const sanitizedFileName = sanitizeFileName(file.name);
+            hoFormData.append(`${photo.key}_file`, file, sanitizedFileName);
           });
         }
       });
@@ -383,7 +410,8 @@ const IRLPhotographs = ({buttonEnabled:boolean}) => {
       productPhotographs.forEach(photo => {
         if (photo.attachment?.length > 0) {
           photo.attachment.forEach(file => {
-            prodFormData.append(`${photo.key}_file`, file);
+            const sanitizedFileName = sanitizeFileName(file.name);
+            prodFormData.append(`${photo.key}_file`, file, sanitizedFileName);
           });
         }
       });
