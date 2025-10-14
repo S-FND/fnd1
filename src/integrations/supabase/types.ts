@@ -56,6 +56,179 @@ export type Database = {
         }
         Relationships: []
       }
+      approval_history: {
+        Row: {
+          action: string
+          actor_id: string
+          actor_role: string
+          approval_request_id: string
+          comment: string | null
+          created_at: string
+          data_snapshot: Json | null
+          id: string
+          ip_address: unknown | null
+          new_status: Database["public"]["Enums"]["workflow_status"]
+          previous_status: Database["public"]["Enums"]["workflow_status"] | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          actor_role: string
+          approval_request_id: string
+          comment?: string | null
+          created_at?: string
+          data_snapshot?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          new_status: Database["public"]["Enums"]["workflow_status"]
+          previous_status?:
+            | Database["public"]["Enums"]["workflow_status"]
+            | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          actor_role?: string
+          approval_request_id?: string
+          comment?: string | null
+          created_at?: string
+          data_snapshot?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          new_status?: Database["public"]["Enums"]["workflow_status"]
+          previous_status?:
+            | Database["public"]["Enums"]["workflow_status"]
+            | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_history_approval_request_id_fkey"
+            columns: ["approval_request_id"]
+            isOneToOne: false
+            referencedRelation: "approval_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_requests: {
+        Row: {
+          approved_at: string | null
+          approver_id: string | null
+          assigned_checker_id: string | null
+          change_summary: string | null
+          created_at: string
+          current_data: Json
+          due_at: string | null
+          evidence_urls: string[] | null
+          id: string
+          maker_id: string
+          materiality_flag: boolean | null
+          module: Database["public"]["Enums"]["maker_checker_module"]
+          portfolio_company_id: string | null
+          previous_data: Json | null
+          priority: Database["public"]["Enums"]["approval_priority"]
+          record_id: string
+          record_type: string
+          requires_dual_approval: boolean | null
+          reviewed_at: string | null
+          status: Database["public"]["Enums"]["workflow_status"]
+          submitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approver_id?: string | null
+          assigned_checker_id?: string | null
+          change_summary?: string | null
+          created_at?: string
+          current_data: Json
+          due_at?: string | null
+          evidence_urls?: string[] | null
+          id?: string
+          maker_id: string
+          materiality_flag?: boolean | null
+          module: Database["public"]["Enums"]["maker_checker_module"]
+          portfolio_company_id?: string | null
+          previous_data?: Json | null
+          priority?: Database["public"]["Enums"]["approval_priority"]
+          record_id: string
+          record_type: string
+          requires_dual_approval?: boolean | null
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["workflow_status"]
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approver_id?: string | null
+          assigned_checker_id?: string | null
+          change_summary?: string | null
+          created_at?: string
+          current_data?: Json
+          due_at?: string | null
+          evidence_urls?: string[] | null
+          id?: string
+          maker_id?: string
+          materiality_flag?: boolean | null
+          module?: Database["public"]["Enums"]["maker_checker_module"]
+          portfolio_company_id?: string | null
+          previous_data?: Json | null
+          priority?: Database["public"]["Enums"]["approval_priority"]
+          record_id?: string
+          record_type?: string
+          requires_dual_approval?: boolean | null
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["workflow_status"]
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_requests_portfolio_company_id_fkey"
+            columns: ["portfolio_company_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_sla_config: {
+        Row: {
+          created_at: string
+          escalation_enabled: boolean | null
+          escalation_hours: number | null
+          id: string
+          module: Database["public"]["Enums"]["maker_checker_module"]
+          requires_dual_approval: boolean | null
+          sla_hours: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          escalation_enabled?: boolean | null
+          escalation_hours?: number | null
+          id?: string
+          module: Database["public"]["Enums"]["maker_checker_module"]
+          requires_dual_approval?: boolean | null
+          sla_hours: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          escalation_enabled?: boolean | null
+          escalation_hours?: number | null
+          id?: string
+          module?: Database["public"]["Enums"]["maker_checker_module"]
+          requires_dual_approval?: boolean | null
+          sla_hours?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -153,6 +326,71 @@ export type Database = {
           },
         ]
       }
+      brsr_report_versions: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          change_summary: string | null
+          content: Json
+          created_at: string
+          created_by: string
+          evidence_urls: string[] | null
+          id: string
+          is_current: boolean | null
+          metrics_references: string[] | null
+          portfolio_company_id: string | null
+          report_section_id: string
+          review_notes: string | null
+          section_name: string
+          section_type: string
+          version_number: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          change_summary?: string | null
+          content: Json
+          created_at?: string
+          created_by: string
+          evidence_urls?: string[] | null
+          id?: string
+          is_current?: boolean | null
+          metrics_references?: string[] | null
+          portfolio_company_id?: string | null
+          report_section_id: string
+          review_notes?: string | null
+          section_name: string
+          section_type: string
+          version_number: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          change_summary?: string | null
+          content?: Json
+          created_at?: string
+          created_by?: string
+          evidence_urls?: string[] | null
+          id?: string
+          is_current?: boolean | null
+          metrics_references?: string[] | null
+          portfolio_company_id?: string | null
+          report_section_id?: string
+          review_notes?: string | null
+          section_name?: string
+          section_type?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brsr_report_versions_portfolio_company_id_fkey"
+            columns: ["portfolio_company_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_versions: {
         Row: {
           change_summary: string | null
@@ -197,6 +435,207 @@ export type Database = {
           version_number?: number
         }
         Relationships: []
+      }
+      esg_cap_versions: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          cap_id: string
+          change_summary: string | null
+          completion_notes: string | null
+          corrective_action: string
+          created_at: string
+          created_by: string
+          evidence_urls: string[] | null
+          id: string
+          is_current: boolean | null
+          issue_description: string
+          portfolio_company_id: string | null
+          responsible_person: string | null
+          status: string
+          target_date: string | null
+          version_number: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          cap_id: string
+          change_summary?: string | null
+          completion_notes?: string | null
+          corrective_action: string
+          created_at?: string
+          created_by: string
+          evidence_urls?: string[] | null
+          id?: string
+          is_current?: boolean | null
+          issue_description: string
+          portfolio_company_id?: string | null
+          responsible_person?: string | null
+          status: string
+          target_date?: string | null
+          version_number: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          cap_id?: string
+          change_summary?: string | null
+          completion_notes?: string | null
+          corrective_action?: string
+          created_at?: string
+          created_by?: string
+          evidence_urls?: string[] | null
+          id?: string
+          is_current?: boolean | null
+          issue_description?: string
+          portfolio_company_id?: string | null
+          responsible_person?: string | null
+          status?: string
+          target_date?: string | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "esg_cap_versions_portfolio_company_id_fkey"
+            columns: ["portfolio_company_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      esg_dd_versions: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          assessment_notes: string | null
+          change_summary: string | null
+          created_at: string
+          created_by: string
+          dd_record_id: string
+          evidence_urls: string[] | null
+          id: string
+          is_current: boolean | null
+          portfolio_company_id: string | null
+          questionnaire_data: Json
+          responses: Json
+          risk_score: number | null
+          version_number: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          assessment_notes?: string | null
+          change_summary?: string | null
+          created_at?: string
+          created_by: string
+          dd_record_id: string
+          evidence_urls?: string[] | null
+          id?: string
+          is_current?: boolean | null
+          portfolio_company_id?: string | null
+          questionnaire_data: Json
+          responses: Json
+          risk_score?: number | null
+          version_number: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          assessment_notes?: string | null
+          change_summary?: string | null
+          created_at?: string
+          created_by?: string
+          dd_record_id?: string
+          evidence_urls?: string[] | null
+          id?: string
+          is_current?: boolean | null
+          portfolio_company_id?: string | null
+          questionnaire_data?: Json
+          responses?: Json
+          risk_score?: number | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "esg_dd_versions_portfolio_company_id_fkey"
+            columns: ["portfolio_company_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      esg_metrics_versions: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          calculation_method: string | null
+          change_reason: string | null
+          change_summary: string | null
+          created_at: string
+          created_by: string
+          data_source: string | null
+          evidence_urls: string[] | null
+          id: string
+          is_current: boolean | null
+          metric_id: string
+          metric_name: string
+          metric_value: number | null
+          portfolio_company_id: string | null
+          reporting_period: string | null
+          unit: string | null
+          version_number: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          calculation_method?: string | null
+          change_reason?: string | null
+          change_summary?: string | null
+          created_at?: string
+          created_by: string
+          data_source?: string | null
+          evidence_urls?: string[] | null
+          id?: string
+          is_current?: boolean | null
+          metric_id: string
+          metric_name: string
+          metric_value?: number | null
+          portfolio_company_id?: string | null
+          reporting_period?: string | null
+          unit?: string | null
+          version_number: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          calculation_method?: string | null
+          change_reason?: string | null
+          change_summary?: string | null
+          created_at?: string
+          created_by?: string
+          data_source?: string | null
+          evidence_urls?: string[] | null
+          id?: string
+          is_current?: boolean | null
+          metric_id?: string
+          metric_name?: string
+          metric_value?: number | null
+          portfolio_company_id?: string | null
+          reporting_period?: string | null
+          unit?: string | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "esg_metrics_versions_portfolio_company_id_fkey"
+            columns: ["portfolio_company_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       esms_documents: {
         Row: {
@@ -248,6 +687,89 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      ghg_accounting_versions: {
+        Row: {
+          activity_data: number
+          activity_type: string
+          activity_unit: string
+          approved_at: string | null
+          approved_by: string | null
+          calculated_emissions: number
+          calculation_formula: string | null
+          change_summary: string | null
+          created_at: string
+          created_by: string
+          emission_factor: number
+          emission_factor_source: string
+          emission_factor_version: string | null
+          evidence_urls: string[] | null
+          id: string
+          is_current: boolean | null
+          portfolio_company_id: string | null
+          record_id: string
+          reporting_period: string
+          scope: string
+          verification_notes: string | null
+          version_number: number
+        }
+        Insert: {
+          activity_data: number
+          activity_type: string
+          activity_unit: string
+          approved_at?: string | null
+          approved_by?: string | null
+          calculated_emissions: number
+          calculation_formula?: string | null
+          change_summary?: string | null
+          created_at?: string
+          created_by: string
+          emission_factor: number
+          emission_factor_source: string
+          emission_factor_version?: string | null
+          evidence_urls?: string[] | null
+          id?: string
+          is_current?: boolean | null
+          portfolio_company_id?: string | null
+          record_id: string
+          reporting_period: string
+          scope: string
+          verification_notes?: string | null
+          version_number: number
+        }
+        Update: {
+          activity_data?: number
+          activity_type?: string
+          activity_unit?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          calculated_emissions?: number
+          calculation_formula?: string | null
+          change_summary?: string | null
+          created_at?: string
+          created_by?: string
+          emission_factor?: number
+          emission_factor_source?: string
+          emission_factor_version?: string | null
+          evidence_urls?: string[] | null
+          id?: string
+          is_current?: boolean | null
+          portfolio_company_id?: string | null
+          record_id?: string
+          reporting_period?: string
+          scope?: string
+          verification_notes?: string | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ghg_accounting_versions_portfolio_company_id_fkey"
+            columns: ["portfolio_company_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       irl_data: {
         Row: {
@@ -597,6 +1119,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_approval_request: {
+        Args: {
+          p_change_summary?: string
+          p_current_data: Json
+          p_materiality_flag?: boolean
+          p_module: Database["public"]["Enums"]["maker_checker_module"]
+          p_previous_data?: Json
+          p_priority?: Database["public"]["Enums"]["approval_priority"]
+          p_record_id: string
+          p_record_type: string
+        }
+        Returns: string
+      }
       create_document_version: {
         Args: {
           p_change_summary?: string
@@ -628,6 +1163,10 @@ export type Database = {
         }
         Returns: string
       }
+      process_approval_request: {
+        Args: { p_action: string; p_comment?: string; p_request_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       action_type:
@@ -639,6 +1178,13 @@ export type Database = {
         | "view"
         | "share"
         | "restore"
+      approval_priority: "low" | "medium" | "high" | "critical"
+      maker_checker_module:
+        | "esg_metrics"
+        | "esg_cap"
+        | "ghg_accounting"
+        | "brsr_report"
+        | "esg_dd"
       pending_status: "pending" | "approved" | "rejected" | "expired"
       portfolio_role:
         | "portfolio_company_admin"
@@ -647,6 +1193,14 @@ export type Database = {
         | "supplier"
         | "stakeholder"
         | "super_admin"
+      workflow_status:
+        | "draft"
+        | "pending_review"
+        | "in_review"
+        | "approved"
+        | "published"
+        | "rejected"
+        | "revision_requested"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -784,6 +1338,14 @@ export const Constants = {
         "share",
         "restore",
       ],
+      approval_priority: ["low", "medium", "high", "critical"],
+      maker_checker_module: [
+        "esg_metrics",
+        "esg_cap",
+        "ghg_accounting",
+        "brsr_report",
+        "esg_dd",
+      ],
       pending_status: ["pending", "approved", "rejected", "expired"],
       portfolio_role: [
         "portfolio_company_admin",
@@ -792,6 +1354,15 @@ export const Constants = {
         "supplier",
         "stakeholder",
         "super_admin",
+      ],
+      workflow_status: [
+        "draft",
+        "pending_review",
+        "in_review",
+        "approved",
+        "published",
+        "rejected",
+        "revision_requested",
       ],
     },
   },
