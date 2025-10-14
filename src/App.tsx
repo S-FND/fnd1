@@ -45,6 +45,7 @@ import ReportsPage from './features/enterprise-admin/pages/Reports';
 import BRSRReport from './features/enterprise-admin/pages/BRSRReport';
 import GRIReport from './features/enterprise-admin/pages/GRIReport';
 import TCFDReport from './features/enterprise-admin/pages/TCFDReport';
+import ESRSReport from './features/enterprise-admin/pages/ESRSReport';
 import ImpactReport from './features/enterprise-admin/pages/ImpactReport';
 import StakeholdersOverviewPage from './features/enterprise-admin/pages/stakeholders/StakeholdersOverviewPage';
 import ManageStakeholdersPage from './features/enterprise-admin/pages/stakeholders/ManageStakeholdersPage';
@@ -96,6 +97,7 @@ function App() {
               <Route path="/reports/brsr" element={<BRSRReport />} />
               <Route path="/reports/gri" element={<GRIReport />} />
               <Route path="/reports/tcfd" element={<TCFDReport />} />
+              <Route path="/reports/esrs" element={<ESRSReport />} />
               <Route path="/reports/impact" element={<ImpactReport />} />
               
               {/* Stakeholder Management Routes */}
