@@ -396,7 +396,7 @@ const IRLCompanyInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) =>
           </Button>
         </div>
         </>
-        )};
+        )}
       </CardContent>
     </Card>
   );
