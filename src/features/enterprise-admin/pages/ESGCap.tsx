@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useContext } from 'react';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
@@ -24,6 +24,7 @@ import {
   updatePlan
 } from '../services/esgdd';
 import { logger } from '@/hooks/logger';
+import { PageAccessContext } from '@/context/PageAccessContext';
 
 interface PlanHistory {
   updateByUserId: string;
@@ -332,7 +333,7 @@ const ComparePlanView = ({
 };
 
 const ESGCapPage = () => {
-  const { isLoading: authLoading } = useRouteProtection(['admin', 'unit_admin']);
+  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
   const { user, isAuthenticated, isAuthenticatedStatus } = useAuth();
   const [loading, setLoading] = useState(false);
   const [esgCap, setEsgCap] = useState<ESGCapData | null>(null);
@@ -344,6 +345,13 @@ const ESGCapPage = () => {
   );
   const [showComparisonView, setShowComparisonView] = useState(false);
   const [originalPlan, setOriginalPlan] = useState<ESGCapItem[]>([]);
+  const {checkPageButtonAccess}=useContext(PageAccessContext);
+  const [buttonEnabled, setButtonEnabled] = useState(false);
+
+  useEffect(() => {
+    const hasAccess = checkPageButtonAccess('/esg-dd/cap');
+    setButtonEnabled(hasAccess);
+  }, []);
 
   const getUserEntityId = () => {
     try {
@@ -650,7 +658,7 @@ const ESGCapPage = () => {
 
   logger.log('shouldDisableAcceptButton', shouldDisableAcceptButton());
 
-  if (authLoading || loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="animate-spin h-8 w-8" />
@@ -739,6 +747,7 @@ const ESGCapPage = () => {
                     sortConfig={sortConfig}
                     requestSort={requestSort}
                     onItemUpdate={handleUpdateItem}
+                    buttonEnabled={buttonEnabled}
                   />
                 )}
               </div>
@@ -749,13 +758,13 @@ const ESGCapPage = () => {
                   <Button
                     variant="outline"
                     onClick={() => handleAction('requestChange')}
-                    disabled={loading}
+                    disabled={isLoading || !buttonEnabled}
                   >
                     Request CAP Change
                   </Button>
                   <Button
                     onClick={() => handleAction('accept')}
-                    disabled={loading || shouldDisableAcceptButton()}
+                    disabled={isLoading || !buttonEnabled}
                   >
                     Accept CAP
                   </Button>

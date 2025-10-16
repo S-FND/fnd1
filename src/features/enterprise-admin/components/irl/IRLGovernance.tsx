@@ -253,6 +253,7 @@ const IRLGovernance = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
       title="Governance"
       description="Upload required governance documents and policies"
       items={governanceItems}
+      buttonEnabled={buttonEnabled}
     />
   );
 };

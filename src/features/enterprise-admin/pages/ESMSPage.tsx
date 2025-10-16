@@ -42,7 +42,6 @@ interface ESMSDocumentSection {
 }
 
 const ESMSPage: React.FC = () => {
-  logger.debug('Rendering ESMSPage component');
   const {checkPageButtonAccess}=useContext(PageAccessContext);
   const [buttonEnabled, setButtonEnabled] = useState(false);
   const [deleteFileDialog, setDeleteFileDialog] = useState<{
@@ -528,8 +527,7 @@ const ESMSPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const hasAccess = checkPageButtonAccess('enterprise-admin');
-    logger.debug("ESMS access:", hasAccess);
+    const hasAccess = checkPageButtonAccess('/esg/esms');
     setButtonEnabled(hasAccess);
   }, []);
 
@@ -638,6 +636,7 @@ const ESMSPage: React.FC = () => {
                           id={`na-${document.id}`}
                           checked={document.isApplicable === "no"}
                           onCheckedChange={(checked) => handleNotApplicableToggle(section.id, document.id, checked as boolean)}
+                          disabled={isLoading || !buttonEnabled}
                         />
                         <Label htmlFor={`na-${document.id}`} className="text-sm">
                           Not Applicable
@@ -699,6 +698,7 @@ const ESMSPage: React.FC = () => {
                                           className="h-6 w-6 p-0 text-destructive hover:bg-red-100"
                                           onClick={() => handleDeleteSingleFile(section.id, document.id, name, url, idx)}
                                           title="Delete file"
+                                          disabled={isLoading || !buttonEnabled}
                                         >
                                           <Trash2 className="w-3 h-3" />
                                         </Button>

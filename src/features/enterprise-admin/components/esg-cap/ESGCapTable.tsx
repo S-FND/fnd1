@@ -11,13 +11,15 @@ interface ESGCapTableProps {
   sortConfig: { key: keyof ESGCapItem; direction: 'asc' | 'desc' } | null;
   requestSort: (key: keyof ESGCapItem) => void;
   onItemUpdate?: (updatedItem: ESGCapItem) => void;
+  buttonEnabled?: boolean;
 }
 
 export const ESGCapTable: React.FC<ESGCapTableProps> = ({ 
   sortedItems, 
   sortConfig, 
   requestSort,
-  onItemUpdate 
+  onItemUpdate,
+  buttonEnabled
 }
 ) => {
   return (
@@ -35,6 +37,7 @@ export const ESGCapTable: React.FC<ESGCapTableProps> = ({
                 item={item} 
                 index={index}
                 onUpdate={onItemUpdate}
+                buttonEnabled={buttonEnabled}
               />
             ))}
             

@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { fetchCompanyData, updateCompanyData } from '../../services/companyApi';
 import { Loader2 } from 'lucide-react';
 import { logger } from '@/hooks/logger';
-const IRLCompanyInformation = ({buttonEnabled:boolean}) => {
+const IRLCompanyInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
   const [formData, setFormData] = useState<CompanyFormData>({
     legalEntityName: '',
     user_id: '',
@@ -388,10 +388,10 @@ const IRLCompanyInformation = ({buttonEnabled:boolean}) => {
         </div>
 
         <div className="flex gap-4 pt-6">
-          <Button onClick={handleSave} variant="outline" className="flex-1">
+          <Button onClick={handleSave} variant="outline" className="flex-1" disabled={isLoading || !buttonEnabled}>
             Save as Draft
           </Button>
-          <Button onClick={handleSubmit} className="flex-1">
+          <Button onClick={handleSubmit} className="flex-1" disabled={isLoading || !buttonEnabled}>
             Submit
           </Button>
         </div>

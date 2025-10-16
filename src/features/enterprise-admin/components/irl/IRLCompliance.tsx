@@ -108,12 +108,13 @@ const complianceItems = [
   }
 ];
 
-const IRLCompliance = ({buttonEnabled:boolean}) => {
+const IRLCompliance = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
   return (
     <IRLComplianceTable
       title="Compliance"
       description="Upload required compliance documents and records on E&S Legal Compliance"
       items={complianceItems}
+      buttonEnabled={buttonEnabled}
     />
   );
 };
