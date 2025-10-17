@@ -44,13 +44,15 @@ interface IRLComplianceTableProps {
   description: string;
   items: Array<{ key: string; name: string }>;
   type?: 'default' | 'it-security' | 'governance'; // Add more types as needed
+  buttonEnabled?: boolean;
 }
 
 const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   title,
   description,
   items,
-  type = 'default'
+  type = 'default',
+  buttonEnabled,
 }) => {
   const [complianceItems, setComplianceItems] = useState<ComplianceItem[]>(
     items.map((item, index) => ({
@@ -388,13 +390,14 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
             onChange={(e) => handleFileUpload(item.id, e.target.files)}
             className="hidden"
             id={`file-upload-${item.id}`}
+            disabled={!buttonEnabled}
             multiple
           />
           <label
             htmlFor={`file-upload-${item.id}`}
             className={`flex items-center gap-2 px-3 py-2 text-sm border rounded-md cursor-pointer hover:bg-gray-50 ${
               error?.includes('upload') ? 'border-red-500' : 'border-gray-300'
-            }`}
+            }${ !buttonEnabled ? 'bg-gray-100 cursor-not-allowed hover:bg-gray-100' : 'cursor-pointer hover:bg-gray-50'}`}
           >
             <Upload className="h-4 w-4" />
             Upload Files
@@ -425,8 +428,8 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
                 <button
                   type="button"
                   onClick={() => handleDeleteExistingFile(key, i, fileUrl)}
-                  className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                  disabled={isLoading}
+                  className="h-6 w-6 p-0 text-red-500 hover:text-red-700 ${ !buttonEnabled ? 'bg-gray-100 cursor-not-allowed hover:bg-gray-100' : 'cursor-pointer hover:bg-gray-50'}"
+                  disabled={isLoading || !buttonEnabled}
                 >
                   {isLoading ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
@@ -600,6 +603,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
                             onChange={(e) => handleStatusChange(item.id, e.target.value)}
                             placeholder="Enter details"
                             className="w-full min-w p-2 border rounded-md"
+                            disabled={!buttonEnabled}
                           />
                         ) : TEXTAREA_KEYS.includes(item.key) ? (
                           <Textarea
@@ -607,13 +611,15 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
                             onChange={(e) => handleStatusChange(item.id, e.target.value)}
                             placeholder="Enter description..."
                             className="min-h-[80px]"
+                            disabled={!buttonEnabled}
                           />
                         ) : (
                           <Select
                             value={item.isApplicable}
                             onValueChange={(value) => handleStatusChange(item.id, value)}
+                            disabled={!buttonEnabled}
                           >
-                            <SelectTrigger>
+                            <SelectTrigger  disabled={!buttonEnabled}>
                               <SelectValue placeholder="Select" />
                             </SelectTrigger>
                             <SelectContent>
@@ -649,7 +655,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
             </div>
 
             <div className="flex gap-4 pt-6">
-              <Button onClick={handleSave} variant="outline" disabled={isLoading} className="flex-1">
+              <Button onClick={handleSave} variant="outline" disabled={isLoading || !buttonEnabled} className="flex-1">
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -659,7 +665,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
                   'Save as Draft'
                 )}
               </Button>
-              <Button onClick={handleFinalSubmit} disabled={isLoading} className="flex-1">
+              <Button onClick={handleFinalSubmit} className="flex-1" disabled={isLoading || !buttonEnabled}>
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -34,8 +34,7 @@ const IRLPage = () => {
   }
 
   useEffect(() => {
-    const hasAccess = checkPageButtonAccess('enterprise-admin');
-    logger.debug("ESMS access:", hasAccess);
+    const hasAccess = checkPageButtonAccess('/esg-dd/irl');
     setButtonEnabled(hasAccess);
   }, []);
 

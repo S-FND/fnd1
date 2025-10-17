@@ -134,7 +134,7 @@ const initialProductPhotographs: ProductPhotograph[] = [
   }
 ];
 
-const IRLPhotographs = ({buttonEnabled:boolean}) => {
+const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
   const [officePhotographs, setOfficePhotographs] = useState<OfficePhotograph[]>(initialOfficePhotographs);
   const [productPhotographs, setProductPhotographs] = useState<ProductPhotograph[]>(initialProductPhotographs);
   const [isLoading, setIsLoading] = useState(true);
@@ -547,6 +547,7 @@ const IRLPhotographs = ({buttonEnabled:boolean}) => {
                         existingFiles={photo.file_path}
                         setOperations={() => { }}
                         onDeleteFile={(fileIndex, fileUrl) => handleDeleteOfficeFile(photo.id, fileIndex, fileUrl)}
+                        buttonEnabled={buttonEnabled}
                       />
                     ))}
                   </tbody>
@@ -608,6 +609,7 @@ const IRLPhotographs = ({buttonEnabled:boolean}) => {
                         existingFiles={photo.file_path}
                         setOperations={() => { }}
                         onDeleteFile={(fileIndex, fileUrl) => handleDeleteProductFile(photo.id, fileIndex, fileUrl)}
+                        buttonEnabled={buttonEnabled}
                       />
                     ))}
                   </tbody>
@@ -620,7 +622,7 @@ const IRLPhotographs = ({buttonEnabled:boolean}) => {
               <Button
                 onClick={() => handleSubmit(true)}
                 variant="outline"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !buttonEnabled}
                 className="flex-1"
               >
                 {isSubmitting ? (
@@ -634,7 +636,7 @@ const IRLPhotographs = ({buttonEnabled:boolean}) => {
               </Button>
               <Button
                 onClick={() => handleSubmit(false)}
-                disabled={isSubmitting}
+                disabled={isSubmitting || !buttonEnabled}
                 className="flex-1"
               >
                 {isSubmitting ? (

@@ -129,6 +129,7 @@ const IRLAdditionalFacility = ({ buttonEnabled }: { buttonEnabled: boolean }) =>
       description="Facility Level Compliance - Office, Plant, Warehouse, Distribution Centre"
       items={facilityItems}
       type="default"
+      buttonEnabled={buttonEnabled}
     />
   );
 };

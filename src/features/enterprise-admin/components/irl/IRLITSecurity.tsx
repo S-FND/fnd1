@@ -49,6 +49,7 @@ const IRLITSecurity = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
       description="Upload required documents and records on IT Security & Data Privacy Compliance"
       items={itSecurityItems}
       type="it-security"
+      buttonEnabled={buttonEnabled}
     />
   );
 };
