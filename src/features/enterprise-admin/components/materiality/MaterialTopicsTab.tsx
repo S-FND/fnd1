@@ -51,6 +51,7 @@ interface MaterialTopicsTabProps {
   }[],
   customTopics:MaterialTopic[];
   getMaterialityData:() => {};
+  buttonEnabled: boolean;
 }
 
 const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
@@ -62,7 +63,8 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
   onUpdateSelectedTopics,
   selectedMaterialTopics,
   customTopics,
-  getMaterialityData
+  getMaterialityData,
+  buttonEnabled
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [classificationView, setClassificationView] = useState<'all' | 'risks' | 'opportunities'>('all');
@@ -385,7 +387,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
               <Plus className="w-4 h-4" />
               Add Custom Topic
             </Button>
-            <Button onClick={handleSaveSelectedTopics} className="flex items-center gap-2">
+            <Button onClick={handleSaveSelectedTopics} className="flex items-center gap-2" disabled={!buttonEnabled}>
               <Save className="w-4 h-4" />
               Save Selected ({getSelectedCount()})
             </Button>
