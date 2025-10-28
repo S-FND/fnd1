@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -22,6 +22,7 @@ import FinalizationMethodSelector from '../components/materiality/FinalizationMe
 import InternalFinalization from '../components/materiality/InternalFinalization';
 import { httpClient } from '@/lib/httpClient';
 import { logger } from '@/hooks/logger';
+import { PageAccessContext } from '@/context/PageAccessContext';
 
 // Define a union type for allowed frameworks
 type Framework = 'SASB' | 'GRI' | 'Custom';
@@ -54,6 +55,9 @@ const MaterialityPage = () => {
   const [finalizationStep, setFinalizationStep] = useState<'method' | 'internal' | 'stakeholder' | 'completed'>('method');
   const [finalizationMethod, setFinalizationMethod] = useState<'internal' | 'stakeholder' | null>(null);
   const [finalizedTopics, setFinalizedTopics] = useState<MaterialTopic[]>([]);
+  // button disable
+  const {checkPageButtonAccess}=useContext(PageAccessContext);
+  const [buttonEnabled, setButtonEnabled] = useState(false);
 
   // Update tempSelectedIndustries when selectedIndustries changes
   useEffect(() => {
@@ -426,6 +430,10 @@ const MaterialityPage = () => {
   // useEffect(()=>{
   //   console.log(`selectedMaterialTopics ========:: =======`,selectedMaterialTopics)
   // },[selectedMaterialTopics])
+  useEffect(() => {
+    const hasAccess = checkPageButtonAccess('/materiality');
+    setButtonEnabled(hasAccess);
+  }, []);
 
   return (
     <UnifiedSidebarLayout>
@@ -443,6 +451,7 @@ const MaterialityPage = () => {
           onClearSelection={() => setTempSelectedIndustries([])}
           onUpdateMatrix={updateMatrixData}
           industries={industries}
+          buttonEnabled={buttonEnabled}
         />
 
         <MaterialityTabs
@@ -463,6 +472,7 @@ const MaterialityPage = () => {
           selectedMaterialTopics={selectedMaterialTopics}
           customTopics={savedCustomTopics}
           getMaterialityData={getMaterialityData}
+          buttonEnabled={buttonEnabled}
         />
 
         {/* Finalization Flow */}

@@ -51,6 +51,7 @@ interface MaterialityTabsProps {
   }[];
   customTopics:MaterialTopic[];
   getMaterialityData:() => {};
+  buttonEnabled: boolean;
 }
 
 const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
@@ -67,7 +68,8 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
   activeFrameworks,
   setActiveFrameworks,
   onUpdateTopics,
-  onUpdateSelectedTopics,selectedMaterialTopics,customTopics,getMaterialityData
+  onUpdateSelectedTopics,selectedMaterialTopics,customTopics,getMaterialityData,
+  buttonEnabled
 }) => {
   // setTimeout(()=>{
   //   getMaterialityData()
@@ -114,6 +116,7 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
           selectedMaterialTopics={selectedMaterialTopics}
           customTopics={customTopics}
           getMaterialityData={getMaterialityData}
+          buttonEnabled={buttonEnabled}
         />
       </TabsContent>
 
