@@ -431,8 +431,16 @@ const MaterialityPage = () => {
   //   console.log(`selectedMaterialTopics ========:: =======`,selectedMaterialTopics)
   // },[selectedMaterialTopics])
   useEffect(() => {
-    const hasAccess = checkPageButtonAccess('/materiality');
-    setButtonEnabled(hasAccess);
+    // const hasAccess = checkPageButtonAccess('/materiality');
+    // setButtonEnabled(hasAccess);
+    const userData = localStorage.getItem('fandoro-user');
+    const user = JSON.parse(userData);
+    if (user.isParent === false) {
+      const hasAccess = checkPageButtonAccess('/materiality');
+      setButtonEnabled(hasAccess);
+    } else {
+      setButtonEnabled(true);
+    }
   }, []);
 
   return (
