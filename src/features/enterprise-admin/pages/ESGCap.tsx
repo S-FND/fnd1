@@ -349,8 +349,16 @@ const ESGCapPage = () => {
   const [buttonEnabled, setButtonEnabled] = useState(false);
 
   useEffect(() => {
-    const hasAccess = checkPageButtonAccess('/esg-dd/cap');
-    setButtonEnabled(hasAccess);
+    // const hasAccess = checkPageButtonAccess('/esg-dd/cap');
+    // setButtonEnabled(hasAccess);
+    const userData = localStorage.getItem('fandoro-user');
+    const user = JSON.parse(userData);
+    if (user.isParent === false) {
+      const hasAccess = checkPageButtonAccess('/esg-dd/cap');
+      setButtonEnabled(hasAccess);
+    } else {
+      setButtonEnabled(true);
+    }
   }, []);
 
   const getUserEntityId = () => {

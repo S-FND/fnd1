@@ -43,7 +43,7 @@ interface ESMSDocumentSection {
 
 const ESMSPage: React.FC = () => {
   const {checkPageButtonAccess}=useContext(PageAccessContext);
-  const [buttonEnabled, setButtonEnabled] = useState(false);
+  const [buttonEnabled, setButtonEnabled] = useState(true);
   const [deleteFileDialog, setDeleteFileDialog] = useState<{
     open: boolean;
     sectionId: string;
@@ -527,8 +527,16 @@ const ESMSPage: React.FC = () => {
   };
 
   useEffect(() => {
-    const hasAccess = checkPageButtonAccess('/esg/esms');
-    setButtonEnabled(hasAccess);
+    const userData = localStorage.getItem('fandoro-user');
+    const user = JSON.parse(userData);
+    if (user.isParent === false) {
+      const hasAccess = checkPageButtonAccess('/esg/esms');
+      setButtonEnabled(hasAccess);
+    } else {
+      setButtonEnabled(true);
+    }
+    // const hasAccess = checkPageButtonAccess('/esg/esms');
+    // setButtonEnabled(hasAccess);
   }, []);
 
   const confirmDeleteSingleFile = async () => {

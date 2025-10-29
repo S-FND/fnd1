@@ -502,14 +502,14 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
                       <Edit className="h-3 w-3 mr-1" />
                       Edit
                     </Button>
-                    <Button
+                    {/* <Button
                       size="sm"
                       variant="outline"
                       onClick={() => setIsAssignmentDialogOpen(true)}
                     >
                       <Users className="h-3 w-3 mr-1" />
                       Assign
-                    </Button>
+                    </Button> */}
                     {/* <Button
                       size="sm"
                       variant={employee.active ? "destructive" : "default"}

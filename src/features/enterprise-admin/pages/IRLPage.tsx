@@ -34,8 +34,16 @@ const IRLPage = () => {
   }
 
   useEffect(() => {
-    const hasAccess = checkPageButtonAccess('/esg-dd/irl');
-    setButtonEnabled(hasAccess);
+    // const hasAccess = checkPageButtonAccess('/esg-dd/irl');
+    // setButtonEnabled(hasAccess);
+    const userData = localStorage.getItem('fandoro-user');
+    const user = JSON.parse(userData);
+    if (user.isParent === false) {
+      const hasAccess = checkPageButtonAccess('/esg-dd/irl');
+      setButtonEnabled(hasAccess);
+    } else {
+      setButtonEnabled(true);
+    }
   }, []);
 
 
