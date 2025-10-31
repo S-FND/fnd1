@@ -13,7 +13,7 @@ import { logger } from '@/hooks/logger';
 
 const TeamManagementPage = () => {
   logger.debug('Rendering TeamManagementPage component');
-  const { isLoading } = useRouteProtection(['admin']);
+  const { isLoading } = useRouteProtection(['admin','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {

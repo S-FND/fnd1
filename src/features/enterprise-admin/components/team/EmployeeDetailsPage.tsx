@@ -47,7 +47,7 @@ const EmployeeDetailsPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('permissions');
 
-  const { isLoading } = useRouteProtection(['admin']); // or required roles
+  const { isLoading } = useRouteProtection(['admin','employee']); // or required roles
   const { user, isAuthenticated } = useAuth();
 
   if (isLoading) {
