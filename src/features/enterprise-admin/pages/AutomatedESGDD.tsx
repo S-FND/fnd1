@@ -15,7 +15,7 @@ import { logger } from '@/hooks/logger';
 
 const AutomatedESGDDPage = () => {
   logger.debug('Rendering AutomatedESGDDPage component');
-  const { isLoading } = useRouteProtection(['admin', 'unit_admin']);
+  const { isLoading } = useRouteProtection(['admin', 'unit_admin','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('reports');
   const [wizardActive, setWizardActive] = useState(false);

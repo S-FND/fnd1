@@ -9,7 +9,7 @@ import { logger } from '@/hooks/logger';
 
 const StakeholdersOverviewPage = () => {
   logger.debug('Rendering StakeholdersOverviewPage component');
-  const { isLoading } = useRouteProtection(['admin', 'manager']);
+  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {

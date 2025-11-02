@@ -17,7 +17,7 @@ import { logger } from '@/hooks/logger';
 
 const GHGAccountingPage = () => {
   logger.debug('Rendering GHGAccountingPage component');
-  const { isLoading } = useRouteProtection(['admin', 'unit_admin']);
+  const { isLoading } = useRouteProtection(['admin', 'unit_admin','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const [activeTab, setActiveTab] = useState("summary");
 

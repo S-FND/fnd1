@@ -8,7 +8,7 @@ import { useRouteProtection } from '@/hooks/useRouteProtection';
 
 const EnterpriseAdminDashboardPage = () => {
   logger.debug('Rendering EnterpriseAdminDashboardPage component');
-  const { isLoading } = useRouteProtection(['admin']);
+  const { isLoading } = useRouteProtection(['admin','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {

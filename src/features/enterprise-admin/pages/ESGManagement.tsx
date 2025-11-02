@@ -26,7 +26,7 @@ interface MaterialTopic {
 
 const ESGManagementPage = () => {
   logger.debug('Rendering ESGManagementPage component');
-  const { isLoading } = useRouteProtection(['admin', 'manager', 'unit_admin']);
+  const { isLoading } = useRouteProtection(['admin', 'manager', 'unit_admin','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const [prioritizedTopics, setPrioritizedTopics] = useState<MaterialTopic[]>([]);
 

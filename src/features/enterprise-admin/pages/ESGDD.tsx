@@ -14,7 +14,7 @@ import { logger } from '@/hooks/logger';
 
 const ESGDDPage = () => {
   logger.debug('Rendering ESGDDPage component');
-  const { isLoading } = useRouteProtection(['admin', 'manager']);
+  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const navigate = useNavigate();
   const [showNewESGDD, setShowNewESGDD] = useState(false);

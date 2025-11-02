@@ -16,7 +16,7 @@ import { logger } from '@/hooks/logger';
 
 const AdvancedIRLPage = () => {
   logger.debug('Rendering AdvancedIRLPage component');
-  const { isLoading } = useRouteProtection(['admin', 'manager']);
+  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {

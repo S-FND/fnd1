@@ -9,7 +9,7 @@ import { logger } from '@/hooks/logger';
 
 const EnhancedDashboard = () => {
   logger.debug('Rendering EnhancedDashboard component');
-  const { isLoading } = useRouteProtection(['admin', 'manager']);
+  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {

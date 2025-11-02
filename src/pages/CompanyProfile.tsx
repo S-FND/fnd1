@@ -8,7 +8,7 @@ import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { logger } from '@/hooks/logger';
 
 const CompanyProfilePage = () => {
-  const { isLoading } = useRouteProtection(['admin', 'manager']);
+  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {

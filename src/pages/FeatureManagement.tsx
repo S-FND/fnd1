@@ -28,7 +28,7 @@ type CategorizedFeatures = {
 
 const FeatureManagementPage = () => {
   const { isOverlayActive, isUrlOverlayActive,setPageList } = useOverlay();
-  const { isLoading } = useRouteProtection(['admin']);
+  const { isLoading } = useRouteProtection(['admin','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const { companyFeatures, isFeatureActive, updateFeatures } = useFeatures();
   const { validateFeatureSelection, autoFixFeatureSelection, getAvailableFeatures } = useFeatureValidation();

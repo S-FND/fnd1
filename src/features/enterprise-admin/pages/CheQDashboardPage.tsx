@@ -17,7 +17,7 @@ import { logger } from '@/hooks/logger';
 
 const CheQDashboardPage = () => {
   logger.debug('Rendering CheQDashboardPage component');
-  const { isLoading } = useRouteProtection(['admin']);
+  const { isLoading } = useRouteProtection(['admin','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {

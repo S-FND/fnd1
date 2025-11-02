@@ -108,7 +108,7 @@ const managementItems = [
   }, {
     key: "employee_grievance_register", // assi
     name: "Employee Grievance Register",
-  }, , {
+  }, {
     key: "external_grievances_register", // assi
     name: "External Grievances Register and records of closure of grievances",
   }, {

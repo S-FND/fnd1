@@ -19,7 +19,7 @@ import { logger } from '@/hooks/logger';
 
 const ManualESGDDPage = () => {
   logger.debug('Rendering ManualESGDDPage component');
-  const { isLoading } = useRouteProtection(['admin', 'unit_admin']);
+  const { isLoading } = useRouteProtection(['admin', 'unit_admin','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploadForm, setUploadForm] = useState({
