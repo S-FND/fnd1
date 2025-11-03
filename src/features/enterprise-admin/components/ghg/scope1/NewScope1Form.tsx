@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Save, Send } from "lucide-react";
+import { Save, Send, Upload } from "lucide-react";
 import { Scope1Entry, Scope1FormData, SourceType } from '@/types/scope1-ghg';
 import Scope1CategoryCard from './Scope1CategoryCard';
+import BulkUploadDialog from './BulkUploadDialog';
 import MonthYearSelector from '../MonthYearSelector';
 import { useMakerChecker } from '@/hooks/useMakerChecker';
 import { v4 as uuidv4 } from 'uuid';
@@ -122,6 +123,7 @@ export const NewScope1Form = () => {
     'Fugitive': false,
     'Process': false,
   });
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
 
   const toggleCategory = (sourceType: SourceType) => {
     setExpandedCategories(prev => ({
@@ -156,6 +158,14 @@ export const NewScope1Form = () => {
       title: "Entry Deleted",
       description: "The emission entry has been removed.",
       variant: "destructive",
+    });
+  };
+
+  const handleBulkUpload = (uploadedEntries: Scope1Entry[]) => {
+    setEntries(prev => [...prev, ...uploadedEntries]);
+    toast({
+      title: "Bulk Upload Complete",
+      description: `Successfully added ${uploadedEntries.length} emission entries.`,
     });
   };
 
@@ -304,8 +314,9 @@ export const NewScope1Form = () => {
 
       {/* Action Buttons */}
       <div className="flex justify-between">
-        <Button variant="outline">
-          Import from CSV
+        <Button variant="outline" onClick={() => setIsBulkUploadOpen(true)}>
+          <Upload className="mr-2 h-4 w-4" />
+          Bulk Upload
         </Button>
         <div className="space-x-2">
           <Button variant="outline" onClick={handleSaveDraft}>
@@ -318,6 +329,15 @@ export const NewScope1Form = () => {
           </Button>
         </div>
       </div>
+
+      {/* Bulk Upload Dialog */}
+      <BulkUploadDialog
+        open={isBulkUploadOpen}
+        onOpenChange={setIsBulkUploadOpen}
+        onUpload={handleBulkUpload}
+        currentMonth={selectedMonth}
+        currentYear={selectedYear}
+      />
 
     </div>
   );
