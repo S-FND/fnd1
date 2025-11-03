@@ -34,6 +34,7 @@ import PersonalGHGPage from './features/employee/pages/PersonalGHG';
 import GHGAccountingPage from './features/enterprise-admin/pages/GHGAccounting';
 import Scope1EntryPage from './pages/Scope1EntryPage';
 import Scope2EntryPage from './pages/Scope2EntryPage';
+import Scope3EntryPage from './pages/Scope3EntryPage';
 import UnitGHGAccountingPage from './features/unit-admin/components/ghg/UnitGHGAccountingPage';
 import ESGDDPage from './features/enterprise-admin/pages/ESGDD';
 import ESGDDReportsPage from './features/enterprise-admin/pages/ESGDDReports';
@@ -93,8 +94,9 @@ function App() {
               <Route path="/esg-dd/irl" element={<ProtectedIRLPage />} />
               <Route path="/esg-dd/advanced" element={<AdvancedIRLPage />} />
               <Route path="/ghg-accounting" element={<GHGAccountingPage />} />
-              <Route path="/ghg-accounting/scope1/entry" element={<Scope1EntryPage />} />
-              <Route path="/ghg-accounting/scope2/entry" element={<Scope2EntryPage />} />
+            <Route path="/ghg-accounting/scope1/entry" element={<Scope1EntryPage />} />
+            <Route path="/ghg-accounting/scope2/entry" element={<Scope2EntryPage />} />
+            <Route path="/ghg-accounting/scope3/entry" element={<Scope3EntryPage />} />
               <Route path="/compliance" element={<Compliance />} />
               <Route path="/lms" element={<LMSPage />} />
               <Route path="/reports" element={<ReportsPage />} />
