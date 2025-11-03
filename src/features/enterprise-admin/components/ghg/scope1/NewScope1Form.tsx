@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Save, Send } from "lucide-react";
-import { Scope1Entry, Scope1FormData } from '@/types/scope1-ghg';
-import Scope1DataTable from './Scope1DataTable';
-import Scope1EntryDialog from './Scope1EntryDialog';
+import { Save, Send } from "lucide-react";
+import { Scope1Entry, Scope1FormData, SourceType } from '@/types/scope1-ghg';
+import Scope1CategoryCard from './Scope1CategoryCard';
 import MonthYearSelector from '../MonthYearSelector';
 import { useMakerChecker } from '@/hooks/useMakerChecker';
 import { v4 as uuidv4 } from 'uuid';
+import { useNavigate } from 'react-router-dom';
 
 // Mock team members - replace with actual data from your auth system
 const MOCK_TEAM_MEMBERS = [
@@ -110,34 +110,44 @@ const SAMPLE_ENTRIES: Scope1Entry[] = [
 export const NewScope1Form = () => {
   const { toast } = useToast();
   const { createApprovalRequest } = useMakerChecker();
+  const navigate = useNavigate();
   
   const [selectedMonth, setSelectedMonth] = useState(new Date().toLocaleString('en-US', { month: 'long' }));
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   // Initialize with sample data for demonstration
   const [entries, setEntries] = useState<Scope1Entry[]>(SAMPLE_ENTRIES);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingEntry, setEditingEntry] = useState<Scope1Entry | null>(null);
+  const [expandedCategories, setExpandedCategories] = useState<Record<SourceType, boolean>>({
+    'Stationary': true,
+    'Mobile': false,
+    'Fugitive': false,
+    'Process': false,
+  });
 
-  const handleAddEntry = (entry: Scope1Entry) => {
-    if (editingEntry) {
-      setEntries(prev => prev.map(e => e.id === entry.id ? entry : e));
-      toast({
-        title: "Entry Updated",
-        description: "The emission entry has been updated successfully.",
-      });
-    } else {
-      setEntries(prev => [...prev, entry]);
-      toast({
-        title: "Entry Added",
-        description: "New emission entry has been added successfully.",
-      });
-    }
-    setEditingEntry(null);
+  const toggleCategory = (sourceType: SourceType) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [sourceType]: !prev[sourceType],
+    }));
+  };
+
+  const handleAddNew = (sourceType: SourceType) => {
+    navigate(`/ghg-accounting/scope1/entry`, { 
+      state: { 
+        sourceType, 
+        month: selectedMonth, 
+        year: selectedYear 
+      } 
+    });
   };
 
   const handleEditEntry = (entry: Scope1Entry) => {
-    setEditingEntry(entry);
-    setIsDialogOpen(true);
+    navigate(`/ghg-accounting/scope1/entry`, { 
+      state: { 
+        entry, 
+        month: selectedMonth, 
+        year: selectedYear 
+      } 
+    });
   };
 
   const handleDeleteEntry = (id: string) => {
@@ -214,15 +224,11 @@ export const NewScope1Form = () => {
     return total.toFixed(2);
   };
 
-  const getTotalEmissionsBySourceType = () => {
-    const byType: Record<string, number> = {};
-    entries.forEach(entry => {
-      byType[entry.sourceType] = (byType[entry.sourceType] || 0) + entry.totalEmission;
-    });
-    return byType;
+  const getEntriesBySourceType = (sourceType: SourceType): Scope1Entry[] => {
+    return entries.filter(entry => entry.sourceType === sourceType);
   };
 
-  const emissionsByType = getTotalEmissionsBySourceType();
+  const sourceTypes: SourceType[] = ['Stationary', 'Mobile', 'Fugitive', 'Process'];
 
   return (
     <div className="space-y-6">
@@ -242,7 +248,7 @@ export const NewScope1Form = () => {
           />
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium">Total Entries</CardTitle>
@@ -261,35 +267,38 @@ export const NewScope1Form = () => {
               </CardContent>
             </Card>
 
-            {Object.entries(emissionsByType).slice(0, 2).map(([type, value]) => (
-              <Card key={type}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">{type}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{value.toFixed(2)} <span className="text-sm font-normal">tCO₂e</span></div>
-                </CardContent>
-              </Card>
+            {sourceTypes.slice(0, 2).map((type) => {
+              const typeEntries = getEntriesBySourceType(type);
+              const total = typeEntries.reduce((sum, e) => sum + e.totalEmission, 0);
+              return (
+                <Card key={type}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">{type}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{total.toFixed(2)} <span className="text-sm font-normal">tCO₂e</span></div>
+                    <div className="text-xs text-muted-foreground">{typeEntries.length} entries</div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Category Cards */}
+          <div className="space-y-4">
+            {sourceTypes.map((sourceType) => (
+              <Scope1CategoryCard
+                key={sourceType}
+                sourceType={sourceType}
+                entries={getEntriesBySourceType(sourceType)}
+                isExpanded={expandedCategories[sourceType]}
+                onToggle={() => toggleCategory(sourceType)}
+                onEdit={handleEditEntry}
+                onDelete={handleDeleteEntry}
+                onAddNew={handleAddNew}
+              />
             ))}
           </div>
-
-          {/* Action Button */}
-          <div className="flex justify-between items-center">
-            <Button onClick={() => {
-              setEditingEntry(null);
-              setIsDialogOpen(true);
-            }}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add New Entry
-            </Button>
-          </div>
-
-          {/* Data Table */}
-          <Scope1DataTable 
-            entries={entries}
-            onEdit={handleEditEntry}
-            onDelete={handleDeleteEntry}
-          />
         </CardContent>
       </Card>
 
@@ -310,16 +319,6 @@ export const NewScope1Form = () => {
         </div>
       </div>
 
-      {/* Entry Dialog */}
-      <Scope1EntryDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        onSave={handleAddEntry}
-        entry={editingEntry}
-        teamMembers={MOCK_TEAM_MEMBERS}
-        currentMonth={selectedMonth}
-        currentYear={selectedYear}
-      />
     </div>
   );
 };

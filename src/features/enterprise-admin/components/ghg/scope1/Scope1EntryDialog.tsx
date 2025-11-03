@@ -27,6 +27,7 @@ interface Scope1EntryDialogProps {
   teamMembers: Array<{ id: string; name: string }>;
   currentMonth: string;
   currentYear: number;
+  defaultSourceType?: SourceType;
 }
 
 export const Scope1EntryDialog: React.FC<Scope1EntryDialogProps> = ({
@@ -37,9 +38,11 @@ export const Scope1EntryDialog: React.FC<Scope1EntryDialogProps> = ({
   teamMembers,
   currentMonth,
   currentYear,
+  defaultSourceType,
 }) => {
   const [formData, setFormData] = useState<Partial<Scope1Entry>>({
     reportingPeriod: getCurrentFY(),
+    sourceType: defaultSourceType || 'Stationary',
     emissionFactorSource: 'IPCC 2006',
     emissionFactor: 0,
     ghgIncluded: 'CO₂, CH₄, N₂O',
@@ -55,6 +58,7 @@ export const Scope1EntryDialog: React.FC<Scope1EntryDialogProps> = ({
     } else {
       setFormData({
         reportingPeriod: getCurrentFY(),
+        sourceType: defaultSourceType || 'Stationary',
         emissionFactorSource: 'IPCC 2006',
         emissionFactor: 0,
         ghgIncluded: 'CO₂, CH₄, N₂O',
