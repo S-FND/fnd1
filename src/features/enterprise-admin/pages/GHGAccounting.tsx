@@ -9,7 +9,7 @@ import { Navigate } from 'react-router-dom';
 import { GHGScope1Form } from '../components/ghg/GHGScope1Form';
 import { GHGScope2Form } from '../components/ghg/GHGScope2Form';
 import { GHGScope3Form } from '../components/ghg/GHGScope3Form';
-import { GHGScope4Form } from '../components/ghg/GHGScope4Form';
+import GHGScope4Form from '../components/ghg/GHGScope4Form';
 import { GHGSummary } from '../components/ghg/GHGSummary';
 import { GHGDataAssignment } from '../components/ghg/GHGDataAssignment';
 import { companyInfo } from '../components/ghg/summary/mockData';
