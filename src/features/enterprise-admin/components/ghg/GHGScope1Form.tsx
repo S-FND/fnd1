@@ -1,4 +1,3 @@
+import NewScope1Form from './scope1/NewScope1Form';
 
-import Scope1Form from './scope1/Scope1Form';
-
-export { Scope1Form as GHGScope1Form };
+export { NewScope1Form as GHGScope1Form };
