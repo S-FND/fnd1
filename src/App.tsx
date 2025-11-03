@@ -32,6 +32,7 @@ import MaterialityPage from './features/enterprise-admin/pages/Materiality';
 import SDGPage from './features/enterprise-admin/pages/SDG';
 import PersonalGHGPage from './features/employee/pages/PersonalGHG';
 import GHGAccountingPage from './features/enterprise-admin/pages/GHGAccounting';
+// Entry pages
 import Scope1EntryPage from './pages/Scope1EntryPage';
 import Scope2EntryPage from './pages/Scope2EntryPage';
 import Scope3EntryPage from './pages/Scope3EntryPage';
