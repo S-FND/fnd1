@@ -12,6 +12,9 @@ import SubsidiaryCompany from './SubsidiaryCompany';
 import { fetchLocationData, fetchTeamData,fetchSubsidiaries } from "../../services/teamMangment";
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { useRouteProtection } from '@/hooks/useRouteProtection';
+import { useAuth } from '@/context/AuthContext';
+import { Navigate } from 'react-router-dom';
 
 const TeamManagementDashboard = () => {
   const [activeTab, setActiveTab] = useState('employees');
@@ -31,6 +34,16 @@ const TeamManagementDashboard = () => {
   const [employees, setEmployees] = useState([]);
   const [locations, setLocations] = useState([]);
   const [subsidiaries, setSubsidiaries] = useState([]);
+  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
+  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!isAuthenticatedStatus()) {
+    return <Navigate to="/" />;
+  }
 
   const fetchEmployeeCount = useCallback(async () => {
     setLoading(prev => ({...prev, employees: true}));
