@@ -37,6 +37,9 @@ import Scope1EntryPage from './pages/Scope1EntryPage';
 import Scope2EntryPage from './pages/Scope2EntryPage';
 import Scope3EntryPage from './pages/Scope3EntryPage';
 import Scope4EntryPage from './pages/Scope4EntryPage';
+// Scope 1 New Workflow Components
+import SourceTemplateForm from './features/enterprise-admin/components/ghg/scope1/SourceTemplateForm';
+import DataCollectionForm from './features/enterprise-admin/components/ghg/scope1/DataCollectionForm';
 import UnitGHGAccountingPage from './features/unit-admin/components/ghg/UnitGHGAccountingPage';
 import ESGDDPage from './features/enterprise-admin/pages/ESGDD';
 import ESGDDReportsPage from './features/enterprise-admin/pages/ESGDDReports';
@@ -97,6 +100,8 @@ function App() {
               <Route path="/esg-dd/advanced" element={<AdvancedIRLPage />} />
               <Route path="/ghg-accounting" element={<GHGAccountingPage />} />
             <Route path="/ghg-accounting/scope1/entry" element={<Scope1EntryPage />} />
+            <Route path="/ghg-accounting/scope1/define-source" element={<SourceTemplateForm />} />
+            <Route path="/ghg-accounting/scope1/collect-data" element={<DataCollectionForm />} />
           <Route path="/ghg-accounting/scope2/entry" element={<Scope2EntryPage />} />
           <Route path="/ghg-accounting/scope3/entry" element={<Scope3EntryPage />} />
           <Route path="/ghg-accounting/scope4/entry" element={<Scope4EntryPage />} />
