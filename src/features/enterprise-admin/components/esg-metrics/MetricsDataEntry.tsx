@@ -87,7 +87,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
 
   const [selectedLocation, setSelectedLocation] = useState<string>('');
 
-  const {userRole}=useContext(PageAccessContext)
+  const {userRole,isLocation}=useContext(PageAccessContext)
   const [locations, setLocations] = useState<LocationData[]>([]);
 
   // Available locations
@@ -515,7 +515,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
               </CardDescription>
             </div>
             <div className="flex gap-2">
-            {userRole == 'employee' && <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+            {userRole == 'employee' && isLocation && <Select value={selectedLocation} onValueChange={setSelectedLocation}>
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder="Select Location" />
                 </SelectTrigger>

@@ -19,6 +19,7 @@ interface PageAccessContextType {
   checkPageButtonAccess: (page: string) => boolean;
   setUserRole: React.Dispatch<React.SetStateAction<string>>;
   userRole: string | null;
+  isLocation: boolean | null;
 }
 
 export const PageAccessContext = createContext<PageAccessContextType>({
@@ -26,7 +27,8 @@ export const PageAccessContext = createContext<PageAccessContextType>({
   setPageAccessList: () => { },
   checkPageButtonAccess: (page: string) => false,
   setUserRole: () => {  },
-  userRole: null
+  userRole: null,
+  isLocation:null
 });
 
 export const PageAccessProvider = ({ children }) => {
@@ -41,6 +43,11 @@ export const PageAccessProvider = ({ children }) => {
     logger.debug("🔵 User role is:", savedUser ? JSON.parse(savedUser).role : null);
     return savedUser ? JSON.parse(savedUser).role : null;
   });
+  const [isLocation, setIsLocation] = useState<boolean | null>(() => {
+    const savedUser = localStorage.getItem('fandoro-user');
+    logger.debug("🔵 Loaded isLocation:", savedUser);
+    return savedUser ? JSON.parse(savedUser).isLocation : null;
+  })
   
   const checkPageButtonAccess = (page) => {
     logger.log("🔵 Checking access for page:", page);
@@ -65,7 +72,7 @@ export const PageAccessProvider = ({ children }) => {
   }, [pageAccessList]);
 
   return (
-    <PageAccessContext.Provider value={{ pageAccessList, setPageAccessList, checkPageButtonAccess,setUserRole,userRole }}>
+    <PageAccessContext.Provider value={{ pageAccessList, setPageAccessList, checkPageButtonAccess,setUserRole,userRole,isLocation }}>
       {children}
     </PageAccessContext.Provider>
   );
