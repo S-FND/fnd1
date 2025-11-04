@@ -166,7 +166,7 @@ const TeamManagementDashboard = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="employees">Employees</TabsTrigger>
-          <TabsTrigger value="locations">Locations</TabsTrigger>
+          {/* <TabsTrigger value="locations">Locations</TabsTrigger> */}
           <TabsTrigger value="roles">Role Assignment</TabsTrigger>
           <TabsTrigger value="unit-heads">Unit Heads</TabsTrigger>
           <TabsTrigger value="subsidiary-company">Subsidiary Company</TabsTrigger>

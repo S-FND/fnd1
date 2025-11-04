@@ -153,8 +153,8 @@ const LocationManagement = ({ locations, refreshData }) => {
     <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
-          <CardTitle>Location Management</CardTitle>
-          <div className="flex gap-2">
+          {/* <CardTitle>Location Management</CardTitle> */}
+          <div className="flex gap-2" style={{ alignItems: 'self-end' }}>
             <Input
               placeholder="Search locations..."
               value={searchTerm}

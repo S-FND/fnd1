@@ -124,7 +124,7 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
         ]
       },
       {
-        name: "Units",
+        name: "Locations",
         href: "/units",
         icon: Building2,
         featureId: 'unit-management'
