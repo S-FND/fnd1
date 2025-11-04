@@ -20,6 +20,9 @@ import {
 } from '../../services/employeeManagementAPI';
 import { useNavigate } from 'react-router-dom';
 import { logger } from '@/hooks/logger';
+import { useRouteProtection } from '@/hooks/useRouteProtection';
+import { useAuth } from '@/context/AuthContext';
+import { Navigate } from 'react-router-dom';
 
 // import { UserPlus, Search, Filter, Edit, Users, Eye } from 'lucide-react';
 
@@ -105,6 +108,16 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [locationNameMap, setLocationNameMap] = useState<Map<string, string>>(new Map());
   const [isAssignmentDialogOpen, setIsAssignmentDialogOpen] = useState(false);
+  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
+  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!isAuthenticatedStatus()) {
+    return <Navigate to="/" />;
+  }
 
   const [newEmployee, setNewEmployee] = useState({
     name: '',
