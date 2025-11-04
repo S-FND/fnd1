@@ -92,15 +92,61 @@ const EmployeeDetailsPage = () => {
     }
   };
 
+  // const updateAccessLevel = (menuItemId: string, level: AccessLevel['accessLevel']) => {
+  //   setAccessLevels(prev =>
+  //     prev.map(item =>
+  //       item.menuItemId === menuItemId
+  //         ? { ...item, accessLevel: level }
+  //         : item
+  //     )
+  //   );
+  // };
+
+//logic to inherit or cascade permissions from a parent menu item to its child submenus
   const updateAccessLevel = (menuItemId: string, level: AccessLevel['accessLevel']) => {
     setAccessLevels(prev =>
-      prev.map(item =>
-        item.menuItemId === menuItemId
-          ? { ...item, accessLevel: level }
-          : item
-      )
+      prev.map(item => {
+        // First, check if this is the item being updated
+        if (item.menuItemId === menuItemId) {
+          return { ...item, accessLevel: level };
+        }
+
+        // If not, check if this item is a descendant of the updated item
+        const isDescendant = isItemDescendant(item.menuItemId, menuItemId, allMenuItems);
+        if (isDescendant) {
+          return { ...item, accessLevel: level };
+        }
+
+        // If neither, return the item unchanged
+        return item;
+      })
     );
   };
+
+  /**
+   * Helper function to determine if an item is a descendant of a parent item.
+   * @param itemId - The ID of the potential descendant item.
+   * @param parentId - The ID of the potential parent item.
+   * @param menuItems - The flat list of all menu items.
+   * @returns boolean - True if itemId is a descendant of parentId.
+   */
+  const isItemDescendant = (itemId: string, parentId: string, menuItems: any[]): boolean => {
+    // Find the item we are checking
+    const item = menuItems.find(i => i.id === itemId);
+    if (!item) return false;
+
+    // If the item has no parent, it cannot be a descendant.
+    if (!item.parentId) return false;
+
+    // If the item's direct parent is the target parent, it's a direct child.
+    if (item.parentId === parentId) {
+      return true;
+    }
+
+    // Otherwise, recursively check if the item's parent is a descendant of the target parent.
+    return isItemDescendant(item.parentId, parentId, menuItems);
+  };
+  
 
   const toggleLocationAssignment = (locationId: string) => {
     setLocationAssignments(prev =>

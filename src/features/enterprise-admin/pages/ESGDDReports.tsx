@@ -17,7 +17,7 @@ const getS3FilePath = (file_path) =>
 
 const ESGDDReportsPage = () => {
   logger.debug('Rendering ESGDDReportsPage component');
-  const { isLoading: authLoading } = useRouteProtection(['admin', 'manager']);
+  const { isLoading: authLoading } = useRouteProtection(['admin', 'manager','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const [loading, setLoading] = useState(false);
   const [paths, setPaths] = useState(null);

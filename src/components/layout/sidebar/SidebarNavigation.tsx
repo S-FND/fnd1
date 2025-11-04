@@ -41,57 +41,49 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
 
   useEffect(() => {
-    const loggedInUser = localStorage.getItem("fandoro-user");
-    const loggedInUserRole = loggedInUser ? JSON.parse(loggedInUser).role : null;
+    logger.debug("User role in SidebarNavigation:", userRole);
+    let loggedInUser = localStorage.getItem('fandoro-user');
+    let loggedInUserRole = loggedInUser ? JSON.parse(loggedInUser).role : null;
+    logger.debug("🔵 SidebarNavigation: Logged in user role:", loggedInUserRole);
+    logger.debug("🔵 SidebarNavigation: Page access list:", pageAccessList);
+    //!pageAccessList || pageAccessList.length === 0 && 
+    if (loggedInUserRole === 'admin') {
+      logger.debug("🔵 SidebarNavigation: No page access found.");
 
-    if (!pageAccessList || pageAccessList.length === 0) {
-      setVisibleItems([]); // explicitly clear while loading
-      return;
+
+      // If no permissions, show all menus
+      setVisibleItems(getNavigationItems(loggedInUserRole !== 'admin' ? 'all-access' : 'admin'));
+    } else {
+      // Filter based on permissions
+      const allowedUrls = pageAccessList
+        .filter((p: PageAccessItem) => !['no_access'].includes(p.accessLevel) && p.url)
+        .map((p: PageAccessItem) => p.url); logger.debug("🔵 SidebarNavigation: Allowed URLs from pageAccessList:", allowedUrls);
+      setAllowedUrlsList(allowedUrls);
+      const filtered = getNavigationItems("all-access")
+        .map((menu) => {
+          // Check if parent menu itself has permission
+          const menuAllowed = allowedUrls.includes(menu.href);
+
+          // Filter submenus that have permission
+          let allowedSubmenus = [];
+          if (menu.submenu && menu.submenu.length > 0) {
+            allowedSubmenus = menu.submenu.filter((sub) => allowedUrls.includes(sub.href));
+          }
+
+          // Include menu if:
+          // 1️⃣ Parent menu is allowed OR
+          // 2️⃣ Any submenu is allowed
+          if (menuAllowed || allowedSubmenus.length > 0) {
+            return { ...menu, submenu: allowedSubmenus };
+          }
+
+          return null; // exclude menu
+        })
+        .filter(Boolean);
+
+      setVisibleItems(filtered);
     }
-
-    if (loggedInUserRole === "admin") {
-      setVisibleItems(getNavigationItems("admin"));
-      return;
-    }
-
-    // 🔁 Inherit access from parent to children
-    const inheritedList = pageAccessList.map(child => {
-      if (child.accessLevel === "no_access" && child.url) {
-        const parent = pageAccessList.find(p =>
-          p.url &&
-          p.accessLevel !== "no_access" &&
-          child.url.startsWith(p.url + "/")
-        );
-        if (parent) return { ...child, accessLevel: parent.accessLevel };
-      }
-      return child;
-    });
-
-    const allowedUrls = new Set(
-      inheritedList
-        .filter(p => p.url && p.accessLevel !== "no_access")
-        .map(p => p.url)
-    );
-
-    // 🔍 Simple, flat filtering (no recursion needed for 1-level submenus)
-    const filtered = getNavigationItems("all-access")
-      .map(menu => {
-        if (!menu.href) return null;
-
-        const menuAllowed = allowedUrls.has(menu.href);
-        const allowedSubmenus = menu.submenu?.filter(sub =>
-          sub.href && allowedUrls.has(sub.href)
-        ) || [];
-
-        if (menuAllowed || allowedSubmenus.length > 0) {
-          return { ...menu, submenu: allowedSubmenus };
-        }
-        return null;
-      })
-      .filter(Boolean);
-
-    setVisibleItems(filtered);
-  }, [pageAccessList, userRole]);
+  }, [pageAccessList]);
 
   useEffect(() => {
     logger.debug("🔵 SidebarNavigation: Updated visibleItems:", visibleItems);
