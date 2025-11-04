@@ -71,6 +71,11 @@ const LocationManagement = ({ locations, refreshData }) => {
       ? { ...formData } // update existing
       : { ...formData, active: true }; // create new
 
+      // If _id empty or invalid → REMOVE it (means ADD mode)
+      if (!payload._id || payload._id.trim() === "") {
+        delete payload._id;
+      }
+
     const [result, error] = await createLocation(payload);
 
     if (result) {

@@ -22,9 +22,9 @@ const TeamManagementDashboard = () => {
   });
   const [counts, setCounts] = useState({
     employees: 0,
-    locations: 0,
-    unitHeads: 0,
-    pendingAssignments: 0,
+    // locations: 0,
+    // unitHeads: 0,
+    // pendingAssignments: 0,
     subsidiaryCompany:0
   });
 
@@ -111,27 +111,27 @@ const TeamManagementDashboard = () => {
       description: 'Across all locations',
       key: 'employees'
     },
-    {
-      title: 'Locations',
-      value: loading.locations ? <Loader2 className="h-6 w-6 animate-spin" /> : counts.locations,
-      icon: MapPin,
-      description: 'Cities and units',
-      key: 'locations'
-    },
-    {
-      title: 'Pending Assignments',
-      value: counts.pendingAssignments,
-      icon: UserPlus,
-      description: 'Role assignments',
-      key: 'pendingAssignments'
-    },
-    {
-      title: 'Unit Heads',
-      value: counts.unitHeads,
-      icon: Building2,
-      description: 'Department leaders',
-      key: 'unitHeads'
-    },
+    // {
+    //   title: 'Locations',
+    //   value: loading.locations ? <Loader2 className="h-6 w-6 animate-spin" /> : counts.locations,
+    //   icon: MapPin,
+    //   description: 'Cities and units',
+    //   key: 'locations'
+    // },
+    // {
+    //   title: 'Pending Assignments',
+    //   value: counts.pendingAssignments,
+    //   icon: UserPlus,
+    //   description: 'Role assignments',
+    //   key: 'pendingAssignments'
+    // },
+    // {
+    //   title: 'Unit Heads',
+    //   value: counts.unitHeads,
+    //   icon: Building2,
+    //   description: 'Department leaders',
+    //   key: 'unitHeads'
+    // },
     {
       title: 'Subsidiary Company',
       value: loading.subsidiaries ? <Loader2 className="h-6 w-6 animate-spin" /> : counts.subsidiaryCompany,
@@ -145,7 +145,7 @@ const TeamManagementDashboard = () => {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
         {stats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -164,11 +164,11 @@ const TeamManagementDashboard = () => {
 
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="employees">Employees</TabsTrigger>
           {/* <TabsTrigger value="locations">Locations</TabsTrigger> */}
-          <TabsTrigger value="roles">Role Assignment</TabsTrigger>
-          <TabsTrigger value="unit-heads">Unit Heads</TabsTrigger>
+          {/* <TabsTrigger value="roles">Role Assignment</TabsTrigger>
+          <TabsTrigger value="unit-heads">Unit Heads</TabsTrigger> */}
           <TabsTrigger value="subsidiary-company">Subsidiary Company</TabsTrigger>
         </TabsList>
         
@@ -181,7 +181,7 @@ const TeamManagementDashboard = () => {
           />
         </TabsContent>
         
-        <TabsContent value="locations">
+        {/* <TabsContent value="locations">
           <LocationManagement locations={locations} refreshData={refreshData} />
         </TabsContent>
         
@@ -191,7 +191,7 @@ const TeamManagementDashboard = () => {
         
         <TabsContent value="unit-heads">
           <UnitHeadsManagement />
-        </TabsContent>
+        </TabsContent> */}
 
         <TabsContent value="subsidiary-company">
           <SubsidiaryCompany />
