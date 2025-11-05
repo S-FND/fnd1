@@ -11,6 +11,9 @@ import { MapPin, Plus } from 'lucide-react';
 import { fetchLocationData, createLocation } from "../../services/teamMangment";
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { useRouteProtection } from '@/hooks/useRouteProtection';
+import { useAuth } from '@/context/AuthContext';
+import { Navigate } from 'react-router-dom';
 
 
 const LocationManagement = ({ locations, refreshData }) => {
@@ -18,6 +21,16 @@ const LocationManagement = ({ locations, refreshData }) => {
   const [loading, setLoading] = useState(false);
   // const [locations, setLocations] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
+  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!isAuthenticatedStatus()) {
+    return <Navigate to="/" />;
+  }
 
   const facilityTypeOptions = [
     'Plant',
@@ -70,6 +83,11 @@ const LocationManagement = ({ locations, refreshData }) => {
     const payload = formData._id
       ? { ...formData } // update existing
       : { ...formData, active: true }; // create new
+
+      // If _id empty or invalid → REMOVE it (means ADD mode)
+      if (!payload._id || payload._id.trim() === "") {
+        delete payload._id;
+      }
 
     const [result, error] = await createLocation(payload);
 

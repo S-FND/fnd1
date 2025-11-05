@@ -15,10 +15,14 @@ import {
   assignEmployeeUrls,
   fetchUrlList,
   // fetchUserAccess,
-  updateCompanyFeatures
+  updateCompanyFeatures,
+  createEmployee
 } from '../../services/employeeManagementAPI';
 import { useNavigate } from 'react-router-dom';
 import { logger } from '@/hooks/logger';
+import { useRouteProtection } from '@/hooks/useRouteProtection';
+import { useAuth } from '@/context/AuthContext';
+import { Navigate } from 'react-router-dom';
 
 // import { UserPlus, Search, Filter, Edit, Users, Eye } from 'lucide-react';
 
@@ -29,7 +33,7 @@ interface Employee {
   employeeId: string;
   active: boolean;
   selectedLocation: string;
-  role: string;
+  // roles: string;
   department: string;
   location: string;
   userAccess: string[];
@@ -104,6 +108,22 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [locationNameMap, setLocationNameMap] = useState<Map<string, string>>(new Map());
   const [isAssignmentDialogOpen, setIsAssignmentDialogOpen] = useState(false);
+  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
+  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!isAuthenticatedStatus()) {
+    return <Navigate to="/" />;
+  }
+
+  const [newEmployee, setNewEmployee] = useState({
+    name: '',
+    email: '',
+    employeeId: ''
+  });
 
   const getLocationName = (locationId: string) => {
     if (!locationId) return 'Unassigned';
@@ -122,7 +142,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
     name: '',
     email: '',
     employeeId: '',
-    role: '',
+    // roles: [],
     department: '',
     selectedLocation: '',
     active: false,
@@ -160,7 +180,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
       name: employee.name || '',
       email: employee.email || '',
       employeeId: employee.employeeId || '',
-      role: employee.role || '',
+      // roles: Array.isArray(employee.roles) ? employee.roles : [employee.roles],
       department: employee.department || '',
       selectedLocation: employee.location || '',
       active: employee.active || false,
@@ -333,7 +353,9 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
     const matchesSearch =
       employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = filterRole === 'all' || employee.role === filterRole;
+    // const matchesRole = filterRole === 'all' || employee.roles === filterRole;
+    const matchesRole = filterRole === 'all';
+
     const loc = employee.selectedLocation || employee.location || 'Unassigned';
     const matchesLocation = filterLocation === 'all' ||
       (filterLocation && getLocationName(loc) === getLocationName(filterLocation));
@@ -404,6 +426,31 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
     }
   };
 
+  const handleAddEmployee = async () => {
+    // Validate
+    if (!newEmployee.name || !newEmployee.email || !newEmployee.employeeId) {
+      toast.error("Please fill all fields");
+      return;
+    }
+  
+    try {
+      const [result, error] = await createEmployee({
+        employeeList: [newEmployee]
+      });
+  
+      if (result) {
+        toast.success("Employee added successfully!");
+        setIsAddDialogOpen(false);
+        refreshData(); // ✅ Use the prop passed from parent
+      } else {
+        toast.error(error?.replace(/^(Error: |ValidationError: email:)/, "") || "Failed to add employee");
+      }
+    } catch (err) {
+      toast.error("An unexpected error occurred");
+      console.error(err);
+    }
+  };
+
 
   return (
     <Card>
@@ -461,7 +508,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Employee ID</TableHead>
-              <TableHead>Role</TableHead>
+              {/* <TableHead>Role</TableHead> */}
               <TableHead>Location</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
@@ -473,11 +520,11 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
                 <TableCell className="font-medium">{employee.name}</TableCell>
                 <TableCell>{employee.email}</TableCell>
                 <TableCell>{employee.employeeId}</TableCell>
-                <TableCell>
-                  <Badge variant={employee.role === 'admin' ? 'default' : 'secondary'}>
-                    {employee.role}
+                {/* <TableCell>
+                  <Badge variant={employee.roles === 'admin' ? 'default' : 'secondary'}>
+                    {employee.roles}
                   </Badge>
-                </TableCell>
+                </TableCell> */}
                 <TableCell>{getLocationName(employee.selectedLocation || employee.location)}</TableCell>
                 <TableCell>
                   <Badge variant={employee.active ? 'default' : 'destructive'}>
@@ -557,9 +604,18 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
                 onChange={(e) => setEditForm({ ...editForm, employeeId: e.target.value })}
               />
             </div>
-            <div>
-              <Label htmlFor="edit-role">Role</Label>
-              <Select value={editForm.role} onValueChange={(value) => setEditForm({ ...editForm, role: value })}>
+            {/* <div>
+              <Label>Roles</Label>
+              <Select
+                // ✅ convert array to string for UI display (first role only)
+                value={editForm.roles[0] || ''}
+                onValueChange={(value) =>
+                  setEditForm({
+                    ...editForm,
+                    roles: [value] // ✅ Always save as array
+                  })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
@@ -569,7 +625,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
             <div>
               <Label htmlFor="edit-department">Department</Label>
               <Input
@@ -735,35 +791,71 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
 
 
       {/* Add Employee Dialog (Placeholder) */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add New Employee</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="add-name">Full Name</Label>
-              <Input id="add-name" placeholder="Enter full name" />
-            </div>
-            <div>
-              <Label htmlFor="add-email">Email</Label>
-              <Input id="add-email" type="email" placeholder="Enter email address" />
-            </div>
-            <div>
-              <Label htmlFor="add-employeeId">Employee ID</Label>
-              <Input id="add-employeeId" placeholder="Enter employee ID" />
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={() => setIsAddDialogOpen(false)} variant="outline" className="flex-1">
-                Cancel
-              </Button>
-              <Button className="flex-1">
-                Add Employee
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+          setIsAddDialogOpen(open);
+          if (!open) {
+            // Reset form when closing
+            setNewEmployee({ name: '', email: '', employeeId: '' });
+          }
+        }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add New Employee</DialogTitle>
+            </DialogHeader>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              handleAddEmployee(); // Your submit function
+            }}>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="add-name">Full Name</Label>
+                  <Input
+                    id="add-name"
+                    placeholder="Enter full name"
+                    value={newEmployee.name}
+                    onChange={(e) => setNewEmployee(prev => ({ ...prev, name: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="add-email">Email</Label>
+                  <Input
+                    id="add-email"
+                    type="email"
+                    placeholder="Enter email address"
+                    value={newEmployee.email}
+                    onChange={(e) => setNewEmployee(prev => ({ ...prev, email: e.target.value.toLowerCase() }))}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="add-employeeId">Employee ID</Label>
+                  <Input
+                    id="add-employeeId"
+                    placeholder="Enter employee ID"
+                    value={newEmployee.employeeId}
+                    onChange={(e) => setNewEmployee(prev => ({ ...prev, employeeId: e.target.value }))}
+                    required
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setIsAddDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" className="flex-1">
+                    Add Employee
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
     </Card>
   );
 };

@@ -417,6 +417,53 @@ const EmployeeDetailsPage = () => {
 
   }
 
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        const locationsResponse = await httpClient.get(`company/locations`);
+        if (locationsResponse.status === 200 && locationsResponse.data['data']) {
+          const locationsData = locationsResponse.data['data'].map(location => ({
+            locationId: location._id,
+            _id: location._id,
+            locationName: location.name,
+            assigned: false,
+            unitId: location.unitId
+          }));
+          
+          const employeeResponse = await httpClient.get(`subuser?id=${employeeId}`);
+          
+          if (employeeResponse.status === 200 && 
+              employeeResponse.data['data']?.[0]?.subuser?.[0]) {
+            
+            const employeeData = employeeResponse.data['data'][0].subuser[0];
+            const employeeLocationId = employeeData.userAccess?.[0]?.location;
+            
+            setEmployee(employeeData);
+            
+            const updatedLocations = locationsData.map(location => {
+              const isAssigned = location._id === employeeLocationId;
+              console.log(`📍 Comparing ${location._id} with ${employeeLocationId}: ${isAssigned}`);
+              return {
+                ...location,
+                assigned: isAssigned
+              };
+            });
+            
+            setLocationAssignments(updatedLocations);
+          } else {
+            console.log('❌ No employee data found in response');
+            setLocationAssignments(locationsData);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error initializing data:', error);
+        toast.error('Failed to load data.');
+      }
+    };
+    
+    initializeData();
+  }, [employeeId]);
+
   const getCompanyLocations = async () => {
     try {
       let locationsResponse = await httpClient.get(`company/locations`);
