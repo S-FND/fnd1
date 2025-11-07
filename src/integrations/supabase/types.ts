@@ -834,6 +834,178 @@ export type Database = {
           },
         ]
       }
+      ghg_activity_data: {
+        Row: {
+          activity_unit: string
+          activity_value: number
+          calculated_emissions: number
+          calculated_emissions_tco2e: number | null
+          collected_by: string | null
+          created_at: string | null
+          created_by: string
+          data_collection_date: string | null
+          data_source: string | null
+          emission_factor: number
+          emission_factor_source: string | null
+          evidence_urls: string[] | null
+          id: string
+          notes: string | null
+          period_end_date: string | null
+          period_name: string
+          period_start_date: string | null
+          portfolio_company_id: string
+          reporting_period: string
+          source_id: string
+          status: string
+          updated_at: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          activity_unit: string
+          activity_value: number
+          calculated_emissions: number
+          calculated_emissions_tco2e?: number | null
+          collected_by?: string | null
+          created_at?: string | null
+          created_by: string
+          data_collection_date?: string | null
+          data_source?: string | null
+          emission_factor: number
+          emission_factor_source?: string | null
+          evidence_urls?: string[] | null
+          id?: string
+          notes?: string | null
+          period_end_date?: string | null
+          period_name: string
+          period_start_date?: string | null
+          portfolio_company_id: string
+          reporting_period: string
+          source_id: string
+          status?: string
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          activity_unit?: string
+          activity_value?: number
+          calculated_emissions?: number
+          calculated_emissions_tco2e?: number | null
+          collected_by?: string | null
+          created_at?: string | null
+          created_by?: string
+          data_collection_date?: string | null
+          data_source?: string | null
+          emission_factor?: number
+          emission_factor_source?: string | null
+          evidence_urls?: string[] | null
+          id?: string
+          notes?: string | null
+          period_end_date?: string | null
+          period_name?: string
+          period_start_date?: string | null
+          portfolio_company_id?: string
+          reporting_period?: string
+          source_id?: string
+          status?: string
+          updated_at?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ghg_activity_data_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "ghg_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ghg_sources: {
+        Row: {
+          activity_unit: string
+          assigned_data_collectors: string[] | null
+          assigned_verifiers: string[] | null
+          calculation_methodology: string | null
+          category: string
+          created_at: string | null
+          created_by: string
+          description: string | null
+          emission_factor: number | null
+          emission_factor_source: string | null
+          emission_factor_unit: string | null
+          facility_id: string | null
+          id: string
+          is_active: boolean | null
+          measurement_frequency: string
+          notes: string | null
+          portfolio_company_id: string
+          reporting_period: string
+          scope: string
+          source_name: string
+          source_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          activity_unit: string
+          assigned_data_collectors?: string[] | null
+          assigned_verifiers?: string[] | null
+          calculation_methodology?: string | null
+          category: string
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          emission_factor?: number | null
+          emission_factor_source?: string | null
+          emission_factor_unit?: string | null
+          facility_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          measurement_frequency: string
+          notes?: string | null
+          portfolio_company_id: string
+          reporting_period: string
+          scope: string
+          source_name: string
+          source_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          activity_unit?: string
+          assigned_data_collectors?: string[] | null
+          assigned_verifiers?: string[] | null
+          calculation_methodology?: string | null
+          category?: string
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          emission_factor?: number | null
+          emission_factor_source?: string | null
+          emission_factor_unit?: string | null
+          facility_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          measurement_frequency?: string
+          notes?: string | null
+          portfolio_company_id?: string
+          reporting_period?: string
+          scope?: string
+          source_name?: string
+          source_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ghg_sources_facility_id_fkey"
+            columns: ["facility_id"]
+            isOneToOne: false
+            referencedRelation: "facilities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       irl_data: {
         Row: {
           created_at: string
