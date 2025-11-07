@@ -22,7 +22,7 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { downloadCSVTemplate, parseCSVData, exportToCSV, validateFrequencyData } from '@/utils/csvHelpers';
+
 
 interface Scope2EntryDialogProps {
   open: boolean;
@@ -46,7 +46,6 @@ export const Scope2EntryDialog: React.FC<Scope2EntryDialogProps> = ({
   defaultSourceType,
 }) => {
   const { toast } = useToast();
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<Partial<Scope2Entry>>({
     reportingPeriod: getCurrentFY(),
     sourceType: defaultSourceType || 'Purchased Electricity',
@@ -60,37 +59,6 @@ export const Scope2EntryDialog: React.FC<Scope2EntryDialogProps> = ({
     dataEntryDate: new Date().toISOString().split('T')[0],
   });
 
-  const [dataCollectionFields, setDataCollectionFields] = useState<Array<{ period: string; activityValue: number }>>([]);
-
-  // Generate data collection fields based on frequency
-  const generateDataFields = (frequency: MeasurementFrequency) => {
-    const fields: Array<{ period: string; activityValue: number }> = [];
-    
-    switch (frequency) {
-      case 'Quarterly':
-        fields.push(
-          { period: 'Q1 (Apr-Jun)', activityValue: 0 },
-          { period: 'Q2 (Jul-Sep)', activityValue: 0 },
-          { period: 'Q3 (Oct-Dec)', activityValue: 0 },
-          { period: 'Q4 (Jan-Mar)', activityValue: 0 }
-        );
-        break;
-      case 'Monthly':
-        ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'].forEach(month => {
-          fields.push({ period: month, activityValue: 0 });
-        });
-        break;
-      case 'Annually':
-        fields.push({ period: 'FY 2024-25', activityValue: 0 });
-        break;
-      case 'Weekly':
-      case 'Daily':
-        // For weekly/daily, data entry fields will be handled separately
-        break;
-    }
-    
-    setDataCollectionFields(fields);
-  };
 
   useEffect(() => {
     if (entry) {
@@ -142,113 +110,6 @@ export const Scope2EntryDialog: React.FC<Scope2EntryDialogProps> = ({
     }
   };
 
-  const handleDownloadTemplate = () => {
-    const frequency = formData.measurementFrequency;
-    const unit = formData.activityDataUnit || 'kWh';
-    
-    if (!frequency) {
-      toast({
-        title: "Select Frequency First",
-        description: "Please select a measurement frequency before downloading the template.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    downloadCSVTemplate(
-      frequency,
-      'Activity Value',
-      unit,
-      `scope2-${frequency.toLowerCase()}-template.csv`
-    );
-    
-    toast({
-      title: "Template Downloaded",
-      description: `CSV template for ${frequency} frequency has been downloaded.`,
-    });
-  };
-
-  const handleImportCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    
-    const frequency = formData.measurementFrequency;
-    
-    if (!frequency) {
-      toast({
-        title: "Select Frequency First",
-        description: "Please select a measurement frequency before importing data.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      const parsedData = parseCSVData(text);
-      
-      const validation = validateFrequencyData(parsedData, frequency);
-      
-      if (!validation.valid) {
-        toast({
-          title: "Import Failed",
-          description: validation.message,
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      const newFields = parsedData.map(item => ({
-        period: item.period,
-        activityValue: item.value,
-      }));
-      
-      setDataCollectionFields(newFields);
-      
-      toast({
-        title: "Data Imported",
-        description: `Successfully imported ${parsedData.length} periods of data.`,
-      });
-    };
-    
-    reader.readAsText(file);
-    
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleExportData = () => {
-    if (dataCollectionFields.length === 0) {
-      toast({
-        title: "No Data to Export",
-        description: "Please generate or enter period data before exporting.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const frequency = formData.measurementFrequency;
-    const unit = formData.activityDataUnit || 'kWh';
-    
-    const exportData = dataCollectionFields.map(field => ({
-      period: field.period,
-      value: field.activityValue,
-    }));
-    
-    exportToCSV(
-      exportData,
-      'Activity Value',
-      unit,
-      `scope2-${frequency?.toLowerCase()}-data.csv`
-    );
-    
-    toast({
-      title: "Data Exported",
-      description: "Period-wise data has been exported to CSV.",
-    });
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -576,7 +437,6 @@ export const Scope2EntryDialog: React.FC<Scope2EntryDialogProps> = ({
                     value={formData.measurementFrequency}
                     onValueChange={(value) => {
                       handleInputChange('measurementFrequency', value as MeasurementFrequency);
-                      generateDataFields(value as MeasurementFrequency);
                     }}
                   >
                     <SelectTrigger>
@@ -678,91 +538,6 @@ export const Scope2EntryDialog: React.FC<Scope2EntryDialogProps> = ({
                 </div>
               </div>
             </div>
-
-            {/* Frequency-Based Data Collection Fields */}
-            {dataCollectionFields.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-semibold text-lg">Period-wise Data Collection</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Enter activity data for each {formData.measurementFrequency?.toLowerCase()} period
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleDownloadTemplate}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Template
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <Upload className="h-4 w-4 mr-2" />
-                      Import
-                    </Button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".csv"
-                      onChange={handleImportCSV}
-                      style={{ display: 'none' }}
-                    />
-                    {dataCollectionFields.some(f => f.activityValue > 0) && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleExportData}
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Export
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {dataCollectionFields.map((field, index) => (
-                    <div key={index} className="space-y-2">
-                      <Label>{field.period}</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder={`Enter ${formData.activityDataUnit || 'value'}...`}
-                        value={field.activityValue || ''}
-                        onChange={(e) => {
-                          const newFields = [...dataCollectionFields];
-                          newFields[index].activityValue = parseFloat(e.target.value) || 0;
-                          setDataCollectionFields(newFields);
-                        }}
-                      />
-                      {field.activityValue > 0 && formData.emissionFactor && (
-                        <p className="text-xs text-muted-foreground">
-                          ≈ {((field.activityValue * (formData.emissionFactor || 0)) / 1000).toFixed(3)} tCO₂e
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                {dataCollectionFields.some(f => f.activityValue > 0) && formData.emissionFactor && (
-                  <div className="pt-4 border-t">
-                    <div className="flex justify-between items-center">
-                      <span className="font-semibold">Total Estimated Emissions:</span>
-                      <span className="text-2xl font-bold text-primary">
-                        {(dataCollectionFields.reduce((sum, f) => sum + (f.activityValue * (formData.emissionFactor || 0)), 0) / 1000).toFixed(3)} tCO₂e
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
 
             <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

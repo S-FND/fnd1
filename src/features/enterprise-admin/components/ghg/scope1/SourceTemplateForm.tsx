@@ -18,7 +18,7 @@ import { EmissionFactor } from '@/data/ghg/emissionFactors';
 import { v4 as uuidv4 } from 'uuid';
 import { getCurrentFY } from '@/types/scope1-ghg';
 import { supabase } from '@/integrations/supabase/client';
-import { downloadCSVTemplate, parseCSVData, exportToCSV, validateFrequencyData } from '@/utils/csvHelpers';
+
 
 interface Facility {
   id: string;
@@ -64,40 +64,9 @@ export const SourceTemplateForm = () => {
   const [selectedEmissionFactor, setSelectedEmissionFactor] = useState<EmissionFactor | null>(null);
   const [selectedCollectors, setSelectedCollectors] = useState<string[]>(editTemplate?.assignedDataCollectors || []);
   const [selectedVerifiers, setSelectedVerifiers] = useState<string[]>(editTemplate?.assignedVerifiers || []);
-  const [dataCollectionFields, setDataCollectionFields] = useState<Array<{ period: string; activityValue: number }>>([]);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loadingFacilities, setLoadingFacilities] = useState(true);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Generate data collection fields based on frequency
-  const generateDataFields = (frequency: MeasurementFrequency) => {
-    const fields: Array<{ period: string; activityValue: number }> = [];
-    
-    switch (frequency) {
-      case 'Quarterly':
-        fields.push(
-          { period: 'Q1 (Apr-Jun)', activityValue: 0 },
-          { period: 'Q2 (Jul-Sep)', activityValue: 0 },
-          { period: 'Q3 (Oct-Dec)', activityValue: 0 },
-          { period: 'Q4 (Jan-Mar)', activityValue: 0 }
-        );
-        break;
-      case 'Monthly':
-        ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'].forEach(month => {
-          fields.push({ period: month, activityValue: 0 });
-        });
-        break;
-      case 'Annually':
-        fields.push({ period: 'FY 2024-25', activityValue: 0 });
-        break;
-      case 'Weekly':
-      case 'Daily':
-        // For weekly/daily, data entry fields will be handled in separate data collection form
-        break;
-    }
-    
-    setDataCollectionFields(fields);
-  };
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -160,115 +129,6 @@ export const SourceTemplateForm = () => {
     setSelectedEmissionFactor(factor);
   };
 
-  const handleDownloadTemplate = () => {
-    const frequency = watch('measurementFrequency') as MeasurementFrequency;
-    const unit = watch('activityDataUnit') || 'units';
-    
-    if (!frequency) {
-      toast({
-        title: "Select Frequency First",
-        description: "Please select a measurement frequency before downloading the template.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    downloadCSVTemplate(
-      frequency,
-      'Activity Value',
-      unit,
-      `scope1-${frequency.toLowerCase()}-template.csv`
-    );
-    
-    toast({
-      title: "Template Downloaded",
-      description: `CSV template for ${frequency} frequency has been downloaded.`,
-    });
-  };
-
-  const handleImportCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    
-    const frequency = watch('measurementFrequency') as MeasurementFrequency;
-    
-    if (!frequency) {
-      toast({
-        title: "Select Frequency First",
-        description: "Please select a measurement frequency before importing data.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      const parsedData = parseCSVData(text);
-      
-      const validation = validateFrequencyData(parsedData, frequency);
-      
-      if (!validation.valid) {
-        toast({
-          title: "Import Failed",
-          description: validation.message,
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Map parsed data to dataCollectionFields
-      const newFields = parsedData.map(item => ({
-        period: item.period,
-        activityValue: item.value,
-      }));
-      
-      setDataCollectionFields(newFields);
-      
-      toast({
-        title: "Data Imported",
-        description: `Successfully imported ${parsedData.length} periods of data.`,
-      });
-    };
-    
-    reader.readAsText(file);
-    
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleExportData = () => {
-    if (dataCollectionFields.length === 0) {
-      toast({
-        title: "No Data to Export",
-        description: "Please generate or enter period data before exporting.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const frequency = watch('measurementFrequency') as MeasurementFrequency;
-    const unit = watch('activityDataUnit') || 'units';
-    
-    const exportData = dataCollectionFields.map(field => ({
-      period: field.period,
-      value: field.activityValue,
-    }));
-    
-    exportToCSV(
-      exportData,
-      'Activity Value',
-      unit,
-      `scope1-${frequency?.toLowerCase()}-data.csv`
-    );
-    
-    toast({
-      title: "Data Exported",
-      description: "Period-wise data has been exported to CSV.",
-    });
-  };
 
   const onSubmit = (data: FormData) => {
     if (!selectedEmissionFactor) {
@@ -546,7 +406,6 @@ export const SourceTemplateForm = () => {
                   value={watch('measurementFrequency')}
                   onValueChange={(value) => {
                     setValue('measurementFrequency', value);
-                    generateDataFields(value as MeasurementFrequency);
                   }}
                 >
                   <SelectTrigger>
@@ -658,95 +517,6 @@ export const SourceTemplateForm = () => {
             />
           </CardContent>
         </Card>
-
-        {/* Data Collection Fields Section */}
-        {dataCollectionFields.length > 0 && (
-          <Card className="border-2 border-primary/20">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-lg">Initial Data Collection</CardTitle>
-                  <CardDescription>
-                    Enter activity data for each {watch('measurementFrequency')?.toLowerCase()} period (optional - can be filled later)
-                  </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDownloadTemplate}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Template
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <Upload className="mr-2 h-4 w-4" />
-                    Import CSV
-                  </Button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".csv"
-                    onChange={handleImportCSV}
-                    style={{ display: 'none' }}
-                  />
-                  {dataCollectionFields.some(f => f.activityValue > 0) && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleExportData}
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      Export
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {dataCollectionFields.map((field, index) => (
-                  <div key={index} className="space-y-2">
-                    <Label>{field.period}</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      placeholder={`Enter ${watch('activityDataUnit') || 'value'}...`}
-                      value={field.activityValue || ''}
-                      onChange={(e) => {
-                        const newFields = [...dataCollectionFields];
-                        newFields[index].activityValue = parseFloat(e.target.value) || 0;
-                        setDataCollectionFields(newFields);
-                      }}
-                    />
-                    {field.activityValue > 0 && selectedEmissionFactor && (
-                      <p className="text-xs text-muted-foreground">
-                        ≈ {((field.activityValue * selectedEmissionFactor.factor) / 1000).toFixed(3)} tCO₂e
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-              {dataCollectionFields.some(f => f.activityValue > 0) && selectedEmissionFactor && (
-                <div className="pt-4 border-t">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold">Total Estimated Emissions:</span>
-                    <span className="text-2xl font-bold text-primary">
-                      {(dataCollectionFields.reduce((sum, f) => sum + (f.activityValue * selectedEmissionFactor.factor), 0) / 1000).toFixed(3)} tCO₂e
-                    </span>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
 
         <div className="flex justify-end gap-4">
           <Button type="button" variant="outline" onClick={() => navigate(-1)}>

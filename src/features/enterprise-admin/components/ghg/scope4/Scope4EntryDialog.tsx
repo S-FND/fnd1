@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Download, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { downloadCSVTemplate, parseCSVData, exportToCSV, validateFrequencyData } from '@/utils/csvHelpers';
+
 import { 
   Scope4Entry, 
   AvoidedEmissionSourceType, 
@@ -57,7 +57,6 @@ const Scope4EntryDialog: React.FC<Scope4EntryDialogProps> = ({
   teamMembers
 }) => {
   const { toast } = useToast();
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<Scope4Entry>({
     id: '',
     facilityName: '',
@@ -86,33 +85,6 @@ const Scope4EntryDialog: React.FC<Scope4EntryDialogProps> = ({
     notes: ''
   });
 
-  const [dataCollectionFields, setDataCollectionFields] = useState<Array<{ period: string; productOutput: number }>>([]);
-
-  // Generate data collection fields based on frequency
-  const generateDataFields = (frequency: MeasurementFrequency) => {
-    const fields: Array<{ period: string; productOutput: number }> = [];
-    
-    switch (frequency) {
-      case 'Quarterly':
-        fields.push(
-          { period: 'Q1 (Apr-Jun)', productOutput: 0 },
-          { period: 'Q2 (Jul-Sep)', productOutput: 0 },
-          { period: 'Q3 (Oct-Dec)', productOutput: 0 },
-          { period: 'Q4 (Jan-Mar)', productOutput: 0 }
-        );
-        break;
-      case 'Monthly':
-        ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'].forEach(month => {
-          fields.push({ period: month, productOutput: 0 });
-        });
-        break;
-      case 'Annually':
-        fields.push({ period: 'FY 2024-25', productOutput: 0 });
-        break;
-    }
-    
-    setDataCollectionFields(fields);
-  };
 
   useEffect(() => {
     if (entry) {
@@ -164,113 +136,6 @@ const Scope4EntryDialog: React.FC<Scope4EntryDialogProps> = ({
     }));
   }, [formData.baselineEmissionFactor, formData.projectEmissionFactor, formData.productOutput]);
 
-  const handleDownloadTemplate = () => {
-    const frequency = formData.measurementFrequency;
-    const unit = formData.activityDataUnit || 'units';
-    
-    if (!frequency) {
-      toast({
-        title: "Select Frequency First",
-        description: "Please select a measurement frequency before downloading the template.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    downloadCSVTemplate(
-      frequency,
-      'Product Output',
-      unit,
-      `scope4-${frequency.toLowerCase()}-template.csv`
-    );
-    
-    toast({
-      title: "Template Downloaded",
-      description: `CSV template for ${frequency} frequency has been downloaded.`,
-    });
-  };
-
-  const handleImportCSV = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    
-    const frequency = formData.measurementFrequency;
-    
-    if (!frequency) {
-      toast({
-        title: "Select Frequency First",
-        description: "Please select a measurement frequency before importing data.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      const parsedData = parseCSVData(text);
-      
-      const validation = validateFrequencyData(parsedData, frequency);
-      
-      if (!validation.valid) {
-        toast({
-          title: "Import Failed",
-          description: validation.message,
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      const newFields = parsedData.map(item => ({
-        period: item.period,
-        productOutput: item.value,
-      }));
-      
-      setDataCollectionFields(newFields);
-      
-      toast({
-        title: "Data Imported",
-        description: `Successfully imported ${parsedData.length} periods of data.`,
-      });
-    };
-    
-    reader.readAsText(file);
-    
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleExportData = () => {
-    if (dataCollectionFields.length === 0) {
-      toast({
-        title: "No Data to Export",
-        description: "Please generate or enter period data before exporting.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    const frequency = formData.measurementFrequency;
-    const unit = formData.activityDataUnit || 'units';
-    
-    const exportData = dataCollectionFields.map(field => ({
-      period: field.period,
-      value: field.productOutput,
-    }));
-    
-    exportToCSV(
-      exportData,
-      'Product Output',
-      unit,
-      `scope4-${frequency?.toLowerCase()}-data.csv`
-    );
-    
-    toast({
-      title: "Data Exported",
-      description: "Period-wise data has been exported to CSV.",
-    });
-  };
 
   const handleSubmit = () => {
     onSave(formData);
@@ -483,7 +348,6 @@ const Scope4EntryDialog: React.FC<Scope4EntryDialogProps> = ({
               value={formData.measurementFrequency}
               onValueChange={(value: MeasurementFrequency) => {
                 setFormData({ ...formData, measurementFrequency: value });
-                generateDataFields(value);
               }}
             >
               <SelectTrigger id="measurementFrequency">
@@ -590,91 +454,6 @@ const Scope4EntryDialog: React.FC<Scope4EntryDialogProps> = ({
             />
           </div>
         </div>
-
-        {/* Frequency-Based Data Collection Fields */}
-        {dataCollectionFields.length > 0 && (
-          <div className="space-y-4 mt-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-semibold text-lg">Period-wise Data Collection</h3>
-                <p className="text-sm text-muted-foreground">
-                  Enter product output for each {formData.measurementFrequency?.toLowerCase()} period
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDownloadTemplate}
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Template
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Import
-                </Button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".csv"
-                  onChange={handleImportCSV}
-                  style={{ display: 'none' }}
-                />
-                {dataCollectionFields.some(f => f.productOutput > 0) && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleExportData}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Export
-                  </Button>
-                )}
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {dataCollectionFields.map((field, index) => (
-                <div key={index} className="space-y-2">
-                  <Label>{field.period}</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    placeholder={`Enter ${formData.activityDataUnit || 'output'}...`}
-                    value={field.productOutput || ''}
-                    onChange={(e) => {
-                      const newFields = [...dataCollectionFields];
-                      newFields[index].productOutput = parseFloat(e.target.value) || 0;
-                      setDataCollectionFields(newFields);
-                    }}
-                  />
-                  {field.productOutput > 0 && formData.avoidedEmissionPerUnit && (
-                    <p className="text-xs text-muted-foreground">
-                      ≈ {((field.productOutput * formData.avoidedEmissionPerUnit) / 1000).toFixed(3)} tCO₂e avoided
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-            {dataCollectionFields.some(f => f.productOutput > 0) && formData.avoidedEmissionPerUnit && (
-              <div className="pt-4 border-t">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold">Total Avoided Emissions:</span>
-                  <span className="text-2xl font-bold text-green-600">
-                    {(dataCollectionFields.reduce((sum, f) => sum + (f.productOutput * formData.avoidedEmissionPerUnit), 0) / 1000).toFixed(3)} tCO₂e
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
