@@ -17,6 +17,16 @@ import EmissionFactorSelector from '../shared/EmissionFactorSelector';
 import { EmissionFactor } from '@/data/ghg/emissionFactors';
 import { v4 as uuidv4 } from 'uuid';
 import { getCurrentFY } from '@/types/scope1-ghg';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Facility {
+  id: string;
+  name: string;
+  code: string | null;
+  location: string | null;
+  city: string | null;
+  facility_type: string | null;
+}
 
 const MOCK_TEAM_MEMBERS = [
   { id: '1', name: 'Meera Sharma' },
@@ -53,6 +63,8 @@ export const SourceTemplateForm = () => {
   const [selectedEmissionFactor, setSelectedEmissionFactor] = useState<EmissionFactor | null>(null);
   const [selectedCollectors, setSelectedCollectors] = useState<string[]>(editTemplate?.assignedDataCollectors || []);
   const [selectedVerifiers, setSelectedVerifiers] = useState<string[]>(editTemplate?.assignedVerifiers || []);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [loadingFacilities, setLoadingFacilities] = useState(true);
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -76,6 +88,33 @@ export const SourceTemplateForm = () => {
   });
 
   const watchSourceType = watch('sourceType');
+
+  // Fetch facilities on mount
+  useEffect(() => {
+    const fetchFacilities = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('facilities')
+          .select('id, name, code, location, city, facility_type')
+          .eq('is_active', true)
+          .order('name');
+
+        if (error) throw error;
+        setFacilities(data || []);
+      } catch (error) {
+        console.error('Error fetching facilities:', error);
+        toast({
+          title: "Error Loading Facilities",
+          description: "Could not load facility list. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingFacilities(false);
+      }
+    };
+
+    fetchFacilities();
+  }, [toast]);
 
   useEffect(() => {
     setSourceType(watchSourceType as SourceType);
@@ -195,13 +234,38 @@ export const SourceTemplateForm = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="facilityName">Facility Name *</Label>
-                <Input
-                  id="facilityName"
-                  placeholder="e.g., Pune Plant 1"
-                  {...register('facilityName')}
-                />
+                <Select
+                  value={watch('facilityName')}
+                  onValueChange={(value) => setValue('facilityName', value)}
+                  disabled={loadingFacilities}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={loadingFacilities ? "Loading facilities..." : "Select facility..."} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {facilities.map((facility) => (
+                      <SelectItem key={facility.id} value={facility.name}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{facility.name}</span>
+                          {(facility.code || facility.location) && (
+                            <span className="text-xs text-muted-foreground">
+                              {facility.code && `${facility.code}`}
+                              {facility.code && facility.location && ' • '}
+                              {facility.location && facility.location}
+                            </span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {errors.facilityName && (
                   <p className="text-sm text-destructive">{errors.facilityName.message}</p>
+                )}
+                {facilities.length === 0 && !loadingFacilities && (
+                  <p className="text-sm text-muted-foreground">
+                    No facilities found. Contact admin to add facilities.
+                  </p>
                 )}
               </div>
 

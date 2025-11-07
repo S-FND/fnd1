@@ -23,7 +23,7 @@ export type Database = {
           entity_name: string | null
           entity_type: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           metadata: Json | null
           user_agent: string | null
           user_id: string
@@ -36,7 +36,7 @@ export type Database = {
           entity_name?: string | null
           entity_type: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           user_agent?: string | null
           user_id: string
@@ -49,7 +49,7 @@ export type Database = {
           entity_name?: string | null
           entity_type?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           user_agent?: string | null
           user_id?: string
@@ -66,7 +66,7 @@ export type Database = {
           created_at: string
           data_snapshot: Json | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           new_status: Database["public"]["Enums"]["workflow_status"]
           previous_status: Database["public"]["Enums"]["workflow_status"] | null
           user_agent: string | null
@@ -80,7 +80,7 @@ export type Database = {
           created_at?: string
           data_snapshot?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_status: Database["public"]["Enums"]["workflow_status"]
           previous_status?:
             | Database["public"]["Enums"]["workflow_status"]
@@ -96,7 +96,7 @@ export type Database = {
           created_at?: string
           data_snapshot?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_status?: Database["public"]["Enums"]["workflow_status"]
           previous_status?:
             | Database["public"]["Enums"]["workflow_status"]
@@ -236,7 +236,7 @@ export type Database = {
           entity_id: string | null
           entity_type: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           new_data: Json | null
           old_data: Json | null
           portfolio_company_id: string
@@ -250,7 +250,7 @@ export type Database = {
           entity_id?: string | null
           entity_type: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_data?: Json | null
           old_data?: Json | null
           portfolio_company_id: string
@@ -264,7 +264,7 @@ export type Database = {
           entity_id?: string | null
           entity_type?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_data?: Json | null
           old_data?: Json | null
           portfolio_company_id?: string
@@ -685,6 +685,69 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      facilities: {
+        Row: {
+          address: string | null
+          area_sqm: number | null
+          city: string | null
+          code: string | null
+          country: string | null
+          created_at: string
+          created_by: string | null
+          employee_count: number | null
+          facility_type: string | null
+          id: string
+          is_active: boolean | null
+          location: string | null
+          name: string
+          notes: string | null
+          operational_status: string | null
+          portfolio_company_id: string
+          state: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          area_sqm?: number | null
+          city?: string | null
+          code?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          employee_count?: number | null
+          facility_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          location?: string | null
+          name: string
+          notes?: string | null
+          operational_status?: string | null
+          portfolio_company_id: string
+          state?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          area_sqm?: number | null
+          city?: string | null
+          code?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          employee_count?: number | null
+          facility_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          location?: string | null
+          name?: string
+          notes?: string | null
+          operational_status?: string | null
+          portfolio_company_id?: string
+          state?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1144,10 +1207,7 @@ export type Database = {
         }
         Returns: string
       }
-      get_user_company: {
-        Args: { user_uuid: string }
-        Returns: string
-      }
+      get_user_company: { Args: { user_uuid: string }; Returns: string }
       get_user_role: {
         Args: { user_uuid: string }
         Returns: Database["public"]["Enums"]["portfolio_role"]
