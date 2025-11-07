@@ -55,6 +55,38 @@ export const Scope2EntryDialog: React.FC<Scope2EntryDialogProps> = ({
     dataEntryDate: new Date().toISOString().split('T')[0],
   });
 
+  const [dataCollectionFields, setDataCollectionFields] = useState<Array<{ period: string; activityValue: number }>>([]);
+
+  // Generate data collection fields based on frequency
+  const generateDataFields = (frequency: MeasurementFrequency) => {
+    const fields: Array<{ period: string; activityValue: number }> = [];
+    
+    switch (frequency) {
+      case 'Quarterly':
+        fields.push(
+          { period: 'Q1 (Apr-Jun)', activityValue: 0 },
+          { period: 'Q2 (Jul-Sep)', activityValue: 0 },
+          { period: 'Q3 (Oct-Dec)', activityValue: 0 },
+          { period: 'Q4 (Jan-Mar)', activityValue: 0 }
+        );
+        break;
+      case 'Monthly':
+        ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'].forEach(month => {
+          fields.push({ period: month, activityValue: 0 });
+        });
+        break;
+      case 'Annually':
+        fields.push({ period: 'FY 2024-25', activityValue: 0 });
+        break;
+      case 'Weekly':
+      case 'Daily':
+        // For weekly/daily, data entry fields will be handled separately
+        break;
+    }
+    
+    setDataCollectionFields(fields);
+  };
+
   useEffect(() => {
     if (entry) {
       setFormData(entry);
@@ -429,7 +461,10 @@ export const Scope2EntryDialog: React.FC<Scope2EntryDialogProps> = ({
                   <Label htmlFor="measurementFrequency">Measurement Frequency</Label>
                   <Select
                     value={formData.measurementFrequency}
-                    onValueChange={(value) => handleInputChange('measurementFrequency', value as MeasurementFrequency)}
+                    onValueChange={(value) => {
+                      handleInputChange('measurementFrequency', value as MeasurementFrequency);
+                      generateDataFields(value as MeasurementFrequency);
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -530,6 +565,49 @@ export const Scope2EntryDialog: React.FC<Scope2EntryDialogProps> = ({
                 </div>
               </div>
             </div>
+
+            {/* Frequency-Based Data Collection Fields */}
+            {dataCollectionFields.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Period-wise Data Collection</h3>
+                <p className="text-sm text-muted-foreground">
+                  Enter activity data for each {formData.measurementFrequency?.toLowerCase()} period
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {dataCollectionFields.map((field, index) => (
+                    <div key={index} className="space-y-2">
+                      <Label>{field.period}</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder={`Enter ${formData.activityDataUnit || 'value'}...`}
+                        value={field.activityValue || ''}
+                        onChange={(e) => {
+                          const newFields = [...dataCollectionFields];
+                          newFields[index].activityValue = parseFloat(e.target.value) || 0;
+                          setDataCollectionFields(newFields);
+                        }}
+                      />
+                      {field.activityValue > 0 && formData.emissionFactor && (
+                        <p className="text-xs text-muted-foreground">
+                          ≈ {((field.activityValue * (formData.emissionFactor || 0)) / 1000).toFixed(3)} tCO₂e
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {dataCollectionFields.some(f => f.activityValue > 0) && formData.emissionFactor && (
+                  <div className="pt-4 border-t">
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold">Total Estimated Emissions:</span>
+                      <span className="text-2xl font-bold text-primary">
+                        {(dataCollectionFields.reduce((sum, f) => sum + (f.activityValue * (formData.emissionFactor || 0)), 0) / 1000).toFixed(3)} tCO₂e
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

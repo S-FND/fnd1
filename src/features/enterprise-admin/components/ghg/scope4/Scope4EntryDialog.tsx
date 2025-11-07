@@ -11,6 +11,7 @@ import {
   MethodologyUsed,
   DataQuality,
   VerificationStatus,
+  MeasurementFrequency,
   getCurrentFY,
   defaultEmissionFactorSource,
   calculateAvoidedEmissionPerUnit,
@@ -71,6 +72,7 @@ const Scope4EntryDialog: React.FC<Scope4EntryDialogProps> = ({
     methodology: 'Comparative LCA',
     emissionFactorSource: defaultEmissionFactorSource,
     dataSource: '',
+    measurementFrequency: 'Annually',
     dataQuality: 'Medium',
     verifiedBy: '',
     verificationStatus: 'Pending',
@@ -78,6 +80,34 @@ const Scope4EntryDialog: React.FC<Scope4EntryDialogProps> = ({
     enteredBy: '',
     notes: ''
   });
+
+  const [dataCollectionFields, setDataCollectionFields] = useState<Array<{ period: string; productOutput: number }>>([]);
+
+  // Generate data collection fields based on frequency
+  const generateDataFields = (frequency: MeasurementFrequency) => {
+    const fields: Array<{ period: string; productOutput: number }> = [];
+    
+    switch (frequency) {
+      case 'Quarterly':
+        fields.push(
+          { period: 'Q1 (Apr-Jun)', productOutput: 0 },
+          { period: 'Q2 (Jul-Sep)', productOutput: 0 },
+          { period: 'Q3 (Oct-Dec)', productOutput: 0 },
+          { period: 'Q4 (Jan-Mar)', productOutput: 0 }
+        );
+        break;
+      case 'Monthly':
+        ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'].forEach(month => {
+          fields.push({ period: month, productOutput: 0 });
+        });
+        break;
+      case 'Annually':
+        fields.push({ period: 'FY 2024-25', productOutput: 0 });
+        break;
+    }
+    
+    setDataCollectionFields(fields);
+  };
 
   useEffect(() => {
     if (entry) {
@@ -335,6 +365,26 @@ const Scope4EntryDialog: React.FC<Scope4EntryDialogProps> = ({
           </div>
 
           <div>
+            <Label htmlFor="measurementFrequency">Measurement Frequency</Label>
+            <Select
+              value={formData.measurementFrequency}
+              onValueChange={(value: MeasurementFrequency) => {
+                setFormData({ ...formData, measurementFrequency: value });
+                generateDataFields(value);
+              }}
+            >
+              <SelectTrigger id="measurementFrequency">
+                <SelectValue placeholder="Select frequency" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Monthly">Monthly</SelectItem>
+                <SelectItem value="Quarterly">Quarterly</SelectItem>
+                <SelectItem value="Annually">Annually</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
             <Label htmlFor="dataQuality">Data Quality / Confidence *</Label>
             <Select
               value={formData.dataQuality}
@@ -427,6 +477,49 @@ const Scope4EntryDialog: React.FC<Scope4EntryDialogProps> = ({
             />
           </div>
         </div>
+
+        {/* Frequency-Based Data Collection Fields */}
+        {dataCollectionFields.length > 0 && (
+          <div className="space-y-4 mt-6">
+            <h3 className="font-semibold text-lg">Period-wise Data Collection</h3>
+            <p className="text-sm text-muted-foreground">
+              Enter product output for each {formData.measurementFrequency?.toLowerCase()} period
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {dataCollectionFields.map((field, index) => (
+                <div key={index} className="space-y-2">
+                  <Label>{field.period}</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder={`Enter ${formData.activityDataUnit || 'output'}...`}
+                    value={field.productOutput || ''}
+                    onChange={(e) => {
+                      const newFields = [...dataCollectionFields];
+                      newFields[index].productOutput = parseFloat(e.target.value) || 0;
+                      setDataCollectionFields(newFields);
+                    }}
+                  />
+                  {field.productOutput > 0 && formData.avoidedEmissionPerUnit && (
+                    <p className="text-xs text-muted-foreground">
+                      ≈ {((field.productOutput * formData.avoidedEmissionPerUnit) / 1000).toFixed(3)} tCO₂e avoided
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+            {dataCollectionFields.some(f => f.productOutput > 0) && formData.avoidedEmissionPerUnit && (
+              <div className="pt-4 border-t">
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold">Total Avoided Emissions:</span>
+                  <span className="text-2xl font-bold text-green-600">
+                    {(dataCollectionFields.reduce((sum, f) => sum + (f.productOutput * formData.avoidedEmissionPerUnit), 0) / 1000).toFixed(3)} tCO₂e
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>

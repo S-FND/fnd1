@@ -17,6 +17,8 @@ export type DataQuality = "High" | "Medium" | "Low";
 
 export type VerificationStatus = "Verified" | "Pending" | "Not Verified";
 
+export type MeasurementFrequency = "Monthly" | "Quarterly" | "Annually";
+
 export interface Scope4Entry {
   id: string;
   facilityName: string;
@@ -36,6 +38,7 @@ export interface Scope4Entry {
   methodology: MethodologyUsed;
   emissionFactorSource: string;
   dataSource: string;
+  measurementFrequency?: MeasurementFrequency;
   dataQuality: DataQuality;
   verifiedBy: string;
   verificationStatus: VerificationStatus;
