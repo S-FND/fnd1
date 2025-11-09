@@ -20,6 +20,7 @@ import {
   calculateAvoidedEmissionPerUnit,
   calculateTotalAvoidedEmission
 } from '@/types/scope4-ghg';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Scope4EntryDialogProps {
   open: boolean;
@@ -57,6 +58,8 @@ const Scope4EntryDialog: React.FC<Scope4EntryDialogProps> = ({
   teamMembers
 }) => {
   const { toast } = useToast();
+  const [facilities, setFacilities] = useState<Array<{ id: string; name: string; code?: string; location?: string }>>([]);
+  const [loadingFacilities, setLoadingFacilities] = useState(false);
   const [formData, setFormData] = useState<Scope4Entry>({
     id: '',
     facilityName: '',
@@ -85,6 +88,36 @@ const Scope4EntryDialog: React.FC<Scope4EntryDialogProps> = ({
     notes: ''
   });
 
+
+  // Fetch facilities on mount
+  useEffect(() => {
+    const fetchFacilities = async () => {
+      setLoadingFacilities(true);
+      try {
+        const { data, error } = await supabase
+          .from('facilities')
+          .select('id, name, code, location')
+          .eq('is_active', true)
+          .order('name');
+
+        if (error) throw error;
+        setFacilities(data || []);
+      } catch (error) {
+        console.error('Error fetching facilities:', error);
+        toast({
+          title: "Error Loading Facilities",
+          description: "Could not load facilities. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoadingFacilities(false);
+      }
+    };
+
+    if (open) {
+      fetchFacilities();
+    }
+  }, [open, toast]);
 
   useEffect(() => {
     if (entry) {
@@ -153,12 +186,34 @@ const Scope4EntryDialog: React.FC<Scope4EntryDialogProps> = ({
           {/* Basic Information */}
           <div>
             <Label htmlFor="facilityName">Facility / Location Name *</Label>
-            <Input
-              id="facilityName"
+            <Select
               value={formData.facilityName}
-              onChange={(e) => setFormData({ ...formData, facilityName: e.target.value })}
-              placeholder="e.g., R&D Center, Pune"
-            />
+              onValueChange={(value) => setFormData({ ...formData, facilityName: value })}
+              disabled={loadingFacilities}
+            >
+              <SelectTrigger id="facilityName">
+                <SelectValue placeholder={loadingFacilities ? "Loading facilities..." : "Select facility..."} />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                <SelectItem value="Other">
+                  <span className="font-medium">Other</span>
+                </SelectItem>
+                {facilities.map((facility) => (
+                  <SelectItem key={facility.id} value={facility.name}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{facility.name}</span>
+                      {(facility.code || facility.location) && (
+                        <span className="text-xs text-muted-foreground">
+                          {facility.code && `${facility.code}`}
+                          {facility.code && facility.location && ' • '}
+                          {facility.location && facility.location}
+                        </span>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

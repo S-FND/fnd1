@@ -9,6 +9,7 @@ import { Download, Upload } from "lucide-react";
 import { Scope3Entry, Scope3Category, CalculationMethodology, MeasurementFrequency, DataQuality, calculateEmissions, getCurrentFY, DEFAULT_EMISSION_FACTORS } from '@/types/scope3-ghg';
 import { v4 as uuidv4 } from 'uuid';
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from '@/integrations/supabase/client';
 
 
 interface Scope3EntryDialogProps {
@@ -57,6 +58,8 @@ export const Scope3EntryDialog: React.FC<Scope3EntryDialogProps> = ({
   currentYear,
 }) => {
   const { toast } = useToast();
+  const [facilities, setFacilities] = useState<Array<{ id: string; name: string; code?: string; location?: string }>>([]);
+  const [loadingFacilities, setLoadingFacilities] = useState(false);
   const [formData, setFormData] = useState<Partial<Scope3Entry>>({
     facilityName: '',
     businessUnit: '',
@@ -82,6 +85,36 @@ export const Scope3EntryDialog: React.FC<Scope3EntryDialogProps> = ({
     notes: '',
   });
 
+
+  // Fetch facilities on mount
+  useEffect(() => {
+    const fetchFacilities = async () => {
+      setLoadingFacilities(true);
+      try {
+        const { data, error } = await supabase
+          .from('facilities')
+          .select('id, name, code, location')
+          .eq('is_active', true)
+          .order('name');
+
+        if (error) throw error;
+        setFacilities(data || []);
+      } catch (error) {
+        console.error('Error fetching facilities:', error);
+        toast({
+          title: "Error Loading Facilities",
+          description: "Could not load facilities. Please try again.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoadingFacilities(false);
+      }
+    };
+
+    if (open) {
+      fetchFacilities();
+    }
+  }, [open, toast]);
 
   useEffect(() => {
     if (entry) {
@@ -160,10 +193,34 @@ export const Scope3EntryDialog: React.FC<Scope3EntryDialogProps> = ({
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label>Facility / Location Name</Label>
-            <Input
+            <Select
               value={formData.facilityName}
-              onChange={(e) => setFormData({ ...formData, facilityName: e.target.value })}
-            />
+              onValueChange={(value) => setFormData({ ...formData, facilityName: value })}
+              disabled={loadingFacilities}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={loadingFacilities ? "Loading facilities..." : "Select facility..."} />
+              </SelectTrigger>
+              <SelectContent className="bg-background z-50">
+                <SelectItem value="Other">
+                  <span className="font-medium">Other</span>
+                </SelectItem>
+                {facilities.map((facility) => (
+                  <SelectItem key={facility.id} value={facility.name}>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{facility.name}</span>
+                      {(facility.code || facility.location) && (
+                        <span className="text-xs text-muted-foreground">
+                          {facility.code && `${facility.code}`}
+                          {facility.code && facility.location && ' • '}
+                          {facility.location && facility.location}
+                        </span>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

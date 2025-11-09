@@ -245,7 +245,10 @@ export const SourceTemplateForm = () => {
                   <SelectTrigger>
                     <SelectValue placeholder={loadingFacilities ? "Loading facilities..." : "Select facility..."} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background z-50">
+                    <SelectItem value="Other">
+                      <span className="font-medium">Other</span>
+                    </SelectItem>
                     {facilities.map((facility) => (
                       <SelectItem key={facility.id} value={facility.name}>
                         <div className="flex flex-col">
