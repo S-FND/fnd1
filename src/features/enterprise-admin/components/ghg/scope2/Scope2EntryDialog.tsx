@@ -161,6 +161,7 @@ export const Scope2EntryDialog: React.FC<Scope2EntryDialogProps> = ({
       emissionFactor: Number(formData.emissionFactor) || 0,
       activityDataValue: Number(formData.activityDataValue) || 0,
       activityDataUnit: formData.activityDataUnit || 'kWh',
+      evidenceUrls: formData.evidenceUrls || [],
       scope2Category: formData.scope2Category || 'Location-Based',
       ghgIncluded: formData.ghgIncluded || 'CO₂, CH₄, N₂O',
       emissionCO2: Number(formData.emissionCO2) || 0,

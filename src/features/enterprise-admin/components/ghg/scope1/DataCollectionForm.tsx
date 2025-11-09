@@ -8,7 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Send, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Send, Plus, Trash2, Upload } from "lucide-react";
+import EvidenceFileUpload from '@/components/ghg/EvidenceFileUpload';
+import UnitSelector from '@/components/ghg/UnitSelector';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import * as XLSX from 'xlsx';
 import { GHGSourceTemplate, GHGDataCollection, getCollectionsForMonth } from '@/types/ghg-source-template';
 import { DataQuality } from '@/types/scope1-ghg';
 import { calculateEmissions } from '@/types/scope1-ghg';
@@ -20,6 +24,8 @@ interface DataEntry {
   date: string;
   activityDataValue: number;
   notes: string;
+  evidenceUrls?: string[];
+  selectedUnit?: string;
 }
 
 const MOCK_TEAM_MEMBERS = [
@@ -46,6 +52,7 @@ export const DataCollectionForm = () => {
   const [dataQuality, setDataQuality] = useState<DataQuality>('Medium');
   const [verifiedBy, setVerifiedBy] = useState('');
   const [collectionNotes, setCollectionNotes] = useState('');
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
 
   const expectedEntries = getCollectionsForMonth(template.measurementFrequency);
 
@@ -83,6 +90,8 @@ export const DataCollectionForm = () => {
         date: new Date().toISOString().split('T')[0],
         activityDataValue: 0,
         notes: '',
+        evidenceUrls: [],
+        selectedUnit: template.activityDataUnit,
       });
     }
     setDataEntries(entries);
@@ -96,6 +105,8 @@ export const DataCollectionForm = () => {
         date: new Date().toISOString().split('T')[0],
         activityDataValue: 0,
         notes: '',
+        evidenceUrls: [],
+        selectedUnit: template.activityDataUnit,
       },
     ]);
   };
@@ -200,6 +211,29 @@ export const DataCollectionForm = () => {
     navigate('/ghg-accounting', { state: { activeTab: 'scope1' } });
   };
 
+  const handleBulkUpload = (entries: DataEntry[]) => {
+    setDataEntries([...dataEntries, ...entries]);
+    setIsBulkUploadOpen(false);
+    toast({
+      title: "Bulk Upload Complete",
+      description: `Successfully added ${entries.length} data entries.`,
+    });
+  };
+
+  const downloadBulkTemplate = () => {
+    const templateData = [{
+      'Date': new Date().toISOString().split('T')[0],
+      'Activity Value': '',
+      'Unit': template.activityDataUnit,
+      'Notes': '',
+    }];
+
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Data Collection');
+    XLSX.writeFile(wb, `${template.templateName}_DataCollection_Template.xlsx`);
+  };
+
   const totalEmissions = calculateTotalEmissions();
 
   return (
@@ -298,10 +332,16 @@ export const DataCollectionForm = () => {
               <CardTitle>Activity Data Entries</CardTitle>
               <CardDescription>Enter activity data for each measurement period</CardDescription>
             </div>
-            <Button onClick={addEntry} variant="outline" size="sm">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Entry
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={() => setIsBulkUploadOpen(true)} variant="outline" size="sm">
+                <Upload className="mr-2 h-4 w-4" />
+                Bulk Upload
+              </Button>
+              <Button onClick={addEntry} variant="outline" size="sm">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Entry
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -331,12 +371,13 @@ export const DataCollectionForm = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Activity Data ({template.activityDataUnit})</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={entry.activityDataValue || ''}
-                    onChange={(e) => updateEntry(entry.id, 'activityDataValue', parseFloat(e.target.value) || 0)}
+                  <UnitSelector
+                    label={`Activity Data`}
+                    value={entry.activityDataValue || 0}
+                    onChange={(value) => updateEntry(entry.id, 'activityDataValue', value)}
+                    baseUnit={template.activityDataUnit}
+                    selectedUnit={entry.selectedUnit || template.activityDataUnit}
+                    onUnitChange={(unit) => updateEntry(entry.id, 'selectedUnit', unit)}
                     placeholder="Enter value..."
                   />
                 </div>
@@ -351,14 +392,27 @@ export const DataCollectionForm = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Notes</Label>
-                <Textarea
-                  value={entry.notes}
-                  onChange={(e) => updateEntry(entry.id, 'notes', e.target.value)}
-                  placeholder="Any notes for this entry..."
-                  rows={2}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Notes</Label>
+                  <Textarea
+                    value={entry.notes}
+                    onChange={(e) => updateEntry(entry.id, 'notes', e.target.value)}
+                    placeholder="Any notes for this entry..."
+                    rows={2}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <EvidenceFileUpload
+                    value={entry.evidenceUrls || []}
+                    onChange={(urls) => updateEntry(entry.id, 'evidenceUrls', urls)}
+                    label="Evidence (Optional)"
+                    description="Upload supporting documents"
+                    maxFiles={3}
+                    scope="scope1"
+                  />
+                </div>
               </div>
             </div>
           ))}
@@ -453,6 +507,58 @@ export const DataCollectionForm = () => {
           Submit for Review
         </Button>
       </div>
+
+      {/* Bulk Upload Dialog */}
+      <Dialog open={isBulkUploadOpen} onOpenChange={setIsBulkUploadOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Bulk Upload Data</DialogTitle>
+            <DialogDescription>
+              Download the template, fill it with your data, and upload it back.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <Button onClick={downloadBulkTemplate} variant="outline" className="w-full">
+              Download Template
+            </Button>
+            
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                
+                try {
+                  const data = await file.arrayBuffer();
+                  const workbook = XLSX.read(data);
+                  const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                  const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
+                  
+                  const entries: DataEntry[] = jsonData.map(row => ({
+                    id: uuidv4(),
+                    date: row['Date'] || new Date().toISOString().split('T')[0],
+                    activityDataValue: parseFloat(row['Activity Value']) || 0,
+                    notes: row['Notes'] || '',
+                    evidenceUrls: [],
+                    selectedUnit: row['Unit'] || template.activityDataUnit,
+                  }));
+                  
+                  handleBulkUpload(entries);
+                } catch (error) {
+                  toast({
+                    title: "Upload Failed",
+                    description: "Failed to parse the Excel file.",
+                    variant: "destructive",
+                  });
+                }
+              }}
+              className="w-full"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
