@@ -35,6 +35,7 @@ export interface Scope2Entry {
   dataEntryDate: string;
   enteredBy: string;
   notes: string;
+  evidenceUrls?: string[];
 }
 
 export interface Scope2FormData {
