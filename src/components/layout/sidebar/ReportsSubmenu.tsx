@@ -2,7 +2,7 @@
 import React from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { FileText } from 'lucide-react';
-import { SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
+import { SidebarMenuSubItem, SidebarMenuSubButton } from '@/components/ui/sidebar';
 import { SidebarSubmenu } from './SidebarSubmenu';
 
 interface ReportsSubmenuProps {
@@ -25,27 +25,27 @@ export const ReportsSubmenu: React.FC<ReportsSubmenuProps> = ({
       isActive={isReportsPath}
       onToggle={onToggle}
     >
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={location.pathname === '/reports'} tooltip="Reports Hub">
-          <Link to="/reports" className="w-full">
+      <SidebarMenuSubItem>
+        <SidebarMenuSubButton asChild isActive={location.pathname === '/reports'}>
+          <Link to="/reports">
             <span>Overview</span>
           </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={location.pathname === '/reports/brsr'} tooltip="BRSR Report">
-          <Link to="/reports/brsr" className="w-full">
+        </SidebarMenuSubButton>
+      </SidebarMenuSubItem>
+      <SidebarMenuSubItem>
+        <SidebarMenuSubButton asChild isActive={location.pathname === '/reports/brsr'}>
+          <Link to="/reports/brsr">
             <span>BRSR Report</span>
           </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild isActive={location.pathname === '/reports/esrs'} tooltip="ESRS Report">
-          <Link to="/reports/esrs" className="w-full">
+        </SidebarMenuSubButton>
+      </SidebarMenuSubItem>
+      <SidebarMenuSubItem>
+        <SidebarMenuSubButton asChild isActive={location.pathname === '/reports/esrs'}>
+          <Link to="/reports/esrs">
             <span>ESRS Report</span>
           </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
+        </SidebarMenuSubButton>
+      </SidebarMenuSubItem>
     </SidebarSubmenu>
   );
 };
