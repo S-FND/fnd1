@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, Upload, Database } from "lucide-react";
+import { Calendar, Upload, Database, RefreshCw } from "lucide-react";
 import DataCollectionScheduleView from '@/features/enterprise-admin/components/ghg/data-collection/DataCollectionSchedule';
 import BulkDataImport from '@/features/enterprise-admin/components/ghg/data-collection/BulkDataImport';
+import { EmissionFactorUpdater } from '@/components/ghg/EmissionFactorUpdater';
 
 const GHGDataCollection: React.FC = () => {
   return (
@@ -16,7 +17,7 @@ const GHGDataCollection: React.FC = () => {
       </div>
 
       <Tabs defaultValue="schedule" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="schedule" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             Collection Schedule
@@ -24,6 +25,10 @@ const GHGDataCollection: React.FC = () => {
           <TabsTrigger value="bulk" className="flex items-center gap-2">
             <Upload className="h-4 w-4" />
             Bulk Import
+          </TabsTrigger>
+          <TabsTrigger value="factors" className="flex items-center gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Emission Factors
           </TabsTrigger>
         </TabsList>
 
@@ -33,6 +38,10 @@ const GHGDataCollection: React.FC = () => {
 
         <TabsContent value="bulk" className="space-y-4">
           <BulkDataImport />
+        </TabsContent>
+
+        <TabsContent value="factors" className="space-y-4">
+          <EmissionFactorUpdater />
         </TabsContent>
       </Tabs>
 

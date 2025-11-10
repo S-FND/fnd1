@@ -13,6 +13,8 @@ import { GHGSource, PeriodDataEntry, generatePeriodNames } from '@/types/ghg-dat
 import { downloadCSVTemplate, parseCSVData, exportToCSV, validateFrequencyData } from '@/utils/csvHelpers';
 import { UnitSelector } from '@/components/ghg/UnitSelector';
 import { EvidenceFileUpload } from '@/components/ghg/EvidenceFileUpload';
+import { validateActivityValue, ValidationResult } from '@/utils/dataQualityValidation';
+import { ValidationWarnings } from '@/components/ghg/ValidationWarnings';
 
 interface DataCollectionDialogProps {
   open: boolean;
@@ -31,6 +33,8 @@ export const DataCollectionDialog: React.FC<DataCollectionDialogProps> = ({
   const [periodData, setPeriodData] = useState<PeriodDataEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [existingData, setExistingData] = useState<Map<string, any>>(new Map());
+  const [validationResults, setValidationResults] = useState<Map<number, ValidationResult>>(new Map());
+  const [validating, setValidating] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -93,12 +97,40 @@ export const DataCollectionDialog: React.FC<DataCollectionDialogProps> = ({
     }
   };
 
-  const handleValueChange = (index: number, value: number) => {
+  const handleValueChange = async (index: number, value: number) => {
     setPeriodData(prev => {
       const newData = [...prev];
       newData[index].activity_value = value;
       return newData;
     });
+
+    // Validate the value
+    if (value > 0 && source) {
+      setValidating(true);
+      try {
+        const result = await validateActivityValue(
+          source.id,
+          periodData[index].period_name,
+          value,
+          source.activity_unit
+        );
+        setValidationResults(prev => {
+          const newResults = new Map(prev);
+          newResults.set(index, result);
+          return newResults;
+        });
+      } catch (error) {
+        console.error('Validation error:', error);
+      } finally {
+        setValidating(false);
+      }
+    } else {
+      setValidationResults(prev => {
+        const newResults = new Map(prev);
+        newResults.delete(index);
+        return newResults;
+      });
+    }
   };
 
   const handleNotesChange = (index: number, notes: string) => {
@@ -164,11 +196,11 @@ export const DataCollectionDialog: React.FC<DataCollectionDialogProps> = ({
             emission_factor: source.emission_factor || 0,
             emission_factor_source: source.emission_factor_source,
             calculated_emissions: emissions,
-            status: 'submitted',
             data_collection_date: new Date().toISOString().split('T')[0],
             collected_by: user.id,
             notes: p.notes,
             evidence_urls: p.evidenceUrls || [],
+            status: 'submitted', // Set to submitted for approval workflow
             created_by: user.id,
           };
         });
@@ -408,6 +440,11 @@ export const DataCollectionDialog: React.FC<DataCollectionDialogProps> = ({
                         description="Upload supporting documents (optional)"
                         maxFiles={3}
                         scope={`period-${index}`}
+                      />
+
+                      {/* Validation Warnings */}
+                      <ValidationWarnings
+                        validationResult={validationResults.get(index) || null}
                       />
                     </CardContent>
                   </Card>

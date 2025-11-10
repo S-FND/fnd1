@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, CheckCircle2, Circle, AlertCircle, Plus } from "lucide-react";
+import { Calendar, CheckCircle2, Circle, AlertCircle, Plus, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { GHGSource, DataCollectionSchedule, generatePeriodNames } from '@/types/ghg-data-collection';
 import DataCollectionDialog from './DataCollectionDialog';
+import { ApprovalWorkflowDialog } from '@/components/ghg/ApprovalWorkflowDialog';
 
 export const DataCollectionScheduleView: React.FC = () => {
   const { toast } = useToast();
@@ -17,6 +18,8 @@ export const DataCollectionScheduleView: React.FC = () => {
   const [selectedScope, setSelectedScope] = useState<string>('all');
   const [selectedSource, setSelectedSource] = useState<GHGSource | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
+  const [selectedActivityId, setSelectedActivityId] = useState<string>('');
 
   useEffect(() => {
     loadSchedules();
@@ -106,6 +109,11 @@ export const DataCollectionScheduleView: React.FC = () => {
   const handleOpenDataCollection = (source: GHGSource) => {
     setSelectedSource(source);
     setDialogOpen(true);
+  };
+
+  const handleOpenApproval = (activityId: string) => {
+    setSelectedActivityId(activityId);
+    setApprovalDialogOpen(true);
   };
 
   const getStatusColor = (status: string) => {
@@ -220,12 +228,16 @@ export const DataCollectionScheduleView: React.FC = () => {
                           <div
                             key={index}
                             className={`
-                              p-3 rounded-lg border-2 text-center space-y-1 transition-colors
+                              p-3 rounded-lg border-2 text-center space-y-1 transition-colors cursor-pointer hover:shadow-md
                               ${period.status !== 'pending' ? 'border-primary bg-primary/5' : 'border-gray-200'}
                             `}
+                            onClick={() => period.data_entry_id && period.status === 'submitted' && handleOpenApproval(period.data_entry_id)}
                           >
-                            <div className="flex items-center justify-center">
+                            <div className="flex items-center justify-center gap-1">
                               {getStatusIcon(period.status)}
+                              {period.status === 'submitted' && period.data_entry_id && (
+                                <Eye className="h-3 w-3 text-primary" />
+                              )}
                             </div>
                             <div className="text-xs font-medium">{period.period_name}</div>
                             {period.activity_value !== undefined && (
@@ -274,6 +286,13 @@ export const DataCollectionScheduleView: React.FC = () => {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         source={selectedSource}
+        onSuccess={loadSchedules}
+      />
+
+      <ApprovalWorkflowDialog
+        open={approvalDialogOpen}
+        onOpenChange={setApprovalDialogOpen}
+        activityDataId={selectedActivityId}
         onSuccess={loadSchedules}
       />
     </>
