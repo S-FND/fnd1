@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Save, Download, Upload } from "lucide-react";
 import { GHGSource, PeriodDataEntry, generatePeriodNames } from '@/types/ghg-data-collection';
 import { downloadCSVTemplate, parseCSVData, exportToCSV, validateFrequencyData } from '@/utils/csvHelpers';
+import { UnitSelector } from '@/components/ghg/UnitSelector';
+import { EvidenceFileUpload } from '@/components/ghg/EvidenceFileUpload';
 
 interface DataCollectionDialogProps {
   open: boolean;
@@ -48,6 +49,8 @@ export const DataCollectionDialog: React.FC<DataCollectionDialogProps> = ({
         period_name: period,
         activity_value: 0,
         notes: '',
+        evidenceUrls: [],
+        selectedUnit: source.activity_unit,
       }))
     );
   };
@@ -79,6 +82,8 @@ export const DataCollectionDialog: React.FC<DataCollectionDialogProps> = ({
                 period_name: p.period_name,
                 activity_value: existing.activity_value,
                 notes: existing.notes || '',
+                evidenceUrls: existing.evidence_urls || [],
+                selectedUnit: source?.activity_unit || '',
               }
             : p;
         })
@@ -100,6 +105,22 @@ export const DataCollectionDialog: React.FC<DataCollectionDialogProps> = ({
     setPeriodData(prev => {
       const newData = [...prev];
       newData[index].notes = notes;
+      return newData;
+    });
+  };
+
+  const handleUnitChange = (index: number, unit: string) => {
+    setPeriodData(prev => {
+      const newData = [...prev];
+      newData[index].selectedUnit = unit;
+      return newData;
+    });
+  };
+
+  const handleEvidenceChange = (index: number, urls: string[]) => {
+    setPeriodData(prev => {
+      const newData = [...prev];
+      newData[index].evidenceUrls = urls;
       return newData;
     });
   };
@@ -147,6 +168,7 @@ export const DataCollectionDialog: React.FC<DataCollectionDialogProps> = ({
             data_collection_date: new Date().toISOString().split('T')[0],
             collected_by: user.id,
             notes: p.notes,
+            evidence_urls: p.evidenceUrls || [],
             created_by: user.id,
           };
         });
@@ -352,18 +374,15 @@ export const DataCollectionDialog: React.FC<DataCollectionDialogProps> = ({
                         )}
                       </div>
                       
-                      <div>
-                        <Label className="text-xs text-muted-foreground">
-                          Activity Value ({source.activity_unit})
-                        </Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={period.activity_value || ''}
-                          onChange={(e) => handleValueChange(index, parseFloat(e.target.value) || 0)}
-                          placeholder="0.00"
-                        />
-                      </div>
+                      <UnitSelector
+                        label="Activity Value"
+                        value={period.activity_value}
+                        onChange={(value) => handleValueChange(index, value)}
+                        baseUnit={source.activity_unit}
+                        selectedUnit={period.selectedUnit || source.activity_unit}
+                        onUnitChange={(unit) => handleUnitChange(index, unit)}
+                        placeholder="0.00"
+                      />
 
                       {period.activity_value > 0 && source.emission_factor && (
                         <div className="text-xs text-muted-foreground">
@@ -381,6 +400,15 @@ export const DataCollectionDialog: React.FC<DataCollectionDialogProps> = ({
                           className="text-sm"
                         />
                       </div>
+
+                      <EvidenceFileUpload
+                        value={period.evidenceUrls || []}
+                        onChange={(urls) => handleEvidenceChange(index, urls)}
+                        label="Evidence Files"
+                        description="Upload supporting documents (optional)"
+                        maxFiles={3}
+                        scope={`period-${index}`}
+                      />
                     </CardContent>
                   </Card>
                 ))}

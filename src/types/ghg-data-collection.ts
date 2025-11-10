@@ -88,6 +88,8 @@ export interface PeriodDataEntry {
   period_name: string;
   activity_value: number;
   notes?: string;
+  evidenceUrls?: string[];
+  selectedUnit?: string;
 }
 
 export interface DataCollectionSchedule {
