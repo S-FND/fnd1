@@ -9,6 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2 } from 'lucide-react';
 import { OfficeSpace, LocationDetails, WarehouseItem } from '../irl/types';
+import { logger } from '@/hooks/logger';
 
 const AdvancedIRLFacility = () => {
   const [formData, setFormData] = useState({
@@ -75,11 +76,11 @@ const AdvancedIRLFacility = () => {
   };
 
   const handleSave = () => {
-    console.log('Saving Advanced IRL Facility data:', { formData, officeSpaces, locationDetails, warehouseItems });
+    logger.log('Saving Advanced IRL Facility data:', { formData, officeSpaces, locationDetails, warehouseItems });
   };
 
   const handleSubmit = () => {
-    console.log('Submitting Advanced IRL Facility data:', { formData, officeSpaces, locationDetails, warehouseItems });
+    logger.log('Submitting Advanced IRL Facility data:', { formData, officeSpaces, locationDetails, warehouseItems });
   };
 
   return (

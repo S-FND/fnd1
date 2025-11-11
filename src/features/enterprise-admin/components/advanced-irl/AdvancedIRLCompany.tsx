@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2 } from 'lucide-react';
+import { logger } from '@/hooks/logger';
 
 interface SubsidiaryInfo {
   name: string;
@@ -95,11 +96,11 @@ const AdvancedIRLCompany = () => {
   };
 
   const handleSave = () => {
-    console.log('Saving Advanced IRL Company data:', { formData, subsidiaries, csrProjects, tradeAssociations });
+    logger.log('Saving Advanced IRL Company data:', { formData, subsidiaries, csrProjects, tradeAssociations });
   };
 
   const handleSubmit = () => {
-    console.log('Submitting Advanced IRL Company data:', { formData, subsidiaries, csrProjects, tradeAssociations });
+    logger.log('Submitting Advanced IRL Company data:', { formData, subsidiaries, csrProjects, tradeAssociations });
   };
 
   return (

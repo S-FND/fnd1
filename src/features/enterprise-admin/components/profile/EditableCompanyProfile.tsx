@@ -8,6 +8,7 @@ import CompanyEditForm from './CompanyEditForm';
 import CompanyDisplay from './CompanyDisplay';
 import { fetchProfileData, updateProfileData,updateCompanyFeatures } from '../../services/companyApi';
 import { defaultPermissions } from '@/config/permissions'; // Make sure to import this
+import { logger } from '@/hooks/logger';
 
 const EditableCompanyProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -71,7 +72,7 @@ const EditableCompanyProfile = () => {
         JSON.stringify(features || [])
       );
     } catch (err) {
-      console.error("Failed to set up company features:", err);
+      logger.error("Failed to set up company features:", err);
     }
   };
   const onSubmit = async (data: CompanyFormData) => {

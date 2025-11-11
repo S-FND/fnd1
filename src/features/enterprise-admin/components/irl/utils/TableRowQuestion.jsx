@@ -13,7 +13,8 @@ const TableRowQuestion = ({
   operationNameToKeyMap,
   existingFiles = [],
   setOperations,
-  onDeleteFile
+  onDeleteFile,
+  buttonEnabled
 }) => {
   const key = operationNameToKeyMap[op.name];
   const field = selectedValues[key] || {};
@@ -104,7 +105,8 @@ const TableRowQuestion = ({
         <select
           value={field.answer || ""}
           onChange={(e) => handleStatusChange(e.target.value)}
-          className="w-[80px] border rounded px-2 py-2 py-1.5"
+          className="w-[80px] border rounded px-2 py-2 py-1.5 ${ !buttonEnabled ? 'bg-gray-100 cursor-not-allowed hover:bg-gray-100' : 'cursor-pointer hover:bg-gray-50'}"
+          disabled={!buttonEnabled}
         >
           <option value="">Select status</option>
           <option value="yes">Yes</option>
@@ -125,6 +127,7 @@ const TableRowQuestion = ({
             onChange={handleFileChange}
             className="text-xs"
             multiple
+            disabled={!buttonEnabled}
           />
 
           {/* Existing files */}
@@ -144,7 +147,8 @@ const TableRowQuestion = ({
                 <button
                   type="button"
                   onClick={() => onDeleteFile(i, fileUrl)}
-                  className="text-red-500 hover:text-red-700 p-0.5"
+                  className="text-red-500 hover:text-red-700 p-0.5 ${ !buttonEnabled ? 'bg-gray-100 cursor-not-allowed hover:bg-gray-100' : 'cursor-pointer hover:bg-gray-50'}"
+                  disabled={!buttonEnabled}
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -164,6 +168,7 @@ const TableRowQuestion = ({
           onChange={handleNotesChange}
           placeholder="Enter notes..."
           className={`w-full p-2 border rounded min-h-[80px] ${fieldError?.includes('reason') ? 'border-red-500' : ''}`}
+          disabled={!buttonEnabled} 
         />
         {fieldError && fieldError.includes('reason') && (
           <p className="text-xs text-red-500 mt-1">{fieldError}</p>

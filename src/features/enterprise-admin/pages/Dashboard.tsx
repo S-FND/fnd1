@@ -5,9 +5,10 @@ import AdminDashboard from '@/features/enterprise-admin/components/Dashboard';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
-
+import { logger } from '@/hooks/logger';
 const EnterpriseAdminDashboardPage = () => {
-  const { isLoading } = useRouteProtection(['admin']);
+  logger.debug('Rendering EnterpriseAdminDashboardPage component');
+  const { isLoading } = useRouteProtection(['admin','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {

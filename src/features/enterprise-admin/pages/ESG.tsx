@@ -13,16 +13,19 @@ import TCFDReport from './TCFDReport';
 import ESRSReport from './ESRSReport';
 import ImpactReport from './ImpactReport';
 import ReportsPage from './Reports';
+import { debug } from 'console';
+import { logger } from '@/hooks/logger';
 
 const ESGPage = () => {
-  const { isLoading } = useRouteProtection(['admin', 'manager']);
+  logger.debug('Rendering ESGPage component');
+  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
-
-  if (!isAuthenticatedStatus()) {
+// debugger;
+  if (!isAuthenticatedStatus(['admin', 'manager', 'employee'])) {
     return <Navigate to="/" />;
   }
 

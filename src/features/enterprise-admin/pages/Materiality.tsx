@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
@@ -21,6 +21,8 @@ import industryList from "../data/industryBychatgtp.json";
 import FinalizationMethodSelector from '../components/materiality/FinalizationMethodSelector';
 import InternalFinalization from '../components/materiality/InternalFinalization';
 import { httpClient } from '@/lib/httpClient';
+import { logger } from '@/hooks/logger';
+import { PageAccessContext } from '@/context/PageAccessContext';
 
 // Define a union type for allowed frameworks
 type Framework = 'SASB' | 'GRI' | 'Custom';
@@ -33,7 +35,8 @@ interface MaterialTopic extends Omit<FrameworkMaterialTopic, 'businessImpact' | 
 }
 
 const MaterialityPage = () => {
-  const { isLoading } = useRouteProtection(['admin', 'manager', 'unit_admin']);
+  logger.debug('Rendering MaterialityPage component');
+  const { isLoading } = useRouteProtection(['admin', 'manager', 'unit_admin','employee']);
   const { user, isAuthenticated, isAuthenticatedStatus } = useAuth();
   const [activeTab, setActiveTab] = useState('assessment');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -52,6 +55,9 @@ const MaterialityPage = () => {
   const [finalizationStep, setFinalizationStep] = useState<'method' | 'internal' | 'stakeholder' | 'completed'>('method');
   const [finalizationMethod, setFinalizationMethod] = useState<'internal' | 'stakeholder' | null>(null);
   const [finalizedTopics, setFinalizedTopics] = useState<MaterialTopic[]>([]);
+  // button disable
+  const {checkPageButtonAccess}=useContext(PageAccessContext);
+  const [buttonEnabled, setButtonEnabled] = useState(false);
 
   // Update tempSelectedIndustries when selectedIndustries changes
   useEffect(() => {
@@ -83,7 +89,7 @@ const MaterialityPage = () => {
       if (materilityDataResponse['status'] == 200) {
         if (materilityDataResponse['data']) {
           if (materilityDataResponse['data']['industry']) {
-            console.log("materialityData['data']['industry']", materilityDataResponse['data']['industry'])
+            logger.log("materialityData['data']['industry']", materilityDataResponse['data']['industry'])
             setSelectedIndustries(materilityDataResponse['data']['industry'])
             setTempSelectedIndustries(materilityDataResponse['data']['industry'])
           }
@@ -96,7 +102,7 @@ const MaterialityPage = () => {
           }
 
           if (materilityDataResponse['data']['selectedTopics']) {
-            console.log(`materilityDataResponse['data']['selectedTopics'] ====`,materilityDataResponse['data']['selectedTopics'])
+            logger.log(`materilityDataResponse['data']['selectedTopics'] ====`,materilityDataResponse['data']['selectedTopics'])
             setSelectedMaterialTopics(materilityDataResponse['data']['selectedTopics'])
             setSelectedTopicsForEngagement(materilityDataResponse['data']['selectedTopics'])
           }
@@ -110,16 +116,16 @@ const MaterialityPage = () => {
                 
                 return {...t,finalized:(filteredData && filteredData.length>0)?true:false}
               })
-              console.log(`materilityDataResponse['data']['selectedTopics']`,finalMetricsSelected)
+              logger.log(`materilityDataResponse['data']['selectedTopics']`,finalMetricsSelected)
               setSelectedMaterialTopics(finalMetricsSelected)
               setSelectedTopicsForEngagement(finalMetricsSelected)
             }
           }
         }
       }
-      console.log('materilityDataResponse', materilityDataResponse)
+      logger.log('materilityDataResponse', materilityDataResponse)
     } catch (error) {
-      console.log("error :: getMaterialityData => ", error)
+      logger.error("error :: getMaterialityData => ", error)
     }
   }
 
@@ -148,7 +154,7 @@ const MaterialityPage = () => {
       try {
         customTopics = JSON.parse(savedCustomTopics);
       } catch (error) {
-        console.error('Error loading custom topics:', error);
+        logger.error('Error loading custom topics:', error);
       }
     }
 
@@ -261,9 +267,9 @@ const MaterialityPage = () => {
         entityId: JSON.parse(localStorage.getItem('fandoro-user')).entityId,
         industry: tempSelectedIndustries
       })
-      // console.log('updateResponse', updateResponse)
+      // logger.log('updateResponse', updateResponse)
     } catch (error) {
-      console.log("error :: updateMatrixData => ", error)
+      logger.log("error :: updateMatrixData => ", error)
     }
     toast.info(`Updated materiality assessment for ${tempSelectedIndustries.length} selected ${tempSelectedIndustries.length === 1 ? 'industry' : 'industries'}`);
   };
@@ -311,8 +317,6 @@ const MaterialityPage = () => {
       a = [...a, ...(c.topics.map((t, index) => {
         //&& st.industry == c.name
         let selected=selectedMaterialTopics.filter((st)=> st.topic == t.name  && st.selected)
-        console.log(`ttttttttttttttttttttttttt ====`,t.name ,c.name)
-        console.log(`ttttttttttttttttttttttttt ====`,selected)
         return {
           id: `${pIndex}-${index}`,
           industry: c.name,
@@ -327,7 +331,7 @@ const MaterialityPage = () => {
       }))]
       return a;
     }, [])
-    console.log("Settign selectedMaterialTopics again",selectedIndustryTopic)
+    logger.log("Settign selectedMaterialTopics again",selectedIndustryTopic)
     setSelectedMaterialTopics(selectedIndustryTopic)
     // console.log('selectedIndustryTopic', selectedIndustryTopic)
   }, [tempSelectedIndustries])
@@ -391,9 +395,9 @@ const MaterialityPage = () => {
         entityId: JSON.parse(localStorage.getItem('fandoro-user')).entityId,
         finalizingMethod: method
       })
-      console.log('updateResponse', updateResponse)
+      logger.log('updateResponse', updateResponse)
     } catch (error) {
-      console.log("error :: handleFinalizationMethodSelect => ", error)
+      logger.error("error :: handleFinalizationMethodSelect => ", error)
     }
   };
 
@@ -409,9 +413,9 @@ const MaterialityPage = () => {
         entityId: JSON.parse(localStorage.getItem('fandoro-user')).entityId,
         finalTopics: selectedTopics
       })
-      console.log('updateResponse', updateResponse)
+      logger.log('updateResponse', updateResponse)
     } catch (error) {
-      console.log("error :: handleInternalFinalization => ", error)
+      logger.error("error :: handleInternalFinalization => ", error)
     }
 
     toast.success('Material topics finalized internally');
@@ -423,9 +427,21 @@ const MaterialityPage = () => {
     setFinalizationMethod(null);
   };
 
-  useEffect(()=>{
-    console.log(`selectedMaterialTopics ========:: =======`,selectedMaterialTopics)
-  },[selectedMaterialTopics])
+  // useEffect(()=>{
+  //   console.log(`selectedMaterialTopics ========:: =======`,selectedMaterialTopics)
+  // },[selectedMaterialTopics])
+  useEffect(() => {
+    // const hasAccess = checkPageButtonAccess('/materiality');
+    // setButtonEnabled(hasAccess);
+    const userData = localStorage.getItem('fandoro-user');
+    const user = JSON.parse(userData);
+    if (user.isParent === false) {
+      const hasAccess = checkPageButtonAccess('/materiality');
+      setButtonEnabled(hasAccess);
+    } else {
+      setButtonEnabled(true);
+    }
+  }, []);
 
   return (
     <UnifiedSidebarLayout>
@@ -443,6 +459,7 @@ const MaterialityPage = () => {
           onClearSelection={() => setTempSelectedIndustries([])}
           onUpdateMatrix={updateMatrixData}
           industries={industries}
+          buttonEnabled={buttonEnabled}
         />
 
         <MaterialityTabs
@@ -463,6 +480,7 @@ const MaterialityPage = () => {
           selectedMaterialTopics={selectedMaterialTopics}
           customTopics={savedCustomTopics}
           getMaterialityData={getMaterialityData}
+          buttonEnabled={buttonEnabled}
         />
 
         {/* Finalization Flow */}

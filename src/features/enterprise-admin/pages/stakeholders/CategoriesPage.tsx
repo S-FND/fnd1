@@ -5,9 +5,11 @@ import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
+import { logger } from '@/hooks/logger';
 
 const CategoriesPage = () => {
-  const { isLoading } = useRouteProtection(['admin', 'manager']);
+  logger.debug('Rendering CategoriesPage component');
+  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {

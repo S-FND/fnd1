@@ -8,7 +8,7 @@ const GHGInventoryPage = () => {
   const { user, isAuthenticated, isSupplier,isAuthenticatedStatus } = useAuth();
 
   if (!isAuthenticatedStatus) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/" />;
   }
 
   if (!isSupplier()) {

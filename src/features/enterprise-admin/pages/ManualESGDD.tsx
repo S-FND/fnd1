@@ -15,9 +15,11 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Upload, Download, Plus } from 'lucide-react';
+import { logger } from '@/hooks/logger';
 
 const ManualESGDDPage = () => {
-  const { isLoading } = useRouteProtection(['admin', 'unit_admin']);
+  logger.debug('Rendering ManualESGDDPage component');
+  const { isLoading } = useRouteProtection(['admin', 'unit_admin','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploadForm, setUploadForm] = useState({
@@ -54,7 +56,7 @@ const ManualESGDDPage = () => {
 
   const handleUpload = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Uploading report:', uploadForm);
+    logger.log('Uploading report:', uploadForm);
     // In a real app, we would upload the file and create a new report
     setUploadDialogOpen(false);
     // Reset form
@@ -69,8 +71,8 @@ const ManualESGDDPage = () => {
 
   return (
     <div className="min-h-screen">
-      <Navbar />
       <UnifiedSidebarLayout>
+      <Navbar />
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <div>

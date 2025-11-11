@@ -13,9 +13,11 @@ import { GHGScope4Form } from '../components/ghg/GHGScope4Form';
 import { GHGSummary } from '../components/ghg/GHGSummary';
 import { GHGDataAssignment } from '../components/ghg/GHGDataAssignment';
 import { companyInfo } from '../components/ghg/summary/mockData';
+import { logger } from '@/hooks/logger';
 
 const GHGAccountingPage = () => {
-  const { isLoading } = useRouteProtection(['admin', 'unit_admin']);
+  logger.debug('Rendering GHGAccountingPage component');
+  const { isLoading } = useRouteProtection(['admin', 'unit_admin','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const [activeTab, setActiveTab] = useState("summary");
 

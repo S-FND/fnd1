@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { logger } from '@/hooks/logger';
 
 interface ReportViewerProps {
   title: string;
@@ -98,7 +99,7 @@ const ReportViewer: React.FC<ReportViewerProps> = ({ title, reportType, children
       setIsDownloading(false);
       toast.success(`${reportType} report downloaded successfully`);
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      logger.error('Error generating PDF:', error);
       setIsDownloading(false);
       toast.error(`Failed to download report: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }

@@ -6,8 +6,10 @@ import EmployeeDashboard from '@/components/dashboard/EmployeeDashboard';
 import { useAuth } from '@/context/AuthContext';
 import { useFeatures } from '@/context/FeaturesContext';
 import { Navigate } from 'react-router-dom';
+import { logger } from '@/hooks/logger';
 
 const Dashboard = () => {
+  logger.debug('Rendering Dashboard component');
   const { user, isAuthenticated, isCompanyUser, isEmployeeUser, isLoading,isAuthenticatedStatus } = useAuth();
   const { isLoading: featuresLoading } = useFeatures();
 

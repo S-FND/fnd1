@@ -13,7 +13,8 @@ import { CompanyFormData, OfficeSpace, OutsourcedService, LocationDetails } from
 import { toast } from 'sonner';
 import { fetchCompanyData, updateCompanyData } from '../../services/companyApi';
 import { Loader2 } from 'lucide-react';
-const IRLCompanyInformation = () => {
+import { logger } from '@/hooks/logger';
+const IRLCompanyInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
   const [formData, setFormData] = useState<CompanyFormData>({
     legalEntityName: '',
     user_id: '',
@@ -65,7 +66,7 @@ const IRLCompanyInformation = () => {
       }
       return null;
     } catch (error) {
-      console.error("Error parsing user data:", error);
+      logger.error("Error parsing user data:", error);
       return null;
     }
   };
@@ -123,10 +124,10 @@ const IRLCompanyInformation = () => {
             businessActivitiesDescription: data.businessActivitiesDescription || ''
           }));
         } else {
-          console.error('Error fetching company data');
+          logger.error('Error fetching company data');
         }
       } catch (error) {
-        console.error('Error fetching company data:', error);
+        logger.error('Error fetching company data:', error);
         // setError('Failed to load company data');
         // toast.error('Failed to load company data');
       } finally {
@@ -195,9 +196,9 @@ const IRLCompanyInformation = () => {
       const response = await updateCompanyData(data);
 
       toast.success('Draft saved successfully!');
-      console.log('Draft saved:', response);
+      logger.log('Draft saved:', response);
     } catch (error) {
-      console.error('Error saving draft:', error);
+      logger.error('Error saving draft:', error);
       setError('Failed to save draft');
       toast.error('Failed to save draft');
     } finally {
@@ -217,13 +218,13 @@ const IRLCompanyInformation = () => {
     setError(null);
     try {
       const data = buildCompanyPayload(false);
-      console.log('Payload being sent:', data);
+      logger.log('Payload being sent:', data);
       const response = await updateCompanyData(data);
 
       toast.success('Form submitted successfully!');
-      console.log('Form submitted:', response);
+      logger.log('Form submitted:', response);
     } catch (error) {
-      console.error('Error submitting form:', error);
+      logger.error('Error submitting form:', error);
       setError('Failed to submit form');
       toast.error('Failed to submit form');
     } finally {
@@ -387,15 +388,15 @@ const IRLCompanyInformation = () => {
         </div>
 
         <div className="flex gap-4 pt-6">
-          <Button onClick={handleSave} variant="outline" className="flex-1">
+          <Button onClick={handleSave} variant="outline" className="flex-1" disabled={isLoading || !buttonEnabled}>
             Save as Draft
           </Button>
-          <Button onClick={handleSubmit} className="flex-1">
+          <Button onClick={handleSubmit} className="flex-1" disabled={isLoading || !buttonEnabled}>
             Submit
           </Button>
         </div>
         </>
-        )};
+        )}
       </CardContent>
     </Card>
   );

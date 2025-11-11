@@ -9,7 +9,7 @@ const CTASection = () => {
   const navigate = useNavigate();
   
   const handleGetStarted = () => {
-    if (!isAuthenticatedStatus()) {
+    if (!isAuthenticatedStatus([])) {
       navigate('/');
     } else {
       // Redirect based on user role

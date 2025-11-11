@@ -189,12 +189,13 @@ const managementItems = [
   }
 ];
 
-const IRLManagement = () => {
+const IRLManagement = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
   return (
     <IRLComplianceTable
       title="Management"
       description="Upload required documents and records on E&S Management Systems"
       items={managementItems}
+      buttonEnabled={buttonEnabled}
     />
   );
 };

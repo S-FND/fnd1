@@ -10,6 +10,7 @@ import { Stakeholder, StakeholderGroup } from '../../data/stakeholderPrioritizat
 import { MaterialTopic } from '../../data/frameworkTopics';
 import { httpClient } from '@/lib/httpClient';
 import { API_ENDPOINTS } from '@/lib/apiEndpoints';
+import { logger } from '@/hooks/logger';
 
 interface StakeholderGroupFormProps {
   stakeholders: Stakeholder[];
@@ -26,7 +27,7 @@ const StakeholderGroupForm: React.FC<StakeholderGroupFormProps> = ({
   onCancel,
   existingGroup
 }) => {
-  console.log('StakeholderGroupForm :: stakeholders ==> ',stakeholders)
+  logger.log('StakeholderGroupForm :: stakeholders ==> ',stakeholders)
   const [formData, setFormData] = useState<{
     name: string;
     description: string;
@@ -56,7 +57,7 @@ const StakeholderGroupForm: React.FC<StakeholderGroupFormProps> = ({
     onSave(newGroup);
   };
   useEffect(()=>{
-    console.log('formData',formData)
+    logger.log('formData',formData)
   },[formData])
   const toggleStakeholder = (stakeholderId: string) => {
     setFormData(prev => ({
@@ -79,10 +80,10 @@ const StakeholderGroupForm: React.FC<StakeholderGroupFormProps> = ({
   // Group topics by category
   const topicsByCategory = materialTopics.reduce<Record<string, MaterialTopic[]>>(
     (acc, topic) => {
-      if (!acc[topic.category]) {
-        acc[topic.category] = [];
+      if (!acc[topic['category']]) {
+        acc[topic['category']] = [];
       }
-      acc[topic.category].push(topic);
+      acc[topic['category']].push(topic);
       return acc;
     },
     {}

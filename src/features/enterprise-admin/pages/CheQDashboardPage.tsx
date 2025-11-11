@@ -13,9 +13,11 @@ import CheQAuditDashboard from '../components/audit/CheQAuditDashboard';
 import CheQLMSOverview from '../components/lms/CheQLMSOverview';
 import CheQEHSTrainings from '../components/ehs/CheQEHSTrainings';
 import { companyInfo } from '../data/cheq-mock-data';
+import { logger } from '@/hooks/logger';
 
 const CheQDashboardPage = () => {
-  const { isLoading } = useRouteProtection(['admin']);
+  logger.debug('Rendering CheQDashboardPage component');
+  const { isLoading } = useRouteProtection(['admin','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {

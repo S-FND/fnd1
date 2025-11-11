@@ -14,6 +14,7 @@ interface IndustrySelectionProps {
   onClearSelection: () => void;
   onUpdateMatrix: () => void;
   industries:{value:string;label:string;}[]
+  buttonEnabled: boolean;
 }
 
 const IndustrySelection: React.FC<IndustrySelectionProps> = ({
@@ -21,7 +22,8 @@ const IndustrySelection: React.FC<IndustrySelectionProps> = ({
   onIndustryChange,
   onClearSelection,
   onUpdateMatrix,
-  industries
+  industries,
+  buttonEnabled
 }) => {
   const handleSelectIndustry = (industryId: string) => {
     if (!selectedIndustries.includes(industryId)) {
@@ -83,6 +85,7 @@ const IndustrySelection: React.FC<IndustrySelectionProps> = ({
                         size="sm"
                         className="h-4 w-4 p-0 hover:bg-transparent"
                         onClick={() => handleRemoveIndustry(industryId)}
+                        disabled={!buttonEnabled}
                       >
                         <X className="h-3 w-3" />
                       </Button>
@@ -99,12 +102,14 @@ const IndustrySelection: React.FC<IndustrySelectionProps> = ({
             variant="outline" 
             size="sm"
             onClick={onClearSelection}
+            disabled={!buttonEnabled}
           >
             Clear Selection
           </Button>
           <Button
             variant="outline"
             size="sm"
+            disabled={!buttonEnabled}
           >
             {selectedIndustries.length} {selectedIndustries.length === 1 ? 'Industry' : 'Industries'} Selected
           </Button>
@@ -112,6 +117,7 @@ const IndustrySelection: React.FC<IndustrySelectionProps> = ({
             variant="default"
             size="sm"
             onClick={onUpdateMatrix}
+            disabled={!buttonEnabled}
           >
             Update Matrix
           </Button>

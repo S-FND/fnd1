@@ -51,9 +51,9 @@ const CreateTopicDialog: React.FC<CreateTopicDialogProps> = ({ isOpen, onClose, 
           entityId:JSON.parse(localStorage.getItem('fandoro-user')).entityId,
           customTopics:[newTopic]
         })
-        console.log('updateResponse',updateResponse)
+        logger.log('updateResponse',updateResponse)
       } catch (error) {
-        console.log("error :: updateMatrixData => ", error)
+        logger.log("error :: updateMatrixData => ", error)
       }
       onCreate(newTopic);
       setFormData({

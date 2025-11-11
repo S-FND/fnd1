@@ -4,8 +4,10 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import AuditDashboard from '@/components/audit/AuditDashboard';
+import { logger } from '@/hooks/logger';
 
 const AuditDashboardPage = () => {
+  logger.debug('Rendering AuditDashboardPage component');
   const { isAuthenticated, isCompanyUser,isAuthenticatedStatus } = useAuth();
 
   if (!isAuthenticatedStatus()) {

@@ -7,6 +7,7 @@ import MaterialityMatrix from './MaterialityMatrix';
 import MaterialTopicsTab from './MaterialTopicsTab';
 import TopicsByPriority from './TopicsByPriority';
 import MethodologyTab from './MethodologyTab';
+import { logger } from '@/hooks/logger';
 
 // Define allowed framework types
 type Framework = 'SASB' | 'GRI' | 'Custom';
@@ -50,6 +51,7 @@ interface MaterialityTabsProps {
   }[];
   customTopics:MaterialTopic[];
   getMaterialityData:() => {};
+  buttonEnabled: boolean;
 }
 
 const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
@@ -66,12 +68,13 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
   activeFrameworks,
   setActiveFrameworks,
   onUpdateTopics,
-  onUpdateSelectedTopics,selectedMaterialTopics,customTopics,getMaterialityData
+  onUpdateSelectedTopics,selectedMaterialTopics,customTopics,getMaterialityData,
+  buttonEnabled
 }) => {
   // setTimeout(()=>{
   //   getMaterialityData()
   // },4000)
-  console.log(`selectedMaterialTopics ========> `,selectedMaterialTopics)
+  logger.log(`selectedMaterialTopics ========> `,selectedMaterialTopics)
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
       <div className="flex items-center justify-between">
@@ -113,6 +116,7 @@ const MaterialityTabs: React.FC<MaterialityTabsProps> = ({
           selectedMaterialTopics={selectedMaterialTopics}
           customTopics={customTopics}
           getMaterialityData={getMaterialityData}
+          buttonEnabled={buttonEnabled}
         />
       </TabsContent>
 

@@ -13,6 +13,7 @@ import TopicClassificationTabs from './TopicClassificationTabs';
 import { getCombinedTopics, MaterialTopic as FrameworkMaterialTopic } from '../../data/frameworkTopics';
 import { industries } from '../../data/materiality';
 import { httpClient } from '@/lib/httpClient';
+import { logger } from '@/hooks/logger';
 
 // Define allowed framework types
 type Framework = 'SASB' | 'GRI' | 'Custom';
@@ -50,6 +51,7 @@ interface MaterialTopicsTabProps {
   }[],
   customTopics:MaterialTopic[];
   getMaterialityData:() => {};
+  buttonEnabled: boolean;
 }
 
 const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
@@ -61,7 +63,8 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
   onUpdateSelectedTopics,
   selectedMaterialTopics,
   customTopics,
-  getMaterialityData
+  getMaterialityData,
+  buttonEnabled
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [classificationView, setClassificationView] = useState<'all' | 'risks' | 'opportunities'>('all');
@@ -99,7 +102,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
   // }, [selectedIndustries, activeFrameworks, materialTopics]);
 
   useEffect(() => {
-    console.log("selectedMaterialTopics",selectedMaterialTopics)
+    logger.log("selectedMaterialTopics",selectedMaterialTopics)
     let reducedTopics = [...selectedMaterialTopics,...customTopics].reduce((a, c) => {
       if (Object.keys(a).includes(c['esg'])) {
         a[c['esg']].push({ ...c, selected: c.selected?c.selected:false })
@@ -109,7 +112,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
       }
       return a
     }, {})
-    console.log('reducedTopics',reducedTopics)
+    logger.log('reducedTopics',reducedTopics)
     // Object.keys(seggregatedTopic).forEach((c) => {
     //   if (reducedTopics[c]) {
     //     reducedTopics[c] = [...seggregatedTopic[c], ...reducedTopics[c]]
@@ -118,13 +121,13 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
     //     reducedTopics[c] = [...seggregatedTopic[c]]
     //   }
     // })
-    console.log('reducedTopics second ',reducedTopics)
+    logger.log('reducedTopics second ',reducedTopics)
     setSeggregatedTopic(reducedTopics)
     setfilteredSeggregatedTopic(reducedTopics)
   }, [selectedMaterialTopics])
 
   useEffect(() => {
-    console.log('seggregatedTopic', seggregatedTopic)
+    logger.log('seggregatedTopic', seggregatedTopic)
     filterTopics(activeFrameworks)
   }, [seggregatedTopic])
 
@@ -168,7 +171,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
       });
       filtered[t] = [...internalFiltered]
     })
-    console.log('filtered', filtered)
+    logger.log('filtered', filtered)
     setfilteredSeggregatedTopic(filtered)
   }
 
@@ -186,12 +189,12 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
   });
 
   const handleTopicSelection = (topicId: string, selected: boolean) => {
-    console.log('topicId', topicId)
-    console.log('selected', selected)
-    console.log(`Object.values(seggregatedTopic).flat()`,Object.values(seggregatedTopic).flat())
+    logger.log('topicId', topicId)
+    logger.log('selected', selected)
+    logger.log(`Object.values(seggregatedTopic).flat()`,Object.values(seggregatedTopic).flat())
     let checkedMaterialTopics:MaterialTopic[]=Object.values(seggregatedTopic).flat() as MaterialTopic[];
     checkedMaterialTopics.forEach((mt:MaterialTopic,index) => {
-      console.log('selected', mt.selected)
+      logger.log('selected', mt.selected)
       if (mt.id == topicId) {
         checkedMaterialTopics[index]={ ...mt, selected: mt.selected?!mt.selected:selected }
       }
@@ -232,7 +235,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
     //   }
     //   return a
     // }, {})
-    console.log('seggregatedTopic', seggregatedTopic)
+    logger.log('seggregatedTopic', seggregatedTopic)
     // setSeggregatedTopic(reducedTopics)
     const updatedTopics = topicsWithSelection.map(topic =>
       topic.id === topicId ? { ...topic, selected } : topic
@@ -249,19 +252,19 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
         }
       })
     })
-    console.log('selectedTopicsMateriality', selectedTopicsMateriality)
+    logger.log('selectedTopicsMateriality', selectedTopicsMateriality)
     try {
       // selectedTopics
       let updateTopicsResponse = await httpClient.post("materiality/v1", {
         entityId: JSON.parse(localStorage.getItem('fandoro-user')).entityId,
         selectedTopics: selectedTopicsMateriality
       })
-      console.log('updateTopicsResponse', updateTopicsResponse)
+      logger.log('updateTopicsResponse', updateTopicsResponse)
       if(updateTopicsResponse['status'] == 201){
         getMaterialityData()
       }
     } catch (error) {
-      console.log(`Error :: handleSaveSelectedTopics ==> `,error)
+      logger.log(`Error :: handleSaveSelectedTopics ==> `,error)
     }
     const selectedTopics = topicsWithSelection.filter(topic => topic.selected);
     if (onUpdateSelectedTopics) {
@@ -297,7 +300,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
     const topicWithSelection = { ...newTopic, selected: true };
     // const updatedTopics = [...topicsWithSelection, topicWithSelection];
     // setTopicsWithSelection(updatedTopics);
-    console.log('topicWithSelection', topicWithSelection)
+    logger.log('topicWithSelection', topicWithSelection)
 
     if (seggregatedTopic[newTopic.esg]) {
       let updatedTopics={...seggregatedTopic}
@@ -310,7 +313,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
     else {
       let updatedTopics = { ...seggregatedTopic }
       updatedTopics[newTopic.esg] = [{ ...newTopic, selected: true,description:{name:newTopic.description}, esg: newTopic.esg, topic: newTopic.topic }]
-      console.log('updatedTopics', updatedTopics)
+      logger.log('updatedTopics', updatedTopics)
       setSeggregatedTopic(updatedTopics)
       setfilteredSeggregatedTopic(updatedTopics)
     }
@@ -342,7 +345,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
   const totalCount = topicsWithSelection.length;
 
   useEffect(() => {
-    console.log('filteredSeggregatedTopic', filteredSeggregatedTopic)
+    logger.log('filteredSeggregatedTopic', filteredSeggregatedTopic)
   }, [filteredSeggregatedTopic])
 
   const getSelectedCount = () => {
@@ -384,7 +387,7 @@ const MaterialTopicsTab: React.FC<MaterialTopicsTabProps> = ({
               <Plus className="w-4 h-4" />
               Add Custom Topic
             </Button>
-            <Button onClick={handleSaveSelectedTopics} className="flex items-center gap-2">
+            <Button onClick={handleSaveSelectedTopics} className="flex items-center gap-2" disabled={!buttonEnabled}>
               <Save className="w-4 h-4" />
               Save Selected ({getSelectedCount()})
             </Button>

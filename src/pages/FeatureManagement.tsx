@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { AlertTriangle, CheckCircle, Info, Lock } from 'lucide-react';
 import { httpClient } from '@/lib/httpClient';
 import { useOverlay } from '@/context/OverlayContext';
+import { logger } from '@/hooks/logger';
 
 type CategorizedFeatures = {
   core: Feature[];
@@ -27,7 +28,7 @@ type CategorizedFeatures = {
 
 const FeatureManagementPage = () => {
   const { isOverlayActive, isUrlOverlayActive,setPageList } = useOverlay();
-  const { isLoading } = useRouteProtection(['admin']);
+  const { isLoading } = useRouteProtection(['admin','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const { companyFeatures, isFeatureActive, updateFeatures } = useFeatures();
   const { validateFeatureSelection, autoFixFeatureSelection, getAvailableFeatures } = useFeatureValidation();
@@ -70,7 +71,7 @@ const FeatureManagementPage = () => {
         featureAccess = JSON.parse(storedData);
       }
     } catch (error) {
-      console.error('Error parsing stored feature access data:', error);
+      logger.error('Error parsing stored feature access data:', error);
       featureAccess = null;
     }
     if(featureAccess){

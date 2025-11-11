@@ -1,4 +1,5 @@
 
+import { logger } from '@/hooks/logger';
 import { toast } from 'sonner';
 
 export interface ApiResponse<T = any> {
@@ -42,7 +43,7 @@ class HttpClient {
   private setupDefaultInterceptors() {
     this.interceptors = {
       onRequest: async (config) => {
-        console.log(`📤 Request: ${config.method} ${config.url}`, config);
+        logger.log(`📤 Request: ${config.method} ${config.url}`, config);
         
         // Add auth token if available
         const token = localStorage.getItem('fandoro-token');
@@ -56,11 +57,11 @@ class HttpClient {
         return config;
       },
       onResponse: async (response) => {
-        console.log(`📥 Response: ${response.status} ${response.statusText}`, response);
+        logger.log(`📥 Response: ${response.status} ${response.statusText}`, response);
         return response;
       },
       onError: async (error) => {
-        console.error('🚨 API Error:', error);
+        logger.error('🚨 API Error:', error);
         
         // Handle common error scenarios
         if (error.status === 401) {
@@ -73,12 +74,12 @@ class HttpClient {
           toast.error('Access denied. You do not have permission for this action.');
         } else if (error.status === 404) {
           // toast.error('Resource not found.');
-          console.log('Resource not found.');
+          logger.log('Resource not found.');
         } else if (error.status >= 500) {
           toast.error('Server error. Please try again later.');
         } else if (error.message) {
           // toast.error(error.message);
-          console.log(error.message);
+          logger.log(error.message);
         }
         
         throw error;
@@ -106,11 +107,11 @@ class HttpClient {
       // headers = { ...this.defaultHeaders };
       headers={ ...this.defaultHeaders, ...config.headers }
     }
-    console.log('headers',headers)
+    logger.log('headers',headers)
     if(!url.split('/').includes('auth')){
       // headers['authorization']=`Bearer ${localStorage.getItem('fandoro-token')}`
     }
-    console.log('headers',headers)
+    logger.log('headers',headers)
     let requestConfig: RequestConfig & { url: string } = {
       method: 'GET',
       headers: headers,
@@ -144,7 +145,7 @@ class HttpClient {
             : JSON.stringify(requestConfig.body);
         }
       }
-      console.log('fetchConfig',fetchConfig)
+      logger.log('fetchConfig',fetchConfig)
       const response = await fetch(requestConfig.url, fetchConfig);
       
       if (timeoutId) clearTimeout(timeoutId);
