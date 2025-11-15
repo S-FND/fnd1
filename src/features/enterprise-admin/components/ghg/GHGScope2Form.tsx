@@ -1,4 +1,3 @@
+import Scope2NewWorkflow from './scope2/Scope2NewWorkflow';
 
-import NewScope2Form from './scope2/NewScope2Form';
-
-export { NewScope2Form as GHGScope2Form };
+export { Scope2NewWorkflow as GHGScope2Form };
