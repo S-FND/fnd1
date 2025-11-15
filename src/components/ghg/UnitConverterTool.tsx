@@ -4,9 +4,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Calculator, ArrowRight, Copy, Check } from "lucide-react";
+import { Calculator, ArrowRight, Copy, Check, Star, Trash2, Edit2 } from "lucide-react";
 import { convertUnit, getAvailableConversions } from "@/utils/unitConversion";
 import { useToast } from "@/hooks/use-toast";
+import { useUnitConversionFavorites } from "@/hooks/useUnitConversionFavorites";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 interface UnitConverterToolProps {
   initialFromUnit?: string;
@@ -27,6 +38,11 @@ export const UnitConverterTool: React.FC<UnitConverterToolProps> = ({
   const [availableFromUnits, setAvailableFromUnits] = useState<string[]>([]);
   const [availableToUnits, setAvailableToUnits] = useState<string[]>([]);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
+  const [favoriteName, setFavoriteName] = useState('');
+  const [favoriteDescription, setFavoriteDescription] = useState('');
+
+  const { favorites, loading: favoritesLoading, addFavorite, deleteFavorite } = useUnitConversionFavorites();
 
   // Common unit categories for quick access
   const unitCategories = {
@@ -108,10 +124,90 @@ export const UnitConverterTool: React.FC<UnitConverterToolProps> = ({
       .filter(conv => conv.value !== null);
   };
 
+  const handleSaveFavorite = async () => {
+    if (!favoriteName.trim()) {
+      toast({
+        title: "Name Required",
+        description: "Please enter a name for this conversion",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    await addFavorite(favoriteName, fromUnit, toUnit, favoriteDescription);
+    setIsSaveDialogOpen(false);
+    setFavoriteName('');
+    setFavoriteDescription('');
+  };
+
+  const handleApplyFavorite = (favorite: any) => {
+    setFromUnit(favorite.from_unit);
+    setToUnit(favorite.to_unit);
+    toast({
+      title: "Favorite Applied",
+      description: `Applied conversion: ${favorite.name}`,
+    });
+  };
+
   const allConversions = getAllConversions();
 
   return (
     <div className="space-y-6">
+      {/* Saved Favorites */}
+      {favorites.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+                <CardTitle>Saved Conversions</CardTitle>
+              </div>
+              <Badge variant="secondary">{favorites.length}</Badge>
+            </div>
+            <CardDescription>
+              Quick access to your frequently used unit conversions
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {favorites.map((favorite) => (
+                <div
+                  key={favorite.id}
+                  className="p-3 border rounded-lg hover:bg-muted/50 transition-colors group"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <button
+                      onClick={() => handleApplyFavorite(favorite)}
+                      className="flex-1 text-left space-y-1"
+                    >
+                      <p className="font-semibold text-sm">{favorite.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {favorite.from_unit} → {favorite.to_unit}
+                      </p>
+                      {favorite.description && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {favorite.description}
+                        </p>
+                      )}
+                    </button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteFavorite(favorite.id);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -211,7 +307,17 @@ export const UnitConverterTool: React.FC<UnitConverterToolProps> = ({
 
           {convertedValue !== null && (
             <div className="p-4 bg-primary/5 rounded-lg">
-              <p className="text-sm text-muted-foreground mb-1">Conversion Result</p>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-muted-foreground">Conversion Result</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsSaveDialogOpen(true)}
+                >
+                  <Star className="h-4 w-4 mr-2" />
+                  Save as Favorite
+                </Button>
+              </div>
               <p className="text-2xl font-bold">
                 {parseFloat(value) || 0} {fromUnit} = {convertedValue.toFixed(4)} {toUnit}
               </p>
@@ -297,6 +403,53 @@ export const UnitConverterTool: React.FC<UnitConverterToolProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      {/* Save Favorite Dialog */}
+      <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Save as Favorite</DialogTitle>
+            <DialogDescription>
+              Save this conversion for quick access in the future
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-3 bg-muted rounded-lg">
+              <p className="text-sm font-medium">
+                {fromUnit} → {toUnit}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="favorite-name">Name *</Label>
+              <Input
+                id="favorite-name"
+                value={favoriteName}
+                onChange={(e) => setFavoriteName(e.target.value)}
+                placeholder="e.g., Fuel Volume Conversion"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="favorite-description">Description (Optional)</Label>
+              <Textarea
+                id="favorite-description"
+                value={favoriteDescription}
+                onChange={(e) => setFavoriteDescription(e.target.value)}
+                placeholder="Add notes about when to use this conversion..."
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSaveDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveFavorite}>
+              <Star className="h-4 w-4 mr-2" />
+              Save Favorite
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
