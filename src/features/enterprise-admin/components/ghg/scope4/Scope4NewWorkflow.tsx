@@ -3,10 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import { Plus, Edit, Trash2, AlertCircle, CheckCircle2, Clock, Database } from "lucide-react";
 import { GHGSourceTemplate } from '@/types/ghg-source-template';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import Scope4Dashboard from '../dashboards/Scope4Dashboard';
 
 type DataStatus = 'No Data' | 'Draft' | 'Submitted' | 'Verified';
 
@@ -15,6 +16,7 @@ export const Scope4NewWorkflow = () => {
   const { toast } = useToast();
   const [sourceTemplates, setSourceTemplates] = useState<GHGSourceTemplate[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [showDashboard, setShowDashboard] = useState(false);
 
   useEffect(() => {
     loadSourceTemplates();
@@ -86,32 +88,105 @@ export const Scope4NewWorkflow = () => {
     ? sourceTemplates 
     : sourceTemplates.filter(t => t.sourceType === selectedCategory);
 
+  const getCategorySummary = () => {
+    const categoryMap = new Map<string, { count: number; withData: number }>();
+    
+    sourceTemplates.forEach(template => {
+      const current = categoryMap.get(template.sourceType || '') || { count: 0, withData: 0 };
+      current.count += 1;
+      const status = getDataStatus(template.id);
+      if (status !== 'No Data') {
+        current.withData += 1;
+      }
+      categoryMap.set(template.sourceType || '', current);
+    });
+
+    return categoryMap;
+  };
+
+  const categorySummary = getCategorySummary();
+  const sourceTypes = ['Product Use', 'Product Manufacturing', 'Energy Generation', 'Transportation', 'Product End-of-Life'];
+
+  if (showDashboard) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <Button variant="outline" onClick={() => setShowDashboard(false)}>
+            ← Back to Sources
+          </Button>
+        </div>
+        <Scope4Dashboard />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex gap-2">
-          {categories.map(cat => (
-            <Button
-              key={cat}
-              variant={selectedCategory === cat ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedCategory(cat)}
-            >
-              {cat}
-            </Button>
-          ))}
-        </div>
-        <Button onClick={handleDefineNewSource}>
-          <Plus className="mr-2 h-4 w-4" />
-          Define New Source
-        </Button>
-      </div>
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Scope 4: Avoided Emissions</CardTitle>
+              <CardDescription>
+                Define avoided emission sources and collect impact data
+              </CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowDashboard(true)}>
+                <Database className="mr-2 h-4 w-4" />
+                View Dashboard
+              </Button>
+              <Button onClick={handleDefineNewSource}>
+                <Plus className="mr-2 h-4 w-4" />
+                Define New Source
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Category Summary */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            {sourceTypes.map(type => {
+              const summary = categorySummary.get(type) || { count: 0, withData: 0 };
+              return (
+                <Card key={type} className="cursor-pointer hover:bg-accent/50 transition-colors"
+                  onClick={() => setSelectedCategory(type)}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">{type}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{summary.count}</div>
+                    <p className="text-xs text-muted-foreground">
+                      {summary.withData} with data
+                    </p>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Category Filter */}
+          <div className="flex gap-2">
+            {categories.map(cat => (
+              <Button
+                key={cat}
+                variant={selectedCategory === cat ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedCategory(cat)}
+              >
+                {cat}
+                {cat !== 'All' && ` (${sourceTemplates.filter(t => t.sourceType === cat).length})`}
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Scope 4 Avoided Emission Sources</CardTitle>
+          <CardTitle>Avoided Emission Sources</CardTitle>
           <CardDescription>
-            Manage your avoided emission sources and collect data
+            Defined sources for impact tracking
           </CardDescription>
         </CardHeader>
         <CardContent>
