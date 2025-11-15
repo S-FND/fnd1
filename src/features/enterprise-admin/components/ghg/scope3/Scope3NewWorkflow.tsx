@@ -3,10 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import { Plus, Edit, Trash2, AlertCircle, CheckCircle2, Clock, Database } from "lucide-react";
 import { GHGSourceTemplate } from '@/types/ghg-source-template';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
+import Scope3Dashboard from '../dashboards/Scope3Dashboard';
 
 type DataStatus = 'No Data' | 'Draft' | 'Submitted' | 'Verified';
 
@@ -15,6 +16,7 @@ export const Scope3NewWorkflow = () => {
   const { toast } = useToast();
   const [sourceTemplates, setSourceTemplates] = useState<GHGSourceTemplate[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [showDashboard, setShowDashboard] = useState(false);
 
   useEffect(() => {
     loadSourceTemplates();
@@ -86,32 +88,107 @@ export const Scope3NewWorkflow = () => {
     ? sourceTemplates 
     : sourceTemplates.filter(t => t.scope3Category === selectedCategory);
 
+  const getCategorySummary = () => {
+    const categoryMap = new Map<string, { count: number; withData: number }>();
+    
+    sourceTemplates.forEach(template => {
+      const category = template.scope3Category || 'Other';
+      const current = categoryMap.get(category) || { count: 0, withData: 0 };
+      current.count += 1;
+      const status = getDataStatus(template.id);
+      if (status !== 'No Data') {
+        current.withData += 1;
+      }
+      categoryMap.set(category, current);
+    });
+
+    return categoryMap;
+  };
+
+  const categorySummary = getCategorySummary();
+  const topCategories = Array.from(categorySummary.entries())
+    .sort((a, b) => b[1].count - a[1].count)
+    .slice(0, 5);
+
+  if (showDashboard) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <Button variant="outline" onClick={() => setShowDashboard(false)}>
+            ← Back to Sources
+          </Button>
+        </div>
+        <Scope3Dashboard />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex gap-2 flex-wrap">
-          {categories.map(cat => (
-            <Button
-              key={cat}
-              variant={selectedCategory === cat ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedCategory(cat)}
-            >
-              {cat}
-            </Button>
-          ))}
-        </div>
-        <Button onClick={handleDefineNewSource}>
-          <Plus className="mr-2 h-4 w-4" />
-          Define New Source
-        </Button>
-      </div>
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Scope 3: Value Chain Emissions</CardTitle>
+              <CardDescription>
+                Define emission sources and collect activity data
+              </CardDescription>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowDashboard(true)}>
+                <Database className="mr-2 h-4 w-4" />
+                View Dashboard
+              </Button>
+              <Button onClick={handleDefineNewSource}>
+                <Plus className="mr-2 h-4 w-4" />
+                Define New Source
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Top Categories Summary */}
+          {topCategories.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              {topCategories.map(([category, summary]) => (
+                <Card key={category} className="cursor-pointer hover:bg-accent/50 transition-colors"
+                  onClick={() => setSelectedCategory(category)}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-xs font-medium truncate">{category.substring(0, 25)}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{summary.count}</div>
+                    <p className="text-xs text-muted-foreground">
+                      {summary.withData} with data
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Category Filter */}
+          <div className="flex gap-2 flex-wrap">
+            {categories.map(cat => (
+              <Button
+                key={cat}
+                variant={selectedCategory === cat ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedCategory(cat)}
+              >
+                {cat === 'All' ? 'All' : cat.substring(0, 30)}
+                {cat !== 'All' && ` (${sourceTemplates.filter(t => t.scope3Category === cat).length})`}
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Scope 3 Emission Sources</CardTitle>
+          <CardTitle>Emission Sources</CardTitle>
           <CardDescription>
-            Manage your value chain emission sources and collect data
+            Defined sources for data collection
           </CardDescription>
         </CardHeader>
         <CardContent>
