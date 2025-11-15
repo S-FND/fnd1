@@ -38,7 +38,6 @@ const MOCK_TEAM_MEMBERS = [
 ];
 
 const formSchema = z.object({
-  templateName: z.string().min(1, 'Template name is required'),
   facilityName: z.string().min(1, 'Facility name is required'),
   businessUnit: z.string().min(1, 'Business unit is required'),
   sourceType: z.string().min(1, 'Source type is required'),
@@ -71,7 +70,6 @@ export const SourceTemplateForm = () => {
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: editTemplate ? {
-      templateName: editTemplate.templateName,
       facilityName: editTemplate.facilityName,
       businessUnit: editTemplate.businessUnit,
       sourceType: editTemplate.sourceType,
@@ -152,7 +150,6 @@ export const SourceTemplateForm = () => {
     const template: GHGSourceTemplate = {
       id: editTemplate?.id || uuidv4(),
       scope: 1,
-      templateName: data.templateName,
       facilityName: data.facilityName,
       businessUnit: data.businessUnit,
       sourceCategory: data.sourceCategory,
@@ -193,7 +190,7 @@ export const SourceTemplateForm = () => {
 
     toast({
       title: editTemplate ? "Source Updated" : "Source Defined",
-      description: `Emission source "${template.templateName}" has been ${editTemplate ? 'updated' : 'saved'}. You can now collect data against this source.`,
+      description: `Emission source "${template.sourceDescription}" has been ${editTemplate ? 'updated' : 'saved'}. You can now collect data against this source.`,
     });
 
     navigate('/ghg-accounting', { state: { activeTab: 'scope1' } });
@@ -223,18 +220,6 @@ export const SourceTemplateForm = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="templateName">Source Template Name *</Label>
-                <Input
-                  id="templateName"
-                  placeholder="e.g., Pune Plant Diesel Generator"
-                  {...register('templateName')}
-                />
-                {errors.templateName && (
-                  <p className="text-sm text-destructive">{errors.templateName.message}</p>
-                )}
-              </div>
-
               <div className="space-y-2">
                 <Label htmlFor="facilityName">Facility Name *</Label>
                 <Select
