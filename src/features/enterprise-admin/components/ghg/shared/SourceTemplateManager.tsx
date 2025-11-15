@@ -82,7 +82,7 @@ export const SourceTemplateManager: React.FC<SourceTemplateManagerProps> = ({
               <TableBody>
                 {filteredTemplates.map(template => (
                   <TableRow key={template.id}>
-                    <TableCell className="font-medium">{template.templateName}</TableCell>
+                    <TableCell className="font-medium">{template.sourceDescription}</TableCell>
                     <TableCell>{template.facilityName}</TableCell>
                     <TableCell>{template.sourceCategory}</TableCell>
                     <TableCell>

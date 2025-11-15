@@ -226,7 +226,7 @@ export const Scope1NewWorkflow = () => {
                     return (
                       <TableRow key={template.id} className="cursor-pointer hover:bg-accent/50"
                         onClick={() => handleCollectData(template)}>
-                        <TableCell className="font-medium">{template.templateName}</TableCell>
+                        <TableCell className="font-medium">{template.sourceDescription}</TableCell>
                         <TableCell>{template.facilityName}</TableCell>
                         <TableCell><Badge variant="outline">{template.sourceType}</Badge></TableCell>
                         <TableCell><Badge variant="secondary">{template.measurementFrequency}</Badge></TableCell>

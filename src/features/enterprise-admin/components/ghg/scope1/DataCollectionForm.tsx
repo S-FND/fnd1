@@ -231,7 +231,7 @@ export const DataCollectionForm = () => {
     const ws = XLSX.utils.json_to_sheet(templateData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Data Collection');
-    XLSX.writeFile(wb, `${template.templateName}_DataCollection_Template.xlsx`);
+    XLSX.writeFile(wb, `${template.sourceDescription}_DataCollection_Template.xlsx`);
   };
 
   const totalEmissions = calculateTotalEmissions();
@@ -245,7 +245,7 @@ export const DataCollectionForm = () => {
         <div>
           <h1 className="text-2xl font-bold">Data Collection - Scope 1</h1>
           <p className="text-muted-foreground">
-            Step 2: Collect activity data for {template.templateName}
+            Step 2: Collect activity data for {template.sourceDescription}
           </p>
         </div>
       </div>
@@ -258,7 +258,7 @@ export const DataCollectionForm = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">Source Name</p>
-              <p className="font-medium">{template.templateName}</p>
+              <p className="font-medium">{template.sourceDescription}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Facility</p>

@@ -6,7 +6,6 @@ import { MeasurementFrequency, DataQuality } from './scope1-ghg';
 export interface GHGSourceTemplate {
   id: string;
   scope: 1 | 2 | 3 | 4;
-  templateName: string;
   facilityName: string;
   businessUnit: string;
   sourceCategory: string;
