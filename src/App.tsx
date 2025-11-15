@@ -40,6 +40,10 @@ import Scope4EntryPage from './pages/Scope4EntryPage';
 // Scope 1 New Workflow Components
 import SourceTemplateForm from './features/enterprise-admin/components/ghg/scope1/SourceTemplateForm';
 import DataCollectionForm from './features/enterprise-admin/components/ghg/scope1/DataCollectionForm';
+// Scope 2, 3, 4 Source Template Forms
+import Scope2SourceTemplateForm from './features/enterprise-admin/components/ghg/scope2/Scope2SourceTemplateForm';
+import Scope3SourceTemplateForm from './features/enterprise-admin/components/ghg/scope3/Scope3SourceTemplateForm';
+import Scope4SourceTemplateForm from './features/enterprise-admin/components/ghg/scope4/Scope4SourceTemplateForm';
 import UnitGHGAccountingPage from './features/unit-admin/components/ghg/UnitGHGAccountingPage';
 import GHGDataCollection from './pages/GHGDataCollection';
 import ESGDDPage from './features/enterprise-admin/pages/ESGDD';
@@ -104,9 +108,12 @@ function App() {
             <Route path="/ghg-accounting/scope1/define-source" element={<SourceTemplateForm />} />
             <Route path="/ghg-accounting/scope1/collect-data" element={<DataCollectionForm />} />
           <Route path="/ghg-accounting/scope2/entry" element={<Scope2EntryPage />} />
+          <Route path="/ghg-accounting/scope2/define-source" element={<Scope2SourceTemplateForm />} />
           <Route path="/ghg-accounting/scope3/entry" element={<Scope3EntryPage />} />
+          <Route path="/ghg-accounting/scope3/define-source" element={<Scope3SourceTemplateForm />} />
           <Route path="/ghg-accounting/scope4/entry" element={<Scope4EntryPage />} />
-          <Route path="/ghg-accounting/data-collection" element={<GHGDataCollection />} />
+          <Route path="/ghg-accounting/scope4/define-source" element={<Scope4SourceTemplateForm />} />
+          <Route path="/ghg-data-collection" element={<GHGDataCollection />} />
               <Route path="/compliance" element={<Compliance />} />
               <Route path="/lms" element={<LMSPage />} />
               <Route path="/reports" element={<ReportsPage />} />

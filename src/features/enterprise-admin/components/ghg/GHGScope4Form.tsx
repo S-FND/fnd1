@@ -1,8 +1,3 @@
-import React from 'react';
-import NewScope4Form from './scope4/NewScope4Form';
+import Scope4NewWorkflow from './scope4/Scope4NewWorkflow';
 
-const GHGScope4Form = () => {
-  return <NewScope4Form />;
-};
-
-export default GHGScope4Form;
+export { Scope4NewWorkflow as default };

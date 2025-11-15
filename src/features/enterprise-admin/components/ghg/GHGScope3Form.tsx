@@ -1,3 +1,3 @@
-import NewScope3Form from './scope3/NewScope3Form';
+import Scope3NewWorkflow from './scope3/Scope3NewWorkflow';
 
-export { NewScope3Form as GHGScope3Form };
+export { Scope3NewWorkflow as GHGScope3Form };
