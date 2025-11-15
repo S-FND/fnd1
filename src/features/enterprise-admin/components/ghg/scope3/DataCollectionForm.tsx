@@ -8,9 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Send, Plus, Trash2, Upload, Download } from "lucide-react";
+import { ArrowLeft, Save, Send, Plus, Trash2, Upload, Download, Calculator } from "lucide-react";
 import EvidenceFileUpload from '@/components/ghg/EvidenceFileUpload';
 import UnitSelector from '@/components/ghg/UnitSelector';
+import { UnitConverterDialog } from '@/components/ghg/UnitConverterDialog';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import * as XLSX from 'xlsx';
 import { GHGSourceTemplate, GHGDataCollection, getCollectionsForMonth } from '@/types/ghg-source-template';
@@ -53,6 +54,7 @@ export const DataCollectionForm = () => {
   const [verifiedBy, setVerifiedBy] = useState('');
   const [collectionNotes, setCollectionNotes] = useState('');
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
+  const [isConverterOpen, setIsConverterOpen] = useState(false);
 
   const expectedEntries = getCollectionsForMonth(template.measurementFrequency);
 
@@ -231,6 +233,10 @@ export const DataCollectionForm = () => {
           </div>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setIsConverterOpen(true)}>
+            <Calculator className="h-4 w-4 mr-2" />
+            Unit Converter
+          </Button>
           <Button variant="outline" onClick={() => setIsBulkUploadOpen(true)}>
             <Upload className="h-4 w-4 mr-2" />
             Bulk Upload
@@ -447,6 +453,12 @@ export const DataCollectionForm = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <UnitConverterDialog
+        open={isConverterOpen}
+        onOpenChange={setIsConverterOpen}
+        initialFromUnit={template.activityDataUnit}
+      />
     </div>
   );
 };
