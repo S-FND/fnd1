@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Calculator, ArrowRight, Copy, Check, Star, Trash2, Edit2 } from "lucide-react";
+import { Calculator, ArrowRight, Copy, Check, Star, Trash2, BookmarkCheck } from "lucide-react";
 import { convertUnit, getAvailableConversions } from "@/utils/unitConversion";
 import { useToast } from "@/hooks/use-toast";
 import { useUnitConversionFavorites } from "@/hooks/useUnitConversionFavorites";
@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { PRESET_CONVERSIONS } from "@/data/presetConversions";
 
 interface UnitConverterToolProps {
   initialFromUnit?: string;
@@ -153,6 +154,48 @@ export const UnitConverterTool: React.FC<UnitConverterToolProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Preset Conversions */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BookmarkCheck className="h-5 w-5 text-primary" />
+              <CardTitle>Common GHG Source Conversions</CardTitle>
+            </div>
+            <Badge variant="outline">{PRESET_CONVERSIONS.length} presets</Badge>
+          </div>
+          <CardDescription>
+            Pre-configured conversions for common emission sources
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {PRESET_CONVERSIONS.map((preset) => (
+              <div
+                key={preset.id}
+                className="p-3 border rounded-lg hover:bg-primary/5 transition-colors cursor-pointer"
+                onClick={() => handleApplyFavorite(preset)}
+              >
+                <div className="space-y-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-semibold text-sm">{preset.name}</p>
+                    <Badge variant="secondary" className="text-xs shrink-0">
+                      {preset.category}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {preset.from_unit} → {preset.to_unit}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {preset.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Saved Favorites */}
       {favorites.length > 0 && (
         <Card>
@@ -160,12 +203,12 @@ export const UnitConverterTool: React.FC<UnitConverterToolProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-                <CardTitle>Saved Conversions</CardTitle>
+                <CardTitle>My Saved Conversions</CardTitle>
               </div>
               <Badge variant="secondary">{favorites.length}</Badge>
             </div>
             <CardDescription>
-              Quick access to your frequently used unit conversions
+              Your custom saved unit conversions
             </CardDescription>
           </CardHeader>
           <CardContent>
