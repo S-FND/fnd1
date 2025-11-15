@@ -46,6 +46,7 @@ import Scope3SourceTemplateForm from './features/enterprise-admin/components/ghg
 import Scope4SourceTemplateForm from './features/enterprise-admin/components/ghg/scope4/Scope4SourceTemplateForm';
 import UnitGHGAccountingPage from './features/unit-admin/components/ghg/UnitGHGAccountingPage';
 import GHGDataCollection from './pages/GHGDataCollection';
+import UnitConverterPage from './pages/UnitConverterPage';
 import ESGDDPage from './features/enterprise-admin/pages/ESGDD';
 import ESGDDReportsPage from './features/enterprise-admin/pages/ESGDDReports';
 import ManualESGDDPage from './features/enterprise-admin/pages/ManualESGDD';
@@ -113,6 +114,7 @@ function App() {
           <Route path="/ghg-accounting/scope3/define-source" element={<Scope3SourceTemplateForm />} />
           <Route path="/ghg-accounting/scope4/entry" element={<Scope4EntryPage />} />
           <Route path="/ghg-accounting/scope4/define-source" element={<Scope4SourceTemplateForm />} />
+          <Route path="/ghg-accounting/unit-converter" element={<UnitConverterPage />} />
           <Route path="/ghg-data-collection" element={<GHGDataCollection />} />
               <Route path="/compliance" element={<Compliance />} />
               <Route path="/lms" element={<LMSPage />} />
