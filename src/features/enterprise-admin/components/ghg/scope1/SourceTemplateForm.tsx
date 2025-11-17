@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -65,7 +65,7 @@ export const SourceTemplateForm = () => {
   const [selectedVerifiers, setSelectedVerifiers] = useState<string[]>(editTemplate?.assignedVerifiers || []);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loadingFacilities, setLoadingFacilities] = useState(true);
-  const [isInitialRender, setIsInitialRender] = useState(true);
+  const isInitialRender = useRef(true);
 
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
@@ -121,15 +121,15 @@ export const SourceTemplateForm = () => {
     setSourceType(watchSourceType as SourceType);
     
     // Don't clear fields on initial render when editing
-    if (isInitialRender && editTemplate) {
-      setIsInitialRender(false);
+    if (isInitialRender.current && editTemplate) {
+      isInitialRender.current = false;
       return;
     }
     
     setValue('sourceCategory', '');
     setValue('fuelSubstanceType', '');
     setValue('activityDataUnit', '');
-  }, [watchSourceType, setValue, isInitialRender, editTemplate]);
+  }, [watchSourceType, setValue, editTemplate]);
 
   const handleEmissionFactorSelect = (factor: EmissionFactor) => {
     setSelectedEmissionFactor(factor);
