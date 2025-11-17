@@ -65,6 +65,7 @@ export const SourceTemplateForm = () => {
   const [selectedVerifiers, setSelectedVerifiers] = useState<string[]>(editTemplate?.assignedVerifiers || []);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loadingFacilities, setLoadingFacilities] = useState(true);
+  const [isInitialRender, setIsInitialRender] = useState(true);
 
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
@@ -118,10 +119,17 @@ export const SourceTemplateForm = () => {
 
   useEffect(() => {
     setSourceType(watchSourceType as SourceType);
+    
+    // Don't clear fields on initial render when editing
+    if (isInitialRender && editTemplate) {
+      setIsInitialRender(false);
+      return;
+    }
+    
     setValue('sourceCategory', '');
     setValue('fuelSubstanceType', '');
     setValue('activityDataUnit', '');
-  }, [watchSourceType, setValue]);
+  }, [watchSourceType, setValue, isInitialRender, editTemplate]);
 
   const handleEmissionFactorSelect = (factor: EmissionFactor) => {
     setSelectedEmissionFactor(factor);
