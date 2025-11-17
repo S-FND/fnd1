@@ -1,13 +1,19 @@
 
-import React from 'react';
-import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TeamManagementDashboard from '../components/team/TeamManagementDashboard';
+// import TeamPermissionsPage from '@/components/admin/TeamPermissionsPage';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
+import { Users, Shield } from 'lucide-react';
+import UnifiedSidebarLayout from '@/components/layout/UnifiedSidebarLayout';
+import { log } from 'console';
+import { logger } from '@/hooks/logger';
 
 const TeamManagementPage = () => {
-  const { isLoading } = useRouteProtection(['admin']);
+  logger.debug('Rendering TeamManagementPage component');
+  const { isLoading } = useRouteProtection(['admin','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {
@@ -27,7 +33,7 @@ const TeamManagementPage = () => {
             Manage employees, assign roles, and organize teams across locations and departments.
           </p>
         </div>
-        
+
         <TeamManagementDashboard />
       </div>
     </UnifiedSidebarLayout>

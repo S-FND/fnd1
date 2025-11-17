@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { logger } from "@/hooks/logger";
 import { useEffect, useState } from "react"
 import { Chart } from "react-google-charts";
 
@@ -158,7 +159,7 @@ const CustomDashboardTab = ({ graphData, selectedMetric, selectedPeriod, selecte
                                 labels: graphData[metric]?.yAxisLabels,
                                 datasets: datasets,
                             };
-                            console.log("This is Bar graph data in custom dashboard tab", data)
+                            logger.info("This is Bar graph data in custom dashboard tab", data)
                             return (
                                 // <Col lg={12} md={12} sm={12} xxl={12}>
                                 <Card>

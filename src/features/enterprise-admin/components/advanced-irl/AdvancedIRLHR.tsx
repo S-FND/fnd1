@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Trash2 } from 'lucide-react';
+import { logger } from '@/hooks/logger';
 
 interface EmergencyIncident {
   date: string;
@@ -113,11 +114,11 @@ const AdvancedIRLHR = () => {
   };
 
   const handleSave = () => {
-    console.log('Saving Advanced IRL HR data:', { formData, emergencyIncidents, sexualHarassmentGrievances, outsourcedServices });
+    logger.log('Saving Advanced IRL HR data:', { formData, emergencyIncidents, sexualHarassmentGrievances, outsourcedServices });
   };
 
   const handleSubmit = () => {
-    console.log('Submitting Advanced IRL HR data:', { formData, emergencyIncidents, sexualHarassmentGrievances, outsourcedServices });
+    logger.log('Submitting Advanced IRL HR data:', { formData, emergencyIncidents, sexualHarassmentGrievances, outsourcedServices });
   };
 
   return (

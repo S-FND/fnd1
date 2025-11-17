@@ -3,6 +3,7 @@ import axios from 'axios';
 
 // Types
 import { CompanyDetailsData,ProductsServicesData,OperationsData,EmployeesData,CSRDetailsData,TransparencyDisclosuresData,ManagementDisclosuresData,PolicyDisclosure,SectorPolicy,BoardCommittee,DirectorStatement,PrincipleWisePerformanceData } from '../types/company';
+import { logger } from '@/hooks/logger';
 
 // Env config
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'; // Use REACT_APP_API_URL if using CRA
@@ -42,7 +43,7 @@ export const useCompanyData = () => {
         });
 
         const result = response.data;
-        console.log('result',result);
+        logger.log('result',result);
         if (result.status && result.data) {
           setData({
             details: transformCompanyDetails(result.data),
@@ -60,10 +61,10 @@ export const useCompanyData = () => {
           throw new Error(result.message || 'Failed to fetch company data');
         }
       } catch (err: any) {
-        // console.error("Fetch error:", err);
+        // logger.error("Fetch error:", err);
         setError(err);
         if (!data) {
-          // console.warn("USING DUMMY DATA");
+          // logger.warn("USING DUMMY DATA");
           setData({
             details: transformCompanyDetails({}),
             productsServices: transformProductsServices({}),

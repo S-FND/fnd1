@@ -22,6 +22,7 @@ import {
   ReferenceLine,
 } from "recharts";
 import ManualESGDDPage from "../../pages/ManualESGDD";
+import { logger } from "@/hooks/logger";
 
 // let rawMetricsData = {
 //   "Percentage of hazardous waste recycled": [
@@ -146,7 +147,7 @@ export default function MetricsGraph1({ graphData, selectedMetric, selectedPerio
     // console.log("Selected Metric:", selectedMetric);
     // console.log("Selected Period:", selectedPeriod);
     // console.log("Selected Year:", selectedYear);
-    console.log("Initial Graph Data:", graphData);
+    logger.log("Initial Graph Data:", graphData);
     if (graphData && Object.keys(graphData).length > 0) {
       // If a specific metric is selected, filter to that metric
       if (selectedMetric && graphData[selectedMetric]) {
@@ -245,11 +246,11 @@ export default function MetricsGraph1({ graphData, selectedMetric, selectedPerio
 
     if (chartType === "line") {
       if (dataType && dataType === "Table") {
-        console.log("Rendering table chart for metric:", metric, "with data:", data);
+        logger.log("Rendering table chart for metric:", metric, "with data:", data);
         // Detect genders dynamically from inputData
         if (xAxis.length === 0) {
           // alert("This has no xaxis")
-          console.log('yAxis', yAxis)
+          logger.log('yAxis', yAxis)
           data.forEach(item => {
             const numericCols = item.value[0].length; // since there’s no label, all are numbers
             if (yAxis.length !== numericCols) {
@@ -268,7 +269,7 @@ export default function MetricsGraph1({ graphData, selectedMetric, selectedPerio
           
             return obj;
           });
-          console.log('tansformedData', transformedData)
+          logger.log('tansformedData', transformedData)
           chartElement = (
             <BarChart
               data={transformedData}
@@ -312,7 +313,7 @@ export default function MetricsGraph1({ graphData, selectedMetric, selectedPerio
             return yAxis[idx] || ''
 
           });
-          console.log('detectedGenders',detectedGenders)
+          logger.log('detectedGenders',detectedGenders)
           //Testing
           // detectedGenders = ['Column1', 'Column2', 'Column3'];
           // Transform inputData dynamically

@@ -10,12 +10,14 @@ import { ESGDDReportsList } from '../components/esg-dd/ESGDDReportsList';
 import { ArrowLeft, FileSearch, Plus } from 'lucide-react';
 import { fetchEsgDDReport } from '../services/esgdd';
 import { Loader2 } from 'lucide-react';
+import { logger } from '@/hooks/logger';
 
 const getS3FilePath = (file_path) =>
   `https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/${file_path}`;
 
 const ESGDDReportsPage = () => {
-  const { isLoading: authLoading } = useRouteProtection(['admin', 'manager']);
+  logger.debug('Rendering ESGDDReportsPage component');
+  const { isLoading: authLoading } = useRouteProtection(['admin', 'manager','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const [loading, setLoading] = useState(false);
   const [paths, setPaths] = useState(null);
@@ -30,7 +32,7 @@ const ESGDDReportsPage = () => {
       }
       return null;
     } catch (error) {
-      console.error("Error parsing user data:", error);
+      logger.error("Error parsing user data:", error);
       return null;
     }
   };
@@ -56,14 +58,14 @@ const ESGDDReportsPage = () => {
         const { data, error } = await fetchEsgDDReport(entityId);
         
         if (error) {
-          console.error('Failed to fetch ESG report:', error);
+          logger.error('Failed to fetch ESG report:', error);
           setPaths({}); // Explicitly set empty object on error
           return;
         }
   
         setPaths(data || {}); // Handle empty/undefined data
       } catch (err) {
-        console.error('Unexpected error:', err);
+        logger.error('Unexpected error:', err);
         setPaths({}); // Ensure empty state on failure
       } finally {
         setLoading(false);
@@ -83,7 +85,7 @@ const ESGDDReportsPage = () => {
 
   // Transform the API data to match the expected report format
   const transformReports = (reports) => {
-    console.log('reports',reports);
+    logger.log('reports',reports);
     if (!reports || (typeof reports === 'object' && Object.keys(reports).length === 0)) {
       return [];
     }

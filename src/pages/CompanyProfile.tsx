@@ -5,15 +5,16 @@ import EditableCompanyProfile from '@/features/enterprise-admin/components/profi
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
+import { logger } from '@/hooks/logger';
 
 const CompanyProfilePage = () => {
-  const { isLoading } = useRouteProtection(['admin', 'manager']);
+  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
-  console.log('isAuthenticatedStatus',isAuthenticatedStatus);
+  logger.log('isAuthenticatedStatus',isAuthenticatedStatus);
   if (!isAuthenticatedStatus(['admin', 'manager'])) {
     return <Navigate to="/" />;
   }

@@ -7,9 +7,10 @@ import { ESGCapReviewDialog } from './ESGCapReviewDialog';
 interface ESGCapRowActionsProps {
   item: ESGCapItem;
   onUpdate: (updatedItem: ESGCapItem) => void;
+  buttonEnabled?: boolean;
 }
 
-export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpdate }) => {
+export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpdate, buttonEnabled }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   return (
@@ -22,6 +23,7 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         onUpdate={onUpdate}
+        buttonEnabled={buttonEnabled}
       />
     </>
   );

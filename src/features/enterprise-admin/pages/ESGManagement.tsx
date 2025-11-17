@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 
 // Import sample material topics for development
 import { defaultMaterialTopics } from '../data/materiality';
+import { logger } from '@/hooks/logger';
 
 interface MaterialTopic {
   id: string;
@@ -24,7 +25,8 @@ interface MaterialTopic {
 }
 
 const ESGManagementPage = () => {
-  const { isLoading } = useRouteProtection(['admin', 'manager', 'unit_admin']);
+  logger.debug('Rendering ESGManagementPage component');
+  const { isLoading } = useRouteProtection(['admin', 'manager', 'unit_admin','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const [prioritizedTopics, setPrioritizedTopics] = useState<MaterialTopic[]>([]);
 
@@ -42,7 +44,7 @@ const ESGManagementPage = () => {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isAuthenticatedStatus()) {
+  if (!isAuthenticatedStatus(['admin', 'manager', 'employee'])) {
     return <Navigate to="/" />;
   }
 

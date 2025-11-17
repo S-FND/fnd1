@@ -1,5 +1,6 @@
 import axios from "axios";
 import { ENV } from "@/config/env";
+import { logger } from "@/hooks/logger";
 const API_URL = ENV.API_URL;
 
 // Get Team Data
@@ -13,7 +14,7 @@ export const fetchTeamData = async () => {
     });
     return response.data;
   } catch (error) {
-    console.error("Error fetching ESG DD report:", error);
+    logger.error("Error fetching ESG DD report:", error);
     throw error;
   }
 };
@@ -38,7 +39,7 @@ export const fetchTeamData = async () => {
         errorMessage = error.message;
       }
   
-      console.error("Error creating location:", errorMessage);
+      logger.error("Error creating location:", errorMessage);
       return [null, errorMessage];
     }
   };
@@ -56,7 +57,7 @@ export const fetchLocationData = async () => {
 
       return response.data;
     } catch (error) {
-      console.error("Error fetching ESG DD report:", error);
+      logger.error("Error fetching ESG DD report:", error);
       throw error;
     }
   };
@@ -81,7 +82,7 @@ export const createLocation = async (params: any) => {
         errorMessage = error.message;
       }
   
-      console.error("Error creating location:", errorMessage);
+      logger.error("Error creating location:", errorMessage);
       return [null, errorMessage];
     }
   };
@@ -98,7 +99,7 @@ export const fetchSubsidiaries = async () => {
 
     return response.data;
   } catch (error) {
-    console.error("Error fetching ESG DD report:", error);
+    logger.error("Error fetching ESG DD report:", error);
     throw error;
   }
 };
@@ -123,7 +124,7 @@ export const createSubsidiary = async (params: any) => {
       errorMessage = error.message;
     }
 
-    console.error("Error creating location:", errorMessage);
+    logger.error("Error creating location:", errorMessage);
     return [null, errorMessage];
   }
 };

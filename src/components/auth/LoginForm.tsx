@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Loader2 } from 'lucide-react';
 import { httpClient } from '@/lib/httpClient';
 import { toast } from 'sonner';
+import { logger } from '@/hooks/logger';
 interface LoginFormProps {
   onForgotPassword?: () => void; // Make it optional if needed
 }
@@ -37,7 +38,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword }) => {
       // Continue with existing auth flow
       await login(email, password);
     } catch (err: any) {
-      console.error('Login error:', err);
+      logger.error('Login error:', err);
       setError('Failed to login. Please check your credentials.');
       toast.error('Login failed. Please try again.');
     }

@@ -40,7 +40,7 @@ const ManageStakeholders: React.FC = () => {
   const handleFetchStakeholders = async () => {
     try {
       let stakeHolderList=await httpClient.get(API_ENDPOINTS.STAKEHOLDERS.LIST)
-      console.log('stakeHolderList',stakeHolderList)
+      logger.log('stakeHolderList',stakeHolderList)
       if(stakeHolderList.status == 200){
         if (stakeHolderList?.data && Array.isArray(stakeHolderList.data)) {
           const data: Stakeholder[] = stakeHolderList.data;
@@ -49,7 +49,7 @@ const ManageStakeholders: React.FC = () => {
       }
     } catch (error) {
       // Error already handled by interceptors, using local data
-      console.log('Fallback to local data');
+      logger.log('Fallback to local data');
     }
   };
 
@@ -81,9 +81,9 @@ const ManageStakeholders: React.FC = () => {
 
   const onSubmit = async (data: StakeholderFormData) => {
     try {
-      console.log('data',data)
+      logger.log('data',data)
       let createStakeHolder=await httpClient.post(API_ENDPOINTS.STAKEHOLDERS.CREATE,data)
-      console.log('createStakeHolder',createStakeHolder)
+      logger.log('createStakeHolder',createStakeHolder)
       if(createStakeHolder['data']['status']){
         setIsDialogOpen(false);
         handleFetchStakeholders();

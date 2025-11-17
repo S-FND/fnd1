@@ -10,6 +10,7 @@ import ESGDashboard from '../components/esg-metrics/ESGDashboard';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { httpClient } from '@/lib/httpClient';
+import { logger } from '@/hooks/logger';
 
 interface MaterialTopic {
   id: string;
@@ -41,7 +42,7 @@ const ESGMetricsPage: React.FC = () => {
             setFinalizedTopics(materilityDataResponse['data']['finalTopics'])
           }
           if (materilityDataResponse['data']['finalMetrics']) {
-            console.log("materialityData['data']['finalMetrics']", materilityDataResponse['data']['finalMetrics'])
+            logger.log("materialityData['data']['finalMetrics']", materilityDataResponse['data']['finalMetrics'])
             // setSelectedIndustries(materilityDataResponse['data']['industry'])
             // setTempSelectedIndustries(materilityDataResponse['data']['industry'])
             setFinalMetrics(materilityDataResponse['data']['finalMetrics'])
@@ -52,9 +53,9 @@ const ESGMetricsPage: React.FC = () => {
           }
         }
       }
-      console.log('materilityDataResponse', materilityDataResponse)
+      logger.log('materilityDataResponse', materilityDataResponse)
     } catch (error) {
-      console.log("error :: getMaterialityData => ", error)
+      logger.log("error :: getMaterialityData => ", error)
     }
   }
 
@@ -66,7 +67,7 @@ const ESGMetricsPage: React.FC = () => {
     //     const topics = JSON.parse(savedTopics);
     //     setFinalizedTopics(topics);
     //   } catch (error) {
-    //     console.error('Error loading finalized topics:', error);
+    //     logger.error('Error loading finalized topics:', error);
     //     // Fallback to high priority topics from default data
     //     const highPriorityTopics = defaultMaterialTopics.filter(
     //       topic => topic.businessImpact >= 7.0 && topic.sustainabilityImpact >= 7.0
@@ -81,7 +82,7 @@ const ESGMetricsPage: React.FC = () => {
   }, []);
 
   useEffect(()=>{
-    console.log("ESGMetricsPage :: selectedMetrics =====> ",customMetrics)
+    logger.log("ESGMetricsPage :: selectedMetrics =====> ",customMetrics)
   },[customMetrics])
 
   return (

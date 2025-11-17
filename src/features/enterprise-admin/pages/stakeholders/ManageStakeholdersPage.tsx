@@ -5,9 +5,10 @@ import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
+import { logger } from '@/hooks/logger';
 
 const ManageStakeholdersPage = () => {
-  const { isLoading } = useRouteProtection(['admin', 'manager']);
+  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {
@@ -15,8 +16,8 @@ const ManageStakeholdersPage = () => {
   }
 
   if (!isAuthenticatedStatus()) {
-    console.log("user?.role",user?.role)
-    // return <Navigate to="/" />;
+    logger.log("user?.role",user?.role)
+    return <Navigate to="/" />;
   }
 
   return (

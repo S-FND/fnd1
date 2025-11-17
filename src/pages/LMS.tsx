@@ -6,8 +6,10 @@ import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Users, Award, TrendingUp } from 'lucide-react';
+import { logger } from '@/hooks/logger';
 
 const LMSPage = () => {
+  logger.debug('Rendering LMSPage component');
   const { isLoading } = useRouteProtection(['admin', 'manager', 'employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 

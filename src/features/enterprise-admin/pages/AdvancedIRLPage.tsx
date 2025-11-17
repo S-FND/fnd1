@@ -12,9 +12,11 @@ import AdvancedIRLPhotos from '../components/advanced-irl/AdvancedIRLPhotos';
 import AdvancedIRLManagement from '../components/advanced-irl/AdvancedIRLManagement';
 import AdvancedIRLFacility from '../components/advanced-irl/AdvancedIRLFacility';
 import AdvancedIRLITSecurity from '../components/advanced-irl/AdvancedIRLITSecurity';
+import { logger } from '@/hooks/logger';
 
 const AdvancedIRLPage = () => {
-  const { isLoading } = useRouteProtection(['admin', 'manager']);
+  logger.debug('Rendering AdvancedIRLPage component');
+  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {

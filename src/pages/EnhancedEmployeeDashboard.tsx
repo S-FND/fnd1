@@ -7,8 +7,10 @@ import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { ArrowUp, ArrowDown, LineChart, Award, Activity } from 'lucide-react';
+import { logger } from '@/hooks/logger';
 
 const EnhancedEmployeeDashboard = () => {
+  logger.debug('Rendering EnhancedEmployeeDashboard component');
   const { isLoading } = useRouteProtection(['employee']);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
 

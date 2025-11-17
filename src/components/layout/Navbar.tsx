@@ -9,6 +9,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { socketConnect } from '@/context/SocketContext'; // Import your socket function
 import { toast } from 'sonner'; // Import toast for notifications
+import { logger } from '@/hooks/logger';
 
 interface Notification {
   _id: string;
@@ -24,33 +25,33 @@ export const Navbar: React.FC = () => {
   const { isOverlayActive, toggleOverlay } = useOverlay();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  
+
   // Only show overlay toggle for company admin role
   const isCompanyAdmin = user?.role === 'admin';
-  
+
   useEffect(() => {
     const token = localStorage.getItem('token');
-    
+
     if (token && user) {
       try {
         const socket = socketConnect(JSON.parse(token));
-        
+
         socket.on("connect", () => {
-          console.log("✅ Socket connected successfully!");
+          logger.log("✅ Socket connected successfully!");
           sessionStorage.setItem('socketId', socket.id);
         });
 
         socket.on("disconnect", (reason) => {
-          console.log('❌ Socket disconnected. Reason:', reason);
+          logger.log('❌ Socket disconnected. Reason:', reason);
         });
 
         socket.on("connect_error", (error) => {
-          console.error('🔥 Socket connection error:', error.message);
+          logger.error('🔥 Socket connection error:', error.message);
         });
 
         // Handle notifications
         socket.on('notification', (data: any) => {
-          console.log('📨 Received notification:', data);
+          logger.log('📨 Received notification:', data);
           if (data?.data?.data) {
             const newNotifications = data.data.data;
             setNotifications(prev => [...newNotifications, ...prev]);
@@ -58,7 +59,7 @@ export const Navbar: React.FC = () => {
         });
 
         socket.on('toast/notification', (data: any) => {
-          console.log('💬 Received toast notification:', data);
+          logger.log('💬 Received toast notification:', data);
           if (data?.data?.message) {
             toast.info(data.data.message);
           }
@@ -69,7 +70,7 @@ export const Navbar: React.FC = () => {
           socket.disconnect();
         };
       } catch (error) {
-        console.error('💥 Failed to create socket:', error);
+        logger.error('💥 Failed to create socket:', error);
       }
     }
   }, [user]);
@@ -81,9 +82,9 @@ export const Navbar: React.FC = () => {
   }, [notifications]);
 
   const markAsRead = (notificationId: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification._id === notificationId 
+    setNotifications(prev =>
+      prev.map(notification =>
+        notification._id === notificationId
           ? { ...notification, isRead: true }
           : notification
       )
@@ -128,7 +129,7 @@ export const Navbar: React.FC = () => {
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <input type="search" placeholder="Search..." className="rounded-md border border-input bg-background px-3 py-2 pl-8 text-sm" />
           </div>
-          
+
           {/* Notification */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -153,8 +154,8 @@ export const Navbar: React.FC = () => {
                   </div>
                 ) : (
                   notifications.slice(0, 5).map((notification) => (
-                    <div 
-                      key={notification._id} 
+                    <div
+                      key={notification._id}
                       className={`p-3 hover:bg-muted cursor-pointer ${!notification.isRead ? 'bg-blue-50' : ''}`}
                       onClick={() => handleNotificationClick(notification)}
                     >
@@ -181,12 +182,12 @@ export const Navbar: React.FC = () => {
               )}
             </DropdownMenuContent>
           </DropdownMenu>
-          
+
           {/* Help */}
           <Button variant="ghost" size="icon">
             <HelpCircle className="h-5 w-5" />
           </Button>
-          
+
           {/* User Menu */}
           {user ? (
             <DropdownMenu>
@@ -203,9 +204,11 @@ export const Navbar: React.FC = () => {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/company">Profile Settings</Link>
-                </DropdownMenuItem>
+                {user.role !== 'employee' && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/company">Profile Settings</Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

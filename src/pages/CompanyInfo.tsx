@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
+import { logger } from "@/hooks/logger";
 
 interface CompanyFormData {
   companyName: string;
@@ -55,7 +56,7 @@ export default function CompanyInfo() {
         });
       }
     } catch (error) {
-      console.error("API call failed:", error);
+      logger.error("API call failed:", error);
       // Optionally show error toast
     }
   };

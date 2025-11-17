@@ -2,8 +2,10 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { logger } from './logger';
 
 export function useRouteProtection(requiredRole?: string | string[]) {
+  logger.debug('useRouteProtection hook invoked with requiredRole:', requiredRole);
   const { user, isAuthenticated, isLoading,isAuthenticatedStatus } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -11,8 +13,7 @@ export function useRouteProtection(requiredRole?: string | string[]) {
   useEffect(() => {
     if (!isLoading && !isAuthenticatedStatus()) {
       // Redirect to login if not authenticated
-      console.log('ist me 14');
-      navigate('/login', { state: { from: location.pathname } });
+      navigate('/', { state: { from: location.pathname } });
     } else if (!isLoading && isAuthenticated && requiredRole) {
       // Check for role-based access if required
       const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
@@ -25,9 +26,8 @@ export function useRouteProtection(requiredRole?: string | string[]) {
         } else if (user?.role === 'vendor') {
           navigate('/vendor/dashboard');
         } else {
-      console.log('ist me 18');
 
-          navigate('/login');
+          navigate('/');
         }
       }
     }

@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import OutsourcedServicesSection from './OutsourcedServicesSection';
 import { OutsourcedService } from './types';
 import { Loader2 } from 'lucide-react';
+import { logger } from '@/hooks/logger';
 
 interface EmployeeData {
   function: string;
@@ -35,7 +36,7 @@ interface DifferentlyAbledData {
   contractFemale: string;
 }
 
-const IRLHRInformation = () => {
+const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -156,7 +157,7 @@ const IRLHRInformation = () => {
           setKeyManagerial(hrData.keyManagerial || { male: '', female: '', total: '' });
         }
       } catch (err) {
-        console.error('Error loading HR data:', err);
+        logger.error('Error loading HR data:', err);
         // setError('Failed to load HR data');
         // toast.error('Failed to load HR data');
       } finally {
@@ -299,7 +300,7 @@ const IRLHRInformation = () => {
       await updateHrData(payload);
       toast.success('Draft saved successfully!');
     } catch (err) {
-      console.error('Error saving HR data:', err);
+      logger.error('Error saving HR data:', err);
       setError('Failed to save HR data');
       toast.error('Failed to save HR data');
     } finally {
@@ -365,7 +366,7 @@ const IRLHRInformation = () => {
       await updateHrData(payload);
       toast.success('Form submitted successfully!');
     } catch (err) {
-      console.error('Error submitting HR data:', err);
+      logger.error('Error submitting HR data:', err);
       setError('Failed to submit HR data');
       toast.error('Failed to submit HR data');
     } finally {
@@ -486,7 +487,7 @@ const IRLHRInformation = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3>7. Human Resource Management - Employees</h3>
-                <Button onClick={addEmployeeRow} size="sm">Add Row</Button>
+                <Button onClick={addEmployeeRow} size="sm" disabled={isLoading || !buttonEnabled}>Add Row</Button>
               </div>
 
               <div className="overflow-x-auto">
@@ -581,7 +582,7 @@ const IRLHRInformation = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3>8. Human Resource Management - Workers</h3>
-                <Button onClick={addWorkerRow} size="sm">Add Row</Button>
+                <Button onClick={addWorkerRow} size="sm" disabled={isLoading || !buttonEnabled}>Add Row</Button>
               </div>
 
               <div className="overflow-x-auto">
@@ -676,7 +677,7 @@ const IRLHRInformation = () => {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3>9. Human Resource Management (Differently Abled Personnel)</h3>
-                <Button onClick={addDifferentlyAbledRow} size="sm">Add Row</Button>
+                <Button onClick={addDifferentlyAbledRow} size="sm" disabled={isLoading || !buttonEnabled}>Add Row</Button>
               </div>
 
               <div className="overflow-x-auto">
@@ -836,10 +837,10 @@ const IRLHRInformation = () => {
             </div>
 
             <div className="flex gap-4 pt-6">
-              <Button onClick={handleSave} variant="outline" className="flex-1">
+              <Button onClick={handleSave} variant="outline" className="flex-1" disabled={isLoading || !buttonEnabled}>
                 Save as Draft
               </Button>
-              <Button onClick={handleSubmit} className="flex-1">
+              <Button onClick={handleSubmit} className="flex-1" disabled={isLoading || !buttonEnabled}>
                 Submit
               </Button>
             </div>

@@ -1,7 +1,9 @@
 
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { FeaturesProvider } from '@/context/FeaturesContext';
+// import { SDGProvider } from '@/contexts/SDGContext';
+import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import './App.css';
 import Index from './pages/Index';
 import Login from './pages/Login';
@@ -27,6 +29,7 @@ import VendorTrainings from './pages/vendor/VendorTrainings';
 import ESGPage from './features/enterprise-admin/pages/ESG';
 import EmployeeDashboardPage from './features/employee/pages/Dashboard';
 import MaterialityPage from './features/enterprise-admin/pages/Materiality';
+// import SDGPage from './features/enterprise-admin/pages/SDG';
 import PersonalGHGPage from './features/employee/pages/PersonalGHG';
 import GHGAccountingPage from './features/enterprise-admin/pages/GHGAccounting';
 import UnitGHGAccountingPage from './features/unit-admin/components/ghg/UnitGHGAccountingPage';
@@ -36,6 +39,7 @@ import ManualESGDDPage from './features/enterprise-admin/pages/ManualESGDD';
 import AutomatedESGDDPage from './features/enterprise-admin/pages/AutomatedESGDD';
 import ESGCapPage from './features/enterprise-admin/pages/ESGCap';
 import IRLPage from './features/enterprise-admin/pages/IRLPage';
+// import ProtectedIRLPage from './components/protected/ProtectedIRLPage';
 import AdvancedIRLPage from './features/enterprise-admin/pages/AdvancedIRLPage';
 import ReportsPage from './features/enterprise-admin/pages/Reports';
 import BRSRReport from './features/enterprise-admin/pages/BRSRReport';
@@ -49,13 +53,15 @@ import EngagementPlanPage from './features/enterprise-admin/pages/stakeholders/E
 import StakeholderLoginPage from './features/stakeholder/pages/StakeholderLoginPage';
 import ESGManagementPage from './features/enterprise-admin/pages/ESGManagement';
 import TeamManagementPage from './features/enterprise-admin/pages/TeamManagement';
+import EmployeeDetailsPage from './features/enterprise-admin/components/team/EmployeeDetailsPage';
 import CompanyProfilePage from './pages/CompanyProfile';
-import FeatureManagementPage from './pages/FeatureManagement';
+// import FeatureManagementPage from './pages/FeatureManagement';
 import SupplierAuditsPage from './pages/audit/SupplierAuditsPage';
 import EHSAuditsPage from './pages/audit/EHSAuditsPage';
 import InternalAuditsPage from './pages/audit/InternalAuditsPage';
 import Scope1EntryPage from './pages/Scope1EntryPage';
 import LMSPage from './pages/LMS';
+// import ActionLogPage from './components/action-log/ActionLogPage';
 import { Toaster } from 'sonner';
 import Scope2EntryPage from './pages/Scope2EntryPage';
 import Scope3EntryPage from './pages/Scope3EntryPage';
@@ -67,6 +73,7 @@ import Scope2SourceTemplateForm from './features/enterprise-admin/components/ghg
 import Scope3SourceTemplateForm from './features/enterprise-admin/components/ghg/scope3/Scope3SourceTemplateForm';
 import Scope4SourceTemplateForm from './features/enterprise-admin/components/ghg/scope4/Scope4SourceTemplateForm';
 import UnitConverterPage from './pages/UnitConverterPage';
+import FeatureManagementPage from './pages/FeatureManagement';
 
 function App() {
   return (
@@ -80,6 +87,7 @@ function App() {
       <Routes>
         {/* Public Routes */}
         {/* <Route path="/" element={<Index />} /> */}
+        <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="/" element={<Login />} />
 
         {/* Company / Enterprise Admin Routes */}
@@ -162,6 +170,7 @@ function App() {
 
         <Route path="*" element={<NotFound />} />
       </Routes>
+      {/* </SDGProvider> */}
     </FeaturesProvider>
   );
 }
