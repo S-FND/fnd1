@@ -61,6 +61,7 @@ export const Scope4SourceTemplateForm = () => {
   const [selectedEmissionFactor, setSelectedEmissionFactor] = useState<EmissionFactor | null>(null);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loadingFacilities, setLoadingFacilities] = useState(true);
+  const [showCustomFacility, setShowCustomFacility] = useState(editTemplate?.facilityName === 'Others' || false);
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -192,18 +193,48 @@ export const Scope4SourceTemplateForm = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="facilityName">Facility/Location *</Label>
-                <Select onValueChange={(value) => setValue('facilityName', value)} defaultValue={editTemplate?.facilityName}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select facility" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {facilities.map(facility => (
-                      <SelectItem key={facility.id} value={facility.name}>
-                        {facility.name} {facility.code && `(${facility.code})`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {!showCustomFacility ? (
+                  <Select 
+                    onValueChange={(value) => {
+                      if (value === 'Others') {
+                        setShowCustomFacility(true);
+                        setValue('facilityName', '');
+                      } else {
+                        setValue('facilityName', value);
+                      }
+                    }} 
+                    defaultValue={editTemplate?.facilityName !== 'Others' ? editTemplate?.facilityName : undefined}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select facility" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {facilities.map(facility => (
+                        <SelectItem key={facility.id} value={facility.name}>
+                          {facility.name} {facility.code && `(${facility.code})`}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value="Others">Others (Specify)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input 
+                      {...register('facilityName')} 
+                      placeholder="Enter custom facility name"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setShowCustomFacility(false);
+                        setValue('facilityName', '');
+                      }}
+                    >
+                      Back
+                    </Button>
+                  </div>
+                )}
                 {errors.facilityName && <p className="text-sm text-destructive">{errors.facilityName.message}</p>}
               </div>
 
