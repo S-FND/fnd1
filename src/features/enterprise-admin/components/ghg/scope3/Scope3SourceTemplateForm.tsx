@@ -24,6 +24,14 @@ interface Facility {
   location: string | null;
 }
 
+const MOCK_TEAM_MEMBERS = [
+  { id: '1', name: 'Meera Sharma' },
+  { id: '2', name: 'Rajesh Kumar' },
+  { id: '3', name: 'Priya Singh' },
+  { id: '4', name: 'Amit Patel' },
+  { id: '5', name: 'Sustainability Team' },
+];
+
 const SCOPE3_CATEGORIES = [
   'Category 1 – Purchased Goods and Services',
   'Category 2 – Capital Goods',
@@ -80,6 +88,8 @@ export const Scope3SourceTemplateForm = () => {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loadingFacilities, setLoadingFacilities] = useState(true);
   const [showCustomFacility, setShowCustomFacility] = useState(editTemplate?.facilityName === 'Others' || false);
+  const [selectedCollectors, setSelectedCollectors] = useState<string[]>(editTemplate?.assignedDataCollectors || []);
+  const [selectedVerifiers, setSelectedVerifiers] = useState<string[]>(editTemplate?.assignedVerifiers || []);
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -390,6 +400,60 @@ export const Scope3SourceTemplateForm = () => {
             <div className="space-y-2">
               <Label htmlFor="notes">Notes (Optional)</Label>
               <Textarea {...register('notes')} placeholder="Additional information about this emission source" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Assignment</CardTitle>
+            <CardDescription>Assign team members for data collection and verification</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Data Collectors *</Label>
+              <div className="border rounded-lg p-4 space-y-2">
+                {MOCK_TEAM_MEMBERS.map(member => (
+                  <label key={member.id} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedCollectors.includes(member.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedCollectors([...selectedCollectors, member.id]);
+                        } else {
+                          setSelectedCollectors(selectedCollectors.filter(id => id !== member.id));
+                        }
+                      }}
+                      className="rounded"
+                    />
+                    <span>{member.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Verifiers (Optional)</Label>
+              <div className="border rounded-lg p-4 space-y-2">
+                {MOCK_TEAM_MEMBERS.map(member => (
+                  <label key={member.id} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedVerifiers.includes(member.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedVerifiers([...selectedVerifiers, member.id]);
+                        } else {
+                          setSelectedVerifiers(selectedVerifiers.filter(id => id !== member.id));
+                        }
+                      }}
+                      className="rounded"
+                    />
+                    <span>{member.name}</span>
+                  </label>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>
