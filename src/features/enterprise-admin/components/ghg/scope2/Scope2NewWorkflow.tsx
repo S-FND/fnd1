@@ -52,8 +52,8 @@ export const Scope2NewWorkflow = () => {
   };
 
   const handleCollectData = (template: GHGSourceTemplate) => {
-    navigate('/ghg-data-collection', { 
-      state: { sourceId: template.id, scope: 2 } 
+    navigate('/ghg-accounting/scope2/collect-data', { 
+      state: { template } 
     });
   };
 
