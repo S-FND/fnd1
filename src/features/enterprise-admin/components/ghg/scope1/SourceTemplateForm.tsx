@@ -67,7 +67,7 @@ export const SourceTemplateForm = () => {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loadingFacilities, setLoadingFacilities] = useState(true);
   const [selectedFacilities, setSelectedFacilities] = useState<string[]>(
-    editTemplate ? [editTemplate.facilityName] : []
+    editTemplate ? [editTemplate.facilityName] : ['Others']
   );
   const isInitialRender = useRef(true);
 
@@ -88,7 +88,7 @@ export const SourceTemplateForm = () => {
       dataSource: editTemplate.dataSource,
       notes: editTemplate.notes,
     } : {
-      facilityNames: [],
+      facilityNames: ['Others'],
       sourceType: initialSourceType || 'Stationary',
       calculationMethodology: 'GHG Protocol - Activity-based',
     }
@@ -236,26 +236,39 @@ export const SourceTemplateForm = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="facilityNames">Facilities *</Label>
-                <div className="border rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto">
+            <div className="space-y-2">
+              <Label htmlFor="facilityNames">Facilities *</Label>
+              <Select
+                value={selectedFacilities.length === 1 ? selectedFacilities[0] : undefined}
+                onValueChange={(value) => {
+                  // Toggle selection for multi-select behavior
+                  const newSelected = selectedFacilities.includes(value)
+                    ? selectedFacilities.filter(f => f !== value)
+                    : [...selectedFacilities, value];
+                  setSelectedFacilities(newSelected);
+                  setValue('facilityNames', newSelected);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue>
+                    {selectedFacilities.length === 0 
+                      ? "Select facilities..."
+                      : `${selectedFacilities.length} facilit${selectedFacilities.length > 1 ? 'ies' : 'y'} selected`}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px] overflow-y-auto">
+                  <SelectItem value="Others">Others</SelectItem>
                   {loadingFacilities ? (
-                    <p className="text-sm text-muted-foreground">Loading facilities...</p>
+                    <div className="p-2 text-sm text-muted-foreground">Loading facilities...</div>
                   ) : (
-                    <>
-                      {facilities.map((facility) => (
-                        <label key={facility.id} className="flex items-start gap-2 cursor-pointer hover:bg-accent/50 p-2 rounded">
+                    facilities.map((facility) => (
+                      <SelectItem key={facility.id} value={facility.name}>
+                        <div className="flex items-center gap-2">
                           <input
                             type="checkbox"
                             checked={selectedFacilities.includes(facility.name)}
-                            onChange={(e) => {
-                              const newSelected = e.target.checked
-                                ? [...selectedFacilities, facility.name]
-                                : selectedFacilities.filter(f => f !== facility.name);
-                              setSelectedFacilities(newSelected);
-                              setValue('facilityNames', newSelected);
-                            }}
-                            className="rounded mt-1"
+                            onChange={() => {}}
+                            className="rounded pointer-events-none"
                           />
                           <div className="flex flex-col">
                             <span className="font-medium">{facility.name}</span>
@@ -267,25 +280,39 @@ export const SourceTemplateForm = () => {
                               </span>
                             )}
                           </div>
-                        </label>
-                      ))}
-                      {facilities.length === 0 && (
-                        <p className="text-sm text-muted-foreground">
-                          No facilities found. Contact admin to add facilities.
-                        </p>
-                      )}
-                    </>
+                        </div>
+                      </SelectItem>
+                    ))
                   )}
+                </SelectContent>
+              </Select>
+              {errors.facilityNames && (
+                <p className="text-sm text-destructive">{errors.facilityNames.message}</p>
+              )}
+              {selectedFacilities.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {selectedFacilities.map((facility) => (
+                    <span
+                      key={facility}
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-accent text-accent-foreground rounded-md text-sm"
+                    >
+                      {facility}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newSelected = selectedFacilities.filter(f => f !== facility);
+                          setSelectedFacilities(newSelected);
+                          setValue('facilityNames', newSelected);
+                        }}
+                        className="hover:text-destructive"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
                 </div>
-                {errors.facilityNames && (
-                  <p className="text-sm text-destructive">{errors.facilityNames.message}</p>
-                )}
-                {selectedFacilities.length > 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    {selectedFacilities.length} facilit{selectedFacilities.length > 1 ? 'ies' : 'y'} selected
-                  </p>
-                )}
-              </div>
+              )}
+            </div>
 
               <div className="space-y-2">
                 <Label htmlFor="businessUnit">Business Unit *</Label>
