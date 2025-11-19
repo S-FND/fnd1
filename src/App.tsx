@@ -46,6 +46,8 @@ import BRSRReport from './features/enterprise-admin/pages/BRSRReport';
 import GRIReport from './features/enterprise-admin/pages/GRIReport';
 import TCFDReport from './features/enterprise-admin/pages/TCFDReport';
 import ImpactReport from './features/enterprise-admin/pages/ImpactReport';
+import ActionLogPage from './features/enterprise-admin/pages/ActionLogPage';
+import SDGPage from './features/enterprise-admin/pages/SDG';
 import StakeholdersOverviewPage from './features/enterprise-admin/pages/stakeholders/StakeholdersOverviewPage';
 import ManageStakeholdersPage from './features/enterprise-admin/pages/stakeholders/ManageStakeholdersPage';
 import CategoriesPage from './features/enterprise-admin/pages/stakeholders/CategoriesPage';
@@ -90,6 +92,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/company" element={<CompanyProfilePage />} />
               <Route path="/materiality" element={<MaterialityPage />} />
+              <Route path="/sdg/*" element={<SDGPage />} />
               <Route path="/esg/*" element={<ESGPage />} />
               <Route path="/esg-dd" element={<ESGDDPage />} />
               <Route path="/esg-dd/reports" element={<ESGDDReportsPage />} />
@@ -106,6 +109,7 @@ function App() {
               <Route path="/reports/gri" element={<GRIReport />} />
               <Route path="/reports/tcfd" element={<TCFDReport />} />
               <Route path="/reports/impact" element={<ImpactReport />} />
+              <Route path="/action-log" element={<ActionLogPage />} />
 
               {/* Stakeholder Management Routes */}
               <Route path="/stakeholders" element={<StakeholdersOverviewPage />} />

@@ -58,17 +58,67 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics, finalMetric
 
   const [selectedYear, setSelectedYear] = useState<string>([...financialYearList].reverse()[0].value); // Default to current year
   const [graphData, setGraphData] = useState<any>({});
-logger.info('activeTab',viewMode,"viewMode");
+  logger.info('activeTab', viewMode, "viewMode");
+
   const getGraphData = async (year: string) => {
-    // Filter data entries based on the selected year
-    let graphData = await httpClient.get(`materiality/metrics/graph-data?year=${year}`);
-    // console.log("Graph Data", graphData);
-    if (graphData && graphData.data && graphData.data['status']) {
-      // setConfiguredMetrics(graphData.data.metrics);
-      // setDataEntries(graphData.data.entries);
-      setGraphData(graphData.data['data']);
+    try {
+      let response = await httpClient.get(`materiality/metrics/graph-data?year=${year}`);
+
+      if (response && response.data && response.data['status']) {
+        const apiData = response.data['data'];
+
+        // Transform API data to match MetricDataEntry interface
+        const transformedDataEntries: MetricDataEntry[] = [];
+        const transformedMetrics: ESGMetricWithTracking[] = [];
+
+        // Map period names to month numbers (for FY starting April)
+        const periodToMonthMap: Record<string, number> = {
+          'April': 4, 'May': 5, 'June': 6, 'July': 7, 'August': 8, 'September': 9,
+          'October': 10, 'November': 11, 'December': 12, 'January': 1, 'February': 2, 'March': 3
+        };
+
+        Object.entries(apiData).forEach(([metricName, metricInfo]: [string, any]) => {
+          // Create metric configuration
+          transformedMetrics.push({
+            id: metricName.trim(),
+            name: metricName.trim(),
+            category: metricInfo.data[0]?.topicId || 'General',
+            collectionFrequency: 'Monthly',
+            unit: metricInfo.units || ''
+          } as ESGMetricWithTracking);
+
+          // Transform each data point
+          metricInfo.data.forEach((entry: any, index: number) => {
+            // Convert period to date
+            const monthNum = periodToMonthMap[entry.period] || 1;
+            const yearToUse = monthNum >= 4 ? parseInt(year.split('-')[0]) : parseInt(year.split('-')[1]);
+            const isoDate = `${yearToUse}-${String(monthNum).padStart(2, '0')}-01`;
+
+            transformedDataEntries.push({
+              id: `${metricName}-${index}`,
+              metricId: metricName.trim(),
+              metricName: metricName.trim(),
+              unit: metricInfo.units || '',
+              frequency: 'Monthly',
+              value: entry.value,
+              date: isoDate,
+              topicId: entry.topicId,
+              dataType: entry.dataType || 'unknown',
+              financialYear: year,
+              // Add unitLevel for aggregation (use fake units for now)
+              unitLevel: ['Manufacturing', 'Operations', 'R&D', 'Logistics'][index % 4]
+            });
+          });
+        });
+
+        setConfiguredMetrics(transformedMetrics);
+        setDataEntries(transformedDataEntries);
+        setGraphData(apiData);
+      }
+    } catch (error) {
+      console.error('Failed to fetch graph data:', error);
     }
-  }
+  };
 
   // Load data on component mount
   useEffect(() => {
@@ -304,39 +354,46 @@ logger.info('activeTab',viewMode,"viewMode");
       .sort((a, b) => parseInt(a.year) - parseInt(b.year));
   }, [processedData]);
 
-  // Category-wise breakdown
+  // Add this before your return statement
   const categoryBreakdown = useMemo(() => {
-    const categories = configuredMetrics.reduce((acc, metric) => {
-      if (!acc[metric.category]) {
-        acc[metric.category] = {
-          category: metric.category,
-          metrics: 0,
-          entries: 0,
-          latestValues: []
-        };
-      }
-      acc[metric.category].metrics++;
+    // Count metrics by ESG category using finalMetricsList
+    const esgCounts = {
+      Environmental: 0,
+      Social: 0,
+      Governance: 0
+    };
 
-      const metricEntries = dataEntries.filter(entry => entry.metricId === metric.id);
-      acc[metric.category].entries += metricEntries.length;
+    // Go through each metric in your graphData
+    Object.keys(graphData).forEach(metricName => {
+      // Find the corresponding metric in finalMetricsList
+      const finalMetric = finalMetricsList.find(m => m.name === metricName);
 
-      if (metricEntries.length > 0) {
-        const latest = metricEntries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
-        if (latest && !isNaN(Number(latest.value))) {
-          acc[metric.category].latestValues.push(Number(latest.value));
+      if (finalMetric && finalMetric.esg) {
+        const esgCat = finalMetric.esg.trim();
+        if (esgCat.toLowerCase().includes('environ')) {
+          esgCounts.Environmental++;
+        } else if (esgCat.toLowerCase().includes('social')) {
+          esgCounts.Social++;
+        } else if (esgCat.toLowerCase().includes('govern')) {
+          esgCounts.Governance++;
         }
       }
+    });
 
-      return acc;
-    }, {} as Record<string, any>);
+    // Create breakdown array with only categories that have metrics
+    const breakdown = [];
+    if (esgCounts.Environmental > 0) {
+      breakdown.push({ category: 'Environmental', metrics: esgCounts.Environmental });
+    }
+    if (esgCounts.Social > 0) {
+      breakdown.push({ category: 'Social', metrics: esgCounts.Social });
+    }
+    if (esgCounts.Governance > 0) {
+      breakdown.push({ category: 'Governance', metrics: esgCounts.Governance });
+    }
 
-    return Object.values(categories).map((cat: any) => ({
-      ...cat,
-      averageValue: cat.latestValues.length > 0
-        ? cat.latestValues.reduce((sum: number, val: number) => sum + val, 0) / cat.latestValues.length
-        : 0
-    }));
-  }, [configuredMetrics, dataEntries]);
+    return breakdown;
+  }, [graphData, finalMetricsList]);
 
   const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1'];
 
@@ -578,7 +635,6 @@ logger.info('activeTab',viewMode,"viewMode");
 
         <TabsContent value="comparison" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2">
-
             <Card>
               <CardHeader>
                 <CardTitle>ESG Category Breakdown</CardTitle>
@@ -586,34 +642,94 @@ logger.info('activeTab',viewMode,"viewMode");
               </CardHeader>
               <CardContent>
                 {categoryBreakdown.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                      <Pie
-                        data={categoryBreakdown}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ category, metrics }) => `${category} (${metrics})`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="metrics"
-                      >
-                        {categoryBreakdown.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
+                  <div className="space-y-6">
+                    {/* Pie Chart */}
+                    <div className="h-[250px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={categoryBreakdown}
+                            cx="50%"
+                            cy="50%"
+                            labelLine={true}
+                            label={({ category, metrics }) => `${category} (${metrics})`}
+                            outerRadius={80}
+                            fill="#8884d8"
+                            dataKey="metrics"
+                          >
+                            {categoryBreakdown.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip
+                            formatter={(value, name, props) => [
+                              `${value} metrics`,
+                              `${props.payload.category}`
+                            ]}
+                          />
+                          <Legend
+                            content={({ payload }) => {
+                              return (
+                                <ul style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}>
+                                  {payload?.map((entry, index) => (
+                                    <li key={`legend-${index}`} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                      <span
+                                        style={{
+                                          display: 'inline-block',
+                                          width: '12px',
+                                          height: '12px',
+                                          backgroundColor: entry.color,
+                                          marginRight: '5px'
+                                        }}
+                                      />
+                                      <span>{entry.value}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              );
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    {/* Metric List Below - CLEAN & READABLE */}
+                    <div className="mt-4 p-4 bg-white border rounded-lg">
+                      <h4 className="font-semibold mb-3">Metrics by Category</h4>
+                      {categoryBreakdown.map((cat) => (
+                        <div key={cat.category} className="mb-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div
+                              className="w-4 h-4 rounded-full"
+                              style={{ backgroundColor: COLORS[categoryBreakdown.findIndex(c => c.category === cat.category) % COLORS.length] }}
+                            />
+                            <span className="font-medium">{cat.category} ({cat.metrics})</span>
+                          </div>
+                          <ul className="ml-6 list-disc space-y-1 text-sm">
+                            {Object.keys(graphData).filter(metricName => {
+                              const finalMetric = finalMetricsList.find(m => m.name === metricName);
+                              if (!finalMetric) return false;
+                              const esg = finalMetric.esg?.trim().toLowerCase() || '';
+                              if (cat.category === 'Environmental') return esg.includes('environ');
+                              if (cat.category === 'Social') return esg.includes('social');
+                              if (cat.category === 'Governance') return esg.includes('govern');
+                              return false;
+                            }).map(metricName => (
+                              <li key={metricName}>{metricName}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 ) : (
                   <div className="text-center py-12 text-muted-foreground">
                     <PieChartIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No category data available</p>
+                    <p>No ESG category data available</p>
                   </div>
                 )}
               </CardContent>
             </Card>
-
             <Card>
               <CardHeader>
                 <CardTitle>Unit Level Aggregation</CardTitle>
