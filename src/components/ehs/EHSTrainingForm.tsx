@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { TrainingSchedule } from './training-form/TrainingSchedule';
 import { AttendeesList } from './training-form/AttendeesList';
 import { TrainingFormData } from './training-form/types';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/context/AuthContext';
+import { httpClient } from '@/lib/httpClient';
 
 interface EHSTrainingFormProps {
   onComplete?: () => void;
@@ -29,7 +28,6 @@ const EHSTrainingForm: React.FC<EHSTrainingFormProps> = ({ onComplete }) => {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
 
   const updateFormData = (updates: Partial<TrainingFormData>) => {
     setFormData(prev => ({ ...prev, ...updates }));
@@ -60,8 +58,20 @@ const EHSTrainingForm: React.FC<EHSTrainingFormProps> = ({ onComplete }) => {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call to submit training for approval
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Convert form data to DTO format
+      const trainingData = {
+        name: formData.name,
+        description: formData.description,
+        clientCompany: formData.clientCompany,
+        trainingType: formData.trainingType,
+        date: formData.date,
+        startTime: formData.time,
+        duration: formData.duration,
+        location: formData.location,
+        attendees: formData.attendees
+      };
+
+      const response: any = await httpClient.post('ehs/trainings', trainingData);
       
       toast({
         title: "Training Recommendation Submitted",
