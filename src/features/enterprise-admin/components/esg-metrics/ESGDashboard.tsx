@@ -648,14 +648,14 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics, finalMetric
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
-                            data={categoryBreakdown}
+                            data={categoryBreakdown} // This has the correct data: [{ category: 'Environmental', metrics: 4 }, { category: 'Social', metrics: 3 }]
                             cx="50%"
                             cy="50%"
                             labelLine={true}
                             label={({ category, metrics }) => `${category} (${metrics})`}
                             outerRadius={80}
                             fill="#8884d8"
-                            dataKey="metrics"
+                            dataKey="metrics" // This tells the pie chart to use the 'metrics' field as the value
                           >
                             {categoryBreakdown.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -671,18 +671,18 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics, finalMetric
                             content={({ payload }) => {
                               return (
                                 <ul style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}>
-                                  {payload?.map((entry, index) => (
+                                  {categoryBreakdown.map((cat, index) => (
                                     <li key={`legend-${index}`} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                                       <span
                                         style={{
                                           display: 'inline-block',
                                           width: '12px',
                                           height: '12px',
-                                          backgroundColor: entry.color,
+                                          backgroundColor: COLORS[index % COLORS.length], // Use the same color mapping
                                           marginRight: '5px'
                                         }}
                                       />
-                                      <span>{entry.value}</span>
+                                      <span>{cat.category} ({cat.metrics})</span> {/* Use original data */}
                                     </li>
                                   ))}
                                 </ul>
