@@ -38,12 +38,13 @@ const MOCK_TEAM_MEMBERS = [
 ];
 
 const formSchema = z.object({
-  facilityName: z.string().min(1, 'Facility name is required'),
+  facilityNames: z.array(z.string()).min(1, 'At least one facility must be selected'),
   businessUnit: z.string().min(1, 'Business unit is required'),
-  sourceType: z.string().min(1, 'Source type is required'),
   sourceCategory: z.string().min(1, 'Source category is required'),
+  sourceType: z.string().min(1, 'Source type is required'),
   sourceDescription: z.string().min(1, 'Description is required'),
-  fuelSubstanceType: z.string().optional(),
+  fuelType: z.string().optional(),
+  equipmentId: z.string().optional(),
   activityDataUnit: z.string().min(1, 'Activity unit is required'),
   measurementFrequency: z.string().min(1, 'Measurement frequency is required'),
   calculationMethodology: z.string().min(1, 'Methodology is required'),
@@ -65,26 +66,31 @@ export const SourceTemplateForm = () => {
   const [selectedVerifiers, setSelectedVerifiers] = useState<string[]>(editTemplate?.assignedVerifiers || []);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loadingFacilities, setLoadingFacilities] = useState(true);
+  const [selectedFacilities, setSelectedFacilities] = useState<string[]>(
+    editTemplate ? [editTemplate.facilityName] : []
+  );
   const isInitialRender = useRef(true);
 
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: editTemplate ? {
-      facilityName: editTemplate.facilityName,
+      facilityNames: [editTemplate.facilityName],
       businessUnit: editTemplate.businessUnit,
-      sourceType: editTemplate.sourceType,
       sourceCategory: editTemplate.sourceCategory,
+      sourceType: editTemplate.sourceType,
       sourceDescription: editTemplate.sourceDescription,
-      fuelSubstanceType: editTemplate.fuelSubstanceType,
+      fuelType: editTemplate.fuelType,
+      equipmentId: editTemplate.equipmentId,
       activityDataUnit: editTemplate.activityDataUnit,
       measurementFrequency: editTemplate.measurementFrequency,
       calculationMethodology: editTemplate.calculationMethodology,
       dataSource: editTemplate.dataSource,
       notes: editTemplate.notes,
     } : {
-      sourceType: initialSourceType || 'Stationary',
-      calculationMethodology: 'GHG Protocol',
+      facilityNames: [],
+      calculationMethodology: 'GHG Protocol - Activity-based',
+      sourceCategory: SOURCE_CATEGORIES[0],
     }
   });
 
