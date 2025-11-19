@@ -69,7 +69,9 @@ export const Scope4SourceTemplateForm = () => {
   const [selectedEmissionFactor, setSelectedEmissionFactor] = useState<EmissionFactor | null>(null);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loadingFacilities, setLoadingFacilities] = useState(true);
-  const [showCustomFacility, setShowCustomFacility] = useState(editTemplate?.facilityName === 'Others' || false);
+  const [showCustomFacility, setShowCustomFacility] = useState(
+    editTemplate ? editTemplate.facilityName === 'Others' || !facilities.find(f => f.name === editTemplate.facilityName) : true
+  );
   const [selectedCollectors, setSelectedCollectors] = useState<string[]>(editTemplate?.assignedDataCollectors || []);
   const [selectedVerifiers, setSelectedVerifiers] = useState<string[]>(editTemplate?.assignedVerifiers || []);
 
