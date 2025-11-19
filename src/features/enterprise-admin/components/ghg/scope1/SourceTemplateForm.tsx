@@ -89,8 +89,8 @@ export const SourceTemplateForm = () => {
       notes: editTemplate.notes,
     } : {
       facilityNames: [],
+      sourceType: initialSourceType || 'Stationary',
       calculationMethodology: 'GHG Protocol - Activity-based',
-      sourceCategory: SOURCE_CATEGORIES[0],
     }
   });
 
@@ -133,7 +133,7 @@ export const SourceTemplateForm = () => {
     }
     
     setValue('sourceCategory', '');
-    setValue('fuelSubstanceType', '');
+    setValue('fuelType', '');
     setValue('activityDataUnit', '');
   }, [watchSourceType, setValue, editTemplate]);
 
@@ -161,15 +161,17 @@ export const SourceTemplateForm = () => {
       return;
     }
 
-    const template: GHGSourceTemplate = {
+    // Create templates for each selected facility
+    const templates = data.facilityNames.map(facilityName => ({
       id: editTemplate?.id || uuidv4(),
       scope: 1,
-      facilityName: data.facilityName,
+      facilityName,
       businessUnit: data.businessUnit,
       sourceCategory: data.sourceCategory,
       sourceDescription: data.sourceDescription,
       sourceType: data.sourceType,
-      fuelSubstanceType: data.fuelSubstanceType,
+      fuelType: data.fuelType,
+      equipmentId: data.equipmentId,
       emissionFactorId: selectedEmissionFactor.id,
       emissionFactor: selectedEmissionFactor.factor,
       emissionFactorUnit: selectedEmissionFactor.unit,
@@ -185,26 +187,26 @@ export const SourceTemplateForm = () => {
       createdDate: editTemplate?.createdDate || new Date().toISOString(),
       createdBy: editTemplate?.createdBy || 'Current User',
       notes: data.notes || '',
-    };
+    }));
 
     // Save to localStorage
     const key = 'scope1_source_templates';
     const existing = JSON.parse(localStorage.getItem(key) || '[]');
     
     if (editTemplate) {
-      const index = existing.findIndex((t: GHGSourceTemplate) => t.id === template.id);
+      const index = existing.findIndex((t: GHGSourceTemplate) => t.id === templates[0].id);
       if (index >= 0) {
-        existing[index] = template;
+        existing[index] = templates[0];
       }
     } else {
-      existing.push(template);
+      existing.push(...templates);
     }
     
     localStorage.setItem(key, JSON.stringify(existing));
 
     toast({
-      title: editTemplate ? "Source Updated" : "Source Defined",
-      description: `Emission source "${template.sourceDescription}" has been ${editTemplate ? 'updated' : 'saved'}. You can now collect data against this source.`,
+      title: editTemplate ? "Source Updated" : `Source${templates.length > 1 ? 's' : ''} Defined`,
+      description: `Emission source "${templates[0].sourceDescription}" has been ${editTemplate ? 'updated' : `saved for ${templates.length} facilit${templates.length > 1 ? 'ies' : 'y'}`}. You can now collect data against ${templates.length > 1 ? 'these sources' : 'this source'}.`,
     });
 
     navigate('/ghg-accounting', { state: { activeTab: 'scope1' } });
@@ -235,41 +237,52 @@ export const SourceTemplateForm = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="facilityName">Facility Name *</Label>
-                <Select
-                  value={watch('facilityName')}
-                  onValueChange={(value) => setValue('facilityName', value)}
-                  disabled={loadingFacilities}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={loadingFacilities ? "Loading facilities..." : "Select facility..."} />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background z-50">
-                    <SelectItem value="Other">
-                      <span className="font-medium">Other</span>
-                    </SelectItem>
-                    {facilities.map((facility) => (
-                      <SelectItem key={facility.id} value={facility.name}>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{facility.name}</span>
-                          {(facility.code || facility.location) && (
-                            <span className="text-xs text-muted-foreground">
-                              {facility.code && `${facility.code}`}
-                              {facility.code && facility.location && ' • '}
-                              {facility.location && facility.location}
-                            </span>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.facilityName && (
-                  <p className="text-sm text-destructive">{errors.facilityName.message}</p>
+                <Label htmlFor="facilityNames">Facilities *</Label>
+                <div className="border rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto">
+                  {loadingFacilities ? (
+                    <p className="text-sm text-muted-foreground">Loading facilities...</p>
+                  ) : (
+                    <>
+                      {facilities.map((facility) => (
+                        <label key={facility.id} className="flex items-start gap-2 cursor-pointer hover:bg-accent/50 p-2 rounded">
+                          <input
+                            type="checkbox"
+                            checked={selectedFacilities.includes(facility.name)}
+                            onChange={(e) => {
+                              const newSelected = e.target.checked
+                                ? [...selectedFacilities, facility.name]
+                                : selectedFacilities.filter(f => f !== facility.name);
+                              setSelectedFacilities(newSelected);
+                              setValue('facilityNames', newSelected);
+                            }}
+                            className="rounded mt-1"
+                          />
+                          <div className="flex flex-col">
+                            <span className="font-medium">{facility.name}</span>
+                            {(facility.code || facility.location) && (
+                              <span className="text-xs text-muted-foreground">
+                                {facility.code && `${facility.code}`}
+                                {facility.code && facility.location && ' • '}
+                                {facility.location && facility.location}
+                              </span>
+                            )}
+                          </div>
+                        </label>
+                      ))}
+                      {facilities.length === 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          No facilities found. Contact admin to add facilities.
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+                {errors.facilityNames && (
+                  <p className="text-sm text-destructive">{errors.facilityNames.message}</p>
                 )}
-                {facilities.length === 0 && !loadingFacilities && (
+                {selectedFacilities.length > 0 && (
                   <p className="text-sm text-muted-foreground">
-                    No facilities found. Contact admin to add facilities.
+                    {selectedFacilities.length} facilit{selectedFacilities.length > 1 ? 'ies' : 'y'} selected
                   </p>
                 )}
               </div>
@@ -328,10 +341,10 @@ export const SourceTemplateForm = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="fuelSubstanceType">Fuel/Substance Type</Label>
+                <Label htmlFor="fuelType">Fuel/Substance Type</Label>
                 <Select
-                  value={watch('fuelSubstanceType')}
-                  onValueChange={(value) => setValue('fuelSubstanceType', value)}
+                  value={watch('fuelType')}
+                  onValueChange={(value) => setValue('fuelType', value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select fuel type..." />
