@@ -61,7 +61,7 @@ const MEASUREMENT_FREQUENCIES = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Ann
 const ACTIVITY_UNITS = ['kg', 'tonnes', 'kWh', 'tonne-km', 'passenger-km', 'units', 'INR'];
 
 const formSchema = z.object({
-  facilityName: z.string().min(1, 'Facility name is required'),
+  facilityNames: z.array(z.string()).min(1, 'At least one facility must be selected'),
   businessUnit: z.string().min(1, 'Business unit is required'),
   scope3Category: z.string().min(1, 'Scope 3 category is required'),
   sourceType: z.string().min(1, 'Source type is required'),
@@ -87,8 +87,8 @@ export const Scope3SourceTemplateForm = () => {
   const [selectedEmissionFactor, setSelectedEmissionFactor] = useState<EmissionFactor | null>(null);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loadingFacilities, setLoadingFacilities] = useState(true);
-  const [showCustomFacility, setShowCustomFacility] = useState(
-    editTemplate ? editTemplate.facilityName === 'Others' || !facilities.find(f => f.name === editTemplate.facilityName) : true
+  const [selectedFacilities, setSelectedFacilities] = useState<string[]>(
+    editTemplate ? [editTemplate.facilityName] : ['Others']
   );
   const [selectedCollectors, setSelectedCollectors] = useState<string[]>(editTemplate?.assignedDataCollectors || []);
   const [selectedVerifiers, setSelectedVerifiers] = useState<string[]>(editTemplate?.assignedVerifiers || []);
@@ -96,7 +96,7 @@ export const Scope3SourceTemplateForm = () => {
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: editTemplate ? {
-      facilityName: editTemplate.facilityName,
+      facilityNames: [editTemplate.facilityName],
       businessUnit: editTemplate.businessUnit,
       scope3Category: editTemplate.scope3Category,
       sourceType: editTemplate.sourceType,
@@ -109,6 +109,7 @@ export const Scope3SourceTemplateForm = () => {
       dataSource: editTemplate.dataSource,
       notes: editTemplate.notes,
     } : {
+      facilityNames: ['Others'],
       scope3Category: SCOPE3_CATEGORIES[0],
       calculationMethodology: 'GHG Protocol - Activity-based',
       countryRegion: 'India',
@@ -157,10 +158,10 @@ export const Scope3SourceTemplateForm = () => {
       return;
     }
 
-    const template: GHGSourceTemplate = {
+    const templates = data.facilityNames.map(facilityName => ({
       id: editTemplate?.id || uuidv4(),
-      scope: 3,
-      facilityName: data.facilityName,
+      scope: 3 as 3,
+      facilityName,
       businessUnit: data.businessUnit,
       sourceCategory: data.scope3Category,
       sourceDescription: data.sourceDescription,
@@ -183,24 +184,24 @@ export const Scope3SourceTemplateForm = () => {
       createdDate: editTemplate?.createdDate || new Date().toISOString(),
       createdBy: 'Current User',
       notes: data.notes || '',
-    };
+    }));
 
     const key = 'scope3_source_templates';
     const stored = localStorage.getItem(key);
-    const templates: GHGSourceTemplate[] = stored ? JSON.parse(stored) : [];
+    const existingTemplates: GHGSourceTemplate[] = stored ? JSON.parse(stored) : [];
 
     if (editTemplate) {
-      const index = templates.findIndex(t => t.id === editTemplate.id);
-      if (index >= 0) templates[index] = template;
+      const index = existingTemplates.findIndex(t => t.id === templates[0].id);
+      if (index >= 0) existingTemplates[index] = templates[0];
     } else {
-      templates.push(template);
+      existingTemplates.push(...templates);
     }
 
-    localStorage.setItem(key, JSON.stringify(templates));
+    localStorage.setItem(key, JSON.stringify(existingTemplates));
 
     toast({
-      title: editTemplate ? "Source Updated" : "Source Defined",
-      description: `${template.sourceDescription} has been ${editTemplate ? 'updated' : 'saved'} successfully.`,
+      title: editTemplate ? "Source Updated" : `Source${templates.length > 1 ? 's' : ''} Defined`,
+      description: `${templates[0].sourceDescription} has been ${editTemplate ? 'updated' : `saved for ${templates.length} facilit${templates.length > 1 ? 'ies' : 'y'}`}.`,
     });
 
     navigate('/ghg-accounting');
@@ -230,52 +231,82 @@ export const Scope3SourceTemplateForm = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="facilityName">Facility/Location *</Label>
-                {!showCustomFacility ? (
-                  <Select 
-                    onValueChange={(value) => {
-                      if (value === 'Others') {
-                        setShowCustomFacility(true);
-                        setValue('facilityName', '');
-                      } else {
-                        setValue('facilityName', value);
-                      }
-                    }} 
-                    defaultValue={editTemplate?.facilityName !== 'Others' ? editTemplate?.facilityName : undefined}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select facility" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {facilities.map(facility => (
-                        <SelectItem key={facility.id} value={facility.name}>
-                          {facility.name} {facility.code && `(${facility.code})`}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="Others">Others (Specify)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div className="flex gap-2">
-                    <Input 
-                      {...register('facilityName')} 
-                      placeholder="Enter custom facility name"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setShowCustomFacility(false);
-                        setValue('facilityName', '');
-                      }}
+            <div className="space-y-2">
+              <Label htmlFor="facilityNames">Facilities *</Label>
+              <Select
+                value={selectedFacilities.length === 1 ? selectedFacilities[0] : undefined}
+                onValueChange={(value) => {
+                  const newSelected = selectedFacilities.includes(value)
+                    ? selectedFacilities.filter(f => f !== value)
+                    : [...selectedFacilities, value];
+                  setSelectedFacilities(newSelected);
+                  setValue('facilityNames', newSelected);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue>
+                    {selectedFacilities.length === 0 
+                      ? "Select facilities..."
+                      : `${selectedFacilities.length} facilit${selectedFacilities.length > 1 ? 'ies' : 'y'} selected`}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px] overflow-y-auto">
+                  <SelectItem value="Others">Others</SelectItem>
+                  {loadingFacilities ? (
+                    <div className="p-2 text-sm text-muted-foreground">Loading facilities...</div>
+                  ) : (
+                    facilities.map((facility) => (
+                      <SelectItem key={facility.id} value={facility.name}>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedFacilities.includes(facility.name)}
+                            onChange={() => {}}
+                            className="rounded pointer-events-none"
+                          />
+                          <div className="flex flex-col">
+                            <span className="font-medium">{facility.name}</span>
+                            {(facility.code || facility.location) && (
+                              <span className="text-xs text-muted-foreground">
+                                {facility.code && `${facility.code}`}
+                                {facility.code && facility.location && ' • '}
+                                {facility.location && facility.location}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+              {errors.facilityNames && (
+                <p className="text-sm text-destructive">{errors.facilityNames.message}</p>
+              )}
+              {selectedFacilities.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {selectedFacilities.map((facility) => (
+                    <span
+                      key={facility}
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-accent text-accent-foreground rounded-md text-sm"
                     >
-                      Back
-                    </Button>
-                  </div>
-                )}
-                {errors.facilityName && <p className="text-sm text-destructive">{errors.facilityName.message}</p>}
-              </div>
+                      {facility}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newSelected = selectedFacilities.filter(f => f !== facility);
+                          setSelectedFacilities(newSelected);
+                          setValue('facilityNames', newSelected);
+                        }}
+                        className="hover:text-destructive"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
 
               <div className="space-y-2">
                 <Label htmlFor="businessUnit">Business Unit *</Label>
