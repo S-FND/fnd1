@@ -58,6 +58,17 @@ const EHSTrainingForm: React.FC<EHSTrainingFormProps> = ({ onComplete }) => {
     setIsSubmitting(true);
 
     try {
+      const entityId = JSON.parse(localStorage.getItem('fandoro-user') || '{}').entityId;
+      if (!entityId) {
+        toast({
+          title: "Entity ID Missing",
+          description: "Cannot submit training without an entity ID.",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       // Convert form data to DTO format
       const trainingData = {
         name: formData.name,
@@ -68,7 +79,8 @@ const EHSTrainingForm: React.FC<EHSTrainingFormProps> = ({ onComplete }) => {
         startTime: formData.time,
         duration: formData.duration,
         location: formData.location,
-        attendees: formData.attendees
+        attendees: formData.attendees,
+        entityId
       };
 
       const response: any = await httpClient.post('ehs/trainings', trainingData);
