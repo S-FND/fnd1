@@ -16,7 +16,7 @@ const EHSTrainingsList = () => {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['ehs-trainings'],
     queryFn: async () => {
-      const response: any = await httpClient.get('ehs/trainings/all');
+      const response: any = await httpClient.get('ehs/trainings');
       return response.data || response; // The API returns { data: [...] } or just [...]
     },
   });
@@ -150,7 +150,7 @@ const EHSTrainingsList = () => {
               </CardContent>
               <CardFooter className="p-4">
                 <Button variant="outline" className="w-full" asChild>
-                  <Link to={`/ehs-trainings/${training.id}`}>View Training Details</Link>
+                  <Link to={`/ehs-trainings/${training._id}`}>View Training Details</Link>
                 </Button>
               </CardFooter>
             </Card>

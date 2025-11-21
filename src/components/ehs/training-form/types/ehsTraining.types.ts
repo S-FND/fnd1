@@ -18,7 +18,8 @@ export enum TrainingStatus {
   }
   
   export interface EHSTraining {
-    id: string;
+    _id: string;
+    id?: string;
     name: string;
     description: string;
     clientCompany: string;
