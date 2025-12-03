@@ -141,7 +141,7 @@ const IRLPage = () => {
             {/* <TabsTrigger value="warehouse">Warehouse</TabsTrigger> */}
             <TabsTrigger value="facility">Facility</TabsTrigger>
             <TabsTrigger value="governance">Governance</TabsTrigger>
-            <TabsTrigger value="custom">custom</TabsTrigger>
+            <TabsTrigger value="custom">Custom</TabsTrigger>
           </TabsList>
           
           <TabsContent value="company">
