@@ -1,4 +1,3 @@
-// IRLComplianceTable.tsx
 import React, { useState, useEffect } from 'react';
 import {
   Card,
@@ -22,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { logger } from '@/hooks/logger';
+import { httpClient } from '@/lib/httpClient';
 
 const TEXT_INPUT_KEYS = ['type_of_servers_used', 'cloud_servers_used', 'scope_data_stored_servers', 'name_of_contractors',
   'name_of_refrigerants',
@@ -36,16 +36,32 @@ interface ComplianceItem {
   attachment: File[];
   notes: string;
   details?: string;
-  type?: 'default' | 'it-security' | 'governance'; // Add more types as needed
+  type?: 'default' | 'it-security' | 'governance';
 }
 
 interface IRLComplianceTableProps {
   title: string;
   description: string;
   items: Array<{ key: string; name: string }>;
-  type?: 'default' | 'it-security' | 'governance'; // Add more types as needed
+  type?: 'default' | 'it-security' | 'governance';
   buttonEnabled?: boolean;
 }
+
+const fetchCompanyConfiguration = async (entityId: string, category: string) => {
+  try {
+    const response: any = await httpClient.get(
+      `company-irl/${entityId}/irl-config?category=${encodeURIComponent(category)}`
+    );
+    
+    if (response?.data?.status === true) {
+      return response.data.data?.configuration?.enabledItems || [];
+    }
+    return [];
+  } catch (error) {
+    console.error('Error fetching company configuration:', error);
+    return [];
+  }
+};
 
 const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   title,
@@ -54,18 +70,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   type = 'default',
   buttonEnabled,
 }) => {
-  const [complianceItems, setComplianceItems] = useState<ComplianceItem[]>(
-    items.map((item, index) => ({
-      id: index + 1,
-      key: item.key,     // ✅ add key
-      name: item.name,
-      isApplicable: '',
-      attachment: [],
-      notes: '',
-      type
-    }))
-  );
-
+  const [complianceItems, setComplianceItems] = useState<ComplianceItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -90,7 +95,70 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   };
 
   const entityId = getUserEntityId();
-  // Get the appropriate API functions based on the title
+
+  const getCategoryFromTitle = (title: string): string => {
+    const mapping: Record<string, string> = {
+      'Compliance': 'compliance',
+      'Business Operations': 'business_operations',
+      'Management': 'management',
+      'IT Security & Data Privacy': 'it_security',
+      'Governance': 'governance',
+      'Facility Information': 'facility'
+    };
+    
+    return mapping[title] || title.toLowerCase().replace(/\s+/g, '_');
+  };
+
+  useEffect(() => {
+    const loadCompanyConfig = async () => {
+      if (!entityId) return;
+      
+      try {
+        const category = getCategoryFromTitle(title);
+        const enabledItemsList = await fetchCompanyConfiguration(entityId, category);
+        
+        let filtered:any = items;
+        if (enabledItemsList.length > 0) {
+          filtered = items.filter(item => enabledItemsList.includes(item.key));
+        }
+        
+        setComplianceItems(
+          filtered.map((item, index) => ({
+            id: index + 1,
+            key: item.key,
+            name: item.name,
+            isApplicable: '',
+            attachment: [],
+            notes: '',
+            type
+          }))
+        );
+        
+        if (filtered.length > 0) {
+          await loadData(filtered);
+        } else {
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Error loading company config:', error);
+        setComplianceItems(
+          items.map((item, index) => ({
+            id: index + 1,
+            key: item.key,
+            name: item.name,
+            isApplicable: '',
+            attachment: [],
+            notes: '',
+            type
+          }))
+        );
+        setIsLoading(false);
+      }
+    };
+    
+    loadCompanyConfig();
+  }, [entityId, title, items]);
+
   const getAPIFunctions = () => {
     switch (title.toLowerCase()) {
       case 'business operations':
@@ -98,92 +166,79 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       case 'compliance':
         return { fetch: fetchComplianceData, update: updateComplianceData };
       case 'management':
-        return {
-          fetch: fetchManagementData, update: updateManagementData
-        };
+        return { fetch: fetchManagementData, update: updateManagementData };
       case 'it security & data privacy':
-        return {
-          fetch: fetchITSecurityData, update: updateITSecurityData
-        };
+        return { fetch: fetchITSecurityData, update: updateITSecurityData };
       case 'governance':
-      return { fetch: fetchGovernanceData, update: updateGovernanceData
-       };
+        return { fetch: fetchGovernanceData, update: updateGovernanceData };
       case 'facility information':
-        return {
-          fetch: fetchFacilityData, update: updateFacilityData
-        };
+        return { fetch: fetchFacilityData, update: updateFacilityData };
+      default:
+        return { fetch: fetchComplianceData, update: updateComplianceData };
     }
   };
 
-  
-    const loadData = async () => {
-      if (!entityId) {
-        setError('Please complete your company profile in the Administration section before submitting IRL details.');
-        setIsLoading(false);
-        return;
+  const loadData = async (filteredItems = complianceItems) => {
+    if (!entityId) {
+      setError('Please complete your company profile in the Administration section before submitting IRL details.');
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { fetch } = getAPIFunctions();
+      const response: any = await fetch(entityId);
+
+      if (!response || response.isApplicable === false) {
+        toast.error('No data found');
       }
 
-      try {
-        const { fetch } = getAPIFunctions();
-        const response: any = await fetch(entityId);
+      const allowedKeys = new Set(filteredItems.map(item => item.key));
+      const filteredResponse = Object.keys(response)
+        .filter(key => allowedKeys.has(key))
+        .reduce((obj, key) => {
+          obj[key] = response[key];
+          return obj;
+        }, {});
 
-        if (!response || response.isApplicable === false) {
-          toast.error('No data found');
+      const updatedItems = filteredItems.map(item => {
+        const key = item.key;
+        const itemData = filteredResponse[key] || {};
+
+        const isApplicable = itemData.isApplicable || itemData.answer || '';
+        const notes = itemData.reason || '';
+        
+        const existingFiles = itemData.file_path || itemData.existing_files || [];
+        if (existingFiles.length > 0) {
+          setFilePaths(prev => ({
+            ...prev,
+            [key]: existingFiles.map(getS3FilePath)
+          }));
         }
 
-        // Create map of known compliance keys for filtering
-        const allowedKeys = new Set(complianceItems.map(item => item.key));
+        if (TEXTAREA_KEYS.includes(key) || TEXT_INPUT_KEYS.includes(key)) {
+          return {
+            ...item,
+            isApplicable: response[key] || '',
+            notes: ''
+          };
+        }
 
-        // Only pick values for known keys
-        const filteredResponse = Object.keys(response)
-          .filter(key => allowedKeys.has(key))
-          .reduce((obj, key) => {
-            obj[key] = response[key];
-            return obj;
-          }, {});
+        return {
+          ...item,
+          isApplicable,
+          notes,
+          attachment: []
+        };
+      });
 
-          const updatedItems = complianceItems.map(item => {
-            const key = item.key;
-            const itemData = filteredResponse[key] || {};
-          
-            // Handle both old and new response formats
-            const isApplicable = itemData.isApplicable || itemData.answer || '';
-            const notes = itemData.reason || '';
-            // Set existing file paths (handling both formats)
-            const existingFiles = itemData.file_path || itemData.existing_files || [];
-            if (existingFiles.length > 0) {
-              setFilePaths(prev => ({
-                ...prev,
-                [key]: existingFiles.map(getS3FilePath)
-              }));
-            }
-          
-            if (TEXTAREA_KEYS.includes(key) || TEXT_INPUT_KEYS.includes(key)) {
-              return {
-                ...item,
-                isApplicable: response[key] || '',
-                notes: ''
-              };
-            }
-          
-            return {
-              ...item,
-              isApplicable,
-              notes,
-              attachment: []
-            };
-          });
+      setComplianceItems(updatedItems);
 
-        setComplianceItems(updatedItems);
-
-      } catch (err) {
-        // console.error(`Error loading ${title} data:`, err);
-        // setError(`Failed to load ${title} data`);
-        // toast.error(`Failed to load ${title} data`);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    } catch (err) {
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -221,10 +276,6 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   
     complianceItems.forEach(item => {
       const key = item.key;
-        // if (!item.status) {
-        //   newErrors[key] = 'Please select a status';
-        //   isValid = false;
-        // } else
          if (item.isApplicable === 'yes') {
           const hasFiles = (
             (filePaths[key]?.length > 0) || 
@@ -239,7 +290,6 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
           isValid = false;
         }
     });
-    // console.log('object',newErrors);
     setErrors(newErrors);
     return isValid;
   };
@@ -305,28 +355,24 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   const handleFileUpload = (id: number, files: FileList | null) => {
     if (!files || files.length === 0) return;
   
-    // Get current total file count for this item
     const currentItem = complianceItems.find(item => item.id === id);
     const existingFiles = currentItem?.attachment.length || 0;
     const newFiles = Array.from(files);
     const totalFiles = existingFiles + newFiles.length;
   
-    // ✅ Enforce max 10 files TOTAL (existing + new)
     if (totalFiles > 10) {
       toast.error('You can upload a maximum of 10 files.');
       
-      // ⚠️ CRITICAL: Reset the file input IMMEDIATELY
       setTimeout(() => {
         const input = document.getElementById(`file-upload-${id}`) as HTMLInputElement | null;
         if (input) {
-          input.value = ''; // Clear selected files
+          input.value = '';
         }
       }, 0);
       
-      return; // ❌ Do NOT update state
+      return;
     }
   
-    // ✅ Only update state if valid
     setComplianceItems(items =>
       items.map(item =>
         item.id === id
@@ -351,23 +397,19 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       return fileName || '';
     }
     
-    // Split by last dot to preserve extension
     const lastDotIndex = fileName.lastIndexOf('.');
     if (lastDotIndex <= 0 || lastDotIndex === fileName.length - 1) {
-      // No extension or just a dot at end
       return fileName
         .replace(/\./g, '_')
         .replace(/\s+/g, '_');
     }
     
-    // Split name and extension
     const namePart = fileName.substring(0, lastDotIndex);
     const extension = fileName.substring(lastDotIndex);
     
-    // Sanitize name part (convert dots/spaces to underscores)
     const sanitizedBaseName = namePart
-      .replace(/\./g, '_')  // Convert dots in name to underscores
-      .replace(/\s+/g, '_'); // Convert spaces to underscores
+      .replace(/\./g, '_')
+      .replace(/\s+/g, '_');
     
     return sanitizedBaseName + extension;
   };
@@ -404,7 +446,6 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
           </label>
         </div>
   
-        {/* Existing file from server */}
         {filePaths[key]?.map((fileUrl, i) => {
           const fileName = fileUrl.split('/').pop() || '';
           
@@ -418,7 +459,6 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
                   className="truncate flex-1 text-blue-600 hover:text-blue-800 underline"
                   title={fileName}
                   onClick={(e) => {
-                    // Ensure it opens in new tab, not download
                     e.preventDefault();
                     window.open(fileUrl, '_blank');
                   }}
@@ -442,7 +482,6 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
           );
         })}
   
-        {/* Newly uploaded file */}
         {item.attachment.map((file, fileIndex) => {
           return (
             <div key={fileIndex} className="flex items-center justify-between bg-gray-50 p-1 py-0.5 rounded text-sx">
@@ -454,7 +493,6 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
                   className="truncate flex-1 text-blue-600 hover:text-blue-800 underline"
                   title={file.name}
                   onClick={(e) => {
-                    // Ensure it opens in new tab, not download
                     e.preventDefault();
                     const url = URL.createObjectURL(file);
                     window.open(url, '_blank');
