@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import OutsourcedServicesSection from './OutsourcedServicesSection';
 import { OutsourcedService } from './types';
 import { Loader2 } from 'lucide-react';
 import { logger } from '@/hooks/logger';
-import { httpClient } from '@/lib/httpClient'; // Add this import
+import { httpClient } from '@/lib/httpClient';
 
 interface EmployeeData {
   function: string;
@@ -59,6 +59,16 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
   // State to track which questions are enabled
   const [enabledQuestions, setEnabledQuestions] = useState<string[]>([]);
   
+  // Memoized enabled questions list with order preserved
+  const enabledQuestionsOrdered = useMemo(() => {
+    if (configLoading) return allHRQuestions;
+    if (enabledQuestions.length === 0) return allHRQuestions;
+    
+    return allHRQuestions.filter(question => 
+      enabledQuestions.includes(question.key)
+    );
+  }, [enabledQuestions, configLoading]);
+
   const [formData, setFormData] = useState({
     workingHours: '',
     shiftTiming: '',
@@ -127,6 +137,16 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
     if (enabledQuestions.length === 0) return true;
     
     return enabledQuestions.includes(questionKey);
+  };
+
+  // Get question number for a specific key
+  const getQuestionNumber = (questionKey: string) => {
+    if (configLoading || enabledQuestions.length === 0) {
+      return allHRQuestions.findIndex(q => q.key === questionKey) + 1;
+    }
+    
+    const index = enabledQuestionsOrdered.findIndex(q => q.key === questionKey);
+    return index !== -1 ? index + 1 : null;
   };
 
   useEffect(() => {
@@ -473,7 +493,7 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
             {/* 1. Working hours for FTEs - Only show if enabled */}
             {isQuestionEnabled('working_hours') && (
               <div className="space-y-2">
-                <Label htmlFor="workingHours">1. Working hours for FTEs</Label>
+                <Label htmlFor="workingHours">{getQuestionNumber('working_hours')}. Working hours for FTEs</Label>
                 <Input
                   id="workingHours"
                   value={formData.workingHours}
@@ -485,7 +505,7 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
             {/* 2. Shift timing for contract workers - Only show if enabled */}
             {isQuestionEnabled('shift_timing') && (
               <div className="space-y-4">
-                <Label>2. Shift timing for contract workers (if any)</Label>
+                <Label>{getQuestionNumber('shift_timing')}. Shift timing for contract workers (if any)</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="shiftTiming">Shift timing</Label>
@@ -526,6 +546,7 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
             {/* 3. Outsourced Services - Only show if enabled */}
             {isQuestionEnabled('outsourced_services') && (
               <OutsourcedServicesSection
+                questionNumber={getQuestionNumber('outsourced_services')}
                 outsourcedServices={outsourcedServices}
                 setOutsourcedServices={setOutsourcedServices}
               />
@@ -534,7 +555,7 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
             {/* 4. List of major facilities - Only show if enabled */}
             {isQuestionEnabled('facilities_list') && (
               <div className="space-y-2">
-                <Label htmlFor="facilitiesList">4. List of major facilities/Units/Departments (Manufacturing, Laboratory, Cafeteria) provided by property owner in the office space (With number of each facility)</Label>
+                <Label htmlFor="facilitiesList">{getQuestionNumber('facilities_list')}. List of major facilities/Units/Departments (Manufacturing, Laboratory, Cafeteria) provided by property owner in the office space (With number of each facility)</Label>
                 <Textarea
                   id="facilitiesList"
                   value={formData.facilitiesList}
@@ -546,7 +567,7 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
             {/* 5. Product safety certifications - Only show if enabled */}
             {isQuestionEnabled('product_safety') && (
               <div className="space-y-2">
-                <Label htmlFor="productSafetyCertifications">5. Certifications (if any) for product safety</Label>
+                <Label htmlFor="productSafetyCertifications">{getQuestionNumber('product_safety')}. Certifications (if any) for product safety</Label>
                 <Textarea
                   id="productSafetyCertifications"
                   value={formData.productSafetyCertifications}
@@ -558,7 +579,7 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
             {/* 6. Emergency incidents - Only show if enabled */}
             {isQuestionEnabled('emergency_incidents') && (
               <div className="space-y-2">
-                <Label htmlFor="emergencyIncidents">6. Have the employees (on-roll, contract) been involved in any emergency incidents or accidents occurred in the workplace or during work related activities?</Label>
+                <Label htmlFor="emergencyIncidents">{getQuestionNumber('emergency_incidents')}. Have the employees (on-roll, contract) been involved in any emergency incidents or accidents occurred in the workplace or during work related activities?</Label>
                 <Textarea
                   id="emergencyIncidents"
                   value={formData.emergencyIncidents}
@@ -571,7 +592,7 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
             {isQuestionEnabled('employees_table') && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3>7. Human Resource Management - Employees</h3>
+                  <h3>{getQuestionNumber('employees_table')}. Human Resource Management - Employees</h3>
                   <Button onClick={addEmployeeRow} size="sm" disabled={isLoading || !buttonEnabled}>Add Row</Button>
                 </div>
 
@@ -668,7 +689,7 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
             {isQuestionEnabled('workers_table') && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3>8. Human Resource Management - Workers</h3>
+                  <h3>{getQuestionNumber('workers_table')}. Human Resource Management - Workers</h3>
                   <Button onClick={addWorkerRow} size="sm" disabled={isLoading || !buttonEnabled}>Add Row</Button>
                 </div>
 
@@ -765,7 +786,7 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
             {isQuestionEnabled('differently_abled') && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3>9. Human Resource Management (Differently Abled Personnel)</h3>
+                  <h3>{getQuestionNumber('differently_abled')}. Human Resource Management (Differently Abled Personnel)</h3>
                   <Button onClick={addDifferentlyAbledRow} size="sm" disabled={isLoading || !buttonEnabled}>Add Row</Button>
                 </div>
 
@@ -861,7 +882,7 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
             {/* 10. Key Managerial Positions / Board of Directors - Only show if enabled */}
             {isQuestionEnabled('board_managerial') && (
               <div className="space-y-4">
-                <h3>10. Key Managerial Positions / Board of Directors</h3>
+                <h3>{getQuestionNumber('board_managerial')}. Key Managerial Positions / Board of Directors</h3>
 
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse border border-gray-300">
@@ -921,7 +942,7 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
             {/* 11. Retrenchment details - Only show if enabled */}
             {isQuestionEnabled('retrenchment_details') && (
               <div className="space-y-2">
-                <Label htmlFor="retrenchmentDetails">11. Any retrenchment or mass dismissal of employees conducted?</Label>
+                <Label htmlFor="retrenchmentDetails">{getQuestionNumber('retrenchment_details')}. Any retrenchment or mass dismissal of employees conducted?</Label>
                 <Textarea
                   id="retrenchmentDetails"
                   value={formData.retrenchmentDetails}

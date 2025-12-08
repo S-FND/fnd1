@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -7,11 +6,13 @@ import { Plus, Trash2 } from 'lucide-react';
 import { OutsourcedService } from './types';
 
 interface OutsourcedServicesSectionProps {
+  questionNumber: number; // Add this prop
   outsourcedServices: OutsourcedService[];
   setOutsourcedServices: (services: OutsourcedService[]) => void;
 }
 
 const OutsourcedServicesSection: React.FC<OutsourcedServicesSectionProps> = ({ 
+  questionNumber, // Add this parameter
   outsourcedServices, 
   setOutsourcedServices 
 }) => {
@@ -25,7 +26,7 @@ const OutsourcedServicesSection: React.FC<OutsourcedServicesSectionProps> = ({
 
   return (
     <div className="space-y-4">
-      <Label>3. Any outsourced services through professional services agencies?</Label>
+      <Label>{questionNumber}. Any outsourced services through professional services agencies?</Label>
       {outsourcedServices.map((service, index) => (
         <div key={index} className="border rounded-lg p-4 space-y-4">
           <div className="flex justify-between items-center">

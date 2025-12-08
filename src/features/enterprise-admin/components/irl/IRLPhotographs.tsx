@@ -498,11 +498,11 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
         <CardTitle>Photographs</CardTitle>
         <CardDescription>
           Upload required photographs for office and products
-          {!configLoading && enabledQuestions.length > 0 && (
+          {/* {!configLoading && enabledQuestions.length > 0 && (
             <div className="text-sm text-green-600 mt-1">
               Showing {enabledQuestions.length} of {allPhotographQuestions.length} configured questions
             </div>
-          )}
+          )} */}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
