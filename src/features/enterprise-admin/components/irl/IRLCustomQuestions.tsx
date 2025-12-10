@@ -386,8 +386,66 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
         };
       }
     }
+
+    if (status === 'Not Applicable') {
+        if (!comment.trim()) {
+          return {
+            isValid: false,
+            message: `"${question.question_text || 'Question'}": Reason is required when status is "Not Applicable"`
+          };
+        }
+      }
     
     return { isValid: true };
+  };
+
+// 2. NEW validation for text, textarea, number
+const validateOtherQuestion = (question: CustomQuestion) => {
+    const answer = answers[question._id]?.answer;
+    
+    // For text, textarea, number fields
+    if (['text', 'textarea', 'number'].includes(question.question_type)) {
+      const stringAnswer = answer as string || '';
+      if (!stringAnswer.trim()) {
+        return {
+          isValid: false,
+          message: `"${question.question_text || 'Question'}": This field is required`
+        };
+      }
+    }
+    
+    // For dropdown
+    if (question.question_type === 'dropdown') {
+      const stringAnswer = answer as string || '';
+      if (!stringAnswer.trim()) {
+        return {
+          isValid: false,
+          message: `"${question.question_text || 'Question'}": Please select an option`
+        };
+      }
+    }
+    
+    // For checkbox
+    if (question.question_type === 'checkbox') {
+      const arrayAnswer = answer as string[] || [];
+      if (arrayAnswer.length === 0) {
+        return {
+          isValid: false,
+          message: `"${question.question_text || 'Question'}": Please select at least one option`
+        };
+      }
+    }
+    
+    return { isValid: true };
+  };
+  
+  // 3. Main validation function
+  const validateQuestion = (question: CustomQuestion) => {
+    if (question.question_type === 'file') {
+      return validateFileQuestion(question); // Use existing file validation
+    } else {
+      return validateOtherQuestion(question); // Use new validation for others
+    }
   };
 
   const handleSave = async () => {
@@ -546,21 +604,21 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
   };
 
   const handleSubmit = async () => {
-    const fileQuestions = questions.filter(q => q.question_type === 'file');
     const invalidQuestions: Array<{isValid: boolean, message: string}> = [];
-    
-    fileQuestions.forEach(question => {
-      const validation:any = validateFileQuestion(question);
-      if (!validation.isValid) {
+  
+    questions.forEach(question => {
+        const validation: any = validateQuestion(question);
+        if (!validation.isValid) {
         invalidQuestions.push(validation);
-      }
+        }
     });
     
+    // Show ALL validation errors
     if (invalidQuestions.length > 0) {
-      invalidQuestions.forEach(validation => {
+        invalidQuestions.forEach(validation => {
         toast.error(validation.message);
-      });
-      return;
+        });
+        return;
     }
 
     if (!buttonEnabled) {
@@ -725,82 +783,110 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     const existingFileUrls = filePaths[question._id] || [];
     const status = statuses[question._id] || 'Yes';
     const comment = comments[question._id] || '';
-
+    const validation = validateQuestion(question);
     switch (question.question_type) {
       case 'text':
         return (
-          <Input
-            value={answer as string}
-            onChange={(e) => handleAnswerChange(question._id, e.target.value)}
-            placeholder="Enter your answer..."
-            disabled={!buttonEnabled}
-          />
+          <div className="space-y-1">
+            <Input
+              value={answer as string}
+              onChange={(e) => handleAnswerChange(question._id, e.target.value)}
+              placeholder="Enter your answer..."
+              disabled={!buttonEnabled}
+              className={!validation.isValid ? 'border-red-500' : ''}
+            />
+            {!validation.isValid && (
+              <p className="text-sm text-red-600">This field is required</p>
+            )}
+          </div>
         );
 
       case 'textarea':
         return (
-          <Textarea
-            value={answer as string}
-            onChange={(e) => handleAnswerChange(question._id, e.target.value)}
-            placeholder="Enter your detailed answer..."
-            rows={4}
-            disabled={!buttonEnabled}
-          />
+            <div className="space-y-1">
+                <Textarea
+                value={answer as string}
+                onChange={(e) => handleAnswerChange(question._id, e.target.value)}
+                placeholder="Enter your detailed answer..."
+                rows={4}
+                disabled={!buttonEnabled}
+                className={!validation.isValid ? 'border-red-500' : ''}
+                />
+                {!validation.isValid && (
+                <p className="text-sm text-red-600">This field is required</p>
+                )}
+            </div>
         );
 
       case 'number':
         return (
-          <Input
-            type="number"
-            value={answer as string}
-            onChange={(e) => handleAnswerChange(question._id, e.target.value)}
-            placeholder="Enter a number..."
-            disabled={!buttonEnabled}
-          />
+            <div className="space-y-1">
+                <Input
+                type="number"
+                value={answer as string}
+                onChange={(e) => handleAnswerChange(question._id, e.target.value)}
+                placeholder="Enter a number..."
+                disabled={!buttonEnabled}
+                className={!validation.isValid ? 'border-red-500' : ''}
+                />
+                {!validation.isValid && (
+                <p className="text-sm text-red-600">This field is required</p>
+                )}
+            </div>
         );
 
       case 'dropdown':
         return (
-          <Select
-            value={answer as string}
-            onValueChange={(value) => handleAnswerChange(question._id, value)}
-            disabled={!buttonEnabled}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select an option" />
-            </SelectTrigger>
-            <SelectContent>
-              {question.options?.map((option, optionIndex) => (
-                <SelectItem key={optionIndex} value={option}>
-                  {option}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <div className="space-y-1">
+                <Select
+                value={answer as string}
+                onValueChange={(value) => handleAnswerChange(question._id, value)}
+                disabled={!buttonEnabled}
+                >
+                <SelectTrigger className={!validation.isValid ? 'border-red-500' : ''}>
+                    <SelectValue placeholder="Select an option" />
+                </SelectTrigger>
+                <SelectContent>
+                    {question.options?.map((option, optionIndex) => (
+                    <SelectItem key={optionIndex} value={option}>
+                        {option}
+                    </SelectItem>
+                    ))}
+                </SelectContent>
+                </Select>
+                {!validation.isValid && (
+                <p className="text-sm text-red-600">Please select an option</p>
+                )}
+            </div>
         );
 
       case 'checkbox':
         return (
-          <div className="space-y-2">
-            {question.options?.map((option:any, optionIndex) => {
-              const isChecked = Array.isArray(answer) ? answer.includes(option) : false;
-              return (
-                <div key={optionIndex} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`${question._id}-${optionIndex}`}
-                    checked={isChecked}
-                    onCheckedChange={(checked) => 
-                      handleCheckboxChange(question._id, option, checked as boolean)
-                    }
-                    disabled={!buttonEnabled}
-                  />
-                  <Label htmlFor={`${question._id}-${optionIndex}`} className="text-sm">
-                    {option}
-                  </Label>
+            <div className="space-y-2">
+                <div className={!validation.isValid ? 'border border-red-300 p-3 rounded-md bg-red-50' : ''}>
+                {question.options?.map((option:any, optionIndex) => {
+                    const isChecked = Array.isArray(answer) ? answer.includes(option) : false;
+                    return (
+                    <div key={optionIndex} className="flex items-center space-x-2">
+                        <Checkbox
+                        id={`${question._id}-${optionIndex}`}
+                        checked={isChecked}
+                        onCheckedChange={(checked) => 
+                            handleCheckboxChange(question._id, option, checked as boolean)
+                        }
+                        disabled={!buttonEnabled}
+                        />
+                        <Label htmlFor={`${question._id}-${optionIndex}`} className="text-sm">
+                        {option}
+                        </Label>
+                    </div>
+                    );
+                })}
                 </div>
-              );
-            })}
-          </div>
+                {!validation.isValid && (
+                <p className="text-sm text-red-600">Please select at least one option</p>
+                )}
+            </div>
         );
 
       case 'file':
@@ -835,11 +921,12 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
               {/* Attachment Column */}
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Attachment</Label>
-                {status === 'No' ? (
+                {status === 'No' || status === 'Not Applicable' ? (
                   <div className="text-sm text-gray-500 italic py-2">
                     No file
                   </div>
                 ) : (
+                    <div className="space-y-4">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <div className="relative flex-1">
@@ -919,11 +1006,19 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                       </div>
                     )}
                   </div>
+                  {!validation.isValid && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                      <p className="text-sm text-red-600">
+                        {validation.message.replace(/^"[^"]+": /, '')}
+                      </p>
+                    </div>
+                  )}
+                </div>
                 )}
                 
                 <div className="text-xs text-gray-500">
-                  {status === 'No' 
-                    ? "No file upload required when status is 'No'"
+                  {status === 'No' || status === 'Not Applicable' 
+                    ? `No file upload required when status is "${status}"`
                     : files.length > 0 
                       ? `${files.length} new file(s) selected` 
                       : existingFileUrls.length > 0 
@@ -951,6 +1046,11 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                   <p className="text-sm text-red-600 mt-1">
                     Reason is required when status is "No"
                   </p>
+                )}
+                {status === 'Not Applicable' && (
+                    <p className="text-sm text-red-600 mt-1">
+                    Reason is required when status is "Not Applicable"
+                    </p>
                 )}
               </div>
             </div>
