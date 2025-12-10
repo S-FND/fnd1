@@ -21,6 +21,7 @@ import { httpClient } from '@/lib/httpClient';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 import { toast } from 'sonner';
+import IRLCustomQuestions from '../components/irl/IRLCustomQuestions'; 
 
 const IRLPage = () => {
   logger.debug('Rendering IRLPage component');
@@ -140,6 +141,7 @@ const IRLPage = () => {
             {/* <TabsTrigger value="warehouse">Warehouse</TabsTrigger> */}
             <TabsTrigger value="facility">Facility</TabsTrigger>
             <TabsTrigger value="governance">Governance</TabsTrigger>
+            <TabsTrigger value="custom">Custom</TabsTrigger>
           </TabsList>
           
           <TabsContent value="company">
@@ -180,6 +182,11 @@ const IRLPage = () => {
 
           <TabsContent value="governance">
             <IRLGovernance buttonEnabled={buttonEnabled} />
+          </TabsContent>
+
+          <TabsContent value="custom">
+            <IRLCustomQuestions buttonEnabled={buttonEnabled} 
+            />
           </TabsContent>
         </Tabs>
       </div>

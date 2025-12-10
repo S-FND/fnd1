@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { format, isSameDay, isWithinInterval } from 'date-fns';
@@ -8,50 +7,80 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Users, Clock, MapPin, BookOpen, Calendar as CalendarIcon, Truck } from 'lucide-react';
-import { fetchEHSTrainings } from '@/data';
 import { Link } from 'react-router-dom';
+import { httpClient } from '@/lib/httpClient';
+import { EHSTraining } from './training-form/types/ehsTraining.types';
 
 const EHSTrainingsCalendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   
-  const { data: trainings } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['ehs-trainings'],
-    queryFn: fetchEHSTrainings,
+    queryFn: async () => {
+      const response: any = await httpClient.get('ehs/trainings');
+      return response.data || response;
+    },
   });
 
-  // Function to check if a day has any training activities
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading trainings...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="text-red-500 text-4xl mb-2">⚠️</div>
+          <p className="text-red-500">Error loading trainings: {(error as Error).message}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Extract the trainings array from the response and map _id to id
+  const trainings: EHSTraining[] = (data?.data || []).map(training => ({
+    ...training,
+    id: training._id,
+    _id: undefined
+  }));
+
+  const normalizeDate = (date: Date) =>
+    new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  
+
   const isDayWithTraining = (day: Date) => {
-    return trainings?.some(training => {
-      // For backwards compatibility with existing data format
-      const startDate = training.startDate ? new Date(training.startDate) : new Date(training.date);
-      const endDate = training.endDate ? new Date(training.endDate) : new Date(training.date);
-      
-      try {
-        // Check if the day is between start and end dates (inclusive)
-        return isWithinInterval(day, { start: startDate, end: endDate });
-      } catch (error) {
-        // Fallback to checking if it's the same day as the training date
-        return isSameDay(new Date(training.date), day);
-      }
+    const normalized = normalizeDate(day);
+  
+    return trainings?.some((training) => {
+      const start = normalizeDate(new Date(training.startDate || training.date));
+      const end = normalizeDate(new Date(training.endDate || training.startDate || training.date));
+  
+      return isWithinInterval(normalized, { start, end });
     });
   };
 
   // Filter trainings for the selected date
-  const trainingsForDate = trainings?.filter(training => {
+  const trainingsForDate = trainings?.filter((training) => {
     if (!selectedDate) return false;
-    
-    const startDate = training.startDate ? new Date(training.startDate) : new Date(training.date);
-    const endDate = training.endDate ? new Date(training.endDate) : new Date(training.date);
-    
-    try {
-      return isWithinInterval(selectedDate, { start: startDate, end: endDate });
-    } catch (error) {
-      return isSameDay(new Date(training.date), selectedDate);
-    }
-  }) || [];
+  
+    const normalized = normalizeDate(selectedDate);
+    const start = normalizeDate(new Date(training.startDate || training.date));
+    const end = normalizeDate(new Date(training.endDate || training.startDate || training.date));
+  
+    return isWithinInterval(normalized, { start, end });
+  });
 
   // Function to get status variant for badge
-  const getStatusVariant = (status) => {
+  const getStatusVariant = (status: string) => {
     switch (status) {
       case 'completed':
         return 'default';
@@ -63,7 +92,7 @@ const EHSTrainingsCalendar = () => {
   };
 
   // Function to get status label
-  const getStatusLabel = (status) => {
+  const getStatusLabel = (status: string) => {
     switch (status) {
       case 'completed':
         return 'Completed';
