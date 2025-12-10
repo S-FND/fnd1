@@ -1047,7 +1047,7 @@ const validateOtherQuestion = (question: CustomQuestion) => {
                     Reason is required when status is "No"
                   </p>
                 )}
-                {status === 'Not Applicable' && (
+                {status === 'Not Applicable' && !comment.trim() && (
                     <p className="text-sm text-red-600 mt-1">
                     Reason is required when status is "Not Applicable"
                     </p>
