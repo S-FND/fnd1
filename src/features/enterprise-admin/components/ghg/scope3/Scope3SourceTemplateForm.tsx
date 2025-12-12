@@ -51,10 +51,91 @@ const SCOPE3_CATEGORIES = [
 ];
 
 const SOURCE_TYPES_BY_CATEGORY: Record<string, string[]> = {
-  'Category 1 – Purchased Goods and Services': ['Raw Material Purchases', 'Packaging Materials', 'Office Supplies'],
-  'Category 4 – Upstream Transportation and Distribution': ['Freight Transport', 'Warehousing', 'Distribution'],
-  'Category 6 – Business Travel': ['Employee Air Travel', 'Rail Travel', 'Rental Cars', 'Hotel Stays'],
-  'Category 12 – End-of-Life Treatment of Sold Products': ['Product Disposal', 'Recycling', 'Waste Treatment']
+  'Category 1 – Purchased Goods and Services': [
+    'Steel & Iron', 'Aluminum', 'Copper & Brass', 'Other Metals',
+    'Plastics (PET, HDPE, PVC)', 'Rubber & Polymers',
+    'Paper & Cardboard', 'Timber & Plywood',
+    'Cement & Concrete', 'Glass', 'Bricks & Aggregates', 'Insulation Materials',
+    'Cotton & Textiles', 'Polyester & Synthetic Fabrics', 'Leather',
+    'Chemicals (Organic)', 'Chemicals (Inorganic)', 'Fertilizers', 'Paints & Coatings',
+    'Electronics & Batteries', 'Electrical Cables',
+    'Food Products (Meat)', 'Food Products (Dairy)', 'Food Products (Vegetables)', 'Beverages',
+    'Office Supplies', 'IT Services', 'Professional Services', 'Water Supply'
+  ],
+  'Category 2 – Capital Goods': [
+    'Industrial Machinery', 'Office Equipment & Furniture',
+    'Passenger Vehicles', 'Trucks & Heavy Vehicles',
+    'Building Construction', 'IT Hardware & Servers',
+    'HVAC Equipment', 'Solar Panels', 'Manufacturing Equipment'
+  ],
+  'Category 3 – Fuel- and Energy-Related Activities': [
+    'Electricity T&D Losses', 'Fuel Extraction & Processing',
+    'Diesel (Well-to-Tank)', 'Petrol (Well-to-Tank)',
+    'LPG (Well-to-Tank)', 'Natural Gas (Well-to-Tank)', 'Coal (Well-to-Tank)'
+  ],
+  'Category 4 – Upstream Transportation and Distribution': [
+    'Road Freight (HGV)', 'Road Freight (LGV)',
+    'Rail Freight', 'Sea Freight (Container)', 'Sea Freight (Bulk)',
+    'Air Freight (Long-haul)', 'Air Freight (Short-haul)',
+    'Inland Waterway', 'Multi-modal Transport'
+  ],
+  'Category 5 – Waste Generated in Operations': [
+    'Mixed Waste to Landfill', 'Organic Waste to Landfill', 'Paper Waste to Landfill',
+    'Waste Incineration', 'Waste-to-Energy',
+    'Paper Recycling', 'Plastic Recycling', 'Metal Recycling', 'Glass Recycling',
+    'Composting', 'Anaerobic Digestion',
+    'Wastewater Treatment', 'Hazardous Waste', 'E-Waste'
+  ],
+  'Category 6 – Business Travel': [
+    'Domestic Flights', 'Short-haul International Flights',
+    'Long-haul Flights (Economy)', 'Long-haul Flights (Business)', 'Long-haul Flights (First)',
+    'Car (Petrol)', 'Car (Diesel)', 'Car (Hybrid)', 'Car (Electric)',
+    'Taxi/Cab', 'Rail (National)', 'Rail (International)',
+    'Bus/Coach', 'Hotel Stays', 'Hotel Stays (Luxury)', 'Ferry'
+  ],
+  'Category 7 – Employee Commuting': [
+    'Car Commute (Petrol)', 'Car Commute (Diesel)', 'Car Commute (Electric)',
+    'Motorbike', 'Scooter (Petrol)', 'E-Scooter/E-Bike',
+    'Bus', 'Metro/Subway', 'Local Train', 'Auto-rickshaw',
+    'Bicycle', 'Walking', 'Carpool', 'Work From Home'
+  ],
+  'Category 8 – Upstream Leased Assets': [
+    'Leased Office Space', 'Leased Warehouse', 'Leased Retail Space',
+    'Leased Facility Electricity', 'Leased Facility Gas',
+    'Leased Vehicles', 'Leased Equipment'
+  ],
+  'Category 9 – Downstream Transportation and Distribution': [
+    'Road Freight (Downstream)', 'Light Goods Vehicles', 'Courier Services',
+    'Rail Freight (Downstream)', 'Sea Freight (Downstream)', 'Air Freight (Downstream)',
+    'Retail Storage', 'Cold Storage'
+  ],
+  'Category 10 – Processing of Sold Products': [
+    'Manufacturing Processing', 'Assembly Operations', 'Packaging',
+    'Industrial Energy Use', 'Heat Treatment', 'Chemical Processing'
+  ],
+  'Category 11 – Use of Sold Products': [
+    'Direct Energy Consumption', 'Indirect Energy Consumption',
+    'Fuel Combustion in Products', 'Electricity Use in Products',
+    'Refrigerant Leakage', 'Vehicle Fuel Use'
+  ],
+  'Category 12 – End-of-Life Treatment of Sold Products': [
+    'Product Landfill', 'Product Incineration', 'Product Recycling',
+    'E-Waste Processing', 'Hazardous Waste Treatment',
+    'Composting', 'Reuse/Refurbishment'
+  ],
+  'Category 13 – Downstream Leased Assets': [
+    'Leased Buildings', 'Leased Retail Locations',
+    'Leased Vehicles', 'Leased Equipment',
+    'Energy Consumption in Leased Assets'
+  ],
+  'Category 14 – Franchises': [
+    'Franchise Electricity', 'Franchise Natural Gas', 'Franchise Fuel',
+    'Franchise Building Operations', 'Franchise Equipment'
+  ],
+  'Category 15 – Investments': [
+    'Equity Investments', 'Debt Investments', 'Project Finance',
+    'Real Estate Investments', 'Infrastructure Investments'
+  ]
 };
 
 const MEASUREMENT_FREQUENCIES = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Annually'];
