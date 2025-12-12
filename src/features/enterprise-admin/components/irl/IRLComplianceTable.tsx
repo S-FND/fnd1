@@ -54,12 +54,46 @@ const fetchCompanyConfiguration = async (entityId: string, category: string) => 
     );
     
     if (response?.data?.status === true) {
-      return response.data.data?.configuration?.enabledItems || [];
+      const responseData = response.data.data;
+      
+      // Check if data is null (no config) or an object (config exists)
+      if (responseData === null) {
+        // No configuration found
+        return {
+          enabledItems: [],
+          configExists: false,
+          message: response.data.message || 'No configuration found'
+        };
+      } else if (responseData?.configuration === null || responseData?.configuration === undefined) {
+        // Configuration record exists but configuration field is null/undefined
+        // This means no config has been set yet, so show all items (default behavior)
+        return {
+          enabledItems: [],
+          configExists: false
+        };
+      } else {
+        // Configuration exists
+        return {
+          enabledItems: responseData?.configuration?.enabledItems || [],
+          configExists: true,
+          message: response.data.message || 'Configuration retrieved successfully'
+        };
+      }
     }
-    return [];
+    
+    // Default case
+    return {
+      enabledItems: [],
+      configExists: false,
+      message: 'No configuration found'
+    };
   } catch (error) {
     console.error('Error fetching company configuration:', error);
-    return [];
+    return {
+      enabledItems: [],
+      configExists: false,
+      message: 'Error fetching configuration'
+    };
   }
 };
 
@@ -110,54 +144,67 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   };
 
   useEffect(() => {
-    const loadCompanyConfig = async () => {
-      if (!entityId) return;
+  const loadCompanyConfig = async () => {
+    if (!entityId) return;
+    
+    try {
+      const category = getCategoryFromTitle(title);
+      const configResult = await fetchCompanyConfiguration(entityId, category);
+      const { enabledItems, configExists } = configResult;
+      console.log('<----------configResult---------->',configResult);
+      let filtered: any = [];
       
-      try {
-        const category = getCategoryFromTitle(title);
-        const enabledItemsList = await fetchCompanyConfiguration(entityId, category);
-        
-        let filtered:any = items;
-        if (enabledItemsList.length > 0) {
-          filtered = items.filter(item => enabledItemsList.includes(item.key));
-        }
-        
-        setComplianceItems(
-          filtered.map((item, index) => ({
-            id: index + 1,
-            key: item.key,
-            name: item.name,
-            isApplicable: '',
-            attachment: [],
-            notes: '',
-            type
-          }))
-        );
-        
-        if (filtered.length > 0) {
-          await loadData(filtered);
+      if (!configExists) {
+        // No config exists yet - show all items (default behavior)
+        filtered = items;
+      } else {
+        // Config exists
+        if (enabledItems.length > 0) {
+          // Some items are enabled - show only those
+          filtered = items.filter(item => enabledItems.includes(item.key));
         } else {
-          setIsLoading(false);
+          // Config exists but all items are hidden - show nothing
+          filtered = [];
         }
-      } catch (error) {
-        console.error('Error loading company config:', error);
-        setComplianceItems(
-          items.map((item, index) => ({
-            id: index + 1,
-            key: item.key,
-            name: item.name,
-            isApplicable: '',
-            attachment: [],
-            notes: '',
-            type
-          }))
-        );
+      }
+      
+      setComplianceItems(
+        filtered.map((item, index) => ({
+          id: index + 1,
+          key: item.key,
+          name: item.name,
+          isApplicable: '',
+          attachment: [],
+          notes: '',
+          type
+        }))
+      );
+      
+      if (filtered.length > 0) {
+        await loadData(filtered);
+      } else {
         setIsLoading(false);
       }
-    };
-    
-    loadCompanyConfig();
-  }, [entityId, title, items]);
+    } catch (error) {
+      console.error('Error loading company config:', error);
+      // On error, default to showing all items
+      setComplianceItems(
+        items.map((item, index) => ({
+          id: index + 1,
+          key: item.key,
+          name: item.name,
+          isApplicable: '',
+          attachment: [],
+          notes: '',
+          type
+        }))
+      );
+      setIsLoading(false);
+    }
+  };
+  
+  loadCompanyConfig();
+}, [entityId, title, items]);
 
   const getAPIFunctions = () => {
     switch (title.toLowerCase()) {
@@ -592,6 +639,8 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   };
 
   return (
+    <>
+    {(complianceItems.length > 0) ? (
     <Card className="max-w-6xl mx-auto">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
@@ -718,6 +767,8 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
         )}
       </CardContent>
     </Card>
+  ) : null}
+  </>
   );
 };
 
