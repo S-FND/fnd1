@@ -50,10 +50,11 @@ const UnifiedSidebar: React.FC = () => {
   const role = user?.role || 'employee';
   const sidebarContentRef = useRef<HTMLDivElement>(null);
   const [scrollPosition, setScrollPosition] = useState(0);
+  const path = location.pathname.split('/')[1]; //
   
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
-    esgManagement: location.pathname.startsWith('/esg'),
-    esgdd: location.pathname.startsWith('/esg-dd'),
+    esgManagement: path == 'esg',
+    esgdd: path == 'esg-dd',
     reports: location.pathname.startsWith('/reports'),
     stakeholders: location.pathname.startsWith('/stakeholders'),
     sdg: location.pathname.startsWith('/sdg'),
@@ -83,6 +84,11 @@ const UnifiedSidebar: React.FC = () => {
       }, 0);
     }
   }, [expandedMenus, scrollPosition]);
+
+  useEffect(() => {
+    logger.log("🔵 UnifiedSidebar: Location changed to", location.pathname,location.pathname.startsWith('/esg'));
+    logger.debug("🔵 UnifiedSidebar: Expanded menus state changed:", expandedMenus);
+  }, [expandedMenus]);
 
   return (
     <Sidebar className="border-r border-border bg-sidebar">
