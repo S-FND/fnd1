@@ -37,6 +37,8 @@ export interface GHGSourceTemplate {
   supplierName?: string; // Scope 3
   avoidedEmissionType?: string; // Scope 4
   baselineScenario?: string; // Scope 4
+
+  access?: 'data-collector' | 'data-verifier'; // User access type
 }
 
 export interface GHGDataCollection {

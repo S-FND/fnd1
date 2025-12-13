@@ -74,6 +74,7 @@ import Scope3SourceTemplateForm from './features/enterprise-admin/components/ghg
 import Scope4SourceTemplateForm from './features/enterprise-admin/components/ghg/scope4/Scope4SourceTemplateForm';
 import UnitConverterPage from './pages/UnitConverterPage';
 import FeatureManagementPage from './pages/FeatureManagement';
+import Scope2DataCollectionForm from './features/enterprise-admin/components/ghg/scope2/Scope2DataCollectionForm';
 
 function App() {
   return (
@@ -117,6 +118,8 @@ function App() {
         <Route path="/ghg-data-collection" element={<GHGDataCollection />} />
         <Route path="/ghg-accounting/unit-converter" element={<UnitConverterPage />} />
 
+        <Route path="/ghg-accounting/scope2/collect-data" element={<Scope2DataCollectionForm />} />
+
 
         <Route path="/compliance" element={<Compliance />} />
         <Route path="/lms" element={<LMSPage />} />
@@ -135,6 +138,7 @@ function App() {
 
         <Route path="/units" element={<Units />} />
         <Route path="/team-management" element={<TeamManagementPage />} />
+        <Route path="/team-management/employee/:employeeId" element={<EmployeeDetailsPage />} />
         <Route path="/ehs-trainings" element={<EHSTrainings />} />
         <Route path="/ehs-trainings/:id" element={<EHSTrainingDetails />} />
 

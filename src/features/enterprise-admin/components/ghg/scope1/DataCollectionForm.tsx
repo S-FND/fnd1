@@ -20,6 +20,7 @@ import { calculateEmissions } from '@/types/scope1-ghg';
 import { v4 as uuidv4 } from 'uuid';
 import { months } from '@/data/ghg/calculator';
 import UnifiedSidebarLayout from '@/components/layout/UnifiedSidebarLayout';
+import { httpClient } from '@/lib/httpClient';
 
 interface DataEntry {
   id: string;
@@ -166,7 +167,7 @@ export const DataCollectionForm = () => {
     });
   };
 
-  const handleSubmitForReview = () => {
+  const handleSubmitForReview = async () => {
     if (dataEntries.some(e => e.activityDataValue === 0)) {
       toast({
         title: "Incomplete Data",
@@ -180,7 +181,6 @@ export const DataCollectionForm = () => {
       const emissions = calculateEmissions(entry.activityDataValue, template.emissionFactor);
 
       return {
-        id: entry.id,
         sourceTemplateId: template._id,
         reportingPeriod: `${selectedMonth} ${selectedYear}`,
         reportingMonth: selectedMonth,
@@ -206,11 +206,31 @@ export const DataCollectionForm = () => {
     // // Update status to Under Review
     // const statusKey = `scope1_status_${template._id}_${selectedMonth}_${selectedYear}`;
     // localStorage.setItem(statusKey, 'Under Review');
+    try {
+      // Simulate API call
+      let dataSubmissionResponse=await httpClient.post('ghg-accounting/collect-ghg-data', 
+        collections
+      );
+      if(dataSubmissionResponse.status === 201){
+        toast({
+          title: "Submitted for Review",
+          description: "Your data has been submitted and is now under review.",
+        });
+        navigate('/ghg-accounting', { state: { activeTab: 'scope1' } });
+      }
+    }
+    catch (error) {
+      toast({
+        title: "Submission Failed",
+        description: "There was an error submitting your data. Please try again.",
+        variant: "destructive",
+      });
+    }
 
-    toast({
-      title: "Submitted for Review",
-      description: "Your data has been submitted and is now under review.",
-    });
+    // toast({
+    //   title: "Submitted for Review",
+    //   description: "Your data has been submitted and is now under review.",
+    // });
 
     // navigate('/ghg-accounting', { state: { activeTab: 'scope1' } });
   };
@@ -239,6 +259,29 @@ export const DataCollectionForm = () => {
   };
 
   const totalEmissions = calculateTotalEmissions();
+
+  const getDataCollected = async () => {
+    try {
+      // Add your data fetching logic here
+      let dataCollectedResponse: { status: number; data: any[] } = await httpClient.get(`ghg-accounting/${template._id}/ghg-data-collection`);
+      console.log("dataCollectedResponse", dataCollectedResponse);
+      if(dataCollectedResponse.status === 200){
+        // Process the fetched data as needed
+        setDataEntries(dataCollectedResponse.data.map(item => ({
+          id: item._id,
+          date: item.collectedDate,
+          activityDataValue: item.activityDataValue,
+          notes: item.notes,
+        })));
+      }
+    } catch (error) {
+      console.error("Error fetching data collected:", error);
+    }
+  };
+
+  useEffect(() => {
+    getDataCollected();
+  }, []);
 
   return (
     <UnifiedSidebarLayout>

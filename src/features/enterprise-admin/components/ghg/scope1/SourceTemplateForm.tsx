@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -17,9 +17,8 @@ import EmissionFactorSelector from '../shared/EmissionFactorSelector';
 import { EmissionFactor } from '@/data/ghg/emissionFactors';
 import { v4 as uuidv4 } from 'uuid';
 import { getCurrentFY } from '@/types/scope1-ghg';
-import UnifiedSidebarLayout from '@/components/layout/UnifiedSidebarLayout';
 import { httpClient } from '@/lib/httpClient';
-// import { supabase } from '@/integrations/supabase/client';
+import UnifiedSidebarLayout from '@/components/layout/UnifiedSidebarLayout';
 
 
 interface Facility {
@@ -40,12 +39,13 @@ const MOCK_TEAM_MEMBERS = [
 ];
 
 const formSchema = z.object({
-  facilityName: z.string().min(1, 'Facility name is required'),
+  facilityNames: z.array(z.string()).min(1, 'At least one facility must be selected'),
   businessUnit: z.string().min(1, 'Business unit is required'),
-  sourceType: z.string().min(1, 'Source type is required'),
   sourceCategory: z.string().min(1, 'Source category is required'),
+  sourceType: z.string().min(1, 'Source type is required'),
   sourceDescription: z.string().min(1, 'Description is required'),
-  fuelSubstanceType: z.string().optional(),
+  fuelType: z.string().optional(),
+  equipmentId: z.string().optional(),
   activityDataUnit: z.string().min(1, 'Activity unit is required'),
   measurementFrequency: z.string().min(1, 'Measurement frequency is required'),
   calculationMethodology: z.string().min(1, 'Methodology is required'),
@@ -61,78 +61,76 @@ export const SourceTemplateForm = () => {
   const { toast } = useToast();
   const { sourceType: initialSourceType, template: editTemplate } = location.state || {};
 
-  // const [editTemplate, setEditTemplate] = useState<GHGSourceTemplate | null>(null);
-  const [sourceType, setSourceType] = useState<SourceType>('Stationary');
+  const [sourceType, setSourceType] = useState<SourceType>(editTemplate?.sourceType || initialSourceType || 'Stationary');
   const [selectedEmissionFactor, setSelectedEmissionFactor] = useState<EmissionFactor | null>(null);
   const [selectedCollectors, setSelectedCollectors] = useState<string[]>(editTemplate?.assignedDataCollectors || []);
   const [selectedVerifiers, setSelectedVerifiers] = useState<string[]>(editTemplate?.assignedVerifiers || []);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loadingFacilities, setLoadingFacilities] = useState(true);
-  const [teamMembers, setTeamMembers] = useState<{ _id: string; name: string, employeeId: string }[]>([]);
-  const isInitialRender = useRef(true)
+  const [selectedFacilities, setSelectedFacilities] = useState<string[]>(
+    editTemplate ? [editTemplate.facilityName] : ['Others']
+  );
 
-  // const { search } = useLocation();
-  const sourceId = new URLSearchParams(location.search).get("id");
+  const [teamMembers, setTeamMembers] = useState<{ _id: string; name: string }[]>([]);
+
+  const isInitialRender = useRef(true);
 
 
-  const { register, handleSubmit, setValue, control, reset, watch, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: editTemplate ? {
-      facilityName: editTemplate.facilityName,
+      facilityNames: [editTemplate.facilityName],
       businessUnit: editTemplate.businessUnit,
-      sourceType: editTemplate.sourceType,
       sourceCategory: editTemplate.sourceCategory,
+      sourceType: editTemplate.sourceType,
       sourceDescription: editTemplate.sourceDescription,
-      fuelSubstanceType: editTemplate.fuelSubstanceType,
+      fuelType: editTemplate.fuelType,
+      equipmentId: editTemplate.equipmentId,
       activityDataUnit: editTemplate.activityDataUnit,
       measurementFrequency: editTemplate.measurementFrequency,
       calculationMethodology: editTemplate.calculationMethodology,
       dataSource: editTemplate.dataSource,
       notes: editTemplate.notes,
     } : {
-      sourceType: 'Stationary',
-      calculationMethodology: 'GHG Protocol',
+      facilityNames: ['Others'],
+      sourceType: initialSourceType || 'Stationary',
+      calculationMethodology: 'GHG Protocol - Activity-based',
     }
   });
 
-  // useEffect(() => {
-  //   if (editTemplate) {
-  //     console.log("Setting form values for editTemplate", editTemplate);
-  //     reset({
-  //       facilityName: editTemplate.facilityName,
-  //       businessUnit: editTemplate.businessUnit,
-  //       sourceType: editTemplate.sourceType,
-  //       sourceCategory: editTemplate.sourceCategory,
-  //       sourceDescription: editTemplate.sourceDescription,
-  //       fuelSubstanceType: editTemplate.fuelSubstanceType,
-  //       activityDataUnit: editTemplate.activityDataUnit,
-  //       measurementFrequency: editTemplate.measurementFrequency,
-  //       calculationMethodology: editTemplate.calculationMethodology,
-  //       dataSource: editTemplate.dataSource,
-  //       notes: editTemplate.notes,
-  //     });
-  //     setSelectedCollectors(editTemplate.assignedDataCollectors);
-  //     setSelectedVerifiers(editTemplate.assignedVerifiers);
-  //     setSourceType(editTemplate.sourceType as SourceType);
-  //     setValue('sourceCategory', editTemplate.sourceCategory);
-  //     // setValue('fuelSubstanceType', '');
-  //     // setValue('activityDataUnit', '');
-  //   }
-  // }, [editTemplate]);
-
   const watchSourceType = watch('sourceType');
 
+  // Fetch facilities on mount
   useEffect(() => {
-    console.log("watchSourceType changed:", watchSourceType);
-    console.log("editTemplate?.sourceType changed:", editTemplate);
-    if( watchSourceType ){
-      setSourceType(watchSourceType as SourceType);
-    }
-    else {
-      setSourceType(editTemplate?.sourceType as SourceType || 'Stationary');  
-    }
+    const fetchFacilities = async () => {
+      try {
+        // const { data, error } = await supabase
+        //   .from('facilities')
+        //   .select('id, name, code, location, city, facility_type')
+        //   .eq('is_active', true)
+        //   .order('name');
+
+        // if (error) throw error;
+        let data=[]
+        setFacilities(data || []);
+      } catch (error) {
+        console.error('Error fetching facilities:', error);
+        toast({
+          title: "Error Loading Facilities",
+          description: "Could not load facility list. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingFacilities(false);
+      }
+    };
+
+    fetchFacilities();
+  }, [toast]);
+
+  useEffect(() => {
+    setSourceType(watchSourceType as SourceType);
     
-    // setValue('sourceCategory', '');
     // Don't clear fields on initial render when editing
     if (isInitialRender.current && editTemplate) {
       isInitialRender.current = false;
@@ -140,7 +138,7 @@ export const SourceTemplateForm = () => {
     }
     
     setValue('sourceCategory', '');
-    setValue('fuelSubstanceType', '');
+    setValue('fuelType', '');
     setValue('activityDataUnit', '');
   }, [watchSourceType, setValue, editTemplate]);
 
@@ -207,15 +205,17 @@ export const SourceTemplateForm = () => {
       return;
     }
 
-    const template: GHGSourceTemplate = {
+    // Create templates for each selected facility
+    const templates = data.facilityNames.map(facilityName => ({
       // id: editTemplate?.id || uuidv4(),
       scope: 1,
-      facilityName: data.facilityName,
+      facilityName,
       businessUnit: data.businessUnit,
       sourceCategory: data.sourceCategory,
       sourceDescription: data.sourceDescription,
       sourceType: data.sourceType,
-      fuelSubstanceType: data.fuelSubstanceType,
+      fuelType: data.fuelType,
+      equipmentId: data.equipmentId,
       emissionFactorId: selectedEmissionFactor.id,
       emissionFactor: selectedEmissionFactor.factor,
       emissionFactorUnit: selectedEmissionFactor.unit,
@@ -231,28 +231,35 @@ export const SourceTemplateForm = () => {
       createdDate: editTemplate?.createdDate || new Date().toISOString(),
       createdBy: editTemplate?.createdBy || 'Current User',
       notes: data.notes || '',
-    };
+    }));
 
     // Save to localStorage
-    // const key = 'scope1_source_templates';
-    // const existing = JSON.parse(localStorage.getItem(key) || '[]');
-
+    const key = 'scope1_source_templates';
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    
     // if (editTemplate) {
-    //   const index = existing.findIndex((t: GHGSourceTemplate) => t.id === template.id);
+    //   const index = existing.findIndex((t: GHGSourceTemplate) => t._id === templates[0]._id);
     //   if (index >= 0) {
-    //     existing[index] = template;
+    //     existing[index] = templates[0];
     //   }
     // } else {
-    //   existing.push(template);
+    //   existing.push(...templates);
     // }
-
+    
     // localStorage.setItem(key, JSON.stringify(existing));
+
+    // toast({
+    //   title: editTemplate ? "Source Updated" : `Source${templates.length > 1 ? 's' : ''} Defined`,
+    //   description: `Emission source "${templates[0].sourceDescription}" has been ${editTemplate ? 'updated' : `saved for ${templates.length} facilit${templates.length > 1 ? 'ies' : 'y'}`}. You can now collect data against ${templates.length > 1 ? 'these sources' : 'this source'}.`,
+    // });
+
+    // navigate('/ghg-accounting', { state: { activeTab: 'scope1' } });
     try {
-      let createUpdateSource = await httpClient.post('ghg-accounting/define-source', template);
+      let createUpdateSource = await httpClient.post('ghg-accounting/define-source', {templates});
       console.log("createUpdateSource", createUpdateSource);
       toast({
         title: editTemplate ? "Source Updated" : "Source Defined",
-        description: `Emission source "${template.sourceDescription}" has been ${editTemplate ? 'updated' : 'saved'}. You can now collect data against this source.`,
+        description: `Emission source "${templates[0].sourceDescription}" has been ${editTemplate ? 'updated' : 'saved'}. You can now collect data against this source.`,
       });
 
       navigate('/ghg-accounting', { state: { activeTab: 'scope1' } });
@@ -264,10 +271,7 @@ export const SourceTemplateForm = () => {
         variant: "destructive",
       });
     }
-
-
   };
-
   let getDataSource = async (id) => {
     try {
       let dataSourceResponse: { status: number; data: any[] } = await httpClient.get(`ghg-accounting/source/1?id=${id}`);
@@ -315,54 +319,71 @@ export const SourceTemplateForm = () => {
     getFacilities();
   }, []);
 
-  useEffect(() => {
-    if (sourceId) {
-      getDataSource(sourceId);
-    }
-  }, [sourceId]);
-
+  // useEffect(() => {
+  //   if (sourceId) {
+  //     getDataSource(sourceId);
+  //   }
+  // }, [sourceId]);
 
   return (
     <UnifiedSidebarLayout>
-      <div className="container mx-auto py-6 space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">
-              {editTemplate ? 'Edit' : 'Define'} Emission Source - Scope 1
-            </h1>
-            <p className="text-muted-foreground">
-              Step 1: Define the emission source and measurement parameters
-            </p>
-          </div>
+    <div className="container mx-auto py-6 space-y-6">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold">
+            {editTemplate ? 'Edit' : 'Define'} Emission Source - Scope 1
+          </h1>
+          <p className="text-muted-foreground">
+            Step 1: Define the emission source and measurement parameters
+          </p>
         </div>
+      </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
-              <CardDescription>Identify the emission source and its location</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="facilityName">Facility Name *</Label>
-                  <Select
-                    value={watch('facilityName')}
-                    onValueChange={(value) => setValue('facilityName', value)}
-                    disabled={loadingFacilities}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={loadingFacilities ? "Loading facilities..." : "Select facility..."} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-50">
-                      <SelectItem value="Other">
-                        <span className="font-medium">Other</span>
-                      </SelectItem>
-                      {facilities.map((facility) => (
-                        <SelectItem key={facility.id} value={facility.name}>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Basic Information</CardTitle>
+            <CardDescription>Identify the emission source and its location</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="facilityNames">Facilities *</Label>
+              <Select
+                value={selectedFacilities.length === 1 ? selectedFacilities[0] : undefined}
+                onValueChange={(value) => {
+                  // Toggle selection for multi-select behavior
+                  const newSelected = selectedFacilities.includes(value)
+                    ? selectedFacilities.filter(f => f !== value)
+                    : [...selectedFacilities, value];
+                  setSelectedFacilities(newSelected);
+                  setValue('facilityNames', newSelected);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue>
+                    {selectedFacilities.length === 0 
+                      ? "Select facilities..."
+                      : `${selectedFacilities.length} facilit${selectedFacilities.length > 1 ? 'ies' : 'y'} selected`}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px] overflow-y-auto">
+                  <SelectItem value="Others">Others</SelectItem>
+                  {loadingFacilities ? (
+                    <div className="p-2 text-sm text-muted-foreground">Loading facilities...</div>
+                  ) : (
+                    facilities.map((facility) => (
+                      <SelectItem key={facility.id} value={facility.name}>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedFacilities.includes(facility.name)}
+                            onChange={() => {}}
+                            className="rounded pointer-events-none"
+                          />
                           <div className="flex flex-col">
                             <span className="font-medium">{facility.name}</span>
                             {(facility.code || facility.location) && (
@@ -373,280 +394,297 @@ export const SourceTemplateForm = () => {
                               </span>
                             )}
                           </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.facilityName && (
-                    <p className="text-sm text-destructive">{errors.facilityName.message}</p>
+                        </div>
+                      </SelectItem>
+                    ))
                   )}
-                  {facilities.length === 0 && !loadingFacilities && (
-                    <p className="text-sm text-muted-foreground">
-                      No facilities found. Contact admin to add facilities.
-                    </p>
-                  )}
+                </SelectContent>
+              </Select>
+              {errors.facilityNames && (
+                <p className="text-sm text-destructive">{errors.facilityNames.message}</p>
+              )}
+              {selectedFacilities.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {selectedFacilities.map((facility) => (
+                    <span
+                      key={facility}
+                      className="inline-flex items-center gap-1 px-2 py-1 bg-accent text-accent-foreground rounded-md text-sm"
+                    >
+                      {facility}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newSelected = selectedFacilities.filter(f => f !== facility);
+                          setSelectedFacilities(newSelected);
+                          setValue('facilityNames', newSelected);
+                        }}
+                        className="hover:text-destructive"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="businessUnit">Business Unit *</Label>
-                  <Input
-                    id="businessUnit"
-                    placeholder="e.g., Operations – West India"
-                    {...register('businessUnit')}
-                  />
-                  {errors.businessUnit && (
-                    <p className="text-sm text-destructive">{errors.businessUnit.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="sourceType">Source Type * {watch('sourceType')}</Label>
-                  <Select
-                    value={watch('sourceType')}
-                    onValueChange={(value) => setValue('sourceType', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Stationary">Stationary Combustion</SelectItem>
-                      <SelectItem value="Mobile">Mobile Combustion</SelectItem>
-                      <SelectItem value="Fugitive">Fugitive Emissions</SelectItem>
-                      <SelectItem value="Process">Process Emissions</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.sourceType && (
-                    <p className="text-sm text-destructive">{errors.sourceType.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="sourceCategory">Emission Source Category *</Label>
-                  <Select
-                    value={watch('sourceCategory')}
-                    onValueChange={(value) => setValue('sourceCategory', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EMISSION_SOURCE_CATEGORIES[sourceType]?.map((cat) => (
-                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.sourceCategory && (
-                    <p className="text-sm text-destructive">{errors.sourceCategory.message}</p>
-                  )}
-                  
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="fuelSubstanceType">Fuel/Substance Type</Label>
-                  <Select
-                    value={watch('fuelSubstanceType')}
-                    onValueChange={(value) => setValue('fuelSubstanceType', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select fuel type..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {FUEL_SUBSTANCE_TYPES[sourceType]?.map((fuel) => (
-                        <SelectItem key={fuel} value={fuel}>{fuel}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              )}
+            </div>
 
               <div className="space-y-2">
-                <Label htmlFor="sourceDescription">Emission Source Description *</Label>
-                <Textarea
-                  id="sourceDescription"
-                  placeholder="Detailed description of the emission source..."
-                  rows={3}
-                  {...register('sourceDescription')}
+                <Label htmlFor="businessUnit">Business Unit *</Label>
+                <Input
+                  id="businessUnit"
+                  placeholder="e.g., Operations – West India"
+                  {...register('businessUnit')}
                 />
-                {errors.sourceDescription && (
-                  <p className="text-sm text-destructive">{errors.sourceDescription.message}</p>
+                {errors.businessUnit && (
+                  <p className="text-sm text-destructive">{errors.businessUnit.message}</p>
                 )}
               </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Emission Factor</CardTitle>
-              <CardDescription>Select emission factor from open databases (IPCC, DEFRA, EPA, etc.)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <EmissionFactorSelector
-                scope={1}
-                category={sourceType}
-                value={selectedEmissionFactor?.id}
-                onSelect={handleEmissionFactorSelect}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Measurement Parameters</CardTitle>
-              <CardDescription>Define how data will be collected</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="activityDataUnit">Activity Data Unit *</Label>
-                  <Select
-                    value={watch('activityDataUnit')}
-                    onValueChange={(value) => setValue('activityDataUnit', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select unit..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ACTIVITY_UNITS[sourceType]?.map((unit) => (
-                        <SelectItem key={unit} value={unit}>{unit}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.activityDataUnit && (
-                    <p className="text-sm text-destructive">{errors.activityDataUnit.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="measurementFrequency">Measurement Frequency *</Label>
-                  <Select
-                    value={watch('measurementFrequency')}
-                    onValueChange={(value) => {
-                      setValue('measurementFrequency', value);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Daily">Daily</SelectItem>
-                      <SelectItem value="Weekly">Weekly</SelectItem>
-                      <SelectItem value="Monthly">Monthly</SelectItem>
-                      <SelectItem value="Quarterly">Quarterly</SelectItem>
-                      <SelectItem value="Annually">Annually</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.measurementFrequency && (
-                    <p className="text-sm text-destructive">{errors.measurementFrequency.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="calculationMethodology">Calculation Methodology *</Label>
-                  <Input
-                    id="calculationMethodology"
-                    placeholder="e.g., GHG Protocol"
-                    {...register('calculationMethodology')}
-                  />
-                  {errors.calculationMethodology && (
-                    <p className="text-sm text-destructive">{errors.calculationMethodology.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="dataSource">Data Source *</Label>
-                  <Input
-                    id="dataSource"
-                    placeholder="e.g., Fuel purchase invoices"
-                    {...register('dataSource')}
-                  />
-                  {errors.dataSource && (
-                    <p className="text-sm text-destructive">{errors.dataSource.message}</p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Assignment</CardTitle>
-              <CardDescription>Assign team members for data collection and verification</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Data Collectors *</Label>
-                <div className="border rounded-lg p-4 space-y-2">
-                  {teamMembers.map(member => (
-                    <label key={member._id} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedCollectors.includes(member._id)}
-                        disabled={selectedVerifiers.includes(member._id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedCollectors([...selectedCollectors, member._id]);
-                          } else {
-                            setSelectedCollectors(selectedCollectors.filter(id => id !== member._id));
-                          }
-                        }}
-                        className="rounded"
-                      />
-                      <span>{member.name} ({member.employeeId})</span>
-                    </label>
-                  ))}
-                </div>
+                <Label htmlFor="sourceType">Source Type *</Label>
+                <Select 
+                  value={watch('sourceType')}
+                  onValueChange={(value) => setValue('sourceType', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Stationary">Stationary Combustion</SelectItem>
+                    <SelectItem value="Mobile">Mobile Combustion</SelectItem>
+                    <SelectItem value="Fugitive">Fugitive Emissions</SelectItem>
+                    <SelectItem value="Process">Process Emissions</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.sourceType && (
+                  <p className="text-sm text-destructive">{errors.sourceType.message}</p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label>Verifiers (Optional)</Label>
-                <div className="border rounded-lg p-4 space-y-2">
-                  {teamMembers.map(member => (
-                    <label key={member._id} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedVerifiers.includes(member._id)}
-                        disabled={selectedCollectors.includes(member._id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedVerifiers([...selectedVerifiers, member._id]);
-                          } else {
-                            setSelectedVerifiers(selectedVerifiers.filter(id => id !== member._id));
-                          }
-                        }}
-                        className="rounded"
-                      />
-                      <span>{member.name} ({member.employeeId})</span>
-                    </label>
-                  ))}
-                </div>
+                <Label htmlFor="sourceCategory">Emission Source Category *</Label>
+                <Select
+                  value={watch('sourceCategory')}
+                  onValueChange={(value) => setValue('sourceCategory', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EMISSION_SOURCE_CATEGORIES[sourceType]?.map((cat) => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.sourceCategory && (
+                  <p className="text-sm text-destructive">{errors.sourceCategory.message}</p>
+                )}
               </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Additional Notes</CardTitle>
-            </CardHeader>
-            <CardContent>
+              <div className="space-y-2">
+                <Label htmlFor="fuelType">Fuel/Substance Type</Label>
+                <Select
+                  value={watch('fuelType')}
+                  onValueChange={(value) => setValue('fuelType', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select fuel type..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FUEL_SUBSTANCE_TYPES[sourceType]?.map((fuel) => (
+                      <SelectItem key={fuel} value={fuel}>{fuel}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="sourceDescription">Emission Source Description *</Label>
               <Textarea
-                placeholder="Any additional notes or comments..."
-                rows={4}
-                {...register('notes')}
+                id="sourceDescription"
+                placeholder="Detailed description of the emission source..."
+                rows={3}
+                {...register('sourceDescription')}
               />
-            </CardContent>
-          </Card>
+              {errors.sourceDescription && (
+                <p className="text-sm text-destructive">{errors.sourceDescription.message}</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-          <div className="flex justify-end gap-4">
-            <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-              Cancel
-            </Button>
-            <Button type="submit">
-              <Save className="mr-2 h-4 w-4" />
-              {editTemplate ? 'Update Source' : 'Save Source Definition'}
-            </Button>
-          </div>
-        </form>
-      </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Emission Factor</CardTitle>
+            <CardDescription>Select emission factor from open databases (IPCC, DEFRA, EPA, etc.)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <EmissionFactorSelector
+              scope={1}
+              category={sourceType}
+              value={selectedEmissionFactor?.id}
+              onSelect={handleEmissionFactorSelect}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Measurement Parameters</CardTitle>
+            <CardDescription>Define how data will be collected</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="activityDataUnit">Activity Data Unit *</Label>
+                <Select
+                  value={watch('activityDataUnit')}
+                  onValueChange={(value) => setValue('activityDataUnit', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select unit..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ACTIVITY_UNITS[sourceType]?.map((unit) => (
+                      <SelectItem key={unit} value={unit}>{unit}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.activityDataUnit && (
+                  <p className="text-sm text-destructive">{errors.activityDataUnit.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="measurementFrequency">Measurement Frequency *</Label>
+                <Select
+                  value={watch('measurementFrequency')}
+                  onValueChange={(value) => {
+                    setValue('measurementFrequency', value);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Daily">Daily</SelectItem>
+                    <SelectItem value="Weekly">Weekly</SelectItem>
+                    <SelectItem value="Monthly">Monthly</SelectItem>
+                    <SelectItem value="Quarterly">Quarterly</SelectItem>
+                    <SelectItem value="Annually">Annually</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.measurementFrequency && (
+                  <p className="text-sm text-destructive">{errors.measurementFrequency.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="calculationMethodology">Calculation Methodology *</Label>
+                <Input
+                  id="calculationMethodology"
+                  placeholder="e.g., GHG Protocol"
+                  {...register('calculationMethodology')}
+                />
+                {errors.calculationMethodology && (
+                  <p className="text-sm text-destructive">{errors.calculationMethodology.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="dataSource">Data Source *</Label>
+                <Input
+                  id="dataSource"
+                  placeholder="e.g., Fuel purchase invoices"
+                  {...register('dataSource')}
+                />
+                {errors.dataSource && (
+                  <p className="text-sm text-destructive">{errors.dataSource.message}</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Assignment</CardTitle>
+            <CardDescription>Assign team members for data collection and verification</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Data Collectors *</Label>
+              <div className="border rounded-lg p-4 space-y-2">
+                {teamMembers.map(member => (
+                  <label key={member._id} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedCollectors.includes(member._id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedCollectors([...selectedCollectors, member._id]);
+                        } else {
+                          setSelectedCollectors(selectedCollectors.filter(id => id !== member._id));
+                        }
+                      }}
+                      className="rounded"
+                    />
+                    <span>{member.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Verifiers (Optional)</Label>
+              <div className="border rounded-lg p-4 space-y-2">
+                {teamMembers.map(member => (
+                  <label key={member._id} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedVerifiers.includes(member._id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedVerifiers([...selectedVerifiers, member._id]);
+                        } else {
+                          setSelectedVerifiers(selectedVerifiers.filter(id => id !== member._id));
+                        }
+                      }}
+                      className="rounded"
+                    />
+                    <span>{member.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Additional Notes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              placeholder="Any additional notes or comments..."
+              rows={4}
+              {...register('notes')}
+            />
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end gap-4">
+          <Button type="button" variant="outline" onClick={() => navigate(-1)}>
+            Cancel
+          </Button>
+          <Button type="submit">
+            <Save className="mr-2 h-4 w-4" />
+            {editTemplate ? 'Update Source' : 'Save Source Definition'}
+          </Button>
+        </div>
+      </form>
+    </div>
     </UnifiedSidebarLayout>
   );
 };

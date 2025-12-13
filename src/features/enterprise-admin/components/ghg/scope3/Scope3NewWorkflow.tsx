@@ -12,7 +12,20 @@ import { httpClient } from '@/lib/httpClient';
 
 type DataStatus = 'No Data' | 'Draft' | 'Submitted' | 'Verified';
 
-export const Scope3NewWorkflow = () => {
+type ScopeAccessType = 'data-collector' | 'data-verifier';
+
+export interface CurrentAccessItem {
+  id: string;
+  access: ScopeAccessType;
+}
+
+export interface Scope1NewWorkflowProps {
+  currentAccess: CurrentAccessItem[];
+}
+
+export const Scope3NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
+  currentAccess,
+})=> {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [sourceTemplates, setSourceTemplates] = useState<GHGSourceTemplate[]>([]);

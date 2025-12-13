@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Save } from "lucide-react";
 import { Scope1Entry, SourceType } from '@/types/scope1-ghg';
 import Scope1EntryDialog from '@/features/enterprise-admin/components/ghg/scope1/Scope1EntryDialog';
+import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 
 // Mock team members - replace with actual data from your auth system
 const MOCK_TEAM_MEMBERS = [
@@ -70,6 +71,7 @@ export const Scope1EntryPage = () => {
   };
 
   return (
+    <UnifiedSidebarLayout>
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate('/ghg-accounting')}>
@@ -111,6 +113,7 @@ export const Scope1EntryPage = () => {
         </CardContent>
       </Card>
     </div>
+    </UnifiedSidebarLayout>
   );
 };
 

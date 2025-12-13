@@ -8,10 +8,24 @@ import { GHGSourceTemplate } from '@/types/ghg-source-template';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import Scope4Dashboard from '../dashboards/Scope4Dashboard';
+import { httpClient } from '@/lib/httpClient';
 
 type DataStatus = 'No Data' | 'Draft' | 'Submitted' | 'Verified';
 
-export const Scope4NewWorkflow = () => {
+type ScopeAccessType = 'data-collector' | 'data-verifier';
+
+export interface CurrentAccessItem {
+  id: string;
+  access: ScopeAccessType;
+}
+
+export interface Scope1NewWorkflowProps {
+  currentAccess: CurrentAccessItem[];
+}
+
+export const Scope4NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
+  currentAccess,
+}) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [sourceTemplates, setSourceTemplates] = useState<GHGSourceTemplate[]>([]);
@@ -21,6 +35,51 @@ export const Scope4NewWorkflow = () => {
   useEffect(() => {
     loadSourceTemplates();
   }, []);
+
+  let getDataSource = async () => {
+    try {
+      let dataSourceResponse: { status: number; data: any[] } = await httpClient.get(`ghg-accounting/source/4`);
+      console.log("dataSourceResponse", dataSourceResponse);
+      if (dataSourceResponse.status === 200) {
+        const dataCollections: GHGSourceTemplate[] = dataSourceResponse.data.map(item => ({
+          _id: item._id,
+          scope: 1, // or from item if available
+          facilityName: item.facilityName,
+          businessUnit: item.businessUnit,
+          sourceCategory: item.sourceCategory,
+          sourceDescription: item.sourceDescription,
+          emissionFactorId: item.emissionFactorId,
+          emissionFactor: item.emissionFactor,
+          emissionFactorUnit: item.emissionFactorUnit,
+          emissionFactorSource: item.emissionFactorSource,
+          activityDataUnit: item.activityDataUnit,
+          measurementFrequency: item.measurementFrequency,
+          assignedDataCollectors: item.assignedDataCollectors,
+          assignedVerifiers: item.assignedVerifiers,
+          ghgIncluded: item.ghgIncluded,
+          calculationMethodology: item.calculationMethodology,
+          dataSource: item.dataSource,
+          isActive: item.isActive,
+          notes: item.notes,
+          sourceType: item.sourceType,
+          fuelSubstanceType: item.fuelSubstanceType,
+
+          createdDate: item.createdAt,  // mapping backend → frontend naming
+          createdBy: "",                // backend doesn’t have this value
+          access: currentAccess.find(ca => ca.id === item._id)?.access || 'data-collector',
+        }));
+        // let dataCollections: GHGSourceTemplate[] = dataSourceResponse.data;
+        setSourceTemplates(dataCollections);
+      }
+    } catch (error) {
+      console.error("Error fetching data collections:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch data collections.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const loadSourceTemplates = () => {
     const key = 'scope4_source_templates';
@@ -33,9 +92,9 @@ export const Scope4NewWorkflow = () => {
   const getDataStatus = (templateId: string): DataStatus => {
     const dataKey = `ghg_activity_data_${templateId}`;
     const data = localStorage.getItem(dataKey);
-    
+
     if (!data) return 'No Data';
-    
+
     const parsed = JSON.parse(data);
     if (parsed.status === 'verified') return 'Verified';
     if (parsed.status === 'submitted') return 'Submitted';
@@ -51,8 +110,8 @@ export const Scope4NewWorkflow = () => {
   };
 
   const handleCollectData = (template: GHGSourceTemplate) => {
-    navigate('/ghg-data-collection', { 
-      state: { sourceId: template._id, scope: 4 } 
+    navigate('/ghg-data-collection', {
+      state: { sourceId: template._id, scope: 4 }
     });
   };
 
@@ -61,7 +120,7 @@ export const Scope4NewWorkflow = () => {
     const filtered = sourceTemplates.filter(t => t._id !== id);
     localStorage.setItem(key, JSON.stringify(filtered));
     setSourceTemplates(filtered);
-    
+
     toast({
       title: "Source Deleted",
       description: "The emission source has been removed.",
@@ -83,14 +142,14 @@ export const Scope4NewWorkflow = () => {
   };
 
   const categories = ['All', ...Array.from(new Set(sourceTemplates.map(t => t.sourceType)))];
-  
-  const filteredTemplates = selectedCategory === 'All' 
-    ? sourceTemplates 
+
+  const filteredTemplates = selectedCategory === 'All'
+    ? sourceTemplates
     : sourceTemplates.filter(t => t.sourceType === selectedCategory);
 
   const getCategorySummary = () => {
     const categoryMap = new Map<string, { count: number; withData: number }>();
-    
+
     sourceTemplates.forEach(template => {
       const current = categoryMap.get(template.sourceType || '') || { count: 0, withData: 0 };
       current.count += 1;
@@ -119,6 +178,10 @@ export const Scope4NewWorkflow = () => {
       </div>
     );
   }
+
+  useEffect(() => {
+    getDataSource();
+  }, []);
 
   return (
     <div className="space-y-6">

@@ -13,11 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save } from "lucide-react";
 import { GHGSourceTemplate } from '@/types/ghg-source-template';
 import { v4 as uuidv4 } from 'uuid';
-// import { supabase } from '@/integrations/supabase/client';
 import EmissionFactorSelector from '../shared/EmissionFactorSelector';
 import { EmissionFactor } from '@/data/ghg/emissionFactors';
-import UnifiedSidebarLayout from '@/components/layout/UnifiedSidebarLayout';
 import { httpClient } from '@/lib/httpClient';
+import UnifiedSidebarLayout from '@/components/layout/UnifiedSidebarLayout';
 
 interface Facility {
   id: string;
@@ -25,6 +24,14 @@ interface Facility {
   code: string | null;
   location: string | null;
 }
+
+const MOCK_TEAM_MEMBERS = [
+  { id: '1', name: 'Meera Sharma' },
+  { id: '2', name: 'Rajesh Kumar' },
+  { id: '3', name: 'Priya Singh' },
+  { id: '4', name: 'Amit Patel' },
+  { id: '5', name: 'Sustainability Team' },
+];
 
 const SCOPE2_SOURCE_TYPES = ['Purchased Electricity', 'Purchased Steam', 'Purchased Heating', 'Purchased Cooling'];
 const SCOPE2_CATEGORIES = {
@@ -38,7 +45,7 @@ const MEASUREMENT_FREQUENCIES = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Ann
 const ACTIVITY_UNITS = ['kWh', 'MWh', 'GJ', 'tonnes', 'kg'];
 
 const formSchema = z.object({
-  facilityName: z.string().min(1, 'Facility name is required'),
+  facilityNames: z.array(z.string()).min(1, 'At least one facility must be selected'),
   businessUnit: z.string().min(1, 'Business unit is required'),
   sourceType: z.string().min(1, 'Source type is required'),
   sourceCategory: z.string().min(1, 'Source category is required'),
@@ -66,14 +73,18 @@ export const Scope2SourceTemplateForm = () => {
   const [selectedEmissionFactor, setSelectedEmissionFactor] = useState<EmissionFactor | null>(null);
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loadingFacilities, setLoadingFacilities] = useState(true);
-  const [teamMembers, setTeamMembers] = useState<{ _id: string; name: string, employeeId: string }[]>([]);
+  const [selectedFacilities, setSelectedFacilities] = useState<string[]>(
+    editTemplate ? [editTemplate.facilityName] : ['Others']
+  );
   const [selectedCollectors, setSelectedCollectors] = useState<string[]>(editTemplate?.assignedDataCollectors || []);
   const [selectedVerifiers, setSelectedVerifiers] = useState<string[]>(editTemplate?.assignedVerifiers || []);
+
+  const [teamMembers, setTeamMembers] = useState<{ _id: string; name: string }[]>([]);
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: editTemplate ? {
-      facilityName: editTemplate.facilityName,
+      facilityNames: [editTemplate.facilityName],
       businessUnit: editTemplate.businessUnit,
       sourceType: editTemplate.sourceType,
       sourceCategory: editTemplate.sourceCategory,
@@ -88,6 +99,7 @@ export const Scope2SourceTemplateForm = () => {
       dataSource: editTemplate.dataSource,
       notes: editTemplate.notes,
     } : {
+      facilityNames: ['Others'],
       sourceType: 'Purchased Electricity',
       scope2Category: 'Location-Based',
       calculationMethodology: 'GHG Protocol - Scope 2',
@@ -96,6 +108,37 @@ export const Scope2SourceTemplateForm = () => {
   });
 
   const watchSourceType = watch('sourceType');
+
+  useEffect(() => {
+    fetchFacilities();
+  }, []);
+
+  useEffect(() => {
+    setSourceType(watchSourceType);
+  }, [watchSourceType]);
+
+  const fetchFacilities = async () => {
+    try {
+      // const { data, error } = await supabase
+      //   .from('facilities')
+      //   .select('id, name, code, location')
+      //   .eq('is_active', true)
+      //   .order('name');
+
+      // if (error) throw error;
+      let data = []
+      setFacilities(data || []);
+    } catch (error) {
+      console.error('Error fetching facilities:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load facilities",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingFacilities(false);
+    }
+  };
 
   const getTeamList = async () => {
     try {
@@ -137,39 +180,7 @@ export const Scope2SourceTemplateForm = () => {
     }
   };
 
-  useEffect(() => {
-    getFacilities();
-    getTeamList()
-  }, []);
-
-  useEffect(() => {
-    setSourceType(watchSourceType);
-  }, [watchSourceType]);
-
-  // const fetchFacilities = async () => {
-  //   try {
-  //   //   const { data, error } = await supabase
-  //   //     .from('facilities')
-  //   //     .select('id, name, code, location')
-  //   //     .eq('is_active', true)
-  //   //     .order('name');
-
-  //   //   if (error) throw error;
-  //   let data=[{id:'others',name:'Others',code:null,location:null}]
-  //     setFacilities(data || []);
-  //   } catch (error) {
-  //     console.error('Error fetching facilities:', error);
-  //     toast({
-  //       title: "Error",
-  //       description: "Failed to load facilities",
-  //       variant: "destructive",
-  //     });
-  //   } finally {
-  //     setLoadingFacilities(false);
-  //   }
-  // };
-
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async(data: FormData) => {
     if (!selectedEmissionFactor) {
       toast({
         title: "Emission Factor Required",
@@ -179,19 +190,10 @@ export const Scope2SourceTemplateForm = () => {
       return;
     }
 
-    if (selectedCollectors.length === 0) {
-      toast({
-        title: "Missing Data Collectors",
-        description: "Please assign at least one data collector.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const template: GHGSourceTemplate = {
+    const templates = data.facilityNames.map(facilityName => ({
       // id: editTemplate?.id || uuidv4(),
-      scope: 2,
-      facilityName: data.facilityName,
+      scope: 2 as 2,
+      facilityName,
       businessUnit: data.businessUnit,
       sourceCategory: data.sourceCategory,
       sourceDescription: data.sourceDescription,
@@ -206,8 +208,8 @@ export const Scope2SourceTemplateForm = () => {
       emissionFactorSource: selectedEmissionFactor.source,
       activityDataUnit: data.activityDataUnit,
       measurementFrequency: data.measurementFrequency as any,
-      assignedDataCollectors: [],
-      assignedVerifiers: [],
+      assignedDataCollectors: selectedCollectors,
+      assignedVerifiers: selectedVerifiers,
       ghgIncluded: 'CO₂, CH₄, N₂O',
       calculationMethodology: data.calculationMethodology,
       dataSource: data.dataSource,
@@ -215,30 +217,29 @@ export const Scope2SourceTemplateForm = () => {
       createdDate: editTemplate?.createdDate || new Date().toISOString(),
       createdBy: 'Current User',
       notes: data.notes || '',
-    };
+    }));
 
+    // ****************
     // const key = 'scope2_source_templates';
     // const stored = localStorage.getItem(key);
-    // const templates: GHGSourceTemplate[] = stored ? JSON.parse(stored) : [];
+    // const existingTemplates: GHGSourceTemplate[] = stored ? JSON.parse(stored) : [];
 
     // if (editTemplate) {
-    //   const index = templates.findIndex(t => t.id === editTemplate.id);
-    //   if (index >= 0) templates[index] = template;
+    //   const index = existingTemplates.findIndex(t => t._id === templates[0].id);
+    //   if (index >= 0) existingTemplates[index] = templates[0];
     // } else {
-    //   templates.push(template);
+    //   existingTemplates.push(...templates);
     // }
 
-    // localStorage.setItem(key, JSON.stringify(templates));
-
+    // localStorage.setItem(key, JSON.stringify(existingTemplates));
+    // ****************
     try {
-      let createUpdateSource = await httpClient.post('ghg-accounting/define-source', template);
+      let createUpdateSource = await httpClient.post('ghg-accounting/define-source', { templates });
       console.log("createUpdateSource", createUpdateSource);
       toast({
         title: editTemplate ? "Source Updated" : "Source Defined",
-        description: `${template.sourceDescription} has been ${editTemplate ? 'updated' : 'saved'} successfully.`,
+        description: `Emission source "${templates[0].sourceDescription}" has been ${editTemplate ? 'updated' : 'saved'}. You can now collect data against this source.`,
       });
-
-
 
       navigate('/ghg-accounting', { state: { activeTab: 'scope2' } });
     } catch (error) {
@@ -249,9 +250,18 @@ export const Scope2SourceTemplateForm = () => {
         variant: "destructive",
       });
     }
+    // toast({
+    //   title: editTemplate ? "Source Updated" : `Source${templates.length > 1 ? 's' : ''} Defined`,
+    //   description: `${templates[0].sourceDescription} has been ${editTemplate ? 'updated' : `saved for ${templates.length} facilit${templates.length > 1 ? 'ies' : 'y'}`}.`,
+    // });
 
-
+    // navigate('/ghg-accounting');
   };
+
+  useEffect(() => {
+    getTeamList();
+    getFacilities();
+  }, []);
 
   return (
     <UnifiedSidebarLayout>
@@ -279,20 +289,80 @@ export const Scope2SourceTemplateForm = () => {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="facilityName">Facility/Location *</Label>
-                  <Select onValueChange={(value) => setValue('facilityName', value)} defaultValue={editTemplate?.facilityName}>
+                  <Label htmlFor="facilityNames">Facilities *</Label>
+                  <Select
+                    value={selectedFacilities.length === 1 ? selectedFacilities[0] : undefined}
+                    onValueChange={(value) => {
+                      const newSelected = selectedFacilities.includes(value)
+                        ? selectedFacilities.filter(f => f !== value)
+                        : [...selectedFacilities, value];
+                      setSelectedFacilities(newSelected);
+                      setValue('facilityNames', newSelected);
+                    }}
+                  >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select facility" />
+                      <SelectValue>
+                        {selectedFacilities.length === 0
+                          ? "Select facilities..."
+                          : `${selectedFacilities.length} facilit${selectedFacilities.length > 1 ? 'ies' : 'y'} selected`}
+                      </SelectValue>
                     </SelectTrigger>
-                    <SelectContent>
-                      {facilities.map(facility => (
-                        <SelectItem key={facility.id} value={facility.name}>
-                          {facility.name} {facility.code && `(${facility.code})`}
-                        </SelectItem>
-                      ))}
+                    <SelectContent className="max-h-[300px] overflow-y-auto">
+                      <SelectItem value="Others">Others</SelectItem>
+                      {loadingFacilities ? (
+                        <div className="p-2 text-sm text-muted-foreground">Loading facilities...</div>
+                      ) : (
+                        facilities.map((facility) => (
+                          <SelectItem key={facility.id} value={facility.name}>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={selectedFacilities.includes(facility.name)}
+                                onChange={() => { }}
+                                className="rounded pointer-events-none"
+                              />
+                              <div className="flex flex-col">
+                                <span className="font-medium">{facility.name}</span>
+                                {(facility.code || facility.location) && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {facility.code && `${facility.code}`}
+                                    {facility.code && facility.location && ' • '}
+                                    {facility.location && facility.location}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
-                  {errors.facilityName && <p className="text-sm text-destructive">{errors.facilityName.message}</p>}
+                  {errors.facilityNames && (
+                    <p className="text-sm text-destructive">{errors.facilityNames.message}</p>
+                  )}
+                  {selectedFacilities.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {selectedFacilities.map((facility) => (
+                        <span
+                          key={facility}
+                          className="inline-flex items-center gap-1 px-2 py-1 bg-accent text-accent-foreground rounded-md text-sm"
+                        >
+                          {facility}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newSelected = selectedFacilities.filter(f => f !== facility);
+                              setSelectedFacilities(newSelected);
+                              setValue('facilityNames', newSelected);
+                            }}
+                            className="hover:text-destructive"
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -447,6 +517,7 @@ export const Scope2SourceTemplateForm = () => {
               </div>
             </CardContent>
           </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Assignment</CardTitle>
@@ -461,7 +532,6 @@ export const Scope2SourceTemplateForm = () => {
                       <input
                         type="checkbox"
                         checked={selectedCollectors.includes(member._id)}
-                        disabled={selectedVerifiers.includes(member._id)}
                         onChange={(e) => {
                           if (e.target.checked) {
                             setSelectedCollectors([...selectedCollectors, member._id]);
@@ -471,7 +541,7 @@ export const Scope2SourceTemplateForm = () => {
                         }}
                         className="rounded"
                       />
-                      <span>{member.name} ({member.employeeId})</span>
+                      <span>{member.name}</span>
                     </label>
                   ))}
                 </div>
@@ -485,7 +555,6 @@ export const Scope2SourceTemplateForm = () => {
                       <input
                         type="checkbox"
                         checked={selectedVerifiers.includes(member._id)}
-                        disabled={selectedCollectors.includes(member._id)}
                         onChange={(e) => {
                           if (e.target.checked) {
                             setSelectedVerifiers([...selectedVerifiers, member._id]);
@@ -495,13 +564,14 @@ export const Scope2SourceTemplateForm = () => {
                         }}
                         className="rounded"
                       />
-                      <span>{member.name} ({member.employeeId})</span>
+                      <span>{member.name}</span>
                     </label>
                   ))}
                 </div>
               </div>
             </CardContent>
           </Card>
+
           <div className="flex justify-end gap-4">
             <Button type="button" variant="outline" onClick={() => navigate('/ghg-accounting')}>
               Cancel

@@ -14,7 +14,20 @@ import { httpClient } from '@/lib/httpClient';
 
 type DataStatus = 'No Data' | 'Draft' | 'Under Review' | 'Reviewed';
 
-export const Scope1NewWorkflow = () => {
+type ScopeAccessType = 'data-collector' | 'data-verifier';
+
+export interface CurrentAccessItem {
+  id: string;
+  access: ScopeAccessType;
+}
+
+export interface Scope1NewWorkflowProps {
+  currentAccess: CurrentAccessItem[];
+}
+
+export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
+  currentAccess,
+}) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [viewMode, setViewMode] = useState<ViewMode>('monthly');
@@ -66,6 +79,7 @@ export const Scope1NewWorkflow = () => {
 
           createdDate: item.createdAt,  // mapping backend → frontend naming
           createdBy: "",                // backend doesn’t have this value
+          access: currentAccess.find(ca => ca.id === item._id)?.access || 'data-collector',
         }));
         // let dataCollections: GHGSourceTemplate[] = dataSourceResponse.data;
         setSourceTemplates(dataCollections);
@@ -266,6 +280,7 @@ export const Scope1NewWorkflow = () => {
                     <TableHead>Facility</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Frequency</TableHead>
+                    <TableHead>Access</TableHead>
                     <TableHead>Status ({viewMode === 'monthly' ? selectedMonth : 'Year'} {selectedYear})</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -280,17 +295,29 @@ export const Scope1NewWorkflow = () => {
                         <TableCell>{template.facilityName}</TableCell>
                         <TableCell><Badge variant="outline">{template.sourceCategory}</Badge></TableCell>
                         <TableCell><Badge variant="secondary">{template.measurementFrequency}</Badge></TableCell>
+                        <TableCell>
+                          {template.access}
+                        </TableCell>
                         <TableCell>{getStatusBadge(status)}</TableCell>
                         <TableCell>
                           <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                            <Button
+                            {template.access == 'data-collector' && <Button
                               size="sm"
                               variant="default"
                               onClick={() => handleCollectData(template)}
                             >
                               <Database className="h-4 w-4 mr-1" />
                               Collect Data
-                            </Button>
+                            </Button>}
+
+                            {template.access == 'data-verifier' && <Button
+                              size="sm"
+                              variant="default"
+                              onClick={() => handleCollectData(template)}
+                            >
+                              <Database className="h-4 w-4 mr-1" />
+                              Verify Data
+                            </Button>}
                             <Button
                               size="sm"
                               variant="ghost"

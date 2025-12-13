@@ -12,7 +12,20 @@ import { httpClient } from '@/lib/httpClient';
 
 type DataStatus = 'No Data' | 'Draft' | 'Submitted' | 'Verified';
 
-export const Scope2NewWorkflow = () => {
+type ScopeAccessType = 'data-collector' | 'data-verifier';
+
+export interface CurrentAccessItem {
+  id: string;
+  access: ScopeAccessType;
+}
+
+export interface Scope1NewWorkflowProps {
+  currentAccess: CurrentAccessItem[];
+}
+
+export const Scope2NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
+  currentAccess,
+}) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [sourceTemplates, setSourceTemplates] = useState<GHGSourceTemplate[]>([]);
@@ -98,9 +111,15 @@ export const Scope2NewWorkflow = () => {
     navigate('/ghg-accounting/scope2/define-source', { state: { template } });
   };
 
+  // const handleCollectData = (template: GHGSourceTemplate) => {
+  //   navigate('/ghg-data-collection', {
+  //     state: { sourceId: template._id, scope: 2 }
+  //   });
+  // };
+
   const handleCollectData = (template: GHGSourceTemplate) => {
-    navigate('/ghg-data-collection', {
-      state: { sourceId: template._id, scope: 2 }
+    navigate('/ghg-accounting/scope2/collect-data', { 
+      state: { template } 
     });
   };
 
