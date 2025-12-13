@@ -141,35 +141,42 @@ const IRLPage = () => {
             {/* <TabsTrigger value="warehouse">Warehouse</TabsTrigger> */}
             <TabsTrigger value="facility">Facility</TabsTrigger>
             <TabsTrigger value="governance">Governance</TabsTrigger>
-            <TabsTrigger value="custom">Custom</TabsTrigger>
+            <TabsTrigger value="custom">Others</TabsTrigger>
           </TabsList>
           
           <TabsContent value="company">
             <IRLCompanyInformation buttonEnabled={buttonEnabled} />
+            <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="company" />
           </TabsContent>
           
           <TabsContent value="hr">
             <IRLHRInformation buttonEnabled={buttonEnabled} />
+            <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="hr" />
           </TabsContent>
 
           <TabsContent value="business">
             <IRLBusinessOperations buttonEnabled={buttonEnabled} />
+            <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="business" />
           </TabsContent>
 
           <TabsContent value="photographs">
             <IRLPhotographs buttonEnabled={buttonEnabled} />
+            <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="photographs" />
           </TabsContent>
 
           <TabsContent value="compliance">
             <IRLCompliance buttonEnabled={buttonEnabled} />
+            <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="compliance" />
           </TabsContent>
 
           <TabsContent value="management">
             <IRLManagement buttonEnabled={buttonEnabled}/>
+            <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="management" />
           </TabsContent>
 
           <TabsContent value="itsecurity">
             <IRLITSecurity buttonEnabled={buttonEnabled} />
+            <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="itsecurity" />
           </TabsContent>
 
           {/* <TabsContent value="warehouse">
@@ -178,10 +185,12 @@ const IRLPage = () => {
 
           <TabsContent value="facility">
             <IRLAdditionalFacility buttonEnabled={buttonEnabled} />
+            <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="facility" />
           </TabsContent>
 
           <TabsContent value="governance">
             <IRLGovernance buttonEnabled={buttonEnabled} />
+            <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="governance" />
           </TabsContent>
 
           <TabsContent value="custom">
