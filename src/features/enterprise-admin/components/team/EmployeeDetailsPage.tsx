@@ -524,7 +524,7 @@ const EmployeeDetailsPage = () => {
             </div>
           </div>
           <div className="flex gap-2">
-            {isEditing ? (
+            {/* {isEditing ? (
               <>
                 <Button variant="outline" onClick={() => setIsEditing(false)}>
                   Cancel
@@ -539,7 +539,7 @@ const EmployeeDetailsPage = () => {
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Details
               </Button>
-            )}
+            )} */}
           </div>
         </div>
 

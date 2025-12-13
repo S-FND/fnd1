@@ -1,21 +1,28 @@
-
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Calendar, Users, Building, Clock, MapPin, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { fetchEHSTrainings } from '@/data/ehs/trainings';
-import type { EHSTraining } from '@/data/ehs/trainings';
+import { EHSTraining } from './training-form/types/ehsTraining.types';
 import { Link } from 'react-router-dom';
 import TrainingApprovalCard from './TrainingApprovalCard';
+import { httpClient } from '@/lib/httpClient';
 
 const EHSTrainingsList = () => {
-  const { data: trainings, isLoading, refetch } = useQuery({
+  const queryClient = useQueryClient();
+  
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ['ehs-trainings'],
-    queryFn: fetchEHSTrainings,
+    queryFn: async () => {
+      const response: any = await httpClient.get('ehs/trainings');
+      return response.data || response; // The API returns { data: [...] } or just [...]
+    },
   });
+
+  // Extract the trainings array from the response
+  const trainings: EHSTraining[] = Array.isArray(data) ? data : (data?.data || []);
 
   if (isLoading) {
     return (
@@ -143,7 +150,7 @@ const EHSTrainingsList = () => {
               </CardContent>
               <CardFooter className="p-4">
                 <Button variant="outline" className="w-full" asChild>
-                  <Link to={`/ehs-trainings/${training.id}`}>View Training Details</Link>
+                  <Link to={`/ehs-trainings/${training._id}`}>View Training Details</Link>
                 </Button>
               </CardFooter>
             </Card>

@@ -8,7 +8,7 @@ import { ESGManagementSubmenu } from './ESGManagementSubmenu';
 import { ReportsSubmenu } from './ReportsSubmenu';
 import { StakeholdersSubmenu } from './StakeholdersSubmenu';
 import { AuditSubmenu } from './AuditSubmenu';
-// import { SDGSubmenu } from './SDGSubmenu';
+import { SDGSubmenu } from './SDGSubmenu';
 import { getNavigationItems } from './navigationData';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { PageAccessContext, PageAccessItem } from '@/context/PageAccessContext';
@@ -164,15 +164,15 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
               );
             }
 
-            // if (item.name === 'SDG') {
-            //   return (
-            //     <SDGSubmenu
-            //       key={item.name}
-            //       isExpanded={expandedMenus.sdg}
-            //       onToggle={() => toggleMenu('sdg')}
-            //     />
-            //   );
-            // }
+            if (item.name === 'SDG') {
+              return (
+                <SDGSubmenu
+                  key={item.name}
+                  isExpanded={expandedMenus.sdg}
+                  onToggle={() => toggleMenu('sdg')}
+                />
+              );
+            }
 
             // Regular menu items
             else {
