@@ -80,6 +80,7 @@ import InternalAuditsPage from './pages/audit/InternalAuditsPage';
 import LMSPage from './pages/LMS';
 import ActionLogPage from './components/action-log/ActionLogPage';
 import PendingApprovalsPage from './pages/PendingApprovalsPage';
+import VerifierApprovalsPage from './pages/VerifierApprovalsPage';
 
 function App() {
   return (
@@ -124,6 +125,7 @@ function App() {
           <Route path="/ghg-accounting/unit-converter" element={<UnitConverterPage />} />
           <Route path="/ghg-data-collection" element={<GHGDataCollection />} />
               <Route path="/pending-approvals" element={<PendingApprovalsPage />} />
+              <Route path="/verifier-approvals" element={<VerifierApprovalsPage />} />
               <Route path="/compliance" element={<Compliance />} />
               <Route path="/lms" element={<LMSPage />} />
               <Route path="/reports" element={<ReportsPage />} />
