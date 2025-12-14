@@ -316,6 +316,42 @@ const VerifierApprovalsPage: React.FC = () => {
     }
   };
 
+  const handleQuickApprove = async (item: ApprovalItem) => {
+    if (item.type !== 'ghg_activity') {
+      toast.info('Quick approve is only available for GHG data');
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('ghg_activity_data')
+        .update({
+          status: 'verified',
+          verified_by: user.id,
+          verified_at: new Date().toISOString(),
+        })
+        .eq('id', item.id);
+
+      if (error) throw error;
+
+      toast.success('Data approved successfully');
+      fetchApprovalItems();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to approve');
+    }
+  };
+
+  const handleQuickReject = async (item: ApprovalItem) => {
+    // For reject, open the dialog to require a comment
+    if (item.type === 'ghg_activity') {
+      setSelectedActivityId(item.id);
+      setApprovalDialogOpen(true);
+    }
+  };
+
   const filteredItems = approvalItems.filter(item => {
     if (selectedModule !== 'all' && item.module !== selectedModule) return false;
     if (selectedPriority !== 'all' && item.priority !== selectedPriority) return false;
@@ -530,8 +566,28 @@ const VerifierApprovalsPage: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                           {getStatusBadge(item.status)}
+                          {item.type === 'ghg_activity' && (
+                            <>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                onClick={(e) => { e.stopPropagation(); handleQuickApprove(item); }}
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={(e) => { e.stopPropagation(); handleQuickReject(item); }}
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
                           <Button size="sm" onClick={() => handleReviewClick(item)}>
                             Review
                           </Button>
@@ -574,12 +630,32 @@ const VerifierApprovalsPage: React.FC = () => {
                               </span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3">
-                            {getStatusBadge(item.status)}
-                            <Button size="sm" onClick={() => handleReviewClick(item)}>
-                              Review
-                            </Button>
-                          </div>
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(item.status)}
+                          {item.type === 'ghg_activity' && (
+                            <>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                onClick={(e) => { e.stopPropagation(); handleQuickApprove(item); }}
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={(e) => { e.stopPropagation(); handleQuickReject(item); }}
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                          <Button size="sm" onClick={() => handleReviewClick(item)}>
+                            Review
+                          </Button>
+                        </div>
                         </div>
                       ))}
                     </div>
@@ -626,8 +702,28 @@ const VerifierApprovalsPage: React.FC = () => {
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
                             {getStatusBadge(item.status)}
+                            {item.type === 'ghg_activity' && (
+                              <>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                  onClick={(e) => { e.stopPropagation(); handleQuickApprove(item); }}
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  onClick={(e) => { e.stopPropagation(); handleQuickReject(item); }}
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
                             <Button size="sm" onClick={() => handleReviewClick(item)}>
                               Review
                             </Button>
