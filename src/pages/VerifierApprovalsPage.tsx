@@ -64,37 +64,21 @@ const VerifierApprovalsPage: React.FC = () => {
 
   useEffect(() => {
     const init = async () => {
-      await fetchUserProfile();
-      // Start fetching data regardless of profile status after a timeout
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
+      if (user?.email) {
+        await fetchUserProfile();
+      }
+      // Always fetch approval items after profile attempt
+      await fetchApprovalItems();
+      await fetchFacilities();
     };
     init();
   }, [user]);
 
-  useEffect(() => {
-    if (userProfileId) {
-      fetchApprovalItems();
-      fetchFacilities();
-    } else {
-      // Still fetch if no profile after delay
-      const timer = setTimeout(() => {
-        fetchApprovalItems();
-        fetchFacilities();
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [userProfileId]);
-
   const fetchUserProfile = async () => {
-    if (!user?.email) {
-      setLoading(false);
-      return;
-    }
+    if (!user?.email) return;
     
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('user_profiles')
         .select('user_id')
         .eq('email', user.email)
@@ -102,12 +86,9 @@ const VerifierApprovalsPage: React.FC = () => {
       
       if (data?.user_id) {
         setUserProfileId(data.user_id);
-      } else {
-        setLoading(false);
       }
     } catch (error) {
       console.error('Error fetching user profile:', error);
-      setLoading(false);
     }
   };
 
