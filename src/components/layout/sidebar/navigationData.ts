@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, BarChart3, FileSearch, LineChart, ClipboardCheck, GraduationCap, Calendar, Users, Building2, Settings, FileText, TreePine, Target, Activity } from 'lucide-react';
+import { LayoutDashboard, BarChart3, FileSearch, LineChart, ClipboardCheck, GraduationCap, Calendar, Users, Building2, Settings, FileText, TreePine, Target, Activity, Shield } from 'lucide-react';
 import { FeatureId } from '@/types/features';
 
 export interface NavigationItem {
@@ -137,14 +137,22 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
       }
     );
 
-    // Add Settings only for admin users
-    if (role === 'admin') {
-      baseItems.push({
-        name: "Settings",
-        href: "/settings",
-        icon: Settings,
-        featureId: 'settings'
-      });
+    // Add Settings and Verifier Admin only for admin users
+    if (role === 'admin' || role === 'super_admin') {
+      baseItems.push(
+        {
+          name: "Verifier Admin",
+          href: "/verifier-admin",
+          icon: Shield,
+          featureId: 'verifier-admin'
+        },
+        {
+          name: "Settings",
+          href: "/settings",
+          icon: Settings,
+          featureId: 'settings'
+        }
+      );
     }
   }
 

@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Save, Download, Upload } from "lucide-react";
+import { Save, Download, Upload, SendHorizonal } from "lucide-react";
 import { GHGSource, PeriodDataEntry, generatePeriodNames } from '@/types/ghg-data-collection';
 import { downloadCSVTemplate, parseCSVData, exportToCSV, validateFrequencyData } from '@/utils/csvHelpers';
 import { UnitSelector } from '@/components/ghg/UnitSelector';
@@ -32,6 +32,7 @@ export const DataCollectionDialog: React.FC<DataCollectionDialogProps> = ({
   const { toast } = useToast();
   const [periodData, setPeriodData] = useState<PeriodDataEntry[]>([]);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [existingData, setExistingData] = useState<Map<string, any>>(new Map());
   const [validationResults, setValidationResults] = useState<Map<number, ValidationResult>>(new Map());
   const [validating, setValidating] = useState(false);
@@ -162,10 +163,16 @@ export const DataCollectionDialog: React.FC<DataCollectionDialogProps> = ({
     return activityValue * source.emission_factor;
   };
 
-  const handleSave = async () => {
+  const saveData = async (status: 'pending' | 'submitted') => {
     if (!source) return;
 
-    setLoading(true);
+    const isSubmitting = status === 'submitted';
+    if (isSubmitting) {
+      setSubmitting(true);
+    } else {
+      setLoading(true);
+    }
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
@@ -200,7 +207,7 @@ export const DataCollectionDialog: React.FC<DataCollectionDialogProps> = ({
             collected_by: user.id,
             notes: p.notes,
             evidence_urls: p.evidenceUrls || [],
-            status: 'submitted', // Set to submitted for approval workflow
+            status: status,
             created_by: user.id,
           };
         });
@@ -212,22 +219,28 @@ export const DataCollectionDialog: React.FC<DataCollectionDialogProps> = ({
       if (error) throw error;
 
       toast({
-        title: "Data Saved Successfully",
-        description: `Saved ${entries.length} period(s) of activity data.`,
+        title: isSubmitting ? "Submitted for Verification" : "Draft Saved",
+        description: isSubmitting 
+          ? `${entries.length} period(s) submitted for verifier approval.`
+          : `${entries.length} period(s) saved as draft.`,
       });
 
       onSuccess?.();
       onOpenChange(false);
     } catch (error: any) {
       toast({
-        title: "Error Saving Data",
+        title: "Error",
         description: error.message,
         variant: "destructive",
       });
     } finally {
       setLoading(false);
+      setSubmitting(false);
     }
   };
+
+  const handleSaveDraft = () => saveData('pending');
+  const handleSubmitForVerification = () => saveData('submitted');
 
   const handleDownloadTemplate = () => {
     if (!source) return;
@@ -315,6 +328,9 @@ export const DataCollectionDialog: React.FC<DataCollectionDialogProps> = ({
 
   const completedPeriods = periodData.filter(p => p.activity_value > 0).length;
 
+  // Check if any existing data is already submitted
+  const hasSubmittedData = Array.from(existingData.values()).some(d => d.status === 'submitted' || d.status === 'verified');
+
   if (!source) return null;
 
   return (
@@ -396,59 +412,69 @@ export const DataCollectionDialog: React.FC<DataCollectionDialogProps> = ({
             <div className="space-y-4">
               <h3 className="font-semibold">Period-wise Activity Data</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {periodData.map((period, index) => (
-                  <Card key={index} className={existingData.has(period.period_name) ? 'border-primary' : ''}>
-                    <CardContent className="pt-4 space-y-3">
-                      <div className="flex justify-between items-center">
-                        <Label className="font-semibold">{period.period_name}</Label>
-                        {existingData.has(period.period_name) && (
-                          <Badge variant="secondary" className="text-xs">Saved</Badge>
-                        )}
-                      </div>
-                      
-                      <UnitSelector
-                        label="Activity Value"
-                        value={period.activity_value}
-                        onChange={(value) => handleValueChange(index, value)}
-                        baseUnit={source.activity_unit}
-                        selectedUnit={period.selectedUnit || source.activity_unit}
-                        onUnitChange={(unit) => handleUnitChange(index, unit)}
-                        placeholder="0.00"
-                      />
-
-                      {period.activity_value > 0 && source.emission_factor && (
-                        <div className="text-xs text-muted-foreground">
-                          ≈ {(calculateEmissions(period.activity_value) / 1000).toFixed(3)} tCO₂e
+                {periodData.map((period, index) => {
+                  const existingEntry = existingData.get(period.period_name);
+                  const entryStatus = existingEntry?.status;
+                  
+                  return (
+                    <Card key={index} className={existingEntry ? 'border-primary' : ''}>
+                      <CardContent className="pt-4 space-y-3">
+                        <div className="flex justify-between items-center">
+                          <Label className="font-semibold">{period.period_name}</Label>
+                          {existingEntry && (
+                            <Badge 
+                              variant={entryStatus === 'submitted' ? 'default' : entryStatus === 'verified' ? 'secondary' : 'outline'}
+                              className="text-xs"
+                            >
+                              {entryStatus === 'submitted' ? 'Pending Review' : entryStatus === 'verified' ? 'Verified' : 'Draft'}
+                            </Badge>
+                          )}
                         </div>
-                      )}
-
-                      <div>
-                        <Label className="text-xs text-muted-foreground">Notes (optional)</Label>
-                        <Textarea
-                          value={period.notes}
-                          onChange={(e) => handleNotesChange(index, e.target.value)}
-                          placeholder="Add notes..."
-                          rows={2}
-                          className="text-sm"
+                        
+                        <UnitSelector
+                          label="Activity Value"
+                          value={period.activity_value}
+                          onChange={(value) => handleValueChange(index, value)}
+                          baseUnit={source.activity_unit}
+                          selectedUnit={period.selectedUnit || source.activity_unit}
+                          onUnitChange={(unit) => handleUnitChange(index, unit)}
+                          placeholder="0.00"
                         />
-                      </div>
 
-                      <EvidenceFileUpload
-                        value={period.evidenceUrls || []}
-                        onChange={(urls) => handleEvidenceChange(index, urls)}
-                        label="Evidence Files"
-                        description="Upload supporting documents (optional)"
-                        maxFiles={3}
-                        scope={`period-${index}`}
-                      />
+                        {period.activity_value > 0 && source.emission_factor && (
+                          <div className="text-xs text-muted-foreground">
+                            ≈ {(calculateEmissions(period.activity_value) / 1000).toFixed(3)} tCO₂e
+                          </div>
+                        )}
 
-                      {/* Validation Warnings */}
-                      <ValidationWarnings
-                        validationResult={validationResults.get(index) || null}
-                      />
-                    </CardContent>
-                  </Card>
-                ))}
+                        <div>
+                          <Label className="text-xs text-muted-foreground">Notes (optional)</Label>
+                          <Textarea
+                            value={period.notes}
+                            onChange={(e) => handleNotesChange(index, e.target.value)}
+                            placeholder="Add notes..."
+                            rows={2}
+                            className="text-sm"
+                          />
+                        </div>
+
+                        <EvidenceFileUpload
+                          value={period.evidenceUrls || []}
+                          onChange={(urls) => handleEvidenceChange(index, urls)}
+                          label="Evidence Files"
+                          description="Upload supporting documents (optional)"
+                          maxFiles={3}
+                          scope={`period-${index}`}
+                        />
+
+                        {/* Validation Warnings */}
+                        <ValidationWarnings
+                          validationResult={validationResults.get(index) || null}
+                        />
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
 
@@ -482,13 +508,24 @@ export const DataCollectionDialog: React.FC<DataCollectionDialogProps> = ({
           </div>
         </ScrollArea>
 
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={loading || completedPeriods === 0}>
+          <Button 
+            variant="secondary" 
+            onClick={handleSaveDraft} 
+            disabled={loading || submitting || completedPeriods === 0}
+          >
             <Save className="mr-2 h-4 w-4" />
-            {loading ? 'Saving...' : 'Save Data'}
+            {loading ? 'Saving...' : 'Save as Draft'}
+          </Button>
+          <Button 
+            onClick={handleSubmitForVerification} 
+            disabled={loading || submitting || completedPeriods === 0}
+          >
+            <SendHorizonal className="mr-2 h-4 w-4" />
+            {submitting ? 'Submitting...' : 'Submit for Verification'}
           </Button>
         </DialogFooter>
       </DialogContent>

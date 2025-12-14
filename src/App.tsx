@@ -81,6 +81,7 @@ import LMSPage from './pages/LMS';
 import ActionLogPage from './components/action-log/ActionLogPage';
 import PendingApprovalsPage from './pages/PendingApprovalsPage';
 import VerifierApprovalsPage from './pages/VerifierApprovalsPage';
+import VerifierAdminPage from './pages/VerifierAdminPage';
 
 function App() {
   return (
@@ -126,6 +127,7 @@ function App() {
           <Route path="/ghg-data-collection" element={<GHGDataCollection />} />
               <Route path="/pending-approvals" element={<PendingApprovalsPage />} />
               <Route path="/verifier-approvals" element={<VerifierApprovalsPage />} />
+              <Route path="/verifier-admin" element={<VerifierAdminPage />} />
               <Route path="/compliance" element={<Compliance />} />
               <Route path="/lms" element={<LMSPage />} />
               <Route path="/reports" element={<ReportsPage />} />
