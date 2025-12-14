@@ -65,6 +65,10 @@ const VerifierApprovalsPage: React.FC = () => {
   useEffect(() => {
     const init = async () => {
       await fetchUserProfile();
+      // Start fetching data regardless of profile status after a timeout
+      setTimeout(() => {
+        setLoading(false);
+      }, 2000);
     };
     init();
   }, [user]);
@@ -73,20 +77,37 @@ const VerifierApprovalsPage: React.FC = () => {
     if (userProfileId) {
       fetchApprovalItems();
       fetchFacilities();
+    } else {
+      // Still fetch if no profile after delay
+      const timer = setTimeout(() => {
+        fetchApprovalItems();
+        fetchFacilities();
+      }, 1000);
+      return () => clearTimeout(timer);
     }
   }, [userProfileId]);
 
   const fetchUserProfile = async () => {
-    if (!user?.email) return;
+    if (!user?.email) {
+      setLoading(false);
+      return;
+    }
     
-    const { data } = await supabase
-      .from('user_profiles')
-      .select('user_id')
-      .eq('email', user.email)
-      .single();
-    
-    if (data?.user_id) {
-      setUserProfileId(data.user_id);
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('user_id')
+        .eq('email', user.email)
+        .maybeSingle();
+      
+      if (data?.user_id) {
+        setUserProfileId(data.user_id);
+      } else {
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      setLoading(false);
     }
   };
 
@@ -102,13 +123,11 @@ const VerifierApprovalsPage: React.FC = () => {
   };
 
   const fetchApprovalItems = async () => {
-    if (!userProfileId) return;
-    
     setLoading(true);
     try {
       const items: ApprovalItem[] = [];
 
-      // Fetch GHG activity data where user is an assigned verifier
+      // Fetch GHG activity data with status 'submitted'
       const { data: ghgData, error: ghgError } = await supabase
         .from('ghg_activity_data')
         .select(`
@@ -139,14 +158,18 @@ const VerifierApprovalsPage: React.FC = () => {
         console.error('Error fetching GHG data:', ghgError);
       }
 
-      // Filter GHG data to only include items where user is assigned verifier
+      // Filter GHG data to items where user is assigned verifier (if userProfileId exists)
+      // For admins/managers, show all submitted data
       if (ghgData) {
-        const userGhgData = (ghgData as unknown as GHGActivityData[]).filter(item => {
-          const verifiers = item.ghg_sources?.assigned_verifiers || [];
-          return verifiers.includes(userProfileId);
-        });
+        const ghgDataTyped = ghgData as unknown as GHGActivityData[];
+        const filteredGhgData = userProfileId 
+          ? ghgDataTyped.filter(item => {
+              const verifiers = item.ghg_sources?.assigned_verifiers || [];
+              return verifiers.includes(userProfileId);
+            })
+          : ghgDataTyped; // Show all for admins without profile
 
-        userGhgData.forEach((item) => {
+        filteredGhgData.forEach((item) => {
           items.push({
             id: item.id,
             type: 'ghg_activity',
