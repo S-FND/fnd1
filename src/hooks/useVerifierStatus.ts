@@ -31,9 +31,10 @@ export const useVerifierStatus = () => {
           .from('user_profiles')
           .select('user_id')
           .eq('email', user.email)
-          .single();
+          .maybeSingle();
 
         if (!profileData?.user_id) {
+          // No profile yet - could still be a verifier via role
           setStatus(prev => ({ ...prev, loading: false }));
           return;
         }
@@ -45,7 +46,7 @@ export const useVerifierStatus = () => {
           .from('user_roles')
           .select('can_approve_actions')
           .eq('user_id', userId)
-          .single();
+          .maybeSingle();
 
         const canApproveActions = roleData?.can_approve_actions ?? false;
 

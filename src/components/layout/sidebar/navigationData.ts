@@ -31,7 +31,8 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
     }
   ];
 
-  if (role === 'admin' || role === 'manager') {
+  const isAdminRole = ['admin', 'manager', 'unit_admin', 'portfolio_company_admin', 'super_admin'].includes(role);
+  if (isAdminRole) {
     baseItems.push(
       {
         name: "Materiality",

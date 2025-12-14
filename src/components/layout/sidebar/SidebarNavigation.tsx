@@ -30,10 +30,11 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
   // Filter items based on verifier status - show for admins/managers by default OR if they are verifiers
   const visibleItems = getNavigationItems(role).filter(item => {
-    // Show "Approvals to be Done" for admins, managers, or verified verifiers
+    // Show "Approvals to be Done" for admins, managers, unit_admins, or verified verifiers
     if (item.name === 'Approvals to be Done') {
-      // Show for admin/manager roles always, or if user is specifically a verifier
-      return role === 'admin' || role === 'manager' || isVerifier;
+      // Show for admin roles always (don't wait for verifier check), or if user is specifically a verifier
+      const isAdminRole = ['admin', 'manager', 'unit_admin', 'portfolio_company_admin', 'super_admin'].includes(role);
+      return isAdminRole || isVerifier;
     }
     return true;
   });
