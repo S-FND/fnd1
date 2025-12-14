@@ -51,8 +51,8 @@ export const Scope3NewWorkflow = () => {
   };
 
   const handleCollectData = (template: GHGSourceTemplate) => {
-    navigate('/ghg-data-collection', { 
-      state: { sourceId: template.id, scope: 3 } 
+    navigate('/ghg-accounting/scope3/collect-data', { 
+      state: { template, month: new Date().toLocaleString('en-US', { month: 'long' }), year: new Date().getFullYear() } 
     });
   };
 
