@@ -16,7 +16,8 @@ export type FeatureId =
   | 'dashboard'
   | 'stakeholder-management'
   | 'action-log'
-  | 'verifier-approvals';
+  | 'verifier-approvals'
+  | 'verifier-admin';
 
 export interface Feature {
   id: FeatureId;
