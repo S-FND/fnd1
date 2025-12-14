@@ -11,6 +11,7 @@ import { AuditSubmenu } from './AuditSubmenu';
 import { SDGSubmenu } from './SDGSubmenu';
 import { getNavigationItems } from './navigationData';
 import { useAuth } from '@/context/AuthContext';
+import { useVerifierStatus } from '@/hooks/useVerifierStatus';
 
 interface SidebarNavigationProps {
   role: string;
@@ -25,8 +26,16 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 }) => {
   const location = useLocation();
   const { user } = useAuth();
+  const { isVerifier, loading: verifierLoading } = useVerifierStatus();
 
-  const visibleItems = getNavigationItems(role);
+  // Filter items based on verifier status
+  const visibleItems = getNavigationItems(role).filter(item => {
+    // Hide "Approvals to be Done" for non-verifiers
+    if (item.name === 'Approvals to be Done') {
+      return isVerifier;
+    }
+    return true;
+  });
 
   return (
     <SidebarGroup>

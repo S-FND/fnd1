@@ -127,6 +127,12 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
         href: "/action-log",
         icon: Activity,
         featureId: 'action-log'
+      },
+      {
+        name: "Approvals to be Done",
+        href: "/verifier-approvals",
+        icon: ClipboardCheck,
+        featureId: 'verifier-approvals'
       }
     );
 
