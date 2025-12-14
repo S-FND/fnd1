@@ -8,13 +8,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Send, Plus, Trash2 } from "lucide-react";
-import { GHGSourceTemplate, GHGDataCollection, getCollectionsForMonth } from '@/types/ghg-source-template';
+import { ArrowLeft, Save, Send, Trash2 } from "lucide-react";
+import { GHGSourceTemplate, GHGDataCollection } from '@/types/ghg-source-template';
+import { MeasurementFrequency, generatePeriodNames } from '@/types/ghg-data-collection';
 import { DataQuality } from '@/types/scope1-ghg';
 import { v4 as uuidv4 } from 'uuid';
+import FrequencySelector from '@/components/ghg/FrequencySelector';
 
 interface DataEntry {
   id: string;
+  periodName: string;
   date: string;
   activityDataValue: number;
   notes: string;
@@ -35,68 +38,55 @@ export const Scope2DataCollectionForm = () => {
   const { toast } = useToast();
   const { template } = location.state as { template: GHGSourceTemplate };
 
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toLocaleString('en-US', { month: 'long' }));
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedFrequency, setSelectedFrequency] = useState<MeasurementFrequency>(template.measurementFrequency);
   const [dataEntries, setDataEntries] = useState<DataEntry[]>([]);
   const [dataQuality, setDataQuality] = useState<DataQuality>('Medium');
   const [verifiedBy, setVerifiedBy] = useState('');
   const [collectionNotes, setCollectionNotes] = useState('');
 
-  const expectedEntries = getCollectionsForMonth(template.measurementFrequency);
+  useEffect(() => {
+    initializeEntries();
+  }, [selectedFrequency, template.id]);
 
   useEffect(() => {
     loadExistingCollections();
-  }, [selectedMonth, selectedYear, template.id]);
+  }, [selectedYear, template.id, selectedFrequency]);
 
   const loadExistingCollections = () => {
-    const key = `scope2_data_collections_${template.id}_${selectedMonth}_${selectedYear}`;
+    const key = `scope2_data_collections_${template.id}_${selectedFrequency}_${selectedYear}`;
     const stored = localStorage.getItem(key);
     
     if (stored) {
       const collections: GHGDataCollection[] = JSON.parse(stored);
       const entries: DataEntry[] = collections.map(c => ({
         id: c.id,
+        periodName: c.reportingMonth || '',
         date: c.collectedDate,
         activityDataValue: c.activityDataValue,
         notes: c.notes,
       }));
       setDataEntries(entries);
-    } else {
-      initializeEntries();
     }
   };
 
   const initializeEntries = () => {
-    const entries: DataEntry[] = [];
-    const count = expectedEntries > 0 ? expectedEntries : 1;
-    
-    for (let i = 0; i < count; i++) {
-      entries.push({
-        id: uuidv4(),
-        date: new Date().toISOString().split('T')[0],
-        activityDataValue: 0,
-        notes: '',
-        evidenceUrls: [],
-      });
-    }
-    setDataEntries(entries);
-  };
-
-  const handleAddEntry = () => {
-    setDataEntries([...dataEntries, {
+    const periods = generatePeriodNames(selectedFrequency);
+    const entries: DataEntry[] = periods.map((periodName) => ({
       id: uuidv4(),
+      periodName,
       date: new Date().toISOString().split('T')[0],
       activityDataValue: 0,
       notes: '',
       evidenceUrls: [],
-    }]);
+    }));
+    setDataEntries(entries);
   };
 
-  const handleRemoveEntry = (id: string) => {
-    if (dataEntries.length > 1) {
-      setDataEntries(dataEntries.filter(e => e.id !== id));
-    }
+  const handleFrequencyChange = (frequency: MeasurementFrequency) => {
+    setSelectedFrequency(frequency);
   };
+
 
   const updateEntry = (id: string, field: keyof DataEntry, value: any) => {
     setDataEntries(dataEntries.map(e => 
@@ -112,7 +102,7 @@ export const Scope2DataCollectionForm = () => {
   };
 
   const handleSave = (status: 'Draft' | 'Submitted') => {
-    const reportingPeriod = `${selectedMonth} ${selectedYear}`;
+    const reportingPeriod = `${selectedFrequency} ${selectedYear}`;
     
     const collections: GHGDataCollection[] = dataEntries.map(entry => {
       const calculatedEmissions = entry.activityDataValue * (template.emissionFactor || 0);
@@ -121,7 +111,7 @@ export const Scope2DataCollectionForm = () => {
         id: entry.id,
         sourceTemplateId: template.id,
         reportingPeriod,
-        reportingMonth: selectedMonth,
+        reportingMonth: entry.periodName,
         reportingYear: selectedYear,
         collectedDate: entry.date,
         activityDataValue: entry.activityDataValue,
@@ -137,10 +127,10 @@ export const Scope2DataCollectionForm = () => {
       };
     });
 
-    const key = `scope2_data_collections_${template.id}_${selectedMonth}_${selectedYear}`;
+    const key = `scope2_data_collections_${template.id}_${selectedFrequency}_${selectedYear}`;
     localStorage.setItem(key, JSON.stringify(collections));
 
-    const statusKey = `scope2_status_${template.id}_${selectedMonth}_${selectedYear}`;
+    const statusKey = `scope2_status_${template.id}_${selectedFrequency}_${selectedYear}`;
     localStorage.setItem(statusKey, status);
 
     toast({
@@ -166,26 +156,34 @@ export const Scope2DataCollectionForm = () => {
         <Badge variant="outline">{template.sourceType}</Badge>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground">Facility</div>
-            <div className="text-lg font-semibold">{template.facilityName}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground">Activity Unit</div>
-            <div className="text-lg font-semibold">{template.activityDataUnit}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-sm text-muted-foreground">Total Emissions</div>
-            <div className="text-lg font-semibold">{calculateTotalEmissions().toFixed(2)} tCO₂e</div>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Reporting Period & Frequency</CardTitle>
+          <CardDescription>Select the frequency and year for data collection</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FrequencySelector
+              value={selectedFrequency}
+              onChange={handleFrequencyChange}
+              defaultFrequency={template.measurementFrequency}
+            />
+            <div className="space-y-2">
+              <Label>Reporting Year</Label>
+              <Select value={selectedYear.toString()} onValueChange={(val) => setSelectedYear(parseInt(val))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[2022, 2023, 2024, 2025, 2026].map(y => (
+                    <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -193,13 +191,9 @@ export const Scope2DataCollectionForm = () => {
             <div>
               <CardTitle>Activity Data Entries</CardTitle>
               <CardDescription>
-                Expected entries for {template.measurementFrequency}: {expectedEntries}
+                Enter activity data for each {selectedFrequency.toLowerCase()} period ({dataEntries.length} periods)
               </CardDescription>
             </div>
-            <Button onClick={handleAddEntry} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Entry
-            </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -208,6 +202,9 @@ export const Scope2DataCollectionForm = () => {
               <CardContent className="pt-6">
                 <div className="grid grid-cols-12 gap-4 items-start">
                   <div className="col-span-2">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge variant="secondary">{entry.periodName}</Badge>
+                    </div>
                     <Label>Date</Label>
                     <Input
                       type="date"
@@ -224,7 +221,7 @@ export const Scope2DataCollectionForm = () => {
                       onChange={(e) => updateEntry(entry.id, 'activityDataValue', parseFloat(e.target.value) || 0)}
                     />
                   </div>
-                  <div className="col-span-2">
+                  <div className="col-span-3">
                     <Label>Emissions (tCO₂e)</Label>
                     <Input
                       type="text"
@@ -240,16 +237,6 @@ export const Scope2DataCollectionForm = () => {
                       onChange={(e) => updateEntry(entry.id, 'notes', e.target.value)}
                       placeholder="Optional notes..."
                     />
-                  </div>
-                  <div className="col-span-1 flex items-end">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveEntry(entry.id)}
-                      disabled={dataEntries.length === 1}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
                   </div>
                 </div>
               </CardContent>
