@@ -58,9 +58,9 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
           { name: "Overview", href: "/esg-dd", icon: FileSearch },
           { name: "Manual Assessment", href: "/esg-dd/manual", icon: FileText },
           { name: "Automated Assessment", href: "/esg-dd/automated", icon: FileText },
-          { name: "CAP Management", href: "/esg-dd/cap", icon: FileText },
-          { name: "IRL Assessment", href: "/esg-dd/irl", icon: FileText },
-          { name: "Reports", href: "/esg-dd/reports", icon: FileText }
+          { name: "ESG CAP", href: "/esg-dd/cap", icon: FileText },
+          // { name: "IRL Assessment", href: "/esg-dd/irl", icon: FileText },
+          { name: "ESG DD Reports", href: "/esg-dd/reports", icon: FileText }
         ]
       },
       {
