@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Card,
   CardContent,
@@ -8,21 +8,23 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Loader2, Upload, X } from 'lucide-react';
+import { Loader2, Upload, X, CheckCircle, AlertCircle, Clock } from 'lucide-react';
 import {
   fetchBoData, updateBoData,
   fetchComplianceData, updateComplianceData,
   fetchManagementData, updateManagementData,
   fetchITSecurityData, updateITSecurityData,
-  fetchGovernanceData,  updateGovernanceData,
-  fetchFacilityData, updateFacilityData, deleteFile
+  fetchGovernanceData, updateGovernanceData,
+  fetchFacilityData, updateFacilityData, deleteFile,
+  // verifyDocument
 } from '../../services/companyApi';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { logger } from '@/hooks/logger';
 import { httpClient } from '@/lib/httpClient';
-
+import { Badge } from '@/components/ui/badge';
+const hasLoggedRef = useRef(false);
 const TEXT_INPUT_KEYS = ['type_of_servers_used', 'cloud_servers_used', 'scope_data_stored_servers', 'name_of_contractors',
   'name_of_refrigerants',
   'supplier_code_of_conduct',
@@ -39,12 +41,30 @@ interface ComplianceItem {
   type?: 'default' | 'it-security' | 'governance';
 }
 
+interface FileDetails {
+  _id?: string;
+  name?: string;
+  file_path: string;
+  expiryDate?: string;
+  isUserVerified?: boolean;
+  isAdminVerified?: boolean;
+  verificationStatus?: 'pending' | 'verified' | 'rejected';
+  verifiedBy?: string;
+  verifiedAt?: string;
+  comments?: string;
+}
 interface IRLComplianceTableProps {
   title: string;
   description: string;
   items: Array<{ key: string; name: string }>;
   type?: 'default' | 'it-security' | 'governance';
   buttonEnabled?: boolean;
+  onVerifyClick?: (data: {
+    file: FileDetails;
+    questionId: string;
+    key: string;
+    question: string;
+  }) => void;
 }
 
 const fetchCompanyConfiguration = async (entityId: string, category: string) => {
@@ -52,7 +72,7 @@ const fetchCompanyConfiguration = async (entityId: string, category: string) => 
     const response: any = await httpClient.get(
       `company-irl/${entityId}/irl-config?category=${encodeURIComponent(category)}`
     );
-    
+
     if (response?.data?.status === true) {
       const responseData = response.data.data;
       
@@ -103,6 +123,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   items,
   type = 'default',
   buttonEnabled,
+  onVerifyClick
 }) => {
   const [complianceItems, setComplianceItems] = useState<ComplianceItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -110,9 +131,23 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [filePaths, setFilePaths] = useState<Record<string, string[]>>({});
+  const [fileDetails, setFileDetails] = useState<Record<string, FileDetails[]>>({});
+  const [verifyingFile, setVerifyingFile] = useState<string | null>(null);
 
-  const getS3FilePath = (file_path: string) =>
-    `https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/${file_path}`;
+  const getS3FilePath = (file_path: string) => {
+    // If already a full URL, return as-is
+    if (file_path.startsWith('https://')) {
+      return file_path;
+    }
+
+    // Check if it's from the staging environment
+    if (file_path.includes('fandoro-sustainability-saas-stage')) {
+      return file_path;
+    }
+
+    // Default to production S3 bucket
+    return `https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/${file_path}`;
+  };
 
   const getUserEntityId = () => {
     try {
@@ -139,72 +174,88 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       'Governance': 'governance',
       'Facility Information': 'facility'
     };
-    
+
     return mapping[title] || title.toLowerCase().replace(/\s+/g, '_');
   };
 
+  // Add this debug useEffect after your state declarations
   useEffect(() => {
-  const loadCompanyConfig = async () => {
-    if (!entityId) return;
-    
-    try {
-      const category = getCategoryFromTitle(title);
-      const configResult = await fetchCompanyConfiguration(entityId, category);
-      const { enabledItems, configExists } = configResult;
-      console.log('<----------configResult---------->',configResult);
-      let filtered: any = [];
-      
-      if (!configExists) {
-        // No config exists yet - show all items (default behavior)
-        filtered = items;
-      } else {
-        // Config exists
-        if (enabledItems.length > 0) {
-          // Some items are enabled - show only those
-          filtered = items.filter(item => enabledItems.includes(item.key));
-        } else {
-          // Config exists but all items are hidden - show nothing
-          filtered = [];
-        }
+    console.log('DEBUG - Current state:');
+    console.log('filePaths:', filePaths);
+    console.log('fileDetails:', fileDetails);
+    console.log('complianceItems:', complianceItems);
+
+    // Log each item's file details
+    complianceItems.forEach(item => {
+      const key = item.key;
+      if (fileDetails[key]) {
+        console.log(`Item ${key} has ${fileDetails[key].length} file details:`, fileDetails[key]);
       }
+    });
+  }, [filePaths, fileDetails, complianceItems]);
+
+  useEffect(() => {
+    const loadCompanyConfig = async () => {
+      if (!entityId) return;
       
-      setComplianceItems(
-        filtered.map((item, index) => ({
-          id: index + 1,
-          key: item.key,
-          name: item.name,
-          isApplicable: '',
-          attachment: [],
-          notes: '',
-          type
-        }))
-      );
-      
-      if (filtered.length > 0) {
-        await loadData(filtered);
-      } else {
+      try {
+        const category = getCategoryFromTitle(title);
+        const configResult = await fetchCompanyConfiguration(entityId, category);
+        const { enabledItems, configExists } = configResult;
+        console.log('<----------configResult---------->',configResult);
+        let filtered: any = [];
+        
+        if (!configExists) {
+          // No config exists yet - show all items (default behavior)
+          filtered = items;
+        } else {
+          // Config exists
+          if (enabledItems.length > 0) {
+            // Some items are enabled - show only those
+            filtered = items.filter(item => enabledItems.includes(item.key));
+          } else {
+            // Config exists but all items are hidden - show nothing
+            filtered = [];
+          }
+        }
+        
+        setComplianceItems(
+          filtered.map((item, index) => ({
+            id: index + 1,
+            key: item.key,
+            name: item.name,
+            isApplicable: '',
+            attachment: [],
+            notes: '',
+            type
+          }))
+        );
+        
+        if (filtered.length > 0) {
+          await loadData(filtered);
+        } else {
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Error loading company config:', error);
+        // On error, default to showing all items
+        setComplianceItems(
+          items.map((item, index) => ({
+            id: index + 1,
+            key: item.key,
+            name: item.name,
+            isApplicable: '',
+            attachment: [],
+            notes: '',
+            type
+          }))
+        );
         setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Error loading company config:', error);
-      // On error, default to showing all items
-      setComplianceItems(
-        items.map((item, index) => ({
-          id: index + 1,
-          key: item.key,
-          name: item.name,
-          isApplicable: '',
-          attachment: [],
-          notes: '',
-          type
-        }))
-      );
-      setIsLoading(false);
-    }
-  };
-  
-  loadCompanyConfig();
-}, [entityId, title, items]);
+    };
+    
+    loadCompanyConfig();
+  }, [entityId, title, items]);
 
   const getAPIFunctions = () => {
     switch (title.toLowerCase()) {
@@ -252,14 +303,93 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
         const key = item.key;
         const itemData = filteredResponse[key] || {};
 
+        console.log(`DEBUG - Processing ${key}:`, itemData);
+
         const isApplicable = itemData.isApplicable || itemData.answer || '';
         const notes = itemData.reason || '';
-        
+
+        // Store file paths
         const existingFiles = itemData.file_path || itemData.existing_files || [];
         if (existingFiles.length > 0) {
+          // IMPORTANT: Like the example, store the FULL URLs
+          const fullUrls = existingFiles.map(file => {
+            if (file.startsWith('https://')) {
+              return file;
+            }
+            return getS3FilePath(file);
+          });
+
           setFilePaths(prev => ({
             ...prev,
-            [key]: existingFiles.map(getS3FilePath)
+            [key]: fullUrls
+          }));
+        }
+
+        // CRITICAL FIX: Store file details exactly like the example component
+        if (itemData.file_details && Array.isArray(itemData.file_details)) {
+          console.log(`DEBUG - Found file_details for ${key}:`, itemData.file_details);
+
+          // Map file details exactly as in the example
+          const mappedDetails = itemData.file_details.map((detail: any, index: number) => {
+            console.log(`📄 [File Detail ${index}]`);
+            console.log('  Original detail:', detail);
+
+            // Get the file path - check if it's already a full URL
+            let filePath = detail.file_path;
+            console.log('  Original file_path:', filePath);
+
+            if (filePath && !filePath.startsWith('https://')) {
+              // Make sure we have the full S3 URL
+              filePath = getS3FilePath(filePath);
+              console.log('  Converted to full URL:', filePath);
+            }
+
+            console.log('  Final file_path:', filePath);
+
+            return {
+              ...detail,
+              file_path: filePath,
+              // IMPORTANT: The example uses isUserVerified directly from API
+              isUserVerified: detail.isUserVerified || false,
+              isAdminVerified: detail.isAdminVerified || false,
+              // Map verification status
+              verificationStatus: detail.isUserVerified && detail.isAdminVerified
+                ? 'verified'
+                : (!detail.isUserVerified && !detail.isAdminVerified)
+                  ? 'rejected'
+                  : 'pending',
+              expiryDate: detail.expiryDate || '',
+              name: detail.name || filePath?.split('/').pop() || 'Document',
+              // Keep the original _id if it exists
+              _id: detail._id || Math.random().toString(36).substr(2, 9)
+            };
+          });
+
+          console.log(`DEBUG - Mapped details for ${key}:`, mappedDetails);
+
+          setFileDetails(prev => ({
+            ...prev,
+            [key]: mappedDetails
+          }));
+        } else if (existingFiles.length > 0) {
+          // If we have files but no file_details, create placeholder details
+          // This matches the example component's behavior
+          const placeholderDetails = existingFiles.map((file, index) => {
+            const filePath = file.startsWith('https://') ? file : getS3FilePath(file);
+            return {
+              file_path: filePath,
+              isUserVerified: false,
+              isAdminVerified: false,
+              verificationStatus: 'pending' as const,
+              expiryDate: '',
+              name: filePath.split('/').pop() || `Document ${index + 1}`,
+              _id: Math.random().toString(36).substr(2, 9)
+            };
+          });
+
+          setFileDetails(prev => ({
+            ...prev,
+            [key]: placeholderDetails
           }));
         }
 
@@ -282,6 +412,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       setComplianceItems(updatedItems);
 
     } catch (err) {
+      console.error('Error loading data:', err);
     } finally {
       setIsLoading(false);
     }
@@ -290,6 +421,201 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   useEffect(() => {
     loadData();
   }, [entityId]);
+
+  // const handleVerifyDocument = async (file: FileDetails, itemKey: string, questionName: string) => {
+  //   if (!file.file_path) {
+  //     toast.error('No valid file found for verification');
+  //     return;
+  //   }
+
+  //   // If parent provides verification handler
+  //   if (onVerifyClick) {
+  //     onVerifyClick({
+  //       file: file,
+  //       questionId: itemKey,
+  //       key: itemKey,
+  //       question: questionName,
+  //     });
+  //     return;
+  //   }
+
+  //   // Otherwise handle internally (optional)
+  //   setVerifyingFile(file.file_path);
+  //   try {
+  //     // Call your verification API here
+  //     // const response = await verifyDocument({...});
+
+  //     // Update verification status in state
+  //     setFileDetails(prev => ({
+  //       ...prev,
+  //       [itemKey]: prev[itemKey]?.map(f =>
+  //         f.file_path === file.file_path
+  //           ? {
+  //             ...f,
+  //             isUserVerified: true,
+  //             verificationStatus: 'verified',
+  //             verifiedBy: 'Admin', // From API response
+  //             verifiedAt: new Date().toISOString()
+  //           }
+  //           : f
+  //       ) || []
+  //     }));
+
+  //     toast.success('Document verified successfully!');
+  //   } catch (error) {
+  //     toast.error('Failed to verify document');
+  //     console.error('Verification error:', error);
+  //   } finally {
+  //     setVerifyingFile(null);
+  //   }
+  // };
+
+  useEffect(() => {
+    console.log('📊 [FILES LOADED]');
+    Object.keys(filePaths).forEach(key => {
+      console.log(`  ${key}: ${filePaths[key]?.length || 0} files`);
+    });
+  }, [filePaths]);
+
+  const renderFileWithVerification = (fileUrl: string, itemKey: string, fileIndex: number) => {
+    console.log(`🔍 [renderFileWithVerification CALLED] ${itemKey} - File ${fileIndex}`);
+    
+    const fileName = fileUrl.split('/').pop() || 'Document';
+    const allDetails = fileDetails[itemKey] || [];
+    const renderCount = { current: 0 };
+  
+    // Only log first 2 times
+    if (renderCount.current < 2) {
+      console.log(`🔍 [Render ${renderCount.current + 1}] ${itemKey} - File ${fileIndex}`);
+      renderCount.current++;
+    }
+    if (!hasLoggedRef.current) {
+      console.log(`🔍 [INITIAL RENDER] ${itemKey} - File ${fileIndex}`);
+      if (fileIndex === filePaths[itemKey]?.length - 1) {
+        hasLoggedRef.current = true;
+      }
+    }
+    // Find or create details
+    let details = allDetails.find((detail: FileDetails, index: number) => {
+      // Clean URLs for comparison
+      const cleanFileUrl = fileUrl.toLowerCase();
+      const cleanDetailPath = (detail.file_path || '').toLowerCase();
+
+      // Multiple matching strategies
+      return (
+        cleanDetailPath === cleanFileUrl || // Exact match
+        cleanDetailPath.includes(fileName.toLowerCase()) || // Contains filename
+        cleanDetailPath.endsWith(fileName.toLowerCase()) || // Ends with filename
+        index === fileIndex // Position match
+      );
+    });
+
+    // Fallback: use index or create placeholder
+    if (!details && allDetails[fileIndex]) {
+      details = allDetails[fileIndex];
+    } else if (!details) {
+      details = {
+        file_path: fileUrl,
+        name: fileName,
+        _id: `temp-${itemKey}-${fileIndex}`,
+        isUserVerified: false,
+        isAdminVerified: false,
+        verificationStatus: 'pending' as const,
+        expiryDate: ''
+      };
+    }
+
+    const isFileExpired = details?.expiryDate ? isExpired(details.expiryDate) : false;
+    const isVerified = details?.isUserVerified === true && details?.isAdminVerified === true;
+    const isUserVerified = details?.isUserVerified === true;
+
+    const shortenFileName = (name: string) => {
+      if (name.length <= 20) return name;
+      return `${name.substring(0, 15)}...${name.substring(name.length - 5)}`;
+    };
+
+    return (
+      <div className="flex items-center justify-between bg-gray-50 p-2 rounded text-xs mb-1">
+        <div className="flex items-center gap-2 flex-1">
+          <a
+            href={fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="truncate text-blue-600 hover:text-blue-800 underline"
+            title={fileName}
+            onClick={(e) => {
+              e.preventDefault();
+              window.open(fileUrl, '_blank');
+            }}
+          >
+            {shortenFileName(fileName)}
+          </a>
+
+          <div className="flex items-center gap-1">
+            {isFileExpired && (
+              <Badge variant="destructive" className="text-xs py-0 px-1.5">
+                Expired
+              </Badge>
+            )}
+
+            {details?.expiryDate && !isFileExpired && (
+              <span className="text-xs text-gray-500 whitespace-nowrap">
+                Exp: {details.expiryDate}
+              </span>
+            )}
+
+            {isVerified && (
+              <Badge variant="default" className="text-xs bg-green-100 text-green-800 py-0 px-1.5">
+                <CheckCircle className="h-3 w-3 mr-1 inline" />
+                Verified
+              </Badge>
+            )}
+
+            {!isUserVerified && details && !isFileExpired && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  // ✅ KEEP logs only in the click handler
+                  console.log(`🔘 [Verify Clicked] ${itemKey} - File ${fileIndex}`);
+                  console.log('  File URL:', fileUrl);
+                  console.log('  Details:', details);
+
+                  // Create the data object
+                  const verificationData = {
+                    file: details,
+                    questionId: itemKey,
+                    key: itemKey,
+                    question: complianceItems.find(item => item.key === itemKey)?.name || '',
+                  };
+
+                  console.log('📤 Sending:', verificationData);
+
+                  if (onVerifyClick) {
+                    onVerifyClick(verificationData);
+                  }
+                }}
+                className="h-6 text-xs py-0 px-2"
+                disabled={!buttonEnabled}
+              >
+                <AlertCircle className="h-3 w-3 mr-1" />
+                Verify
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => handleDeleteExistingFile(itemKey, fileIndex, fileUrl)}
+          className="h-5 w-5 p-0 text-red-500 hover:text-red-700 ml-2"
+          disabled={!buttonEnabled}
+        >
+          <X className="h-3 w-3" />
+        </button>
+      </div>
+    );
+  };
 
   const buildPayload = (isDraft = false) => {
     const payload: any = {
@@ -301,7 +627,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       const key = item.key;
       if (TEXT_INPUT_KEYS.includes(key) || TEXTAREA_KEYS.includes(key)) {
         payload[key] = item.isApplicable;
-      }else {
+      } else {
         payload[key] = {
           answer: item.isApplicable,
           reason: item.notes || '',
@@ -320,22 +646,22 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
     let isValid = true;
-  
+
     complianceItems.forEach(item => {
       const key = item.key;
-         if (item.isApplicable === 'yes') {
-          const hasFiles = (
-            (filePaths[key]?.length > 0) || 
-            (item.attachment.length > 0)
-          );
-          if (!hasFiles) {
-            newErrors[key] = 'Please upload the document.';
-            isValid = false;
-          }
-        } else if (item.isApplicable === 'no' && !item.notes.trim()) {
-          newErrors[key] = 'Please provide the reason.';
+      if (item.isApplicable === 'yes') {
+        const hasFiles = (
+          (filePaths[key]?.length > 0) ||
+          (item.attachment.length > 0)
+        );
+        if (!hasFiles) {
+          newErrors[key] = 'Please upload the document.';
           isValid = false;
         }
+      } else if (item.isApplicable === 'no' && !item.notes.trim()) {
+        newErrors[key] = 'Please provide the reason.';
+        isValid = false;
+      }
     });
     setErrors(newErrors);
     return isValid;
@@ -356,7 +682,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
     setIsLoading(true);
 
     try {
-      const formData:any = new FormData();
+      const formData: any = new FormData();
 
       const payload = buildPayload(isDraft);
       formData.append('data', JSON.stringify(payload));
@@ -367,7 +693,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
         if (item.attachment.length > 0) {
           item.attachment.forEach(file => {
             const sanitizedFileName = sanitizeFileName(file.name);
-            formData.append(`${key}_file`, file,sanitizedFileName);
+            formData.append(`${key}_file`, file, sanitizedFileName);
           });
         }
       });
@@ -401,25 +727,25 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
 
   const handleFileUpload = (id: number, files: FileList | null) => {
     if (!files || files.length === 0) return;
-  
+
     const currentItem = complianceItems.find(item => item.id === id);
     const existingFiles = currentItem?.attachment.length || 0;
     const newFiles = Array.from(files);
     const totalFiles = existingFiles + newFiles.length;
-  
+
     if (totalFiles > 10) {
       toast.error('You can upload a maximum of 10 files.');
-      
+
       setTimeout(() => {
         const input = document.getElementById(`file-upload-${id}`) as HTMLInputElement | null;
         if (input) {
           input.value = '';
         }
       }, 0);
-      
+
       return;
     }
-  
+
     setComplianceItems(items =>
       items.map(item =>
         item.id === id
@@ -443,122 +769,74 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
     if (!fileName || typeof fileName !== 'string') {
       return fileName || '';
     }
-    
+
     const lastDotIndex = fileName.lastIndexOf('.');
     if (lastDotIndex <= 0 || lastDotIndex === fileName.length - 1) {
       return fileName
         .replace(/\./g, '_')
         .replace(/\s+/g, '_');
     }
-    
+
     const namePart = fileName.substring(0, lastDotIndex);
     const extension = fileName.substring(lastDotIndex);
-    
+
     const sanitizedBaseName = namePart
       .replace(/\./g, '_')
       .replace(/\s+/g, '_');
-    
+
     return sanitizedBaseName + extension;
   };
 
   const renderAttachmentCell = (item: ComplianceItem) => {
     const key = item.key;
     const error = errors[key];
-  
-    const shortenFileName = (name: string) => {
-      if (name.length <= 20) return name;
-      return `${name.substring(0, 9)}...${name.substring(name.length - 5)}`;
-    };
-  
+
     return (
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <Input
-            type="file"
-            accept=".pdf,.doc,.docx,.jpg,.png,.jpeg"
-            onChange={(e) => handleFileUpload(item.id, e.target.files)}
-            className="hidden"
-            id={`file-upload-${item.id}`}
-            disabled={!buttonEnabled}
-            multiple
-          />
-          <label
-            htmlFor={`file-upload-${item.id}`}
-            className={`flex items-center gap-2 px-3 py-2 text-sm border rounded-md cursor-pointer hover:bg-gray-50 ${
-              error?.includes('upload') ? 'border-red-500' : 'border-gray-300'
-            }${ !buttonEnabled ? 'bg-gray-100 cursor-not-allowed hover:bg-gray-100' : 'cursor-pointer hover:bg-gray-50'}`}
-          >
-            <Upload className="h-4 w-4" />
-            Upload Files
-          </label>
+          {/* File upload input */}
         </div>
-  
-        {filePaths[key]?.map((fileUrl, i) => {
-          const fileName = fileUrl.split('/').pop() || '';
-          
-          return (
-            <div key={`existing-${i}`} className="flex items-center justify-between bg-gray-50 p-1 py-0.5 rounded text-sx">
-              <div className="flex items-center gap-2">
-                <a
-                  href={fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="truncate flex-1 text-blue-600 hover:text-blue-800 underline"
-                  title={fileName}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    window.open(fileUrl, '_blank');
-                  }}
-                >
-                  {shortenFileName(fileName)}
-                </a>
-                <button
-                  type="button"
-                  onClick={() => handleDeleteExistingFile(key, i, fileUrl)}
-                  className="h-6 w-6 p-0 text-red-500 hover:text-red-700 ${ !buttonEnabled ? 'bg-gray-100 cursor-not-allowed hover:bg-gray-100' : 'cursor-pointer hover:bg-gray-50'}"
-                  disabled={isLoading || !buttonEnabled}
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <X className="h-3 w-3" />
-                  )}
-                </button>
-              </div>
+
+        {/* IMPORTANT: Check if filePaths has data for this key */}
+        {filePaths[key] && filePaths[key].length > 0 ? (
+          filePaths[key].map((fileUrl, i) =>
+            <div key={`${key}-${i}-${fileUrl}`}>
+              {renderFileWithVerification(fileUrl, key, i)}
             </div>
-          );
-        })}
-  
-        {item.attachment.map((file, fileIndex) => {
-          return (
-            <div key={fileIndex} className="flex items-center justify-between bg-gray-50 p-1 py-0.5 rounded text-sx">
-              <div className="flex items-center gap-2">
-                <a
-                  href={URL.createObjectURL(file)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="truncate flex-1 text-blue-600 hover:text-blue-800 underline"
-                  title={file.name}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    const url = URL.createObjectURL(file);
-                    window.open(url, '_blank');
-                  }}
-                >
-                  {shortenFileName(file.name)}
-                </a>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveFile(item.id, fileIndex)}
-                  className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
+          )
+        ) : (
+          <div className="text-gray-500 text-sm italic">No files uploaded yet</div>
+        )}
+
+        {/* Newly uploaded files */}
+        {item.attachment.map((file, fileIndex) => (
+          <div key={`new-${item.key}-${fileIndex}-${file.name}`} className="flex items-center justify-between bg-gray-50 p-2 rounded text-xs mb-1">
+            <div className="flex items-center gap-2 flex-1">
+              <a
+                href={URL.createObjectURL(file)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="truncate text-blue-600 hover:text-blue-800 underline"
+                title={file.name}
+              >
+                {file.name.length > 20
+                  ? `${file.name.substring(0, 15)}...${file.name.substring(file.name.length - 5)}`
+                  : file.name}
+              </a>
+              <Badge variant="secondary" className="text-xs py-0 px-1.5">
+                New
+              </Badge>
             </div>
-          );
-        })}
-  
+            <button
+              type="button"
+              onClick={() => handleRemoveFile(item.id, fileIndex)}
+              className="h-5 w-5 p-0 text-red-500 hover:text-red-700 ml-2"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ))}
+
         {error && error.includes('upload') && (
           <p className="text-xs text-red-500">{error}</p>
         )}
@@ -572,16 +850,16 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
 
     return (
       <div className="space-y-2">
-      <Textarea
-        value={item.notes}
-        onChange={(e) => handleNotesChange(item.id, e.target.value)}
-        placeholder="Enter notes..."
-        className={`min-h-[80px] ${error?.includes('reason') ? 'border-red-500' : ''}`}
-      />
-      {error && error.includes('reason') && (
-        <p className="text-xs text-red-500">{error}</p>
-      )}
-    </div>
+        <Textarea
+          value={item.notes}
+          onChange={(e) => handleNotesChange(item.id, e.target.value)}
+          placeholder="Enter notes..."
+          className={`min-h-[80px] ${error?.includes('reason') ? 'border-red-500' : ''}`}
+        />
+        {error && error.includes('reason') && (
+          <p className="text-xs text-red-500">{error}</p>
+        )}
+      </div>
     );
   };
 
@@ -589,7 +867,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
     try {
       setIsLoading(true);
       const filePath = fileUrl.replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/', '');
-      
+
       let type: string;
       switch (title.toLowerCase()) {
         case 'business operations':
@@ -673,14 +951,14 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
                     {type === 'it-security' && (
                       <th className="p-3 text-left text-sm font-semibold text-gray-900">Supporting Documents</th>
                     )}
-                     <th className="p-3 text-left text-sm font-semibold text-gray-900">
+                    <th className="p-3 text-left text-sm font-semibold text-gray-900">
                       {type === 'it-security' ? 'Details' : 'Company Notes'}
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {complianceItems.map((item, idx) => (
-                    <tr key={item.id}>
+                    <tr key={`${item.key}-${idx}`}>
                       <td className="whitespace-nowrap p-3 text-sm text-center text-gray-500">{idx + 1}</td>
                       <td className="p-3 text-sm font-medium text-gray-900">{item.name}</td>
                       <td className="p-3 text-sm text-gray-500">
@@ -706,7 +984,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
                             onValueChange={(value) => handleStatusChange(item.id, value)}
                             disabled={!buttonEnabled}
                           >
-                            <SelectTrigger  disabled={!buttonEnabled}>
+                            <SelectTrigger disabled={!buttonEnabled}>
                               <SelectValue placeholder="Select" />
                             </SelectTrigger>
                             <SelectContent>
@@ -723,14 +1001,14 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
                               {renderAttachmentCell(item)}
                             </td>
                           )}
-                          
+
                           {type === 'it-security' && (
                             <td className="whitespace-nowrap p-3 text-sm text-gray-500">
                               {renderAttachmentCell(item)}
                             </td>
                           )}
 
-                        <td className="p-3 text-sm text-gray-500">
+                          <td className="p-3 text-sm text-gray-500">
                             {renderITSecurityNotesCell(item)}
                           </td>
                         </>
