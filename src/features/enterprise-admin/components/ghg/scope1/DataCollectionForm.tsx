@@ -44,15 +44,21 @@ export const DataCollectionForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { template, month, year } = location.state as { 
+  
+  // Handle missing location state
+  const stateData = location.state as { 
     template: GHGSourceTemplate; 
     month: string; 
     year: number;
-  };
+  } | null;
+
+  const template = stateData?.template;
+  const month = stateData?.month;
+  const year = stateData?.year;
 
   const [selectedMonth, setSelectedMonth] = useState(month || new Date().toLocaleString('en-US', { month: 'long' }));
   const [selectedYear, setSelectedYear] = useState(year || new Date().getFullYear());
-  const [selectedFrequency, setSelectedFrequency] = useState<MeasurementFrequency>(template.measurementFrequency);
+  const [selectedFrequency, setSelectedFrequency] = useState<MeasurementFrequency>(template?.measurementFrequency || 'Monthly');
   const [dataEntries, setDataEntries] = useState<DataEntry[]>([]);
   const [dataQuality, setDataQuality] = useState<DataQuality>('Medium');
   const [verifiedBy, setVerifiedBy] = useState('');
@@ -62,13 +68,29 @@ export const DataCollectionForm = () => {
 
   const periodNames = generatePeriodNames(selectedFrequency);
 
+  // Redirect if no template provided
   useEffect(() => {
-    initializeEntries();
-  }, [selectedFrequency, template.id]);
+    if (!template) {
+      toast({
+        title: "No source selected",
+        description: "Please select an emission source first.",
+        variant: "destructive"
+      });
+      navigate('/ghg-accounting');
+    }
+  }, [template, navigate, toast]);
 
   useEffect(() => {
-    loadExistingCollections();
-  }, [selectedMonth, selectedYear, template.id, selectedFrequency]);
+    if (template) {
+      initializeEntries();
+    }
+  }, [selectedFrequency, template?.id]);
+
+  useEffect(() => {
+    if (template) {
+      loadExistingCollections();
+    }
+  }, [selectedMonth, selectedYear, template?.id, selectedFrequency]);
 
   const loadExistingCollections = () => {
     const key = `scope1_data_collections_${template.id}_${selectedFrequency}_${selectedYear}`;
@@ -226,6 +248,11 @@ export const DataCollectionForm = () => {
     XLSX.utils.book_append_sheet(wb, ws, 'Data Collection');
     XLSX.writeFile(wb, `${template.sourceDescription}_DataCollection_Template.xlsx`);
   };
+
+  // Early return if no template
+  if (!template) {
+    return null;
+  }
 
   const totalEmissions = calculateTotalEmissions();
 
