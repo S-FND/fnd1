@@ -46,10 +46,10 @@ const ESGDDPage = () => {
               Create, manage, and track ESG due diligence assessments and corrective action plans.
             </p>
           </div>
-          <Button onClick={() => setShowNewESGDD(true)}>
+          {/* <Button onClick={() => setShowNewESGDD(true)}>
             <Plus className="h-4 w-4 mr-2" />
             New ESG DD
-          </Button>
+          </Button> */}
         </div>
         
         {showNewESGDD && (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,7 @@ interface CustomQuestion {
   question_type: 'text' | 'textarea' | 'dropdown' | 'checkbox' | 'file' | 'number';
   options?: string[];
   entity_id: string;
+  tab_name?: string | string[];
   createdAt?: string;
   updatedAt?: string;
   answer?: string | FileAnswer | FileAnswer[];
@@ -42,13 +43,15 @@ interface CustomQuestionAnswer {
 
 interface IRLCustomQuestionsProps {
   buttonEnabled: boolean;
+  tabName?: string;
 }
 
 const getS3FilePath = (file_path: string) =>
   `https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/${file_path}`;
 
 const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({ 
-  buttonEnabled 
+  buttonEnabled,
+  tabName = 'custom'
 }) => {
   const [questions, setQuestions] = useState<CustomQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, CustomQuestionAnswer>>({});
@@ -56,6 +59,8 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
   const [filePaths, setFilePaths] = useState<Record<string, string[]>>({});
   const [statuses, setStatuses] = useState<Record<string, string>>({});
   const [comments, setComments] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({}); // Track touched fields
   const [isLoading, setIsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -192,6 +197,10 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
         setFilePaths(initialFilePaths);
         setStatuses(initialStatuses);
         setComments(initialComments);
+        
+        // Clear any validation errors on fresh load
+        setValidationErrors({});
+        setTouchedFields({});
       } else {
         throw new Error('Failed to fetch custom questions');
       }
@@ -211,6 +220,183 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     }
   }, [entityId]);
 
+  const filteredQuestions = useMemo(() => {
+    const filtered = questions.filter(q => {
+      // Handle tab_name as string or array
+      let questionTab: string;
+      
+      if (Array.isArray(q.tab_name)) {
+        // If it's an array, get the first element or default to 'custom'
+        questionTab = q.tab_name.length > 0 ? q.tab_name[0] : 'custom';
+      } else if (q.tab_name) {
+        // If it's a string, use it
+        questionTab = q.tab_name;
+      } else {
+        // If undefined/null, default to 'custom'
+        questionTab = 'custom';
+      }
+      
+      return questionTab === tabName;
+    });
+    
+    // Debug logging
+    console.log('Filtering questions:', {
+      totalQuestions: questions.length,
+      tabName,
+      filteredCount: filtered.length,
+      questionsWithTabs: questions.map(q => {
+        let tabValue: string;
+        if (Array.isArray(q.tab_name)) {
+          tabValue = q.tab_name.length > 0 ? q.tab_name[0] : 'custom (default)';
+        } else {
+          tabValue = q.tab_name || 'custom (default)';
+        }
+        return {
+          id: q._id,
+          text: q.question_text,
+          tab_name: tabValue
+        };
+      })
+    });
+    
+    return filtered;
+  }, [questions, tabName]);
+
+  // Real-time validation functions
+  const validateFileQuestion = (question: CustomQuestion) => {
+    const status = statuses[question._id] || '';
+    const files = uploadedFiles[question._id] || [];
+    const existingFileUrls = filePaths[question._id] || [];
+    const comment = comments[question._id] || '';
+    
+    if (status === 'Yes') {
+      if (files.length === 0 && existingFileUrls.length === 0) {
+        return {
+          isValid: false,
+          message: `At least one file is required when status is "Yes"`
+        };
+      }
+    }
+    
+    if (status === 'No' || status === 'Not Applicable') {
+      if (!comment.trim()) {
+        return {
+          isValid: false,
+          message: `Reason is required when status is "${status}"`
+        };
+      }
+    }
+    
+    return { isValid: true };
+  };
+
+  const validateOtherQuestion = (question: CustomQuestion) => {
+    const answer = answers[question._id]?.answer;
+    
+    if (['text', 'textarea', 'number'].includes(question.question_type)) {
+      const stringAnswer = answer as string || '';
+      if (!stringAnswer.trim()) {
+        return {
+          isValid: false,
+          message: `This field is required`
+        };
+      }
+    }
+    
+    if (question.question_type === 'dropdown') {
+      const stringAnswer = answer as string || '';
+      if (!stringAnswer.trim()) {
+        return {
+          isValid: false,
+          message: `Please select an option`
+        };
+      }
+    }
+    
+    if (question.question_type === 'checkbox') {
+      const arrayAnswer = answer as string[] || [];
+      if (arrayAnswer.length === 0) {
+        return {
+          isValid: false,
+          message: `Please select at least one option`
+        };
+      }
+    }
+    
+    return { isValid: true };
+  };
+
+  const validateQuestion = (question: CustomQuestion) => {
+    if (question.question_type === 'file') {
+      return validateFileQuestion(question);
+    } else {
+      return validateOtherQuestion(question);
+    }
+  };
+
+  // Validate a single question (for real-time validation)
+  const validateSingleQuestion = (questionId: string) => {
+    const question = questions.find(q => q._id === questionId);
+    if (!question) return;
+    
+    const validation: any = validateQuestion(question);
+    
+    if (!validation.isValid && touchedFields[questionId]) {
+      // Only show error if field has been touched
+      setValidationErrors(prev => ({
+        ...prev,
+        [questionId]: validation.message
+      }));
+    } else {
+      // Clear error if valid or field not touched
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[questionId];
+        return newErrors;
+      });
+    }
+  };
+
+  // Mark field as touched
+  const markFieldAsTouched = (questionId: string) => {
+    if (!touchedFields[questionId]) {
+      setTouchedFields(prev => ({
+        ...prev,
+        [questionId]: true
+      }));
+    }
+  };
+
+  // Validate all questions (for save/submit)
+  const validateAllQuestions = () => {
+    const newErrors: Record<string, string> = {};
+    
+    // questions.forEach(question => {
+    //   const validation: any = validateQuestion(question);
+    //   if (!validation.isValid) {
+    //     newErrors[question._id] = validation.message;
+    //     // Mark field as touched when validation fails on save/submit
+    //     setTouchedFields(prev => ({
+    //       ...prev,
+    //       [question._id]: true
+    //     }));
+    //   }
+    // });
+    filteredQuestions.forEach(question => {
+      const validation: any = validateQuestion(question);
+      if (!validation.isValid) {
+        newErrors[question._id] = validation.message;
+        // Mark field as touched when validation fails on save/submit
+        setTouchedFields(prev => ({
+          ...prev,
+          [question._id]: true
+        }));
+      }
+    });
+    setValidationErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleAnswerChange = (questionId: string, value: string | string[] | number | File[]) => {
     setAnswers(prev => ({
       ...prev,
@@ -219,6 +405,12 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
         answer: value
       }
     }));
+    
+    // Mark field as touched
+    markFieldAsTouched(questionId);
+    
+    // Run validation for this specific question
+    validateSingleQuestion(questionId);
   };
 
   const handleCheckboxChange = (questionId: string, option: string, checked: boolean) => {
@@ -254,6 +446,12 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
           answer: fileNames
         }
       }));
+      
+      // Mark field as touched
+      markFieldAsTouched(questionId);
+      
+      // Run validation for this specific question
+      validateSingleQuestion(questionId);
     }
   };
 
@@ -278,6 +476,12 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
         [questionId]: updatedFiles
       };
     });
+    
+    // Mark field as touched
+    markFieldAsTouched(questionId);
+    
+    // Run validation for this specific question
+    validateSingleQuestion(questionId);
   };
 
   const handleRemoveAllFiles = (questionId: string) => {
@@ -295,6 +499,12 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
         answer: ''
       }
     }));
+    
+    // Mark field as touched
+    markFieldAsTouched(questionId);
+    
+    // Run validation for this specific question
+    validateSingleQuestion(questionId);
   };
 
   const handleStatusChange = (questionId: string, value: string) => {
@@ -302,6 +512,12 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
       ...prev,
       [questionId]: value
     }));
+    
+    // Mark field as touched
+    markFieldAsTouched(questionId);
+    
+    // Run validation for this specific question
+    validateSingleQuestion(questionId);
   };
 
   const handleCommentsChange = (questionId: string, value: string) => {
@@ -309,6 +525,12 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
       ...prev,
       [questionId]: value
     }));
+    
+    // Mark field as touched
+    markFieldAsTouched(questionId);
+    
+    // Run validation for this specific question
+    validateSingleQuestion(questionId);
   };
 
   const handleDeleteExistingFile = async (questionId: string, fileIndex: number) => {
@@ -363,91 +585,6 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     }
   };
 
-  const validateFileQuestion = (question: CustomQuestion) => {
-    const status = statuses[question._id] || '';
-    const files = uploadedFiles[question._id] || [];
-    const existingFileUrls = filePaths[question._id] || [];
-    const comment = comments[question._id] || '';
-    
-    if (status === 'Yes') {
-      if (files.length === 0 && existingFileUrls.length === 0) {
-        return {
-          isValid: false,
-          message: `"${question.question_text || 'Question'}": At least one file is required when status is "Yes"`
-        };
-      }
-    }
-    
-    if (status === 'No') {
-      if (!comment.trim()) {
-        return {
-          isValid: false,
-          message: `"${question.question_text || 'Question'}": Reason is required when status is "No"`
-        };
-      }
-    }
-
-    if (status === 'Not Applicable') {
-        if (!comment.trim()) {
-          return {
-            isValid: false,
-            message: `"${question.question_text || 'Question'}": Reason is required when status is "Not Applicable"`
-          };
-        }
-      }
-    
-    return { isValid: true };
-  };
-
-// 2. NEW validation for text, textarea, number
-const validateOtherQuestion = (question: CustomQuestion) => {
-    const answer = answers[question._id]?.answer;
-    
-    // For text, textarea, number fields
-    if (['text', 'textarea', 'number'].includes(question.question_type)) {
-      const stringAnswer = answer as string || '';
-      if (!stringAnswer.trim()) {
-        return {
-          isValid: false,
-          message: `"${question.question_text || 'Question'}": This field is required`
-        };
-      }
-    }
-    
-    // For dropdown
-    if (question.question_type === 'dropdown') {
-      const stringAnswer = answer as string || '';
-      if (!stringAnswer.trim()) {
-        return {
-          isValid: false,
-          message: `"${question.question_text || 'Question'}": Please select an option`
-        };
-      }
-    }
-    
-    // For checkbox
-    if (question.question_type === 'checkbox') {
-      const arrayAnswer = answer as string[] || [];
-      if (arrayAnswer.length === 0) {
-        return {
-          isValid: false,
-          message: `"${question.question_text || 'Question'}": Please select at least one option`
-        };
-      }
-    }
-    
-    return { isValid: true };
-  };
-  
-  // 3. Main validation function
-  const validateQuestion = (question: CustomQuestion) => {
-    if (question.question_type === 'file') {
-      return validateFileQuestion(question); // Use existing file validation
-    } else {
-      return validateOtherQuestion(question); // Use new validation for others
-    }
-  };
-
   const handleSave = async () => {
     if (!buttonEnabled) {
       toast.error('You do not have permission to save answers');
@@ -459,32 +596,21 @@ const validateOtherQuestion = (question: CustomQuestion) => {
       return;
     }
 
-    if (questions.length === 0) {
+    if (filteredQuestions.length === 0) {
       toast.error('No custom questions found to save.');
       return;
     }
 
-    const fileQuestions = questions.filter(q => q.question_type === 'file');
-    const invalidQuestions: Array<{isValid: boolean, message: string}> = [];
-    
-    fileQuestions.forEach(question => {
-      const validation:any = validateFileQuestion(question);
-      if (!validation.isValid) {
-        invalidQuestions.push(validation);
-      }
-    });
-    
-    if (invalidQuestions.length > 0) {
-      invalidQuestions.forEach(validation => {
-        toast.error(validation.message);
-      });
+    // Validate all questions before saving
+    if (!validateAllQuestions()) {
+      toast.error('Please fix validation errors before saving');
       return;
     }
 
     setSaving(true);
     setError(null);
     try {
-      const hasFileUploads = questions.some(q => 
+      const hasFileUploads = filteredQuestions.some(q => 
         q.question_type === 'file' && uploadedFiles[q._id]?.length > 0
       );
 
@@ -493,19 +619,21 @@ const validateOtherQuestion = (question: CustomQuestion) => {
         formData.append('entity_id', entityId);
         formData.append('isDraft', 'true');
 
-        const answersArray = questions.map(q => {
+        const answersArray = filteredQuestions.map(q => {
           const answer = answers[q._id];
           
           if (q.question_type === 'file') {
             const status = statuses[q._id] || 'Yes';
             const comment = comments[q._id] || '';
             const files = uploadedFiles[q._id] || [];
+            const hasExistingFiles = filePaths[q._id]?.length > 0;
             
             const answerData = {
               status: status,
               comments: comment,
               hasFile: files.length > 0,
-              fileCount: files.length
+              fileCount: files.length,
+              hasExistingFiles: hasExistingFiles  // Add this
             };
             
             return {
@@ -523,7 +651,7 @@ const validateOtherQuestion = (question: CustomQuestion) => {
         formData.append('answers', JSON.stringify(answersArray));
 
         // Add files with proper naming convention
-        questions
+        filteredQuestions
         .filter(q => q.question_type === 'file' && uploadedFiles[q._id]?.length > 0)
         .forEach(q => {
           const files = uploadedFiles[q._id] || [];
@@ -552,7 +680,7 @@ const validateOtherQuestion = (question: CustomQuestion) => {
           throw new Error('Failed to save draft');
         }
       } else {
-        const answersArray = questions.map(q => {
+        const answersArray = filteredQuestions.map(q => {
           const answer = answers[q._id];
           
           if (q.question_type === 'file') {
@@ -604,21 +732,10 @@ const validateOtherQuestion = (question: CustomQuestion) => {
   };
 
   const handleSubmit = async () => {
-    const invalidQuestions: Array<{isValid: boolean, message: string}> = [];
-  
-    questions.forEach(question => {
-        const validation: any = validateQuestion(question);
-        if (!validation.isValid) {
-        invalidQuestions.push(validation);
-        }
-    });
-    
-    // Show ALL validation errors
-    if (invalidQuestions.length > 0) {
-        invalidQuestions.forEach(validation => {
-        toast.error(validation.message);
-        });
-        return;
+    // Validate all questions before submitting
+    if (!validateAllQuestions()) {
+      toast.error('Please fix validation errors before submitting');
+      return;
     }
 
     if (!buttonEnabled) {
@@ -631,41 +748,15 @@ const validateOtherQuestion = (question: CustomQuestion) => {
       return;
     }
 
-    if (questions.length === 0) {
+    if (filteredQuestions.length === 0) {
       toast.error('No custom questions found to submit.');
-      return;
-    }
-
-    const unansweredQuestions = questions.filter(question => {
-      if (question.question_type === 'file') {
-        const status = statuses[question._id] || 'Yes';
-        if (status === 'Yes') {
-          const hasExistingFiles = filePaths[question._id]?.length > 0;
-          const hasNewFiles = uploadedFiles[question._id]?.length > 0;
-          return !hasNewFiles && !hasExistingFiles;
-        }
-        if (status === 'No') {
-          const comment = comments[question._id] || '';
-          return !comment.trim();
-        }
-        return false;
-      }
-      
-      const answer = answers[question._id]?.answer;
-      return answer === '' || answer === null || answer === undefined || 
-             (Array.isArray(answer) && answer.length === 0);
-    });
-
-    if (unansweredQuestions.length > 0) {
-      setError(`Please answer all questions before submitting.`);
-      toast.error('Please answer all questions before submitting.');
       return;
     }
 
     setSaving(true);
     setError(null);
     try {
-      const hasFileUploads = questions.some(q => 
+      const hasFileUploads = filteredQuestions.some(q => 
         q.question_type === 'file' && uploadedFiles[q._id]?.length > 0
       );
 
@@ -674,19 +765,21 @@ const validateOtherQuestion = (question: CustomQuestion) => {
         formData.append('entity_id', entityId);
         formData.append('isDraft', 'false');
 
-        const answersArray = questions.map(q => {
+        const answersArray = filteredQuestions.map(q => {
           const answer = answers[q._id];
           
           if (q.question_type === 'file') {
             const status = statuses[q._id] || 'Yes';
             const comment = comments[q._id] || '';
             const files = uploadedFiles[q._id] || [];
+            const hasExistingFiles = filePaths[q._id]?.length > 0;
             
             const answerData = {
               status: status,
               comments: comment,
               hasFile: files.length > 0,
-              fileCount: files.length
+              fileCount: files.length,
+              hasExistingFiles: hasExistingFiles
             };
             
             return {
@@ -703,7 +796,7 @@ const validateOtherQuestion = (question: CustomQuestion) => {
 
         formData.append('answers', JSON.stringify(answersArray));
 
-        questions
+        filteredQuestions
           .filter(q => q.question_type === 'file' && uploadedFiles[q._id]?.length > 0)
           .forEach(q => {
             const files = uploadedFiles[q._id] || [];
@@ -726,7 +819,7 @@ const validateOtherQuestion = (question: CustomQuestion) => {
           throw new Error('Failed to submit answers');
         }
       } else {
-        const answersArray = questions.map(q => {
+        const answersArray = filteredQuestions.map(q => {
           const answer = answers[q._id];
           
           if (q.question_type === 'file') {
@@ -783,7 +876,9 @@ const validateOtherQuestion = (question: CustomQuestion) => {
     const existingFileUrls = filePaths[question._id] || [];
     const status = statuses[question._id] || 'Yes';
     const comment = comments[question._id] || '';
-    const validation = validateQuestion(question);
+    const errorMessage = validationErrors[question._id];
+    const isTouched = touchedFields[question._id];
+    
     switch (question.question_type) {
       case 'text':
         return (
@@ -793,100 +888,100 @@ const validateOtherQuestion = (question: CustomQuestion) => {
               onChange={(e) => handleAnswerChange(question._id, e.target.value)}
               placeholder="Enter your answer..."
               disabled={!buttonEnabled}
-              className={!validation.isValid ? 'border-red-500' : ''}
+              className={errorMessage && isTouched ? 'border-red-500' : ''}
             />
-            {!validation.isValid && (
-              <p className="text-sm text-red-600">This field is required</p>
+            {errorMessage && isTouched && (
+              <p className="text-sm text-red-600">{errorMessage}</p>
             )}
           </div>
         );
 
       case 'textarea':
         return (
-            <div className="space-y-1">
-                <Textarea
-                value={answer as string}
-                onChange={(e) => handleAnswerChange(question._id, e.target.value)}
-                placeholder="Enter your detailed answer..."
-                rows={4}
-                disabled={!buttonEnabled}
-                className={!validation.isValid ? 'border-red-500' : ''}
-                />
-                {!validation.isValid && (
-                <p className="text-sm text-red-600">This field is required</p>
-                )}
-            </div>
+          <div className="space-y-1">
+            <Textarea
+              value={answer as string}
+              onChange={(e) => handleAnswerChange(question._id, e.target.value)}
+              placeholder="Enter your detailed answer..."
+              rows={4}
+              disabled={!buttonEnabled}
+              className={errorMessage && isTouched ? 'border-red-500' : ''}
+            />
+            {errorMessage && isTouched && (
+              <p className="text-sm text-red-600">{errorMessage}</p>
+            )}
+          </div>
         );
 
       case 'number':
         return (
-            <div className="space-y-1">
-                <Input
-                type="number"
-                value={answer as string}
-                onChange={(e) => handleAnswerChange(question._id, e.target.value)}
-                placeholder="Enter a number..."
-                disabled={!buttonEnabled}
-                className={!validation.isValid ? 'border-red-500' : ''}
-                />
-                {!validation.isValid && (
-                <p className="text-sm text-red-600">This field is required</p>
-                )}
-            </div>
+          <div className="space-y-1">
+            <Input
+              type="number"
+              value={answer as string}
+              onChange={(e) => handleAnswerChange(question._id, e.target.value)}
+              placeholder="Enter a number..."
+              disabled={!buttonEnabled}
+              className={errorMessage && isTouched ? 'border-red-500' : ''}
+            />
+            {errorMessage && isTouched && (
+              <p className="text-sm text-red-600">{errorMessage}</p>
+            )}
+          </div>
         );
 
       case 'dropdown':
         return (
-            <div className="space-y-1">
-                <Select
-                value={answer as string}
-                onValueChange={(value) => handleAnswerChange(question._id, value)}
-                disabled={!buttonEnabled}
-                >
-                <SelectTrigger className={!validation.isValid ? 'border-red-500' : ''}>
-                    <SelectValue placeholder="Select an option" />
-                </SelectTrigger>
-                <SelectContent>
-                    {question.options?.map((option, optionIndex) => (
-                    <SelectItem key={optionIndex} value={option}>
-                        {option}
-                    </SelectItem>
-                    ))}
-                </SelectContent>
-                </Select>
-                {!validation.isValid && (
-                <p className="text-sm text-red-600">Please select an option</p>
-                )}
-            </div>
+          <div className="space-y-1">
+            <Select
+              value={answer as string}
+              onValueChange={(value) => handleAnswerChange(question._id, value)}
+              disabled={!buttonEnabled}
+            >
+              <SelectTrigger className={errorMessage && isTouched ? 'border-red-500' : ''}>
+                <SelectValue placeholder="Select an option" />
+              </SelectTrigger>
+              <SelectContent>
+                {question.options?.map((option, optionIndex) => (
+                  <SelectItem key={optionIndex} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errorMessage && isTouched && (
+              <p className="text-sm text-red-600">{errorMessage}</p>
+            )}
+          </div>
         );
 
       case 'checkbox':
         return (
-            <div className="space-y-2">
-                <div className={!validation.isValid ? 'border border-red-300 p-3 rounded-md bg-red-50' : ''}>
-                {question.options?.map((option:any, optionIndex) => {
-                    const isChecked = Array.isArray(answer) ? answer.includes(option) : false;
-                    return (
-                    <div key={optionIndex} className="flex items-center space-x-2">
-                        <Checkbox
-                        id={`${question._id}-${optionIndex}`}
-                        checked={isChecked}
-                        onCheckedChange={(checked) => 
-                            handleCheckboxChange(question._id, option, checked as boolean)
-                        }
-                        disabled={!buttonEnabled}
-                        />
-                        <Label htmlFor={`${question._id}-${optionIndex}`} className="text-sm">
-                        {option}
-                        </Label>
-                    </div>
-                    );
-                })}
-                </div>
-                {!validation.isValid && (
-                <p className="text-sm text-red-600">Please select at least one option</p>
-                )}
+          <div className="space-y-2">
+            <div className={errorMessage && isTouched ? 'border border-red-300 p-3 rounded-md bg-red-50' : ''}>
+              {question.options?.map((option:any, optionIndex) => {
+                const isChecked = Array.isArray(answer) ? answer.includes(option) : false;
+                return (
+                  <div key={optionIndex} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`${question._id}-${optionIndex}`}
+                      checked={isChecked}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange(question._id, option, checked as boolean)
+                      }
+                      disabled={!buttonEnabled}
+                    />
+                    <Label htmlFor={`${question._id}-${optionIndex}`} className="text-sm">
+                      {option}
+                    </Label>
+                  </div>
+                );
+              })}
             </div>
+            {errorMessage && isTouched && (
+              <p className="text-sm text-red-600">{errorMessage}</p>
+            )}
+          </div>
         );
 
       case 'file':
@@ -910,12 +1005,6 @@ const validateOtherQuestion = (question: CustomQuestion) => {
                     <SelectItem value="Not Applicable">Not Applicable</SelectItem>
                   </SelectContent>
                 </Select>
-                
-                {status === 'Yes' && files.length === 0 && existingFileUrls.length === 0 && (
-                  <p className="text-sm text-red-600 mt-1">
-                    At least one file is required when status is "Yes"
-                  </p>
-                )}
               </div>
               
               {/* Attachment Column */}
@@ -926,7 +1015,6 @@ const validateOtherQuestion = (question: CustomQuestion) => {
                     No file
                   </div>
                 ) : (
-                    <div className="space-y-4">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <div className="relative flex-1">
@@ -943,9 +1031,7 @@ const validateOtherQuestion = (question: CustomQuestion) => {
                           multiple
                         />
                         <div className={`flex items-center justify-between border rounded-md px-3 py-2 bg-white ${
-                          status === 'Yes' && files.length === 0 && existingFileUrls.length === 0 
-                            ? 'border-red-500' 
-                            : 'border-gray-300'
+                          errorMessage && errorMessage.includes('file') && isTouched ? 'border-red-500' : 'border-gray-300'
                         }`}>
                           <span className="text-gray-500 text-sm truncate">
                             {files.length > 0 || existingFileUrls.length > 0 
@@ -986,16 +1072,16 @@ const validateOtherQuestion = (question: CustomQuestion) => {
                         </div>
                         <div className="space-y-1">
                           {files.map((file, index) => (
-                            <div key={`new-${index}`} className="flex items-center justify-between text-xs">
-                              <div className="flex items-center gap-2">
-                                <FileText className="h-3 w-3 text-blue-600" />
-                                <span className="text-blue-700 truncate" title={file.name}>
+                            <div key={`new-${index}`} className="flex items-center justify-between gap-2 text-xs">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <FileText className="h-3 w-3 text-blue-600 flex-shrink-0" />
+                                <span className="text-blue-700 truncate min-w-0" title={file.name}>
                                   {file.name}
                                 </span>
                               </div>
                               <button
                                 type="button"
-                                className="text-red-600 hover:text-red-800 text-xs"
+                                className="text-red-600 hover:text-red-800 text-xs flex-shrink-0"
                                 onClick={() => handleRemoveFile(question._id, index)}
                               >
                                 <X className="h-3 w-3" />
@@ -1006,25 +1092,7 @@ const validateOtherQuestion = (question: CustomQuestion) => {
                       </div>
                     )}
                   </div>
-                  {!validation.isValid && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                      <p className="text-sm text-red-600">
-                        {validation.message.replace(/^"[^"]+": /, '')}
-                      </p>
-                    </div>
-                  )}
-                </div>
                 )}
-                
-                <div className="text-xs text-gray-500">
-                  {status === 'No' || status === 'Not Applicable' 
-                    ? `No file upload required when status is "${status}"`
-                    : files.length > 0 
-                      ? `${files.length} new file(s) selected` 
-                      : existingFileUrls.length > 0 
-                      ? `${existingFileUrls.length} existing file(s)` 
-                      : "No files chosen"}
-                </div>
               </div>
               
               {/* Company Notes Column */}
@@ -1037,23 +1105,20 @@ const validateOtherQuestion = (question: CustomQuestion) => {
                   rows={2}
                   disabled={!buttonEnabled}
                   className={`resize-none min-h-[80px] w-full ${
-                    status === 'No' && !comment.trim() 
-                      ? 'border-red-500' 
-                      : ''
+                    errorMessage && errorMessage.includes('Reason') && isTouched ? 'border-red-500' : ''
                   }`}
                 />
-                {status === 'No' && !comment.trim() && (
-                  <p className="text-sm text-red-600 mt-1">
-                    Reason is required when status is "No"
-                  </p>
-                )}
-                {status === 'Not Applicable' && !comment.trim() && (
-                    <p className="text-sm text-red-600 mt-1">
-                    Reason is required when status is "Not Applicable"
-                    </p>
-                )}
               </div>
             </div>
+            
+            {/* Show validation error below the form section */}
+            {errorMessage && isTouched && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-sm text-red-600">
+                  {errorMessage}
+                </p>
+              </div>
+            )}
             
             {/* Show existing files */}
             {existingFileUrls.length > 0 && (
@@ -1065,34 +1130,34 @@ const validateOtherQuestion = (question: CustomQuestion) => {
                   {existingFileUrls.map((fileUrl, index) => {
                     const fileName = fileUrl.split('/').pop() || 'Download File';
                     return (
-                      <div key={`existing-${index}`} className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-gray-600" />
-                          <span className="text-gray-700 truncate" title={fileName}>
+                      <div key={`existing-${index}`} className="flex items-center justify-between gap-2 text-sm">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <FileText className="h-4 w-4 text-gray-600 flex-shrink-0" />
+                          <span className="text-gray-700 truncate min-w-0" title={fileName}>
                             {fileName}
                           </span>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-shrink-0">
                           <button
                             type="button"
-                            className="text-blue-600 hover:text-blue-800 underline text-xs"
+                            className="text-blue-600 hover:text-blue-800 underline text-xs whitespace-nowrap"
                             onClick={() => window.open(fileUrl, '_blank')}
                           >
                             View
                           </button>
                           <button
                             type="button"
-                            className="text-red-600 hover:text-red-800 underline text-xs"
+                            className="text-red-600 hover:text-red-800 underline text-xs whitespace-nowrap"
                             onClick={() => {
-                                console.log('Delete clicked:', {
+                              console.log('Delete clicked:', {
                                 questionId: question._id,
                                 question,
                                 fileIndex: index,
                                 hasQuestionId: !!question._id
-                                });
-                                handleDeleteExistingFile(question._id, index);
+                              });
+                              handleDeleteExistingFile(question._id, index);
                             }}
-                            >
+                          >
                             Delete
                           </button>
                         </div>
@@ -1107,123 +1172,383 @@ const validateOtherQuestion = (question: CustomQuestion) => {
 
       default:
         return (
-          <Input
-            value={answer as string}
-            onChange={(e) => handleAnswerChange(question._id, e.target.value)}
-            placeholder="Enter your answer..."
-            disabled={!buttonEnabled}
-          />
+          <div className="space-y-1">
+            <Input
+              value={answer as string}
+              onChange={(e) => handleAnswerChange(question._id, e.target.value)}
+              placeholder="Enter your answer..."
+              disabled={!buttonEnabled}
+              className={errorMessage && isTouched ? 'border-red-500' : ''}
+            />
+            {errorMessage && isTouched && (
+              <p className="text-sm text-red-600">{errorMessage}</p>
+            )}
+          </div>
         );
     }
   };
 
-  const hasExistingAnswers = questions.some(question => question.answer);
+  const hasExistingAnswers = filteredQuestions.some(question => question.answer);
+
+  const getSectionTitle = () => {
+    const titleMap: Record<string, string> = {
+      'company': 'Advanced Company Information',
+      'hr': 'Advanced HR Information',
+      'business': 'Advanced Business Operations',
+      'photographs': 'Advanced Photographs',
+      'compliance': 'Advanced Compliance',
+      'management': 'Advanced Management',
+      'itsecurity': 'Advanced IT Security',
+      'facility': 'Advanced Facility Information',
+      'governance': 'Advanced Governance',
+      'custom': 'Custom Questions'
+    };
+    return titleMap[tabName] || 'Custom Questions';
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Custom Questions</CardTitle>
-        <CardDescription>
-          {hasExistingAnswers 
-            ? 'Review and update your answers to the custom questions'
-            : 'Please provide answers to the custom questions specific to your company'
-          }
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {isLoading ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
-            <span className="ml-2">Loading custom questions...</span>
-          </div>
-        ) : error ? (
-          <div className="text-center py-4">
-            <p className="text-blue-500 font-medium text-sm bg-blue-50 p-3 rounded-md">
-              {error}
-            </p>
-            {error.includes('complete your company profile') && (
-              <Button 
-                variant="link" 
-                className="mt-2"
-                onClick={() => window.location.href = '/administration'}
-              >
-                Go to Administration
-              </Button>
-            )}
-          </div>
-        ) : questions.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">
-              There are no custom questions assigned to your company at this time.
-            </p>
-            <p className="text-sm text-gray-400 mt-2">
-              Custom questions can be created in the Administration section.
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="space-y-6">
-              {questions
-                .sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime())
-                .map((question, index) => (
-                  <div key={question._id} className="border-l-4 border-blue-500 pl-4 py-3">
-                    <div className="mb-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Label className="text-base font-medium">
-                          {index + 1}. {question.question_text}
-                        </Label>
-                        {question.question_type === 'file' && (
-                          <Badge variant="outline" className="text-xs">
-                            File Upload
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    {renderQuestionInput(question, index)}
-                  </div>
-                ))}
-            </div>
+    <>
+      {/* Only show title if there are questions for this tab */}
+      {filteredQuestions.length > 0 && (
+        <div className="mt-6">
+          <h3 className="text-lg font-semibold mb-2">{getSectionTitle()}</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Additional questions specific to your company
+          </p>
+        </div>
+      )}
 
-            {buttonEnabled && (
-              <div className="flex gap-4 pt-6 border-t">
-                <Button 
-                  onClick={handleSave} 
-                  variant="outline" 
-                  className="flex-1" 
-                  disabled={saving || questions.length === 0}
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-2 h-4 w-4" />
-                      Save as Draft
-                    </>
-                  )}
-                </Button>
-                <Button 
-                  onClick={handleSubmit} 
-                  className="flex-1" 
-                  disabled={saving || questions.length === 0}
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    'Submit All Answers'
-                  )}
-                </Button>
-              </div>
+      {isLoading ? (
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-500" />
+          <span className="ml-2">Loading custom questions...</span>
+        </div>
+      ) : error ? (
+        <div className="text-center py-4">
+          <p className="text-blue-500 font-medium text-sm bg-blue-50 p-3 rounded-md">
+            {error}
+          </p>
+          {error.includes('complete your company profile') && (
+            <Button 
+              variant="link" 
+              className="mt-2"
+              onClick={() => window.location.href = '/administration'}
+            >
+              Go to Administration
+            </Button>
+          )}
+        </div>
+      ) : filteredQuestions.length === 0 ? (
+        // Don't show empty state - just render nothing
+        null
+      ) : (
+        <div className="overflow-x-auto rounded-lg border mt-4">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="p-3 text-left text-sm font-semibold text-gray-900">S. No.</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-900">Question</th>
+                <th className="p-3 text-left text-sm font-semibold text-gray-900">Answer</th>
+                {filteredQuestions.some(q => q.question_type === 'file') && (
+                  <th className="p-3 text-left text-sm font-semibold text-gray-900">Attachment</th>
+                )}
+                {filteredQuestions.some(q => q.question_type === 'file') && (
+                  <th className="p-3 text-left text-sm font-semibold text-gray-900">Company Notes</th>
+                )}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {filteredQuestions
+                .sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime())
+                .map((question, index) => {
+                  const answer = answers[question._id]?.answer || '';
+                  const files = uploadedFiles[question._id] || [];
+                  const existingFileUrls = filePaths[question._id] || [];
+                  const status = statuses[question._id] || 'Yes';
+                  const comment = comments[question._id] || '';
+                  const errorMessage = validationErrors[question._id];
+                  const isTouched = touchedFields[question._id];
+                  const isFileQuestion = question.question_type === 'file';
+
+                  return (
+                    <tr key={question._id}>
+                      <td className="whitespace-nowrap p-3 text-sm text-center text-gray-500">
+                        {index + 1}
+                      </td>
+                      <td className="p-3 text-sm font-medium text-gray-900">
+                        <div className="flex items-center gap-2">
+                          {question.question_text}
+                          {question.question_type === 'file' && (
+                            <Badge variant="outline" className="text-xs">
+                              File Upload
+                            </Badge>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-3 text-sm text-gray-500">
+                        {isFileQuestion ? (
+                          <Select
+                            value={status}
+                            onValueChange={(value) => handleStatusChange(question._id, value)}
+                            disabled={!buttonEnabled}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Yes">Yes</SelectItem>
+                              <SelectItem value="No">No</SelectItem>
+                              <SelectItem value="Not Applicable">Not Applicable</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : question.question_type === 'text' ? (
+                          <Input
+                            value={answer as string}
+                            onChange={(e) => handleAnswerChange(question._id, e.target.value)}
+                            placeholder="Enter your answer..."
+                            disabled={!buttonEnabled}
+                            className={errorMessage && isTouched ? 'border-red-500' : ''}
+                          />
+                        ) : question.question_type === 'textarea' ? (
+                          <Textarea
+                            value={answer as string}
+                            onChange={(e) => handleAnswerChange(question._id, e.target.value)}
+                            placeholder="Enter your detailed answer..."
+                            rows={3}
+                            disabled={!buttonEnabled}
+                            className={errorMessage && isTouched ? 'border-red-500' : ''}
+                          />
+                        ) : question.question_type === 'number' ? (
+                          <Input
+                            type="number"
+                            value={answer as string}
+                            onChange={(e) => handleAnswerChange(question._id, e.target.value)}
+                            placeholder="Enter a number..."
+                            disabled={!buttonEnabled}
+                            className={errorMessage && isTouched ? 'border-red-500' : ''}
+                          />
+                        ) : question.question_type === 'dropdown' ? (
+                          <Select
+                            value={answer as string}
+                            onValueChange={(value) => handleAnswerChange(question._id, value)}
+                            disabled={!buttonEnabled}
+                          >
+                            <SelectTrigger className={errorMessage && isTouched ? 'border-red-500' : ''}>
+                              <SelectValue placeholder="Select an option" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {question.options?.map((option, optionIndex) => (
+                                <SelectItem key={optionIndex} value={option}>
+                                  {option}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : question.question_type === 'checkbox' ? (
+                          <div className="space-y-2">
+                            <div className={errorMessage && isTouched ? 'border border-red-300 p-2 rounded-md bg-red-50' : ''}>
+                              {question.options?.map((option: any, optionIndex) => {
+                                const isChecked = Array.isArray(answer) ? answer.includes(option) : false;
+                                return (
+                                  <div key={optionIndex} className="flex items-center space-x-2">
+                                    <Checkbox
+                                      id={`${question._id}-${optionIndex}`}
+                                      checked={isChecked}
+                                      onCheckedChange={(checked) => 
+                                        handleCheckboxChange(question._id, option, checked as boolean)
+                                      }
+                                      disabled={!buttonEnabled}
+                                    />
+                                    <Label htmlFor={`${question._id}-${optionIndex}`} className="text-sm">
+                                      {option}
+                                    </Label>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ) : (
+                          <Input
+                            value={answer as string}
+                            onChange={(e) => handleAnswerChange(question._id, e.target.value)}
+                            placeholder="Enter your answer..."
+                            disabled={!buttonEnabled}
+                            className={errorMessage && isTouched ? 'border-red-500' : ''}
+                          />
+                        )}
+                        {errorMessage && isTouched && !isFileQuestion && (
+                          <p className="text-xs text-red-500 mt-1">{errorMessage}</p>
+                        )}
+                      </td>
+                      {isFileQuestion && (
+                        <>
+                          <td className="whitespace-nowrap p-3 text-sm text-gray-500">
+                            {status === 'No' || status === 'Not Applicable' ? (
+                              <div className="text-sm text-gray-500 italic py-2">
+                                No file
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    type="file"
+                                    onChange={(e) => {
+                                      handleFileChange(question._id, e.target.files);
+                                      e.target.value = '';
+                                    }}
+                                    disabled={!buttonEnabled}
+                                    className="hidden"
+                                    accept=".pdf,.doc,.docx,.jpg,.png,.jpeg"
+                                    id={`file-${question._id}`}
+                                    multiple
+                                  />
+                                  <label
+                                    htmlFor={`file-${question._id}`}
+                                    className={`flex items-center gap-2 px-3 py-2 text-sm border rounded-md ${
+                                      errorMessage && errorMessage.includes('file') && isTouched 
+                                        ? 'border-red-500' 
+                                        : 'border-gray-300'
+                                    } ${!buttonEnabled ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'}`}
+                                  >
+                                    <Upload className="h-4 w-4" />
+                                    Upload Files
+                                  </label>
+                                </div>
+
+                                {existingFileUrls.map((fileUrl, fileIndex) => {
+                                  const fileName = fileUrl.split('/').pop() || 'Download File';
+                                  return (
+                                    <div key={`existing-${fileIndex}`} className="flex items-center justify-between bg-gray-50 p-1 py-0.5 rounded text-xs">
+                                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                                        <a
+                                          href={fileUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="truncate flex-1 text-blue-600 hover:text-blue-800 underline"
+                                          title={fileName}
+                                        >
+                                          {fileName.length > 30 ? `${fileName.substring(0, 25)}...` : fileName}
+                                        </a>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDeleteExistingFile(question._id, fileIndex)}
+                                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                          disabled={!buttonEnabled}
+                                        >
+                                          <X className="h-3 w-3" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+
+                                {files.map((file, fileIndex) => (
+                                  <div key={`new-${fileIndex}`} className="flex items-center justify-between bg-blue-50 p-1 py-0.5 rounded text-xs">
+                                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                                      <span className="truncate flex-1 text-blue-700" title={file.name}>
+                                        {file.name.length > 30 ? `${file.name.substring(0, 25)}...` : file.name}
+                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveFile(question._id, fileIndex)}
+                                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ))}
+
+                                {errorMessage && errorMessage.includes('file') && isTouched && (
+                                  <p className="text-xs text-red-500">{errorMessage}</p>
+                                )}
+                              </div>
+                            )}
+                          </td>
+                          <td className="p-3 text-sm text-gray-500">
+                            <Textarea
+                              value={comment}
+                              onChange={(e) => handleCommentsChange(question._id, e.target.value)}
+                              placeholder="Enter notes..."
+                              rows={2}
+                              disabled={!buttonEnabled}
+                              className={`resize-none min-h-[80px] w-full ${
+                                errorMessage && errorMessage.includes('Reason') && isTouched ? 'border-red-500' : ''
+                              }`}
+                            />
+                            {errorMessage && errorMessage.includes('Reason') && isTouched && (
+                              <p className="text-xs text-red-500 mt-1">{errorMessage}</p>
+                            )}
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Show validation error for file questions below table */}
+      {filteredQuestions.some(q => {
+        const errorMsg = validationErrors[q._id];
+        const isTouched = touchedFields[q._id];
+        return q.question_type === 'file' && errorMsg && isTouched;
+      }) && (
+        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+          {filteredQuestions
+            .filter(q => {
+              const errorMsg = validationErrors[q._id];
+              const isTouched = touchedFields[q._id];
+              return q.question_type === 'file' && errorMsg && isTouched;
+            })
+            .map(q => (
+              <p key={q._id} className="text-sm text-red-600">
+                {validationErrors[q._id]}
+              </p>
+            ))}
+        </div>
+      )}
+
+      {/* Action buttons - only show if there are questions */}
+      {buttonEnabled && filteredQuestions.length > 0 && (
+        <div className="flex gap-4 pt-6 border-t mt-6">
+          <Button 
+            onClick={handleSave} 
+            variant="outline" 
+            className="flex-1" 
+            disabled={saving || filteredQuestions.length === 0}
+          >
+            {saving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Save as Draft
+              </>
             )}
-          </>
-        )}
-      </CardContent>
-    </Card>
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            className="flex-1" 
+            disabled={saving || filteredQuestions.length === 0}
+          >
+            {saving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Submitting...
+              </>
+            ) : (
+              'Submit'
+            )}
+          </Button>
+        </div>
+      )}
+    </>
   );
 };
 
