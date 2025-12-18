@@ -131,6 +131,17 @@ export const DataCollectionForm = () => {
                   </div>
                 </div>
                 <Textarea value={entry.notes} onChange={(e) => updateEntry(entry.id, 'notes', e.target.value)} placeholder="Notes..." />
+                
+                <div>
+                  <Label>Evidence (Optional)</Label>
+                  <EvidenceFileUpload
+                    value={entry.evidenceUrls || []}
+                    onChange={(urls) => updateEntry(entry.id, 'evidenceUrls', urls)}
+                    scope="scope3"
+                    label="Upload supporting documents"
+                    maxFiles={3}
+                  />
+                </div>
               </CardContent>
             </Card>
           ))}
