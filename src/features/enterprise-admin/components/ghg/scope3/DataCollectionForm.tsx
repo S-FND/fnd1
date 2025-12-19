@@ -40,28 +40,51 @@ export const DataCollectionForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { template, year } = location.state as { template: GHGSourceTemplate; month: string; year: number; };
+  
+  // Handle null state gracefully
+  const stateData = location.state as { template: GHGSourceTemplate; month: string; year: number; } | null;
+  const template = stateData?.template;
+  const year = stateData?.year;
 
   const [selectedYear, setSelectedYear] = useState(year || new Date().getFullYear());
-  const [selectedFrequency, setSelectedFrequency] = useState<MeasurementFrequency>(template.measurementFrequency);
+  const [selectedFrequency, setSelectedFrequency] = useState<MeasurementFrequency>(template?.measurementFrequency || 'Monthly');
   const [dataEntries, setDataEntries] = useState<DataEntry[]>([]);
   const [dataQuality, setDataQuality] = useState<DataQuality>('Medium');
   const [verifiedBy, setVerifiedBy] = useState('');
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [isConverterOpen, setIsConverterOpen] = useState(false);
 
+  // Redirect if no template is provided
   useEffect(() => {
-    const periods = generatePeriodNames(selectedFrequency);
-    setDataEntries(periods.map((periodName) => ({
-      id: uuidv4(),
-      periodName,
-      date: new Date().toISOString().split('T')[0],
-      activityDataValue: 0,
-      notes: '',
-      evidenceUrls: [],
-      selectedUnit: template.activityDataUnit,
-    })));
-  }, [selectedFrequency, template.id]);
+    if (!template) {
+      toast({
+        title: "No source selected",
+        description: "Please select a Scope 3 source to collect data for.",
+        variant: "destructive",
+      });
+      navigate('/ghg-accounting', { state: { activeTab: 'scope3' } });
+    }
+  }, [template, navigate, toast]);
+
+  useEffect(() => {
+    if (template) {
+      const periods = generatePeriodNames(selectedFrequency);
+      setDataEntries(periods.map((periodName) => ({
+        id: uuidv4(),
+        periodName,
+        date: new Date().toISOString().split('T')[0],
+        activityDataValue: 0,
+        notes: '',
+        evidenceUrls: [],
+        selectedUnit: template.activityDataUnit,
+      })));
+    }
+  }, [selectedFrequency, template?.id]);
+
+  // Early return if no template
+  if (!template) {
+    return null;
+  }
 
   const updateEntry = (id: string, field: keyof DataEntry, value: any) => {
     setDataEntries(dataEntries.map(entry => entry.id === id ? { ...entry, [field]: value } : entry));
