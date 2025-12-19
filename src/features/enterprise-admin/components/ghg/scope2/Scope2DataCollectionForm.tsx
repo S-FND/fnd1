@@ -37,24 +37,43 @@ export const Scope2DataCollectionForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { template } = location.state as { template: GHGSourceTemplate };
+  
+  // Handle null state gracefully
+  const template = (location.state as { template: GHGSourceTemplate } | null)?.template;
 
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedFrequency, setSelectedFrequency] = useState<MeasurementFrequency>(template.measurementFrequency);
+  const [selectedFrequency, setSelectedFrequency] = useState<MeasurementFrequency>(template?.measurementFrequency || 'Monthly');
   const [dataEntries, setDataEntries] = useState<DataEntry[]>([]);
   const [dataQuality, setDataQuality] = useState<DataQuality>('Medium');
   const [verifiedBy, setVerifiedBy] = useState('');
   const [collectionNotes, setCollectionNotes] = useState('');
 
+  // Redirect if no template is provided
   useEffect(() => {
-    initializeEntries();
-  }, [selectedFrequency, template.id]);
+    if (!template) {
+      toast({
+        title: "No source selected",
+        description: "Please select a Scope 2 source to collect data for.",
+        variant: "destructive",
+      });
+      navigate('/ghg-accounting', { state: { activeTab: 'scope2' } });
+    }
+  }, [template, navigate, toast]);
 
   useEffect(() => {
-    loadExistingCollections();
-  }, [selectedYear, template.id, selectedFrequency]);
+    if (template) {
+      initializeEntries();
+    }
+  }, [selectedFrequency, template?.id]);
+
+  useEffect(() => {
+    if (template) {
+      loadExistingCollections();
+    }
+  }, [selectedYear, template?.id, selectedFrequency]);
 
   const loadExistingCollections = () => {
+    if (!template) return;
     const key = `scope2_data_collections_${template.id}_${selectedFrequency}_${selectedYear}`;
     const stored = localStorage.getItem(key);
     
@@ -70,6 +89,11 @@ export const Scope2DataCollectionForm = () => {
       setDataEntries(entries);
     }
   };
+
+  // Early return if no template
+  if (!template) {
+    return null;
+  }
 
   const initializeEntries = () => {
     const periods = generatePeriodNames(selectedFrequency);
