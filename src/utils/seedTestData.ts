@@ -1,4 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
+import { GHGSourceTemplate } from '@/types/ghg-source-template';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Seeds test data for the approval workflow.
@@ -216,8 +218,198 @@ VALUES ('Test Company', 'test-company', true, 'approved');
     console.log('Note: Additional test users would need to be created via Supabase Auth.');
     console.log('Current user has been set up as admin with verifier permissions.');
 
+    // 7. Create Scope 1 source templates in localStorage for UI workflow
+    const scope1Templates: GHGSourceTemplate[] = [
+      {
+        id: uuidv4(),
+        scope: 1,
+        facilityName: 'Main Manufacturing Plant',
+        businessUnit: 'Operations',
+        sourceCategory: 'Stationary Combustion',
+        sourceDescription: 'Natural Gas Boiler - Heating',
+        sourceType: 'Stationary',
+        fuelSubstanceType: 'Natural Gas',
+        emissionFactorId: 'ef-001',
+        emissionFactor: 2.02,
+        emissionFactorUnit: 'kgCO2e/m³',
+        emissionFactorSource: 'IPCC 2006',
+        activityDataUnit: 'm³',
+        measurementFrequency: 'Monthly',
+        assignedDataCollectors: [user.id],
+        assignedVerifiers: [user.id],
+        ghgIncluded: 'CO2, CH4, N2O',
+        calculationMethodology: 'Activity Data × Emission Factor',
+        dataSource: 'Utility Bills',
+        isActive: true,
+        createdDate: new Date().toISOString(),
+        createdBy: user.email || 'System',
+        notes: 'Primary heating system for manufacturing facility',
+      },
+      {
+        id: uuidv4(),
+        scope: 1,
+        facilityName: 'Corporate Headquarters',
+        businessUnit: 'Administration',
+        sourceCategory: 'Stationary Combustion',
+        sourceDescription: 'Diesel Generator - Backup Power',
+        sourceType: 'Stationary',
+        fuelSubstanceType: 'Diesel',
+        emissionFactorId: 'ef-002',
+        emissionFactor: 2.68,
+        emissionFactorUnit: 'kgCO2e/L',
+        emissionFactorSource: 'IPCC 2006',
+        activityDataUnit: 'liters',
+        measurementFrequency: 'Monthly',
+        assignedDataCollectors: [user.id],
+        assignedVerifiers: [user.id],
+        ghgIncluded: 'CO2, CH4, N2O',
+        calculationMethodology: 'Activity Data × Emission Factor',
+        dataSource: 'Fuel Purchase Records',
+        isActive: true,
+        createdDate: new Date().toISOString(),
+        createdBy: user.email || 'System',
+        notes: 'Emergency backup generator',
+      },
+      {
+        id: uuidv4(),
+        scope: 1,
+        facilityName: 'Distribution Center',
+        businessUnit: 'Logistics',
+        sourceCategory: 'Mobile Combustion',
+        sourceDescription: 'Delivery Fleet - Diesel Trucks',
+        sourceType: 'Mobile',
+        fuelSubstanceType: 'Diesel',
+        emissionFactorId: 'ef-003',
+        emissionFactor: 2.68,
+        emissionFactorUnit: 'kgCO2e/L',
+        emissionFactorSource: 'IPCC 2006',
+        activityDataUnit: 'liters',
+        measurementFrequency: 'Weekly',
+        assignedDataCollectors: [user.id],
+        assignedVerifiers: [user.id],
+        ghgIncluded: 'CO2, CH4, N2O',
+        calculationMethodology: 'Fuel Consumption × Emission Factor',
+        dataSource: 'Fleet Fuel Cards',
+        isActive: true,
+        createdDate: new Date().toISOString(),
+        createdBy: user.email || 'System',
+        notes: 'Heavy-duty delivery vehicles',
+      },
+      {
+        id: uuidv4(),
+        scope: 1,
+        facilityName: 'Corporate Headquarters',
+        businessUnit: 'Sales',
+        sourceCategory: 'Mobile Combustion',
+        sourceDescription: 'Company Cars - Petrol',
+        sourceType: 'Mobile',
+        fuelSubstanceType: 'Petrol/Gasoline',
+        emissionFactorId: 'ef-004',
+        emissionFactor: 2.31,
+        emissionFactorUnit: 'kgCO2e/L',
+        emissionFactorSource: 'IPCC 2006',
+        activityDataUnit: 'liters',
+        measurementFrequency: 'Monthly',
+        assignedDataCollectors: [user.id],
+        assignedVerifiers: [user.id],
+        ghgIncluded: 'CO2, CH4, N2O',
+        calculationMethodology: 'Fuel Consumption × Emission Factor',
+        dataSource: 'Expense Reports',
+        isActive: true,
+        createdDate: new Date().toISOString(),
+        createdBy: user.email || 'System',
+        notes: 'Sales team company vehicles',
+      },
+      {
+        id: uuidv4(),
+        scope: 1,
+        facilityName: 'Cold Storage Facility',
+        businessUnit: 'Operations',
+        sourceCategory: 'Fugitive Emissions',
+        sourceDescription: 'Refrigerant Leakage - R410A',
+        sourceType: 'Fugitive',
+        fuelSubstanceType: 'R-410A Refrigerant',
+        emissionFactorId: 'ef-005',
+        emissionFactor: 2088,
+        emissionFactorUnit: 'kgCO2e/kg',
+        emissionFactorSource: 'IPCC AR5 GWP',
+        activityDataUnit: 'kg',
+        measurementFrequency: 'Quarterly',
+        assignedDataCollectors: [user.id],
+        assignedVerifiers: [user.id],
+        ghgIncluded: 'HFCs',
+        calculationMethodology: 'Refrigerant Loss × GWP',
+        dataSource: 'HVAC Service Records',
+        isActive: true,
+        createdDate: new Date().toISOString(),
+        createdBy: user.email || 'System',
+        notes: 'Industrial refrigeration system',
+      },
+      {
+        id: uuidv4(),
+        scope: 1,
+        facilityName: 'Chemical Plant',
+        businessUnit: 'Production',
+        sourceCategory: 'Process Emissions',
+        sourceDescription: 'Chemical Process - CO2 Release',
+        sourceType: 'Process',
+        fuelSubstanceType: 'Industrial Process',
+        emissionFactorId: 'ef-006',
+        emissionFactor: 1.0,
+        emissionFactorUnit: 'kgCO2e/kg product',
+        emissionFactorSource: 'Engineering Estimates',
+        activityDataUnit: 'kg product',
+        measurementFrequency: 'Monthly',
+        assignedDataCollectors: [user.id],
+        assignedVerifiers: [user.id],
+        ghgIncluded: 'CO2',
+        calculationMethodology: 'Mass Balance',
+        dataSource: 'Production Records',
+        isActive: true,
+        createdDate: new Date().toISOString(),
+        createdBy: user.email || 'System',
+        notes: 'Process emissions from chemical reactions',
+      },
+    ];
+
+    // Store templates in localStorage
+    localStorage.setItem('scope1_source_templates', JSON.stringify(scope1Templates));
+    console.log(`Created ${scope1Templates.length} Scope 1 source templates in localStorage`);
+
+    // Create sample data collections for some templates
+    const currentMonth = new Date().toLocaleString('en-US', { month: 'long' });
+    const currentYear = new Date().getFullYear();
+    
+    scope1Templates.slice(0, 3).forEach((template, index) => {
+      const sampleData = {
+        id: uuidv4(),
+        sourceTemplateId: template.id,
+        reportingPeriod: `FY ${currentYear}-${(currentYear + 1).toString().slice(-2)}`,
+        reportingMonth: currentMonth,
+        reportingYear: currentYear,
+        activityDataValue: [1500, 250, 3200][index],
+        emissionCO2: [3030, 670, 8576][index],
+        emissionCH4: [2.5, 0.5, 5.0][index],
+        emissionN2O: [0.3, 0.05, 0.6][index],
+        totalEmission: [3032.8, 670.55, 8581.6][index],
+        dataQuality: 'Medium',
+        collectedDate: new Date().toISOString(),
+        collectedBy: user.email || 'System',
+        verifiedBy: '',
+        verificationStatus: 'Pending',
+        notes: 'Sample data for testing',
+      };
+      
+      const dataKey = `scope1_data_collections_${template.id}_${currentMonth}_${currentYear}`;
+      localStorage.setItem(dataKey, JSON.stringify([sampleData]));
+      localStorage.setItem(`scope1_status_${template.id}_${currentMonth}_${currentYear}`, 'Draft');
+    });
+    console.log('Created sample Scope 1 data collections for first 3 templates');
+
     console.log('\n✅ Test data seeding complete!');
-    console.log(`Created ${createdSources.length} GHG sources with activity data.`);
+    console.log(`Created ${createdSources.length} GHG sources with activity data in Supabase.`);
+    console.log(`Created ${scope1Templates.length} Scope 1 source templates in localStorage.`);
+    console.log('Navigate to /ghg-accounting to see Scope 1 sources.');
     console.log('Navigate to /verifier-approvals to see pending approvals.');
     console.log('Navigate to /verifier-admin to manage verifier settings.');
 
@@ -226,6 +418,7 @@ VALUES ('Test Company', 'test-company', true, 'approved');
       companyId,
       userProfileId,
       sourcesCreated: createdSources.length,
+      scope1TemplatesCreated: scope1Templates.length,
     };
   } catch (error: any) {
     console.error('Error seeding test data:', error);
