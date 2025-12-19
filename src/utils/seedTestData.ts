@@ -171,8 +171,8 @@ VALUES ('Test Company', 'test-company', true, 'approved');
     }
 
     // 5. Create submitted activity data for testing approvals
-    const periods = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    const statuses = ['submitted', 'submitted', 'submitted', 'pending', 'verified'];
+    const periods = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'];
+    const statuses = ['submitted', 'submitted', 'submitted', 'pending', 'verified', 'approved', 'pending', 'submitted'];
 
     for (const source of createdSources) {
       for (let i = 0; i < periods.length; i++) {
