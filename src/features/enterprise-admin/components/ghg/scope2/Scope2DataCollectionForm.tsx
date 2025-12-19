@@ -14,6 +14,7 @@ import { MeasurementFrequency, generatePeriodNames } from '@/types/ghg-data-coll
 import { DataQuality } from '@/types/scope1-ghg';
 import { v4 as uuidv4 } from 'uuid';
 import FrequencySelector from '@/components/ghg/FrequencySelector';
+import EvidenceFileUpload from '@/components/ghg/EvidenceFileUpload';
 
 interface DataEntry {
   id: string;
@@ -238,6 +239,15 @@ export const Scope2DataCollectionForm = () => {
                       placeholder="Optional notes..."
                     />
                   </div>
+                </div>
+                <div className="mt-4">
+                  <EvidenceFileUpload
+                    value={entry.evidenceUrls || []}
+                    onChange={(urls) => updateEntry(entry.id, 'evidenceUrls', urls)}
+                    scope="scope2"
+                    label="Upload supporting documents"
+                    maxFiles={3}
+                  />
                 </div>
               </CardContent>
             </Card>
