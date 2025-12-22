@@ -546,7 +546,7 @@ const VerifierApprovalsPage: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="w-full px-4 py-6 space-y-6">
       {/* Demo Mode Banner */}
       {useDemoData && (
         <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
