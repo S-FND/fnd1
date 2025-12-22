@@ -6,8 +6,11 @@ import { SDGProvider } from '@/contexts/SDGContext';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import './App.css';
 
-// Import seed function to make it available in browser console
-import '@/utils/seedVerifierData';
+// Import and register seed function to make it available in browser console
+import { seedVerifierData } from '@/utils/seedVerifierData';
+if (typeof window !== 'undefined') {
+  (window as any).seedVerifierData = seedVerifierData;
+}
 import Index from './pages/Index';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
