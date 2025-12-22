@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { ApprovalWorkflowDialog } from '@/components/ghg/ApprovalWorkflowDialog';
 import { ReviewApprovalDialog } from '@/components/verifier/ReviewApprovalDialog';
+import { RejectApprovalDialog } from '@/components/verifier/RejectApprovalDialog';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { VerificationSettingsCard } from '@/components/admin/VerificationSettingsCard';
@@ -244,8 +245,10 @@ const VerifierApprovalsPage: React.FC = () => {
   const [selectedVerifier, setSelectedVerifier] = useState<string>('all');
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<ApprovalItem | null>(null);
+  const [selectedRejectItem, setSelectedRejectItem] = useState<ApprovalItem | null>(null);
   const [userProfileId, setUserProfileId] = useState<string | null>(null);
   const [useDemoData, setUseDemoData] = useState(false);
 
@@ -577,31 +580,54 @@ const VerifierApprovalsPage: React.FC = () => {
     }
   };
 
-  const handleQuickReject = async (item: ApprovalItem) => {
-    if (item.type === 'ghg_activity') {
-      setSelectedActivityId(item.id);
-      setApprovalDialogOpen(true);
-    } else {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('User not authenticated');
+  const handleRejectClick = (item: ApprovalItem) => {
+    setSelectedRejectItem(item);
+    setRejectDialogOpen(true);
+  };
 
+  const handleRejectWithComment = async (itemId: string, comment: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const item = approvalItems.find(i => i.id === itemId);
+      if (!item) throw new Error('Item not found');
+
+      if (item.type === 'ghg_activity') {
+        const { error } = await supabase
+          .from('ghg_activity_data')
+          .update({
+            status: 'pending',
+            notes: comment,
+          })
+          .eq('id', item.id);
+
+        if (error) throw error;
+      } else if (item.type === 'esg_metric' || item.type === 'esg_dd') {
         const { error } = await supabase
           .from('approval_requests')
           .update({
             status: 'rejected',
             reviewed_at: new Date().toISOString(),
             assigned_checker_id: user.id,
+            change_summary: comment,
           })
           .eq('id', item.id);
 
         if (error) throw error;
-
-        toast.success('Rejected');
-        fetchApprovalItems();
-      } catch (error: any) {
-        toast.error(error.message || 'Failed to reject');
       }
+
+      // For demo data, just remove from the list
+      if (useDemoData) {
+        setApprovalItems(prev => prev.filter(i => i.id !== itemId));
+      } else {
+        fetchApprovalItems();
+      }
+
+      toast.success('Rejected successfully');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to reject');
+      throw error;
     }
   };
 
@@ -890,7 +916,7 @@ const VerifierApprovalsPage: React.FC = () => {
                               size="sm"
                               variant="outline"
                               className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => handleQuickReject(item)}
+                              onClick={() => handleRejectClick(item)}
                             >
                               <XCircle className="h-4 w-4 mr-1" />
                               Reject
@@ -928,6 +954,14 @@ const VerifierApprovalsPage: React.FC = () => {
         onOpenChange={setReviewDialogOpen}
         item={selectedItem}
         onApprove={handleApproveWithComment}
+      />
+
+      {/* Reject Dialog */}
+      <RejectApprovalDialog
+        open={rejectDialogOpen}
+        onOpenChange={setRejectDialogOpen}
+        item={selectedRejectItem}
+        onReject={handleRejectWithComment}
       />
     </div>
   );
