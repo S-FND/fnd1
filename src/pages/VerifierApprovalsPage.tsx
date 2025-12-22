@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { ApprovalWorkflowDialog } from '@/components/ghg/ApprovalWorkflowDialog';
+import { ReviewApprovalDialog } from '@/components/verifier/ReviewApprovalDialog';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { VerificationSettingsCard } from '@/components/admin/VerificationSettingsCard';
@@ -242,7 +243,9 @@ const VerifierApprovalsPage: React.FC = () => {
   const [selectedScope, setSelectedScope] = useState<string>('all');
   const [selectedVerifier, setSelectedVerifier] = useState<string>('all');
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<ApprovalItem | null>(null);
   const [userProfileId, setUserProfileId] = useState<string | null>(null);
   const [useDemoData, setUseDemoData] = useState(false);
 
@@ -521,10 +524,18 @@ const VerifierApprovalsPage: React.FC = () => {
     }
   };
 
-  const handleQuickApprove = async (item: ApprovalItem) => {
+  const handleAcceptClick = (item: ApprovalItem) => {
+    setSelectedItem(item);
+    setReviewDialogOpen(true);
+  };
+
+  const handleApproveWithComment = async (itemId: string, comment: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
+
+      const item = approvalItems.find(i => i.id === itemId);
+      if (!item) throw new Error('Item not found');
 
       if (item.type === 'ghg_activity') {
         const { error } = await supabase
@@ -533,6 +544,7 @@ const VerifierApprovalsPage: React.FC = () => {
             status: 'verified',
             verified_by: user.id,
             verified_at: new Date().toISOString(),
+            notes: comment || undefined,
           })
           .eq('id', item.id);
 
@@ -544,16 +556,24 @@ const VerifierApprovalsPage: React.FC = () => {
             status: 'approved',
             approved_at: new Date().toISOString(),
             approver_id: user.id,
+            change_summary: comment || undefined,
           })
           .eq('id', item.id);
 
         if (error) throw error;
       }
 
+      // For demo data, just remove from the list
+      if (useDemoData) {
+        setApprovalItems(prev => prev.filter(i => i.id !== itemId));
+      } else {
+        fetchApprovalItems();
+      }
+
       toast.success('Approved successfully');
-      fetchApprovalItems();
     } catch (error: any) {
       toast.error(error.message || 'Failed to approve');
+      throw error;
     }
   };
 
@@ -861,7 +881,7 @@ const VerifierApprovalsPage: React.FC = () => {
                               size="sm"
                               variant="outline"
                               className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                              onClick={() => handleQuickApprove(item)}
+                              onClick={() => handleAcceptClick(item)}
                             >
                               <CheckCircle className="h-4 w-4 mr-1" />
                               Accept
@@ -900,6 +920,14 @@ const VerifierApprovalsPage: React.FC = () => {
           fetchApprovalItems();
           setApprovalDialogOpen(false);
         }}
+      />
+
+      {/* Review Approval Dialog */}
+      <ReviewApprovalDialog
+        open={reviewDialogOpen}
+        onOpenChange={setReviewDialogOpen}
+        item={selectedItem}
+        onApprove={handleApproveWithComment}
       />
     </div>
   );
