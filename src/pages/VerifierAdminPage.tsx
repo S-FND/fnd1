@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Users, ClipboardCheck, Settings } from 'lucide-react';
+import { Shield, Users, ClipboardCheck, Settings, AlertTriangle, Filter } from 'lucide-react';
 
 interface UserWithVerifierStatus {
   user_id: string;
@@ -27,7 +27,35 @@ interface PendingApproval {
   status: string;
   created_at: string;
   collector_email: string;
+  assigned_verifier_id?: string;
+  assigned_verifier_name?: string;
 }
+
+// Demo data for users
+const DEMO_USERS: UserWithVerifierStatus[] = [
+  { user_id: 'user-1', email: 'rajesh.kumar@company.com', full_name: 'Rajesh Kumar', role: 'portfolio_company_admin', can_approve_actions: true },
+  { user_id: 'user-2', email: 'priya.sharma@company.com', full_name: 'Priya Sharma', role: 'portfolio_team_editor', can_approve_actions: true },
+  { user_id: 'user-3', email: 'amit.patel@company.com', full_name: 'Amit Patel', role: 'portfolio_team_editor', can_approve_actions: false },
+  { user_id: 'user-4', email: 'sunita.reddy@company.com', full_name: 'Sunita Reddy', role: 'portfolio_team_viewer', can_approve_actions: false },
+  { user_id: 'user-5', email: 'vikram.singh@company.com', full_name: 'Vikram Singh', role: 'portfolio_team_editor', can_approve_actions: true },
+  { user_id: 'user-6', email: 'neha.gupta@company.com', full_name: 'Neha Gupta', role: 'portfolio_team_viewer', can_approve_actions: false },
+  { user_id: 'user-7', email: 'karthik.iyer@company.com', full_name: 'Karthik Iyer', role: 'portfolio_company_admin', can_approve_actions: true },
+  { user_id: 'user-8', email: 'meera.nair@company.com', full_name: 'Meera Nair', role: 'portfolio_team_editor', can_approve_actions: false },
+];
+
+// Demo data for pending approvals
+const DEMO_PENDING_APPROVALS: PendingApproval[] = [
+  { id: 'pa-1', source_name: 'Diesel Generator - Mumbai', scope: 'Scope 1', period_name: 'January 2024', activity_value: 2450, status: 'submitted', created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'amit.patel@company.com', assigned_verifier_id: 'user-1', assigned_verifier_name: 'Rajesh Kumar' },
+  { id: 'pa-2', source_name: 'Company Fleet', scope: 'Scope 1', period_name: 'Q1 2024', activity_value: 12800, status: 'submitted', created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'sunita.reddy@company.com', assigned_verifier_id: 'user-2', assigned_verifier_name: 'Priya Sharma' },
+  { id: 'pa-3', source_name: 'Electricity - Bangalore', scope: 'Scope 2', period_name: 'February 2024', activity_value: 45000, status: 'submitted', created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'neha.gupta@company.com', assigned_verifier_id: 'user-1', assigned_verifier_name: 'Rajesh Kumar' },
+  { id: 'pa-4', source_name: 'Business Travel - Flights', scope: 'Scope 3', period_name: 'March 2024', activity_value: 24500, status: 'submitted', created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'meera.nair@company.com', assigned_verifier_id: 'user-5', assigned_verifier_name: 'Vikram Singh' },
+  { id: 'pa-5', source_name: 'Refrigerant Leakage', scope: 'Scope 1', period_name: 'Q1 2024', activity_value: 15, status: 'submitted', created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'amit.patel@company.com', assigned_verifier_id: 'user-7', assigned_verifier_name: 'Karthik Iyer' },
+  { id: 'pa-6', source_name: 'Natural Gas - Delhi', scope: 'Scope 1', period_name: 'January 2024', activity_value: 3200, status: 'submitted', created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'sunita.reddy@company.com', assigned_verifier_id: 'user-2', assigned_verifier_name: 'Priya Sharma' },
+  { id: 'pa-7', source_name: 'Purchased Steam', scope: 'Scope 2', period_name: 'February 2024', activity_value: 8500, status: 'submitted', created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'neha.gupta@company.com', assigned_verifier_id: 'user-5', assigned_verifier_name: 'Vikram Singh' },
+  { id: 'pa-8', source_name: 'Employee Commute', scope: 'Scope 3', period_name: 'Q1 2024', activity_value: 156000, status: 'submitted', created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'meera.nair@company.com', assigned_verifier_id: 'user-1', assigned_verifier_name: 'Rajesh Kumar' },
+  { id: 'pa-9', source_name: 'Waste Disposal', scope: 'Scope 3', period_name: 'January 2024', activity_value: 450, status: 'submitted', created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'amit.patel@company.com', assigned_verifier_id: 'user-7', assigned_verifier_name: 'Karthik Iyer' },
+  { id: 'pa-10', source_name: 'Water Treatment', scope: 'Scope 1', period_name: 'February 2024', activity_value: 1200, status: 'submitted', created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'sunita.reddy@company.com', assigned_verifier_id: 'user-2', assigned_verifier_name: 'Priya Sharma' },
+];
 
 const VerifierAdminPage = () => {
   const { toast } = useToast();
@@ -35,10 +63,21 @@ const VerifierAdminPage = () => {
   const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [useDemoData, setUseDemoData] = useState(false);
+  const [selectedVerifier, setSelectedVerifier] = useState<string>('all');
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Use demo data if no real data is loaded
+  useEffect(() => {
+    if (!loading && users.length === 0 && pendingApprovals.length === 0) {
+      setUseDemoData(true);
+      setUsers(DEMO_USERS);
+      setPendingApprovals(DEMO_PENDING_APPROVALS);
+    }
+  }, [loading, users.length, pendingApprovals.length]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -185,10 +224,16 @@ const VerifierAdminPage = () => {
   };
 
   const verifierCount = users.filter(u => u.can_approve_actions).length;
+  const verifiers = users.filter(u => u.can_approve_actions);
+  
+  // Filter pending approvals by selected verifier
+  const filteredApprovals = selectedVerifier === 'all' 
+    ? pendingApprovals 
+    : pendingApprovals.filter(a => a.assigned_verifier_id === selectedVerifier);
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="w-full px-4 py-6">
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
@@ -197,7 +242,19 @@ const VerifierAdminPage = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="w-full px-4 py-6 space-y-6">
+      {/* Demo Mode Banner */}
+      {useDemoData && (
+        <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
+          <CardContent className="py-3">
+            <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="text-sm font-medium">Demo Mode: Showing sample data for demonstration purposes</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex items-center gap-3">
         <Shield className="h-8 w-8 text-primary" />
         <div>
@@ -318,38 +375,66 @@ const VerifierAdminPage = () => {
         <TabsContent value="pending">
           <Card>
             <CardHeader>
-              <CardTitle>All Pending Approvals</CardTitle>
-              <CardDescription>
-                Overview of all submissions awaiting verification across the organization.
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>All Pending Approvals</CardTitle>
+                  <CardDescription>
+                    Overview of all submissions awaiting verification across the organization.
+                  </CardDescription>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <Select value={selectedVerifier} onValueChange={setSelectedVerifier}>
+                    <SelectTrigger className="w-[220px]">
+                      <SelectValue placeholder="Filter by Verifier" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Verifiers</SelectItem>
+                      {verifiers.map(v => (
+                        <SelectItem key={v.user_id} value={v.user_id}>
+                          {v.full_name || v.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              {pendingApprovals.length === 0 ? (
+              {filteredApprovals.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">
-                  No pending approvals at this time.
+                  No pending approvals {selectedVerifier !== 'all' ? 'for this verifier' : 'at this time'}.
                 </p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-[50px]">S.No</TableHead>
                       <TableHead>Source</TableHead>
                       <TableHead>Scope</TableHead>
                       <TableHead>Period</TableHead>
                       <TableHead>Value</TableHead>
                       <TableHead>Submitted By</TableHead>
+                      <TableHead>Assigned Verifier</TableHead>
                       <TableHead>Date</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {pendingApprovals.map(a => (
+                    {filteredApprovals.map((a, index) => (
                       <TableRow key={a.id}>
+                        <TableCell className="font-medium">{index + 1}</TableCell>
                         <TableCell className="font-medium">{a.source_name}</TableCell>
                         <TableCell>
                           <Badge variant="outline">{a.scope}</Badge>
                         </TableCell>
                         <TableCell>{a.period_name}</TableCell>
-                        <TableCell>{a.activity_value.toFixed(2)}</TableCell>
+                        <TableCell>{a.activity_value.toLocaleString()}</TableCell>
                         <TableCell>{a.collector_email}</TableCell>
+                        <TableCell>
+                          <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            {a.assigned_verifier_name || 'Unassigned'}
+                          </Badge>
+                        </TableCell>
                         <TableCell>
                           {new Date(a.created_at).toLocaleDateString()}
                         </TableCell>
@@ -357,6 +442,11 @@ const VerifierAdminPage = () => {
                     ))}
                   </TableBody>
                 </Table>
+              )}
+              {filteredApprovals.length > 0 && (
+                <div className="mt-4 text-sm text-muted-foreground">
+                  Showing {filteredApprovals.length} of {pendingApprovals.length} pending approvals
+                </div>
               )}
             </CardContent>
           </Card>
