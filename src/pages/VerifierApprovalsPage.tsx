@@ -894,7 +894,7 @@ const VerifierApprovalsPage: React.FC = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => navigate(item.link!)}
+                              onClick={() => navigate(`/verifier-approvals/${item.id}?module=${encodeURIComponent(item.module)}&title=${encodeURIComponent(item.title)}`)}
                               className="h-8 w-8 p-0"
                             >
                               <ExternalLink className="h-4 w-4" />
