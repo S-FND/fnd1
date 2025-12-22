@@ -327,10 +327,12 @@ export async function seedVerifierData() {
   }
 }
 
-// Make available globally in browser console - execute immediately
-(function() {
+// Make available globally in browser console
+try {
   if (typeof window !== 'undefined') {
     (window as any).seedVerifierData = seedVerifierData;
-    console.log('✅ seedVerifierData() is now available in the console');
+    console.log('✅ seedVerifierData() is now available in the console. Type seedVerifierData() to run it.');
   }
-})();
+} catch (e) {
+  console.error('Failed to register seedVerifierData:', e);
+}
