@@ -4,13 +4,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, CheckCircle, XCircle, Clock, FileText, BarChart3, Flame, Building2, Filter, Target, Shield, AlertTriangle, ExternalLink } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, Clock, FileText, BarChart3, Flame, Building2, Filter, Target, Shield, AlertTriangle, ExternalLink, Settings, UserCheck } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { format } from 'date-fns';
 import { ApprovalWorkflowDialog } from '@/components/ghg/ApprovalWorkflowDialog';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { VerificationSettingsCard } from '@/components/admin/VerificationSettingsCard';
+import { VerifierAssignmentSelect } from '@/components/admin/VerifierAssignmentSelect';
 
 interface ApprovalItem {
   id: string;
@@ -28,6 +31,14 @@ interface ApprovalItem {
   category?: string;
   dueDate?: string;
   link?: string;
+  assignedVerifierId?: string;
+  assignedVerifierName?: string;
+}
+
+interface Verifier {
+  user_id: string;
+  full_name: string | null;
+  email: string;
 }
 
 interface GHGActivityData {
@@ -52,6 +63,14 @@ interface GHGActivityData {
   };
 }
 
+// Demo verifiers
+const DEMO_VERIFIERS: Verifier[] = [
+  { user_id: 'user-1', full_name: 'Rajesh Kumar', email: 'rajesh.kumar@company.com' },
+  { user_id: 'user-2', full_name: 'Priya Sharma', email: 'priya.sharma@company.com' },
+  { user_id: 'user-5', full_name: 'Vikram Singh', email: 'vikram.singh@company.com' },
+  { user_id: 'user-7', full_name: 'Karthik Iyer', email: 'karthik.iyer@company.com' },
+];
+
 // Demo data for showcasing the approval workflow
 const DEMO_APPROVAL_ITEMS: ApprovalItem[] = [
   {
@@ -69,6 +88,8 @@ const DEMO_APPROVAL_ITEMS: ApprovalItem[] = [
     scope: 'Scope 1',
     category: 'Stationary Combustion',
     link: '/ghg-accounting',
+    assignedVerifierId: 'user-2',
+    assignedVerifierName: 'Priya Sharma',
   },
   {
     id: 'demo-ghg-2',
@@ -215,9 +236,11 @@ const VerifierApprovalsPage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [approvalItems, setApprovalItems] = useState<ApprovalItem[]>([]);
+  const [verifiers, setVerifiers] = useState<Verifier[]>([]);
   const [selectedModule, setSelectedModule] = useState<string>('all');
   const [selectedPriority, setSelectedPriority] = useState<string>('all');
   const [selectedScope, setSelectedScope] = useState<string>('all');
+  const [selectedVerifier, setSelectedVerifier] = useState<string>('all');
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const [userProfileId, setUserProfileId] = useState<string | null>(null);
@@ -228,7 +251,7 @@ const VerifierApprovalsPage: React.FC = () => {
       if (user?.email) {
         await fetchUserProfile();
       }
-      await fetchApprovalItems();
+      await Promise.all([fetchApprovalItems(), fetchVerifiers()]);
     };
     init();
   }, [user]);
@@ -238,6 +261,7 @@ const VerifierApprovalsPage: React.FC = () => {
     if (!loading && approvalItems.length === 0) {
       setUseDemoData(true);
       setApprovalItems(DEMO_APPROVAL_ITEMS);
+      setVerifiers(DEMO_VERIFIERS);
     }
   }, [loading, approvalItems.length]);
 
@@ -257,6 +281,46 @@ const VerifierApprovalsPage: React.FC = () => {
     } catch (error) {
       console.error('Error fetching user profile:', error);
     }
+  };
+
+  const fetchVerifiers = async () => {
+    try {
+      // Get user roles with can_approve_actions
+      const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, can_approve_actions')
+        .eq('can_approve_actions', true);
+
+      if (rolesError) throw rolesError;
+
+      if (roles && roles.length > 0) {
+        const userIds = roles.map(r => r.user_id);
+        const { data: profiles } = await supabase
+          .from('user_profiles')
+          .select('user_id, full_name, email')
+          .in('user_id', userIds);
+
+        if (profiles) {
+          setVerifiers(profiles);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching verifiers:', error);
+    }
+  };
+
+  const handleAssignVerifier = (itemId: string, verifierId: string) => {
+    const verifier = verifiers.find(v => v.user_id === verifierId);
+    
+    setApprovalItems(prev =>
+      prev.map(item =>
+        item.id === itemId
+          ? { ...item, assignedVerifierId: verifierId, assignedVerifierName: verifier?.full_name || verifier?.email || 'Unknown' }
+          : item
+      )
+    );
+    
+    toast.success(`Verifier ${verifier?.full_name || verifier?.email} assigned successfully`);
   };
 
   const fetchApprovalItems = async () => {
@@ -528,6 +592,7 @@ const VerifierApprovalsPage: React.FC = () => {
       if (!item.scope) return false;
       if (!item.scope.toLowerCase().includes(selectedScope.replace('scope_', ''))) return false;
     }
+    if (selectedVerifier !== 'all' && item.assignedVerifierId !== selectedVerifier) return false;
     return true;
   });
 
@@ -625,167 +690,206 @@ const VerifierApprovalsPage: React.FC = () => {
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">Filters:</span>
-            </div>
-            <Select value={selectedModule} onValueChange={setSelectedModule}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Modules" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Modules</SelectItem>
-                <SelectItem value="ESG Metrics">ESG Metrics</SelectItem>
-                <SelectItem value="GHG">GHG</SelectItem>
-                <SelectItem value="ESMS">ESMS</SelectItem>
-                <SelectItem value="ESG DD">ESG DD</SelectItem>
-                <SelectItem value="SDG Metrics">SDG Metrics</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={selectedPriority} onValueChange={setSelectedPriority}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Priorities" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Priorities</SelectItem>
-                <SelectItem value="critical">Critical</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={selectedScope} onValueChange={setSelectedScope}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Scopes (GHG)" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Scopes</SelectItem>
-                <SelectItem value="scope_1">Scope 1</SelectItem>
-                <SelectItem value="scope_2">Scope 2</SelectItem>
-                <SelectItem value="scope_3">Scope 3</SelectItem>
-                <SelectItem value="scope_4">Scope 4</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="sm" onClick={fetchApprovalItems}>
-              Refresh
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="approvals" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="approvals">
+            <CheckCircle className="h-4 w-4 mr-2" />
+            Pending Approvals ({approvalItems.length})
+          </TabsTrigger>
+          <TabsTrigger value="settings">
+            <Settings className="h-4 w-4 mr-2" />
+            Verification Settings
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Empty State */}
-      {filteredItems.length === 0 && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold">All caught up!</h3>
-            <p className="text-muted-foreground">You have no pending approvals at this time.</p>
-          </CardContent>
-        </Card>
-      )}
+        <TabsContent value="approvals" className="space-y-4">
+          {/* Filters */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-wrap gap-4 items-center">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Filters:</span>
+                </div>
+                <Select value={selectedModule} onValueChange={setSelectedModule}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Modules" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Modules</SelectItem>
+                    <SelectItem value="ESG Metrics">ESG Metrics</SelectItem>
+                    <SelectItem value="GHG">GHG</SelectItem>
+                    <SelectItem value="ESMS">ESMS</SelectItem>
+                    <SelectItem value="ESG DD">ESG DD</SelectItem>
+                    <SelectItem value="SDG Metrics">SDG Metrics</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={selectedPriority} onValueChange={setSelectedPriority}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Priorities" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Priorities</SelectItem>
+                    <SelectItem value="critical">Critical</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={selectedScope} onValueChange={setSelectedScope}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="All Scopes (GHG)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Scopes</SelectItem>
+                    <SelectItem value="scope_1">Scope 1</SelectItem>
+                    <SelectItem value="scope_2">Scope 2</SelectItem>
+                    <SelectItem value="scope_3">Scope 3</SelectItem>
+                    <SelectItem value="scope_4">Scope 4</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={selectedVerifier} onValueChange={setSelectedVerifier}>
+                  <SelectTrigger className="w-[180px]">
+                    <div className="flex items-center gap-2">
+                      <UserCheck className="h-4 w-4 text-muted-foreground" />
+                      <SelectValue placeholder="All Verifiers" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Verifiers</SelectItem>
+                    {verifiers.map(v => (
+                      <SelectItem key={v.user_id} value={v.user_id}>
+                        {v.full_name || v.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" size="sm" onClick={fetchApprovalItems}>
+                  Refresh
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-      {/* Approvals Table */}
-      {filteredItems.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Pending Verifications</CardTitle>
-            <CardDescription>
-              {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''} requiring your verification
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[60px]">S.No</TableHead>
-                  <TableHead className="w-[120px]">Module</TableHead>
-                  <TableHead className="w-[100px]">Priority</TableHead>
-                  <TableHead>Verification Title</TableHead>
-                  <TableHead className="w-[140px]">Submitted By</TableHead>
-                  <TableHead className="w-[120px]">Facility</TableHead>
-                  <TableHead className="w-[100px]">Scope</TableHead>
-                  <TableHead className="w-[80px]">Link</TableHead>
-                  <TableHead className="w-[160px] text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredItems.map((item, index) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{index + 1}</TableCell>
-                    <TableCell>{getModuleBadge(item.module)}</TableCell>
-                    <TableCell>{getPriorityBadge(item.priority)}</TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{item.title}</p>
-                        <p className="text-xs text-muted-foreground">{item.description}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Submitted {format(new Date(item.submittedAt), 'MMM d, yyyy')}
-                          {item.dueDate && new Date(item.dueDate) < new Date() && (
-                            <Badge variant="destructive" className="ml-2 text-xs">Overdue</Badge>
+          {/* Empty State */}
+          {filteredItems.length === 0 && (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold">All caught up!</h3>
+                <p className="text-muted-foreground">You have no pending approvals at this time.</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Approvals Table */}
+          {filteredItems.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Pending Verifications</CardTitle>
+                <CardDescription>
+                  {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''} requiring your verification
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[60px]">S.No</TableHead>
+                      <TableHead className="w-[120px]">Module</TableHead>
+                      <TableHead className="w-[100px]">Priority</TableHead>
+                      <TableHead>Verification Title</TableHead>
+                      <TableHead className="w-[140px]">Submitted By</TableHead>
+                      <TableHead className="w-[180px]">Assigned Verifier</TableHead>
+                      <TableHead className="w-[100px]">Scope</TableHead>
+                      <TableHead className="w-[80px]">Link</TableHead>
+                      <TableHead className="w-[160px] text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredItems.map((item, index) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{index + 1}</TableCell>
+                        <TableCell>{getModuleBadge(item.module)}</TableCell>
+                        <TableCell>{getPriorityBadge(item.priority)}</TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{item.title}</p>
+                            <p className="text-xs text-muted-foreground">{item.description}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Submitted {format(new Date(item.submittedAt), 'MMM d, yyyy')}
+                              {item.dueDate && new Date(item.dueDate) < new Date() && (
+                                <Badge variant="destructive" className="ml-2 text-xs">Overdue</Badge>
+                              )}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm">{item.submittedByName || 'Unknown'}</span>
+                        </TableCell>
+                        <TableCell>
+                          <VerifierAssignmentSelect
+                            verifiers={verifiers}
+                            currentVerifierId={item.assignedVerifierId}
+                            onAssign={(verifierId) => handleAssignVerifier(item.id, verifierId)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {item.module === 'GHG' && item.scope ? (
+                            <Badge variant="outline" className="text-xs">
+                              {item.scope}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
                           )}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm">{item.submittedByName || 'Unknown'}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm text-muted-foreground">{item.facility || '—'}</span>
-                    </TableCell>
-                    <TableCell>
-                      {item.module === 'GHG' && item.scope ? (
-                        <Badge variant="outline" className="text-xs">
-                          {item.scope}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {item.link && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => navigate(item.link!)}
-                          className="h-8 w-8 p-0"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                          onClick={() => handleQuickApprove(item)}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          Accept
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                          onClick={() => handleQuickReject(item)}
-                        >
-                          <XCircle className="h-4 w-4 mr-1" />
-                          Reject
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+                        </TableCell>
+                        <TableCell>
+                          {item.link && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => navigate(item.link!)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                              onClick={() => handleQuickApprove(item)}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Accept
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() => handleQuickReject(item)}
+                            >
+                              <XCircle className="h-4 w-4 mr-1" />
+                              Reject
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <VerificationSettingsCard />
+        </TabsContent>
+      </Tabs>
 
       {/* Approval Dialog */}
       <ApprovalWorkflowDialog
