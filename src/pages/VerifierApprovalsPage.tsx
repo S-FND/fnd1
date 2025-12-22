@@ -52,6 +52,164 @@ interface GHGActivityData {
   };
 }
 
+// Demo data for showcasing the approval workflow
+const DEMO_APPROVAL_ITEMS: ApprovalItem[] = [
+  {
+    id: 'demo-ghg-1',
+    type: 'ghg_activity',
+    module: 'GHG',
+    title: 'Diesel Generator - January 2024',
+    description: '2,450 liters (6.54 tCO2e)',
+    submittedBy: 'user-1',
+    submittedByName: 'Rajesh Kumar',
+    submittedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'submitted',
+    priority: 'high',
+    facility: 'Mumbai Plant',
+    scope: 'Scope 1',
+    category: 'Stationary Combustion',
+    link: '/ghg-accounting',
+  },
+  {
+    id: 'demo-ghg-2',
+    type: 'ghg_activity',
+    module: 'GHG',
+    title: 'Company Fleet - Q1 2024',
+    description: '12,800 km traveled (3.21 tCO2e)',
+    submittedBy: 'user-2',
+    submittedByName: 'Priya Sharma',
+    submittedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'submitted',
+    priority: 'medium',
+    facility: 'Delhi Office',
+    scope: 'Scope 1',
+    category: 'Mobile Combustion',
+    link: '/ghg-accounting',
+  },
+  {
+    id: 'demo-ghg-3',
+    type: 'ghg_activity',
+    module: 'GHG',
+    title: 'Electricity Consumption - February 2024',
+    description: '45,000 kWh (36.00 tCO2e)',
+    submittedBy: 'user-3',
+    submittedByName: 'Amit Patel',
+    submittedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'submitted',
+    priority: 'critical',
+    facility: 'Bangalore Tech Park',
+    scope: 'Scope 2',
+    category: 'Purchased Electricity',
+    dueDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    link: '/ghg-accounting',
+  },
+  {
+    id: 'demo-ghg-4',
+    type: 'ghg_activity',
+    module: 'GHG',
+    title: 'Business Travel - March 2024',
+    description: '8 flights, 24,500 km (4.89 tCO2e)',
+    submittedBy: 'user-4',
+    submittedByName: 'Sunita Reddy',
+    submittedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'submitted',
+    priority: 'low',
+    facility: 'Corporate HQ',
+    scope: 'Scope 3',
+    category: 'Business Travel',
+    link: '/ghg-accounting',
+  },
+  {
+    id: 'demo-esg-1',
+    type: 'esg_metric',
+    module: 'ESG Metrics',
+    title: 'Water Consumption Report',
+    description: 'Q1 2024 water usage data for all facilities',
+    submittedBy: 'user-5',
+    submittedByName: 'Vikram Singh',
+    submittedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'pending_review',
+    priority: 'medium',
+    category: 'Environmental',
+    link: '/esg',
+  },
+  {
+    id: 'demo-esg-2',
+    type: 'esg_metric',
+    module: 'ESG Metrics',
+    title: 'Waste Management Metrics',
+    description: 'Hazardous and non-hazardous waste tracking',
+    submittedBy: 'user-6',
+    submittedByName: 'Neha Gupta',
+    submittedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'pending_review',
+    priority: 'high',
+    category: 'Environmental',
+    dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+    link: '/esg',
+  },
+  {
+    id: 'demo-esms-1',
+    type: 'esms_document',
+    module: 'ESMS',
+    title: 'Environmental Policy Document',
+    description: 'Updated environmental management policy v2.1',
+    submittedBy: 'user-7',
+    submittedByName: 'Karthik Iyer',
+    submittedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'pending_review',
+    priority: 'medium',
+    category: 'Policy',
+    link: '/esms',
+  },
+  {
+    id: 'demo-dd-1',
+    type: 'esg_dd',
+    module: 'ESG DD',
+    title: 'Supplier ESG Assessment - ABC Corp',
+    description: 'Due diligence assessment for new supplier',
+    submittedBy: 'user-8',
+    submittedByName: 'Meera Nair',
+    submittedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'pending_review',
+    priority: 'critical',
+    category: 'Due Diligence',
+    dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
+    link: '/esg-dd',
+  },
+  {
+    id: 'demo-sdg-1',
+    type: 'sdg',
+    module: 'SDG Metrics',
+    title: 'SDG 13 - Climate Action Progress',
+    description: 'Annual climate action metrics and targets',
+    submittedBy: 'user-9',
+    submittedByName: 'Arjun Menon',
+    submittedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'pending_review',
+    priority: 'medium',
+    category: 'SDG Reporting',
+    link: '/sdg',
+  },
+  {
+    id: 'demo-ghg-5',
+    type: 'ghg_activity',
+    module: 'GHG',
+    title: 'Refrigerant Leakage - Q1 2024',
+    description: '15 kg R-410A leaked (31.20 tCO2e)',
+    submittedBy: 'user-10',
+    submittedByName: 'Deepak Verma',
+    submittedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+    status: 'submitted',
+    priority: 'critical',
+    facility: 'Chennai Factory',
+    scope: 'Scope 1',
+    category: 'Fugitive Emissions',
+    dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+    link: '/ghg-accounting',
+  },
+];
+
 const VerifierApprovalsPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -63,6 +221,7 @@ const VerifierApprovalsPage: React.FC = () => {
   const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
   const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null);
   const [userProfileId, setUserProfileId] = useState<string | null>(null);
+  const [useDemoData, setUseDemoData] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -73,6 +232,14 @@ const VerifierApprovalsPage: React.FC = () => {
     };
     init();
   }, [user]);
+
+  // Use demo data if no real data is loaded
+  useEffect(() => {
+    if (!loading && approvalItems.length === 0) {
+      setUseDemoData(true);
+      setApprovalItems(DEMO_APPROVAL_ITEMS);
+    }
+  }, [loading, approvalItems.length]);
 
   const fetchUserProfile = async () => {
     if (!user?.email) return;
@@ -380,6 +547,18 @@ const VerifierApprovalsPage: React.FC = () => {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
+      {/* Demo Mode Banner */}
+      {useDemoData && (
+        <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
+          <CardContent className="py-3">
+            <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="text-sm font-medium">Demo Mode: Showing sample approval data for demonstration purposes</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Approvals to be Done</h1>
         <p className="text-muted-foreground mt-2">
@@ -526,6 +705,8 @@ const VerifierApprovalsPage: React.FC = () => {
                   <TableHead className="w-[120px]">Module</TableHead>
                   <TableHead className="w-[100px]">Priority</TableHead>
                   <TableHead>Verification Title</TableHead>
+                  <TableHead className="w-[140px]">Submitted By</TableHead>
+                  <TableHead className="w-[120px]">Facility</TableHead>
                   <TableHead className="w-[100px]">Scope</TableHead>
                   <TableHead className="w-[80px]">Link</TableHead>
                   <TableHead className="w-[160px] text-right">Actions</TableHead>
@@ -548,6 +729,12 @@ const VerifierApprovalsPage: React.FC = () => {
                           )}
                         </p>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm">{item.submittedByName || 'Unknown'}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-muted-foreground">{item.facility || '—'}</span>
                     </TableCell>
                     <TableCell>
                       {item.module === 'GHG' && item.scope ? (
