@@ -327,7 +327,10 @@ export async function seedVerifierData() {
   }
 }
 
-// Make available globally in browser console
-if (typeof window !== 'undefined') {
-  (window as any).seedVerifierData = seedVerifierData;
-}
+// Make available globally in browser console - execute immediately
+(function() {
+  if (typeof window !== 'undefined') {
+    (window as any).seedVerifierData = seedVerifierData;
+    console.log('✅ seedVerifierData() is now available in the console');
+  }
+})();
