@@ -8,7 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, Users, ClipboardCheck, Settings, AlertTriangle, Filter } from 'lucide-react';
+import { Shield, Users, ClipboardCheck, Settings, AlertTriangle, Filter, UserCheck, ExternalLink } from 'lucide-react';
+import { VerificationSettingsCard } from '@/components/admin/VerificationSettingsCard';
+import { useNavigate } from 'react-router-dom';
+import { getApprovalDeepLink } from '@/utils/approvalDeepLinks';
 
 interface UserWithVerifierStatus {
   user_id: string;
@@ -21,6 +24,7 @@ interface UserWithVerifierStatus {
 interface PendingApproval {
   id: string;
   source_name: string;
+  module: string;
   scope: string;
   period_name: string;
   activity_value: number;
@@ -45,24 +49,26 @@ const DEMO_USERS: UserWithVerifierStatus[] = [
 
 // Demo data for pending approvals
 const DEMO_PENDING_APPROVALS: PendingApproval[] = [
-  { id: 'pa-1', source_name: 'Diesel Generator - Mumbai', scope: 'Scope 1', period_name: 'January 2024', activity_value: 2450, status: 'submitted', created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'amit.patel@company.com', assigned_verifier_id: 'user-1', assigned_verifier_name: 'Rajesh Kumar' },
-  { id: 'pa-2', source_name: 'Company Fleet', scope: 'Scope 1', period_name: 'Q1 2024', activity_value: 12800, status: 'submitted', created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'sunita.reddy@company.com', assigned_verifier_id: 'user-2', assigned_verifier_name: 'Priya Sharma' },
-  { id: 'pa-3', source_name: 'Electricity - Bangalore', scope: 'Scope 2', period_name: 'February 2024', activity_value: 45000, status: 'submitted', created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'neha.gupta@company.com', assigned_verifier_id: 'user-1', assigned_verifier_name: 'Rajesh Kumar' },
-  { id: 'pa-4', source_name: 'Business Travel - Flights', scope: 'Scope 3', period_name: 'March 2024', activity_value: 24500, status: 'submitted', created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'meera.nair@company.com', assigned_verifier_id: 'user-5', assigned_verifier_name: 'Vikram Singh' },
-  { id: 'pa-5', source_name: 'Refrigerant Leakage', scope: 'Scope 1', period_name: 'Q1 2024', activity_value: 15, status: 'submitted', created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'amit.patel@company.com', assigned_verifier_id: 'user-7', assigned_verifier_name: 'Karthik Iyer' },
-  { id: 'pa-6', source_name: 'Natural Gas - Delhi', scope: 'Scope 1', period_name: 'January 2024', activity_value: 3200, status: 'submitted', created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'sunita.reddy@company.com', assigned_verifier_id: 'user-2', assigned_verifier_name: 'Priya Sharma' },
-  { id: 'pa-7', source_name: 'Purchased Steam', scope: 'Scope 2', period_name: 'February 2024', activity_value: 8500, status: 'submitted', created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'neha.gupta@company.com', assigned_verifier_id: 'user-5', assigned_verifier_name: 'Vikram Singh' },
-  { id: 'pa-8', source_name: 'Employee Commute', scope: 'Scope 3', period_name: 'Q1 2024', activity_value: 156000, status: 'submitted', created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'meera.nair@company.com', assigned_verifier_id: 'user-1', assigned_verifier_name: 'Rajesh Kumar' },
-  { id: 'pa-9', source_name: 'Waste Disposal', scope: 'Scope 3', period_name: 'January 2024', activity_value: 450, status: 'submitted', created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'amit.patel@company.com', assigned_verifier_id: 'user-7', assigned_verifier_name: 'Karthik Iyer' },
-  { id: 'pa-10', source_name: 'Water Treatment', scope: 'Scope 1', period_name: 'February 2024', activity_value: 1200, status: 'submitted', created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'sunita.reddy@company.com', assigned_verifier_id: 'user-2', assigned_verifier_name: 'Priya Sharma' },
+  { id: 'pa-1', source_name: 'Diesel Generator - Mumbai', module: 'GHG', scope: 'Scope 1', period_name: 'January 2024', activity_value: 2450, status: 'submitted', created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'amit.patel@company.com', assigned_verifier_id: 'user-1', assigned_verifier_name: 'Rajesh Kumar' },
+  { id: 'pa-2', source_name: 'Company Fleet', module: 'GHG', scope: 'Scope 1', period_name: 'Q1 2024', activity_value: 12800, status: 'submitted', created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'sunita.reddy@company.com', assigned_verifier_id: 'user-2', assigned_verifier_name: 'Priya Sharma' },
+  { id: 'pa-3', source_name: 'Electricity - Bangalore', module: 'GHG', scope: 'Scope 2', period_name: 'February 2024', activity_value: 45000, status: 'submitted', created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'neha.gupta@company.com', assigned_verifier_id: 'user-1', assigned_verifier_name: 'Rajesh Kumar' },
+  { id: 'pa-4', source_name: 'Business Travel - Flights', module: 'GHG', scope: 'Scope 3', period_name: 'March 2024', activity_value: 24500, status: 'submitted', created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'meera.nair@company.com', assigned_verifier_id: 'user-5', assigned_verifier_name: 'Vikram Singh' },
+  { id: 'pa-5', source_name: 'Refrigerant Leakage', module: 'GHG', scope: 'Scope 1', period_name: 'Q1 2024', activity_value: 15, status: 'submitted', created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'amit.patel@company.com', assigned_verifier_id: 'user-7', assigned_verifier_name: 'Karthik Iyer' },
+  { id: 'pa-6', source_name: 'Water Consumption Report', module: 'ESG Metrics', scope: '', period_name: 'Q1 2024', activity_value: 12500, status: 'submitted', created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'sunita.reddy@company.com', assigned_verifier_id: 'user-2', assigned_verifier_name: 'Priya Sharma' },
+  { id: 'pa-7', source_name: 'Environmental Policy Doc', module: 'ESMS', scope: '', period_name: 'February 2024', activity_value: 0, status: 'submitted', created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'neha.gupta@company.com', assigned_verifier_id: 'user-5', assigned_verifier_name: 'Vikram Singh' },
+  { id: 'pa-8', source_name: 'SDG 13 - Climate Action', module: 'SDG', scope: '', period_name: 'Q1 2024', activity_value: 0, status: 'submitted', created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'meera.nair@company.com', assigned_verifier_id: 'user-1', assigned_verifier_name: 'Rajesh Kumar' },
+  { id: 'pa-9', source_name: 'Waste Disposal', module: 'GHG', scope: 'Scope 3', period_name: 'January 2024', activity_value: 450, status: 'submitted', created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'amit.patel@company.com', assigned_verifier_id: 'user-7', assigned_verifier_name: 'Karthik Iyer' },
+  { id: 'pa-10', source_name: 'Water Treatment', module: 'GHG', scope: 'Scope 1', period_name: 'February 2024', activity_value: 1200, status: 'submitted', created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), collector_email: 'sunita.reddy@company.com', assigned_verifier_id: 'user-2', assigned_verifier_name: 'Priya Sharma' },
 ];
 
 const VerifierAdminPage = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [users, setUsers] = useState<UserWithVerifierStatus[]>([]);
   const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [assigningVerifier, setAssigningVerifier] = useState<string | null>(null);
   const [useDemoData, setUseDemoData] = useState(false);
   const [selectedVerifier, setSelectedVerifier] = useState<string>('all');
 
@@ -154,6 +160,7 @@ const VerifierAdminPage = () => {
       const approvals: PendingApproval[] = (data || []).map((d: any) => ({
         id: d.id,
         source_name: d.ghg_sources?.source_name || 'Unknown',
+        module: 'GHG',
         scope: d.ghg_sources?.scope || 'Unknown',
         period_name: d.period_name,
         activity_value: d.activity_value,
@@ -221,6 +228,50 @@ const VerifierAdminPage = () => {
     } finally {
       setUpdating(null);
     }
+  };
+
+  const handleAssignVerifier = (approvalId: string, verifierId: string) => {
+    setAssigningVerifier(approvalId);
+    
+    // Find the verifier name
+    const verifier = verifiers.find(v => v.user_id === verifierId);
+    
+    // Update local state (in demo mode or real mode)
+    setPendingApprovals(prev =>
+      prev.map(a =>
+        a.id === approvalId
+          ? { ...a, assigned_verifier_id: verifierId, assigned_verifier_name: verifier?.full_name || verifier?.email || 'Unknown' }
+          : a
+      )
+    );
+    
+    toast({
+      title: 'Verifier Assigned',
+      description: `${verifier?.full_name || verifier?.email} has been assigned as the verifier.`,
+    });
+    
+    setAssigningVerifier(null);
+  };
+
+  const handleNavigateToApproval = (approval: PendingApproval) => {
+    const link = getApprovalDeepLink({
+      module: approval.module,
+      type: approval.module.toLowerCase(),
+      id: approval.id,
+      scope: approval.scope,
+    });
+    navigate(link);
+  };
+
+  const getModuleBadge = (module: string) => {
+    const colors: Record<string, string> = {
+      'GHG': 'bg-orange-100 text-orange-800 border-orange-200',
+      'ESG Metrics': 'bg-green-100 text-green-800 border-green-200',
+      'ESMS': 'bg-blue-100 text-blue-800 border-blue-200',
+      'ESG DD': 'bg-purple-100 text-purple-800 border-purple-200',
+      'SDG': 'bg-teal-100 text-teal-800 border-teal-200',
+    };
+    return <Badge variant="outline" className={colors[module] || 'bg-gray-100 text-gray-800'}>{module}</Badge>;
   };
 
   const verifierCount = users.filter(u => u.can_approve_actions).length;
@@ -309,6 +360,10 @@ const VerifierAdminPage = () => {
           <TabsTrigger value="pending">
             <ClipboardCheck className="h-4 w-4 mr-2" />
             Pending Approvals ({pendingApprovals.length})
+          </TabsTrigger>
+          <TabsTrigger value="settings">
+            <Settings className="h-4 w-4 mr-2" />
+            Verification Settings
           </TabsTrigger>
         </TabsList>
 
@@ -411,12 +466,13 @@ const VerifierAdminPage = () => {
                     <TableRow>
                       <TableHead className="w-[50px]">S.No</TableHead>
                       <TableHead>Source</TableHead>
+                      <TableHead>Module</TableHead>
                       <TableHead>Scope</TableHead>
                       <TableHead>Period</TableHead>
-                      <TableHead>Value</TableHead>
                       <TableHead>Submitted By</TableHead>
-                      <TableHead>Assigned Verifier</TableHead>
+                      <TableHead>Assign Verifier</TableHead>
                       <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -424,19 +480,43 @@ const VerifierAdminPage = () => {
                       <TableRow key={a.id}>
                         <TableCell className="font-medium">{index + 1}</TableCell>
                         <TableCell className="font-medium">{a.source_name}</TableCell>
+                        <TableCell>{getModuleBadge(a.module)}</TableCell>
                         <TableCell>
-                          <Badge variant="outline">{a.scope}</Badge>
+                          {a.scope ? <Badge variant="outline">{a.scope}</Badge> : '-'}
                         </TableCell>
                         <TableCell>{a.period_name}</TableCell>
-                        <TableCell>{a.activity_value.toLocaleString()}</TableCell>
                         <TableCell>{a.collector_email}</TableCell>
                         <TableCell>
-                          <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                            {a.assigned_verifier_name || 'Unassigned'}
-                          </Badge>
+                          <Select
+                            value={a.assigned_verifier_id || 'unassigned'}
+                            onValueChange={(value) => handleAssignVerifier(a.id, value)}
+                            disabled={assigningVerifier === a.id}
+                          >
+                            <SelectTrigger className="w-[160px]">
+                              <div className="flex items-center gap-2">
+                                <UserCheck className="h-3 w-3" />
+                                <SelectValue placeholder="Assign" />
+                              </div>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {verifiers.map(v => (
+                                <SelectItem key={v.user_id} value={v.user_id}>
+                                  {v.full_name || v.email}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </TableCell>
-                        <TableCell>
-                          {new Date(a.created_at).toLocaleDateString()}
+                        <TableCell>{new Date(a.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleNavigateToApproval(a)}
+                          >
+                            <ExternalLink className="h-4 w-4 mr-1" />
+                            View
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -450,6 +530,10 @@ const VerifierAdminPage = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <VerificationSettingsCard />
         </TabsContent>
       </Tabs>
     </div>
