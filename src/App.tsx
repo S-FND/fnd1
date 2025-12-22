@@ -8,9 +8,9 @@ import './App.css';
 
 // Import and register seed function to make it available in browser console
 import { seedVerifierData } from '@/utils/seedVerifierData';
-if (typeof window !== 'undefined') {
-  (window as any).seedVerifierData = seedVerifierData;
-}
+console.log('🔧 Registering seedVerifierData to window...');
+(window as any).seedVerifierData = seedVerifierData;
+console.log('✅ seedVerifierData() is now available. Type seedVerifierData() in console to run it.');
 import Index from './pages/Index';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
