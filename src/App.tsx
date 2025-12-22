@@ -5,6 +5,9 @@ import { FeaturesProvider } from '@/context/FeaturesContext';
 import { SDGProvider } from '@/contexts/SDGContext';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import './App.css';
+
+// Import seed function to make it available in browser console
+import '@/utils/seedVerifierData';
 import Index from './pages/Index';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
