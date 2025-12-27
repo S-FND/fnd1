@@ -4,14 +4,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search } from "lucide-react";
-import { EmissionFactor, getEmissionFactorsByScope, getEmissionFactorsByCategory, searchEmissionFactors } from '@/data/ghg/emissionFactors';
-
+import { EmissionFactor, getEmissionFactorsByScope, searchEmissionFactors } from '@/data/ghg/emissionFactors';
 interface EmissionFactorSelectorProps {
   scope: 1 | 2 | 3 | 4;
   category?: string;
   value?: string; // emission factor ID
   onSelect: (factor: EmissionFactor) => void;
 }
+
+const mapScope3CategoryToShort = (fullCategory: string): string | null => {
+  if (!fullCategory) return null;
+  
+  // Extract category number from the full name
+  const match = fullCategory.match(/Category\s*(\d+)/i);
+  if (match) {
+    return `Category ${match[1]}`;
+  }
+  return null;
+};
 
 export const EmissionFactorSelector: React.FC<EmissionFactorSelectorProps> = ({
   scope,
@@ -28,10 +38,20 @@ export const EmissionFactorSelector: React.FC<EmissionFactorSelectorProps> = ({
     
     if (searchTerm) {
       factors = searchEmissionFactors(scope, searchTerm);
-    } else if (category) {
-      factors = getEmissionFactorsByCategory(scope, category);
     } else {
+      // Get all factors for this scope
       factors = getEmissionFactorsByScope(scope);
+      
+      // For Scope 3, filter by short category name (e.g., "Category 1")
+      if (scope === 3 && category) {
+        const shortCategory = mapScope3CategoryToShort(category);
+        if (shortCategory) {
+          factors = factors.filter(ef => ef.category === shortCategory);
+        }
+      } else if (category) {
+        // For other scopes, use exact category match
+        factors = factors.filter(ef => ef.category === category);
+      }
     }
     
     setFilteredFactors(factors);
@@ -68,13 +88,13 @@ export const EmissionFactorSelector: React.FC<EmissionFactorSelectorProps> = ({
       </div>
 
       <div className="space-y-2">
-        <Label>Select Emission Factor</Label>
+        <Label>Select Emission Factor {filteredFactors.length > 0 && <span className="text-muted-foreground text-xs">({filteredFactors.length} available)</span>}</Label>
         <Select value={selectedFactor?.id} onValueChange={handleSelect}>
           <SelectTrigger>
             <SelectValue placeholder="Select emission factor..." />
           </SelectTrigger>
           <SelectContent className="max-h-[300px]">
-            {filteredFactors.map(factor => (
+            {/* {filteredFactors.map(factor => (
               <SelectItem key={factor.id} value={factor.id}>
                 <div className="flex flex-col py-1">
                   <div className="font-medium">{factor.name}</div>
@@ -86,7 +106,24 @@ export const EmissionFactorSelector: React.FC<EmissionFactorSelectorProps> = ({
                   )}
                 </div>
               </SelectItem>
-            ))}
+            ))} */}
+            {filteredFactors.length === 0 ? (
+              <div className="p-2 text-sm text-muted-foreground">No emission factors found</div>
+            ) : (
+              filteredFactors.map(factor => (
+                <SelectItem key={factor.id} value={factor.id}>
+                  <div className="flex flex-col py-1">
+                    <div className="font-medium">{factor.name}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {factor.factor} {factor.unit} • {factor.source} ({factor.year})
+                    </div>
+                    {factor.description && (
+                      <div className="text-xs text-muted-foreground">{factor.description}</div>
+                    )}
+                  </div>
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
       </div>

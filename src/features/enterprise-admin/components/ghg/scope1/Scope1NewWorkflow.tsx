@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import TimePeriodFilter, { ViewMode } from '../shared/TimePerformanceFilter';
 import Scope1Dashboard from '../dashboards/Scope1Dashboard';
 import { httpClient } from '@/lib/httpClient';
+import { get } from 'http';
+import { AuthProvider } from '@/context/AuthContext';
 
 type DataStatus = 'No Data' | 'Draft' | 'Under Review' | 'Reviewed';
 
@@ -23,10 +25,12 @@ export interface CurrentAccessItem {
 
 export interface Scope1NewWorkflowProps {
   currentAccess: CurrentAccessItem[];
+  isParent?: boolean;
 }
 
 export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
   currentAccess,
+  isParent = false,
 }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -37,9 +41,10 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<SourceType | 'All'>('All');
   const [showDashboard, setShowDashboard] = useState(false);
 
-  useEffect(() => {
-    loadSourceTemplates();
-  }, []);
+
+  // useEffect(() => {
+  //   loadSourceTemplates();
+  // }, []);
 
   const loadSourceTemplates = () => {
     const key = 'scope1_source_templates';
@@ -51,7 +56,7 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
 
   let getDataSource = async () => {
     try {
-      let dataSourceResponse:{status:number; data:any[]} = await httpClient.get(`ghg-accounting/source/1`);
+      let dataSourceResponse: { status: number; data: any[] } = await httpClient.get(`ghg-accounting/source/1`);
       console.log("dataSourceResponse", dataSourceResponse);
       if (dataSourceResponse.status === 200) {
         const dataCollections: GHGSourceTemplate[] = dataSourceResponse.data.map(item => ({
@@ -117,22 +122,44 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
   };
 
   const handleCollectData = (template: GHGSourceTemplate) => {
-    navigate('/ghg-accounting/scope1/collect-data', {
+    navigate('/ghg-accounting/scope1/collect-data?templateId=' + template._id, {
       state: { template, month: selectedMonth, year: selectedYear }
     });
   };
 
-  const handleDeleteSource = (id: string) => {
-    const key = 'scope1_source_templates';
-    const filtered = sourceTemplates.filter(t => t._id !== id);
-    localStorage.setItem(key, JSON.stringify(filtered));
-    setSourceTemplates(filtered);
+  const handleDeleteSource = async (templateId: string) => {
+    // const key = 'scope1_source_templates';
+    // const filtered = sourceTemplates.filter(t => t._id !== id);
+    // localStorage.setItem(key, JSON.stringify(filtered));
+    // setSourceTemplates(filtered);
+    try {
+      let deleteResponse: { status: number; data: any } = await httpClient.delete(`ghg-accounting/source/${templateId}`);
+      if (deleteResponse.status !== 200) {
+        toast({
+          title: "Error",
+          description: "Failed to delete the emission source.",
+          variant: "destructive",
+        });
+        throw new Error('Failed to delete source');
+      }
+      else {
+        getDataSource();
+        toast({
+          title: "Source Deleted",
+          description: "The emission source has been removed.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete the emission source.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    toast({
-      title: "Source Deleted",
-      description: "The emission source has been removed.",
-      variant: "destructive",
-    });
+
   };
 
   const getStatusBadge = (status: DataStatus) => {
@@ -197,10 +224,10 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
             <div>
               <CardTitle>Scope 1: Direct Emissions</CardTitle>
               <CardDescription>
-                Define emission sources and collect activity data
+                Define emission sources and collect activity data 
               </CardDescription>
             </div>
-            <div className="flex gap-2">
+            {isParent && <div className="flex gap-2">
               <Button variant="outline" onClick={() => setShowDashboard(true)}>
                 <Database className="mr-2 h-4 w-4" />
                 View Dashboard
@@ -209,7 +236,7 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
                 <Plus className="mr-2 h-4 w-4" />
                 Define New Source
               </Button>
-            </div>
+            </div>}
           </div>
         </CardHeader>
         <CardContent className="space-y-6">

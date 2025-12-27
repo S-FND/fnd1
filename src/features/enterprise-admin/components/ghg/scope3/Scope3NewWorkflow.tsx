@@ -19,13 +19,15 @@ export interface CurrentAccessItem {
   access: ScopeAccessType;
 }
 
-export interface Scope1NewWorkflowProps {
+export interface Scope3NewWorkflowProps {
   currentAccess: CurrentAccessItem[];
+  isParent?: boolean;
 }
 
-export const Scope3NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
+export const Scope3NewWorkflow: React.FC<Scope3NewWorkflowProps> = ({
   currentAccess,
-})=> {
+  isParent = false,
+}) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [sourceTemplates, setSourceTemplates] = useState<GHGSourceTemplate[]>([]);
@@ -69,7 +71,11 @@ export const Scope3NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
           dataSource: item.dataSource,
           isActive: item.isActive,
           notes: item.notes,
-
+          source3Category: item.scope3Category,
+          supplierName: item.supplierName,
+          supplierContact: item.supplierContact,
+          createdByUserId: item.createdByUserId,
+          scope3Category: item.scope3Category,
           createdDate: item.createdAt,  // mapping backend → frontend naming
           createdBy: "",                // backend doesn’t have this value
         }));
@@ -107,26 +113,48 @@ export const Scope3NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
   };
 
   const handleEditSource = (template: GHGSourceTemplate) => {
-    navigate('/ghg-accounting/scope3/define-source', { state: { template } });
+    navigate(`/ghg-accounting/scope3/define-source?id=${template._id}`, { state: { template } });
   };
 
   const handleCollectData = (template: GHGSourceTemplate) => {
-    navigate('/ghg-data-collection', {
-      state: { sourceId: template._id, scope: 3 }
+    navigate('/ghg-accounting/scope3/collect-data?templateId=' + template._id, {
+      state: { template, month: new Date().toLocaleString('en-US', { month: 'long' }), year: new Date().getFullYear() }
     });
   };
 
-  const handleDeleteSource = (id: string) => {
-    const key = 'scope3_source_templates';
-    const filtered = sourceTemplates.filter(t => t._id !== id);
-    localStorage.setItem(key, JSON.stringify(filtered));
-    setSourceTemplates(filtered);
+  const handleDeleteSource = async (templateId: string) => {
+    // const key = 'scope1_source_templates';
+    // const filtered = sourceTemplates.filter(t => t._id !== id);
+    // localStorage.setItem(key, JSON.stringify(filtered));
+    // setSourceTemplates(filtered);
+    try {
+      let deleteResponse: { status: number; data: any } = await httpClient.delete(`ghg-accounting/source/${templateId}`);
+      if (deleteResponse.status !== 200) {
+        toast({
+          title: "Error",
+          description: "Failed to delete the emission source.",
+          variant: "destructive",
+        });
+        throw new Error('Failed to delete source');
+      }
+      else {
+        getDataSource();
+        toast({
+          title: "Source Deleted",
+          description: "The emission source has been removed.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete the emission source.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    toast({
-      title: "Source Deleted",
-      description: "The emission source has been removed.",
-      variant: "destructive",
-    });
+
   };
 
   const getStatusBadge = (status: DataStatus) => {
@@ -194,7 +222,7 @@ export const Scope3NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
                 Define emission sources and collect activity data
               </CardDescription>
             </div>
-            <div className="flex gap-2">
+            {isParent && <div className="flex gap-2">
               <Button variant="outline" onClick={() => setShowDashboard(true)}>
                 <Database className="mr-2 h-4 w-4" />
                 View Dashboard
@@ -203,7 +231,7 @@ export const Scope3NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
                 <Plus className="mr-2 h-4 w-4" />
                 Define New Source
               </Button>
-            </div>
+            </div>}
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -278,6 +306,7 @@ export const Scope3NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
               <TableBody>
                 {filteredTemplates.map(template => {
                   const status = getDataStatus(template._id);
+                  console.log("Template Status:", template._id, status, template.supplierName);
                   return (
                     <TableRow key={template._id}>
                       <TableCell className="font-medium">{template.sourceDescription}</TableCell>

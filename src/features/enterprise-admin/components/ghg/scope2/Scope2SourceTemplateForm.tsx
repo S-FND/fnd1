@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,7 +67,7 @@ export const Scope2SourceTemplateForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { template: editTemplate } = location.state || {};
+  let  { template: editTemplate } = location.state || {};
 
   const [sourceType, setSourceType] = useState(editTemplate?.sourceType || 'Purchased Electricity');
   const [selectedEmissionFactor, setSelectedEmissionFactor] = useState<EmissionFactor | null>(null);
@@ -80,6 +80,10 @@ export const Scope2SourceTemplateForm = () => {
   const [selectedVerifiers, setSelectedVerifiers] = useState<string[]>(editTemplate?.assignedVerifiers || []);
 
   const [teamMembers, setTeamMembers] = useState<{ _id: string; name: string }[]>([]);
+
+  const [params] = useSearchParams();
+  const sourceId = params.get('id');
+
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -192,6 +196,7 @@ export const Scope2SourceTemplateForm = () => {
 
     const templates = data.facilityNames.map(facilityName => ({
       // id: editTemplate?.id || uuidv4(),
+      _id: editTemplate?._id || undefined,
       scope: 2 as 2,
       facilityName,
       businessUnit: data.businessUnit,
@@ -262,6 +267,65 @@ export const Scope2SourceTemplateForm = () => {
     getTeamList();
     getFacilities();
   }, []);
+
+  let getDataSource = async (id) => {
+    try {
+      let dataSourceResponse: { status: number; data: any[] } = await httpClient.get(`ghg-accounting/source/2?id=${id}`);
+      console.log("dataSourceResponse", dataSourceResponse);
+      if (dataSourceResponse.status === 200) {
+        if(dataSourceResponse.data && dataSourceResponse.data.length>0){
+          editTemplate=dataSourceResponse.data[0];
+          if(dataSourceResponse.data[0]['sourceType']){
+            setSourceType(dataSourceResponse.data[0]['sourceType'])
+          }
+          setValue('utilityProviderName',dataSourceResponse.data[0]['utilityProviderName'])
+          setValue('countryRegion',dataSourceResponse.data[0]['countryRegion'])
+          setValue('scope2Category',dataSourceResponse.data[0]['scope2Category'])
+          // setValue('emissionFactorSource',dataSourceResponse.data[0]['emissionFactorSource'])
+        }
+        // const dataCollections: GHGSourceTemplate[] = dataSourceResponse.data.map(item => ({
+        //   _id: item._id,
+        //   scope: 2, // or from item if available
+        //   facilityNames: [editTemplate.facilityName],
+        //   businessUnit: editTemplate.businessUnit,
+        //   sourceType: editTemplate.sourceType,
+        //   sourceCategory: editTemplate.sourceCategory,
+        //   sourceDescription: editTemplate.sourceDescription,
+        //   utilityProviderName: editTemplate.utilityProviderName,
+        //   countryRegion: editTemplate.countryRegion,
+        //   gridEmissionFactorSource: editTemplate.gridEmissionFactorSource,
+        //   scope2Category: editTemplate.scope2Category,
+        //   activityDataUnit: editTemplate.activityDataUnit,
+        //   measurementFrequency: editTemplate.measurementFrequency,
+        //   calculationMethodology: editTemplate.calculationMethodology,
+        //   dataSource: editTemplate.dataSource,
+        //   notes: editTemplate.notes,
+
+        //   createdDate: item.createdAt,  // mapping backend → frontend naming
+        //   createdBy: "",                // backend doesn’t have this value
+        // }));
+        // let dataCollections: GHGSourceTemplate[] = dataSourceResponse.data;
+        // setSourceType(dataCollections[0]?.sourceType as SourceType);
+      }
+    } catch (error) {
+      console.error("Error fetching data collections:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch data collections.",
+        variant: "destructive",
+      });
+    }
+  }
+
+  useEffect(() => {
+    if (sourceId) {
+      getDataSource(sourceId);
+    }
+  }, [sourceId]);
+
+  useEffect(()=>{
+    console.log('Edit Template => ',editTemplate)
+  },[editTemplate])
 
   return (
     <UnifiedSidebarLayout>
@@ -375,7 +439,7 @@ export const Scope2SourceTemplateForm = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="sourceType">Source Type *</Label>
-                  <Select onValueChange={(value) => setValue('sourceType', value)} defaultValue={sourceType}>
+                  <Select onValueChange={(value) => setValue('sourceType', value)} value={sourceType}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -390,7 +454,7 @@ export const Scope2SourceTemplateForm = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="sourceCategory">Source Category *</Label>
-                  <Select onValueChange={(value) => setValue('sourceCategory', value)} defaultValue={editTemplate?.sourceCategory}>
+                  <Select onValueChange={(value) => setValue('sourceCategory', value)} value={editTemplate?.sourceCategory}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
@@ -427,7 +491,7 @@ export const Scope2SourceTemplateForm = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="scope2Category">Scope 2 Category *</Label>
-                  <Select onValueChange={(value) => setValue('scope2Category', value as any)} defaultValue={editTemplate?.scope2Category}>
+                  <Select onValueChange={(value) => setValue('scope2Category', value as any)} value={editTemplate?.scope2Category}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

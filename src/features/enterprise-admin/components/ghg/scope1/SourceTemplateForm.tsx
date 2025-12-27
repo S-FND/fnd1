@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,6 +74,9 @@ export const SourceTemplateForm = () => {
   const [teamMembers, setTeamMembers] = useState<{ _id: string; name: string }[]>([]);
 
   const isInitialRender = useRef(true);
+
+  const [params] = useSearchParams();
+  const sourceId = params.get('id');
 
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
@@ -208,6 +211,7 @@ export const SourceTemplateForm = () => {
     // Create templates for each selected facility
     const templates = data.facilityNames.map(facilityName => ({
       // id: editTemplate?.id || uuidv4(),
+      _id: editTemplate?._id || undefined,
       scope: 1,
       facilityName,
       businessUnit: data.businessUnit,
@@ -319,11 +323,11 @@ export const SourceTemplateForm = () => {
     getFacilities();
   }, []);
 
-  // useEffect(() => {
-  //   if (sourceId) {
-  //     getDataSource(sourceId);
-  //   }
-  // }, [sourceId]);
+  useEffect(() => {
+    if (sourceId) {
+      getDataSource(sourceId);
+    }
+  }, [sourceId]);
 
   return (
     <UnifiedSidebarLayout>
@@ -628,6 +632,7 @@ export const SourceTemplateForm = () => {
                           setSelectedCollectors(selectedCollectors.filter(id => id !== member._id));
                         }
                       }}
+                      disabled={selectedVerifiers.includes(member._id)}
                       className="rounded"
                     />
                     <span>{member.name}</span>
@@ -652,6 +657,7 @@ export const SourceTemplateForm = () => {
                         }
                       }}
                       className="rounded"
+                      disabled={selectedCollectors.includes(member._id)}
                     />
                     <span>{member.name}</span>
                   </label>

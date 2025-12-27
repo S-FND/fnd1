@@ -58,6 +58,8 @@ export interface GHGDataCollection {
   verifiedBy: string;
   verificationStatus: 'Pending' | 'Verified' | 'Rejected';
   notes: string;
+  uploadedEvidenceFiles?: { url: string; name: string }[];
+  evidenceFiles?: { url?: string; name?: string; type?: string; key?: string }[];
 }
 
 // Helper type for frequency-based data collection

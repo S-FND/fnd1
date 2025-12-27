@@ -27,6 +27,25 @@ export interface GHGSource {
   access: 'data-collector' | 'data-verifier';
 }
 
+type ScopeSource = {
+  id: string;
+  access: 'data-collector' | 'data-verifier';
+};
+
+type ScopeAccessData = {
+  scope1Sources?: ScopeSource[];
+  scope2Sources?: ScopeSource[];
+  scope3Sources?: ScopeSource[];
+  scope4Sources?: ScopeSource[];
+};
+
+type ScopeAccessState = {
+  scope1: boolean;
+  scope2: boolean;
+  scope3: boolean;
+  scope4: boolean;
+};
+
 export type AssignedGHGSources = Record<GHGScope, GHGSource[]>;
 
 const GHGAccountingPage = () => {
@@ -41,6 +60,11 @@ const GHGAccountingPage = () => {
     scope3Sources: [],
     scope4Sources: [],
   });
+
+  const hasCollectorAccess = (sources?: ScopeSource[]) =>
+    Array.isArray(sources)
+      ? sources.some(src => src.access === 'data-collector')
+      : false;
 
 
   if (isLoading) {
@@ -67,6 +91,23 @@ const GHGAccountingPage = () => {
 
     }
   }, []);
+
+  const [scopeAccess, setScopeAccess] = useState<ScopeAccessState>({
+    scope1: false,
+    scope2: false,
+    scope3: false,
+    scope4: false
+  });
+  useEffect(() => {
+    if (!assignedSources) return;
+
+    setScopeAccess({
+      scope1: hasCollectorAccess(assignedSources.scope1Sources),
+      scope2: hasCollectorAccess(assignedSources.scope2Sources),
+      scope3: hasCollectorAccess(assignedSources.scope3Sources),
+      scope4: hasCollectorAccess(assignedSources.scope4Sources),
+    });
+  }, [assignedSources]);
 
   return (
     <UnifiedSidebarLayout>
@@ -119,27 +160,28 @@ const GHGAccountingPage = () => {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="mb-4 w-full sm:w-auto">
-            <TabsTrigger value="summary">Summary{isParent ? " (Parent)" : ""}</TabsTrigger>
+            <TabsTrigger value="summary">Summary</TabsTrigger> 
+            {/* //{isParent ? " (Parent)" : ""} */}
             {/* {!isParent && assignedSources && assignedSources.scope1Sources && assignedSources.scope1Sources.length>0 && <TabsTrigger value="scope1">Scope 1</TabsTrigger>}
             {!isParent && assignedSources && assignedSources.scope2Sources && assignedSources.scope2Sources.length>0 && <TabsTrigger value="scope2">Scope 2</TabsTrigger>}
             {!isParent && assignedSources && assignedSources.scope3Sources && assignedSources.scope3Sources.length>0 && <TabsTrigger value="scope3">Scope 3</TabsTrigger>}
             {!isParent && assignedSources && assignedSources.scope4Sources && assignedSources.scope4Sources.length>0 && <TabsTrigger value="scope4">Scope 4</TabsTrigger>} */}
-            {(isParent || (assignedSources?.scope1Sources?.length ?? 0) > 0) && (
+            {(isParent || scopeAccess?.scope1) && (
               <TabsTrigger value="scope1">Scope 1</TabsTrigger>
             )}
 
-            {(isParent || (assignedSources?.scope2Sources?.length ?? 0) > 0) && (
+            {(isParent || scopeAccess?.scope2) && (
               <TabsTrigger value="scope2">Scope 2</TabsTrigger>
             )}
 
-            {(isParent || (assignedSources?.scope3Sources?.length ?? 0) > 0) && (
+            {(isParent ||scopeAccess?.scope3) && (
               <TabsTrigger value="scope3">Scope 3</TabsTrigger>
             )}
 
-            {(isParent || (assignedSources?.scope4Sources?.length ?? 0) > 0) && (
+            {(isParent || scopeAccess?.scope4) && (
               <TabsTrigger value="scope4">Scope 4</TabsTrigger>
             )}
-            <TabsTrigger value="assignments">Assignments</TabsTrigger>
+            {/* <TabsTrigger value="assignments">Assignments</TabsTrigger> */}
           </TabsList>
 
           <TabsContent value="summary" className="mt-6">
@@ -147,19 +189,19 @@ const GHGAccountingPage = () => {
           </TabsContent>
 
           <TabsContent value="scope1" className="mt-6">
-            <GHGScope1Form currentAccess={assignedSources.scope1Sources} />
+            <GHGScope1Form currentAccess={assignedSources.scope1Sources} isParent={isParent} />
           </TabsContent>
 
           <TabsContent value="scope2" className="mt-6">
-            <GHGScope2Form currentAccess={assignedSources.scope2Sources} />
+            <GHGScope2Form currentAccess={assignedSources.scope2Sources} isParent={isParent} />
           </TabsContent>
 
           <TabsContent value="scope3" className="mt-6">
-            <GHGScope3Form currentAccess={assignedSources.scope3Sources} />
+            <GHGScope3Form currentAccess={assignedSources.scope3Sources} isParent={isParent} />
           </TabsContent>
 
           <TabsContent value="scope4" className="mt-6">
-            <GHGScope4Form currentAccess={assignedSources.scope4Sources} />
+            <GHGScope4Form currentAccess={assignedSources.scope4Sources} isParent={isParent} />
           </TabsContent>
 
           <TabsContent value="assignments" className="mt-6">

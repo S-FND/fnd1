@@ -77,6 +77,11 @@ import Scope4SourceTemplateForm from './features/enterprise-admin/components/ghg
 import UnitConverterPage from './pages/UnitConverterPage';
 import FeatureManagementPage from './pages/FeatureManagement';
 import Scope2DataCollectionForm from './features/enterprise-admin/components/ghg/scope2/Scope2DataCollectionForm';
+import VerifierApprovalsPage from './pages/VerifierApprovalsPage';
+import Scope3DataCollectionForm from './features/enterprise-admin/components/ghg/scope3/DataCollectionForm';
+import Scope4DataCollectionForm from './features/enterprise-admin/components/ghg/scope4/DataCollectionForm';
+import VerifierApprovalDetailPage from './pages/VerifierApprovalDetailPage';
+
 
 function App() {
   return (
@@ -115,12 +120,16 @@ function App() {
         <Route path="/ghg-accounting/scope2/define-source" element={<Scope2SourceTemplateForm />} />
         <Route path="/ghg-accounting/scope3/entry" element={<Scope3EntryPage />} />
         <Route path="/ghg-accounting/scope3/define-source" element={<Scope3SourceTemplateForm />} />
+         <Route path="/ghg-accounting/scope3/collect-data" element={<Scope3DataCollectionForm />} />
         <Route path="/ghg-accounting/scope4/entry" element={<Scope4EntryPage />} />
         <Route path="/ghg-accounting/scope4/define-source" element={<Scope4SourceTemplateForm />} />
+        <Route path="/ghg-accounting/scope4/collect-data" element={<Scope4DataCollectionForm />} />
         <Route path="/ghg-data-collection" element={<GHGDataCollection />} />
         <Route path="/ghg-accounting/unit-converter" element={<UnitConverterPage />} />
 
         <Route path="/ghg-accounting/scope2/collect-data" element={<Scope2DataCollectionForm />} />
+        <Route path="/verifier-approvals" element={<VerifierApprovalsPage />} />
+         <Route path="/verifier-approvals/:id" element={<VerifierApprovalDetailPage />} />
 
 
         <Route path="/compliance" element={<Compliance />} />

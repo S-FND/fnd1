@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,6 +76,9 @@ export const Scope4SourceTemplateForm = () => {
   const [selectedCollectors, setSelectedCollectors] = useState<string[]>(editTemplate?.assignedDataCollectors || []);
   const [selectedVerifiers, setSelectedVerifiers] = useState<string[]>(editTemplate?.assignedVerifiers || []);
   const [teamMembers, setTeamMembers] = useState<{ _id: string; name: string }[]>([]);
+
+  const [params] = useSearchParams();
+  const sourceId = params.get('id');
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -242,6 +245,54 @@ export const Scope4SourceTemplateForm = () => {
     getTeamList();
     getFacilities();
   }, []);
+
+  let getDataSource = async (id) => {
+    try {
+      let dataSourceResponse: { status: number; data: any[] } = await httpClient.get(`ghg-accounting/source/4?id=${id}`);
+      console.log("dataSourceResponse", dataSourceResponse);
+      if (dataSourceResponse.status === 200) {
+        const dataCollections: GHGSourceTemplate[] = dataSourceResponse.data.map(item => ({
+          _id: item._id,
+          scope: 1, // or from item if available
+          facilityName: item.facilityName,
+          businessUnit: item.businessUnit,
+          sourceCategory: item.sourceCategory,
+          sourceDescription: item.sourceDescription,
+          emissionFactorId: item.emissionFactorId,
+          emissionFactor: item.emissionFactor,
+          emissionFactorUnit: item.emissionFactorUnit,
+          emissionFactorSource: item.emissionFactorSource,
+          activityDataUnit: item.activityDataUnit,
+          measurementFrequency: item.measurementFrequency,
+          assignedDataCollectors: item.assignedDataCollectors,
+          assignedVerifiers: item.assignedVerifiers,
+          ghgIncluded: item.ghgIncluded,
+          calculationMethodology: item.calculationMethodology,
+          dataSource: item.dataSource,
+          isActive: item.isActive,
+          notes: item.notes,
+
+          createdDate: item.createdAt,  // mapping backend → frontend naming
+          createdBy: "",                // backend doesn’t have this value
+        }));
+        // let dataCollections: GHGSourceTemplate[] = dataSourceResponse.data;
+        // setSourceType(dataCollections[0]?.sourceType as SourceType);
+      }
+    } catch (error) {
+      console.error("Error fetching data collections:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch data collections.",
+        variant: "destructive",
+      });
+    }
+  }
+
+  useEffect(() => {
+    if (sourceId) {
+      getDataSource(sourceId);
+    }
+  }, [sourceId]);
 
   return (
     <UnifiedSidebarLayout>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,9 +12,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save } from "lucide-react";
 import { GHGSourceTemplate } from '@/types/ghg-source-template';
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 import EmissionFactorSelector from '../shared/EmissionFactorSelector';
-import { EmissionFactor } from '@/data/ghg/emissionFactors';
+import { EmissionFactor, scope3EmissionFactors } from '@/data/ghg/emissionFactors';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { httpClient } from '@/lib/httpClient';
 
@@ -52,10 +52,91 @@ const SCOPE3_CATEGORIES = [
 ];
 
 const SOURCE_TYPES_BY_CATEGORY: Record<string, string[]> = {
-  'Category 1 – Purchased Goods and Services': ['Raw Material Purchases', 'Packaging Materials', 'Office Supplies'],
-  'Category 4 – Upstream Transportation and Distribution': ['Freight Transport', 'Warehousing', 'Distribution'],
-  'Category 6 – Business Travel': ['Employee Air Travel', 'Rail Travel', 'Rental Cars', 'Hotel Stays'],
-  'Category 12 – End-of-Life Treatment of Sold Products': ['Product Disposal', 'Recycling', 'Waste Treatment']
+  'Category 1 – Purchased Goods and Services': [
+    'Steel & Iron', 'Aluminum', 'Copper & Brass', 'Other Metals',
+    'Plastics (PET, HDPE, PVC)', 'Rubber & Polymers',
+    'Paper & Cardboard', 'Timber & Plywood',
+    'Cement & Concrete', 'Glass', 'Bricks & Aggregates', 'Insulation Materials',
+    'Cotton & Textiles', 'Polyester & Synthetic Fabrics', 'Leather',
+    'Chemicals (Organic)', 'Chemicals (Inorganic)', 'Fertilizers', 'Paints & Coatings',
+    'Electronics & Batteries', 'Electrical Cables',
+    'Food Products (Meat)', 'Food Products (Dairy)', 'Food Products (Vegetables)', 'Beverages',
+    'Office Supplies', 'IT Services', 'Professional Services', 'Water Supply'
+  ],
+  'Category 2 – Capital Goods': [
+    'Industrial Machinery', 'Office Equipment & Furniture',
+    'Passenger Vehicles', 'Trucks & Heavy Vehicles',
+    'Building Construction', 'IT Hardware & Servers',
+    'HVAC Equipment', 'Solar Panels', 'Manufacturing Equipment'
+  ],
+  'Category 3 – Fuel- and Energy-Related Activities': [
+    'Electricity T&D Losses', 'Fuel Extraction & Processing',
+    'Diesel (Well-to-Tank)', 'Petrol (Well-to-Tank)',
+    'LPG (Well-to-Tank)', 'Natural Gas (Well-to-Tank)', 'Coal (Well-to-Tank)'
+  ],
+  'Category 4 – Upstream Transportation and Distribution': [
+    'Road Freight (HGV)', 'Road Freight (LGV)',
+    'Rail Freight', 'Sea Freight (Container)', 'Sea Freight (Bulk)',
+    'Air Freight (Long-haul)', 'Air Freight (Short-haul)',
+    'Inland Waterway', 'Multi-modal Transport'
+  ],
+  'Category 5 – Waste Generated in Operations': [
+    'Mixed Waste to Landfill', 'Organic Waste to Landfill', 'Paper Waste to Landfill',
+    'Waste Incineration', 'Waste-to-Energy',
+    'Paper Recycling', 'Plastic Recycling', 'Metal Recycling', 'Glass Recycling',
+    'Composting', 'Anaerobic Digestion',
+    'Wastewater Treatment', 'Hazardous Waste', 'E-Waste'
+  ],
+  'Category 6 – Business Travel': [
+    'Domestic Flights', 'Short-haul International Flights',
+    'Long-haul Flights (Economy)', 'Long-haul Flights (Business)', 'Long-haul Flights (First)',
+    'Car (Petrol)', 'Car (Diesel)', 'Car (Hybrid)', 'Car (Electric)',
+    'Taxi/Cab', 'Rail (National)', 'Rail (International)',
+    'Bus/Coach', 'Hotel Stays', 'Hotel Stays (Luxury)', 'Ferry'
+  ],
+  'Category 7 – Employee Commuting': [
+    'Car Commute (Petrol)', 'Car Commute (Diesel)', 'Car Commute (Electric)',
+    'Motorbike', 'Scooter (Petrol)', 'E-Scooter/E-Bike',
+    'Bus', 'Metro/Subway', 'Local Train', 'Auto-rickshaw',
+    'Bicycle', 'Walking', 'Carpool', 'Work From Home'
+  ],
+  'Category 8 – Upstream Leased Assets': [
+    'Leased Office Space', 'Leased Warehouse', 'Leased Retail Space',
+    'Leased Facility Electricity', 'Leased Facility Gas',
+    'Leased Vehicles', 'Leased Equipment'
+  ],
+  'Category 9 – Downstream Transportation and Distribution': [
+    'Road Freight (Downstream)', 'Light Goods Vehicles', 'Courier Services',
+    'Rail Freight (Downstream)', 'Sea Freight (Downstream)', 'Air Freight (Downstream)',
+    'Retail Storage', 'Cold Storage'
+  ],
+  'Category 10 – Processing of Sold Products': [
+    'Manufacturing Processing', 'Assembly Operations', 'Packaging',
+    'Industrial Energy Use', 'Heat Treatment', 'Chemical Processing'
+  ],
+  'Category 11 – Use of Sold Products': [
+    'Direct Energy Consumption', 'Indirect Energy Consumption',
+    'Fuel Combustion in Products', 'Electricity Use in Products',
+    'Refrigerant Leakage', 'Vehicle Fuel Use'
+  ],
+  'Category 12 – End-of-Life Treatment of Sold Products': [
+    'Product Landfill', 'Product Incineration', 'Product Recycling',
+    'E-Waste Processing', 'Hazardous Waste Treatment',
+    'Composting', 'Reuse/Refurbishment'
+  ],
+  'Category 13 – Downstream Leased Assets': [
+    'Leased Buildings', 'Leased Retail Locations',
+    'Leased Vehicles', 'Leased Equipment',
+    'Energy Consumption in Leased Assets'
+  ],
+  'Category 14 – Franchises': [
+    'Franchise Electricity', 'Franchise Natural Gas', 'Franchise Fuel',
+    'Franchise Building Operations', 'Franchise Equipment'
+  ],
+  'Category 15 – Investments': [
+    'Equity Investments', 'Debt Investments', 'Project Finance',
+    'Real Estate Investments', 'Infrastructure Investments'
+  ]
 };
 
 const MEASUREMENT_FREQUENCIES = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Annually'];
@@ -94,6 +175,10 @@ export const Scope3SourceTemplateForm = () => {
   const [selectedCollectors, setSelectedCollectors] = useState<string[]>(editTemplate?.assignedDataCollectors || []);
   const [selectedVerifiers, setSelectedVerifiers] = useState<string[]>(editTemplate?.assignedVerifiers || []);
   const [teamMembers, setTeamMembers] = useState<{ _id: string; name: string }[]>([]);
+  const [sourceType, setSourceType] = useState<string>(editTemplate?.sourceType || '');
+
+  const [params] = useSearchParams();
+  const sourceId = params.get('id');
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -119,6 +204,7 @@ export const Scope3SourceTemplateForm = () => {
   });
 
   const watchScope3Category = watch('scope3Category');
+  const watchSourceType = watch('sourceType');
 
   useEffect(() => {
     fetchFacilities();
@@ -127,6 +213,11 @@ export const Scope3SourceTemplateForm = () => {
   useEffect(() => {
     setScope3Category(watchScope3Category);
   }, [watchScope3Category]);
+
+  useEffect(() => {
+    setSourceType(watchSourceType);
+    setValue('sourceType', watchSourceType);
+  }, [watchSourceType]);
 
   const fetchFacilities = async () => {
     try {
@@ -192,7 +283,6 @@ export const Scope3SourceTemplateForm = () => {
   };
 
   const onSubmit = async (data: FormData) => {
-    debugger;
     if (!selectedEmissionFactor) {
       toast({
         title: "Emission Factor Required",
@@ -204,6 +294,7 @@ export const Scope3SourceTemplateForm = () => {
 
     const templates = data.facilityNames.map(facilityName => ({
       // id: editTemplate?.id || uuidv4(),
+      _id: editTemplate?._id || undefined,
       scope: 3 as 3,
       facilityName,
       businessUnit: data.businessUnit,
@@ -272,6 +363,56 @@ export const Scope3SourceTemplateForm = () => {
     getTeamList();
     getFacilities();
   }, []);
+
+  let getDataSource = async (id) => {
+    try {
+      let dataSourceResponse: { status: number; data: any[] } = await httpClient.get(`ghg-accounting/source/3?id=${id}`);
+      console.log("dataSourceResponse", dataSourceResponse);
+      if (dataSourceResponse.status === 200) {
+        if(dataSourceResponse.data && dataSourceResponse.data.length>0){
+          // editTemplate=dataSourceResponse.data[0];
+          if(dataSourceResponse.data[0]['scope3Category']){
+            setValue('scope3Category',dataSourceResponse.data[0]['scope3Category'])
+            setScope3Category(dataSourceResponse.data[0]['scope3Category'])
+          }
+          setValue('businessUnit',dataSourceResponse.data[0]['businessUnit'])
+          setValue('sourceType',dataSourceResponse.data[0]['sourceType'])
+          setValue('sourceDescription',dataSourceResponse.data[0]['sourceDescription'])
+          setValue('supplierName',dataSourceResponse.data[0]['supplierName'])
+          setValue('activityDataUnit',dataSourceResponse.data[0]['activityDataUnit'])
+          setValue('measurementFrequency',dataSourceResponse.data[0]['measurementFrequency'])
+          setValue('calculationMethodology',dataSourceResponse.data[0]['calculationMethodology'])
+          setValue('dataSource',dataSourceResponse.data[0]['dataSource'])
+          setValue('notes',dataSourceResponse.data[0]['notes'])
+          setSelectedFacilities([dataSourceResponse.data[0]['facilityName']])
+          setSourceType(dataSourceResponse.data[0]['sourceType'])
+          setValue('countryRegion',dataSourceResponse.data[0]['countryRegion'])
+          if(dataSourceResponse.data[0]['emissionFactorId']){
+            setSelectedEmissionFactor(scope3EmissionFactors.find(ef=>ef.id===dataSourceResponse.data[0]['emissionFactorId']) || null);
+          }
+          // setValue('utilityProviderName',dataSourceResponse.data[0]['utilityProviderName'])
+          // setValue('countryRegion',dataSourceResponse.data[0]['countryRegion'])
+          // setValue('scope2Category',dataSourceResponse.data[0]['scope2Category'])
+          // setValue('emissionFactorSource',dataSourceResponse.data[0]['emissionFactorSource'])
+        }
+        // let dataCollections: GHGSourceTemplate[] = dataSourceResponse.data;
+        // setSourceType(dataCollections[0]?.sourceType as SourceType);
+      }
+    } catch (error) {
+      console.error("Error fetching data collections:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch data collections.",
+        variant: "destructive",
+      });
+    }
+  }
+
+  useEffect(() => {
+    if (sourceId) {
+      getDataSource(sourceId);
+    }
+  }, [sourceId]);
 
   return (
     <UnifiedSidebarLayout>
@@ -384,7 +525,7 @@ export const Scope3SourceTemplateForm = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="scope3Category">Scope 3 Category *</Label>
-                <Select onValueChange={(value) => setValue('scope3Category', value)} defaultValue={scope3Category}>
+                <Select onValueChange={(value) => setValue('scope3Category', value)} value={scope3Category}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -399,7 +540,7 @@ export const Scope3SourceTemplateForm = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="sourceType">Source Type *</Label>
-                <Select onValueChange={(value) => setValue('sourceType', value)} defaultValue={editTemplate?.sourceType}>
+                <Select onValueChange={(value) => setValue('sourceType', value)} value={sourceType}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select source type" />
                   </SelectTrigger>

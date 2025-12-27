@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,23 +13,31 @@ import { ArrowLeft, Save, Send, Plus, Trash2, Upload, Calculator } from "lucide-
 import EvidenceFileUpload from '@/components/ghg/EvidenceFileUpload';
 import UnitSelector from '@/components/ghg/UnitSelector';
 import { UnitConverterDialog } from '@/components/ghg/UnitConverterDialog';
+import FrequencySelector from '@/components/ghg/FrequencySelector';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import * as XLSX from 'xlsx';
-import { GHGSourceTemplate, GHGDataCollection, getCollectionsForMonth } from '@/types/ghg-source-template';
+import { GHGSourceTemplate, GHGDataCollection } from '@/types/ghg-source-template';
+import { MeasurementFrequency, generatePeriodNames } from '@/types/ghg-data-collection';
 import { DataQuality } from '@/types/scope1-ghg';
 import { calculateEmissions } from '@/types/scope1-ghg';
 import { v4 as uuidv4 } from 'uuid';
 import { months } from '@/data/ghg/calculator';
 import UnifiedSidebarLayout from '@/components/layout/UnifiedSidebarLayout';
 import { httpClient } from '@/lib/httpClient';
+import { logger } from '@/hooks/logger';
+import { SignedUploadUrl, uploadFilesInParallel } from '@/utils/parallelUploader';
+import { start } from 'repl';
 
 interface DataEntry {
+  _id?: string;
   id: string;
+  periodName: string;
   date: string;
   activityDataValue: number;
   notes: string;
   evidenceUrls?: string[];
   selectedUnit?: string;
+  evidenceFiles?: { url?: string; name?: string; key?: string; type?: string }[];
 }
 
 const MOCK_TEAM_MEMBERS = [
@@ -51,68 +60,120 @@ export const DataCollectionForm = () => {
 
   const [selectedMonth, setSelectedMonth] = useState(month || new Date().toLocaleString('en-US', { month: 'long' }));
   const [selectedYear, setSelectedYear] = useState(year || new Date().getFullYear());
+  const [selectedFrequency, setSelectedFrequency] = useState<MeasurementFrequency>(template.measurementFrequency);
   const [dataEntries, setDataEntries] = useState<DataEntry[]>([]);
   const [dataQuality, setDataQuality] = useState<DataQuality>('Medium');
   const [verifiedBy, setVerifiedBy] = useState('');
   const [collectionNotes, setCollectionNotes] = useState('');
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [isConverterOpen, setIsConverterOpen] = useState(false);
+  const [evidenceFiles, setEvidenceFiles] = useState<File[]>([]);
 
-  const expectedEntries = getCollectionsForMonth(template.measurementFrequency);
+  const [evidenceByEntry, setEvidenceByEntry] = useState<Record<string, File[]>>({});
+  const [isFileUploadOpen, setIsFileUploadOpen] = useState(false);
+  const [uploadProgress, setUploadProgress] =
+    useState<Record<string, number>>({});
+
+  const [uploadStatus, setUploadStatus] =
+    useState<Record<string, "uploading" | "done" | "error">>({});
+
+  const [reloadData, setReloadData] = useState(false);
+
+  const [bulkUploadErrors, setBulkUploadErrors] = useState<string[]>([]);
+
+  const periodNames = generatePeriodNames(selectedFrequency);
+
+  const [params] = useSearchParams();
+  const templateId = params.get('templateId');
+
+  const getTemplateData = async (templateId: string) => {
+    try {
+      let response = await httpClient.get(`ghg-accounting/${templateId}/ghg-data-collection`);
+      logger.debug("Template data response:", response);
+      if (response.status === 200) {
+        return response.data as { collectedData: GHGDataCollection[], templateDetails: GHGSourceTemplate };
+      }
+    } catch (error) {
+      console.error("Error fetching template data:", error);
+    }
+    return null;
+  };
+
 
   useEffect(() => {
-    // Load existing data collections for this template and period
-    loadExistingCollections();
-  }, [selectedMonth, selectedYear, template._id]);
+    if (templateId) {
+      // Fetch template details using templateId if needed
+      // For now, we assume template is passed via location.state
+      // alert("Template ID: " + templateId);
+      getTemplateData(templateId).then(data => {
+        if (data) {
+          logger.debug("Fetched template data:", data);
+          // You can set the fetched data to state variables here
+          // setTemplate(data.templateDetails);
+          // setDataEntries(...) based on data.collectedData
+          if (data.templateDetails && data.templateDetails.measurementFrequency) {
+            setSelectedFrequency(data.templateDetails.measurementFrequency);
+          }
+          if (data.collectedData && data.collectedData.length > 0) {
+            data
+            const entries: DataEntry[] = data.collectedData.map(c => ({
+              _id: c._id,
+              id: c._id,
+              periodName: c.reportingMonth || '',
+              date: c.collectedDate,
+              activityDataValue: c.activityDataValue,
+              evidenceFiles: c.evidenceFiles ? c.evidenceFiles.map(ef => ({ key: ef.key, name: ef.name, type: ef.type, url: ef.key })) : [],
+              notes: c.notes,
+            }));
+            setDataEntries(entries);
+          }
+        }
+      });
+    }
+  }, [templateId, reloadData]);
+
+  useEffect(() => {
+    initializeEntries();
+  }, [selectedFrequency, template._id]);
+
+  // useEffect(() => {
+  //   loadExistingCollections();
+  // }, [selectedMonth, selectedYear, template._id, selectedFrequency]);
 
   const loadExistingCollections = () => {
-    const key = `scope1_data_collections_${template._id}_${selectedMonth}_${selectedYear}`;
+    const key = `scope1_data_collections_${template._id}_${selectedFrequency}_${selectedYear}`;
     const stored = localStorage.getItem(key);
 
     if (stored) {
       const collections: GHGDataCollection[] = JSON.parse(stored);
       const entries: DataEntry[] = collections.map(c => ({
         id: c._id,
+        periodName: c.reportingMonth || '',
         date: c.collectedDate,
         activityDataValue: c.activityDataValue,
         notes: c.notes,
+        selectedUnit: template.activityDataUnit,
       }));
       setDataEntries(entries);
-    } else {
-      // Initialize with empty entries based on frequency
-      initializeEntries();
     }
   };
 
   const initializeEntries = () => {
-    const entries: DataEntry[] = [];
-    const count = expectedEntries > 0 ? expectedEntries : 1;
-
-    for (let i = 0; i < count; i++) {
-      entries.push({
-        id: uuidv4(),
-        date: new Date().toISOString().split('T')[0],
-        activityDataValue: 0,
-        notes: '',
-        evidenceUrls: [],
-        selectedUnit: template.activityDataUnit,
-      });
-    }
+    const periods = generatePeriodNames(selectedFrequency);
+    const entries: DataEntry[] = periods.map((periodName) => ({
+      id: uuidv4(),
+      periodName,
+      date: new Date().toISOString().split('T')[0],
+      activityDataValue: 0,
+      notes: '',
+      evidenceUrls: [],
+      selectedUnit: template.activityDataUnit,
+    }));
     setDataEntries(entries);
   };
 
-  const addEntry = () => {
-    setDataEntries([
-      ...dataEntries,
-      {
-        id: uuidv4(),
-        date: new Date().toISOString().split('T')[0],
-        activityDataValue: 0,
-        notes: '',
-        evidenceUrls: [],
-        selectedUnit: template.activityDataUnit,
-      },
-    ]);
+  const handleFrequencyChange = (frequency: MeasurementFrequency) => {
+    setSelectedFrequency(frequency);
   };
 
   const removeEntry = (id: string) => {
@@ -130,15 +191,42 @@ export const DataCollectionForm = () => {
     return calculateEmissions(totalActivity, template.emissionFactor);
   };
 
+
+  //
+  const startEvidenceUpload = async (
+    entryKey: string,
+    signedUrls: SignedUploadUrl[]
+  ) => {
+    const files = evidenceByEntry[entryKey] || [];
+    if (!files.length) return;
+
+    setIsFileUploadOpen(true);
+
+    await uploadFilesInParallel(
+      entryKey,
+      files,
+      signedUrls,
+      3, // concurrency (2–4 is ideal)
+      (key, percent) =>
+        setUploadProgress(p => ({ ...p, [key]: percent })),
+      (key, status) =>
+        setUploadStatus(s => ({ ...s, [key]: status }))
+    );
+
+    setIsFileUploadOpen(false);
+  }
+  // 
+
+
   const handleSaveDraft = () => {
     const collections: GHGDataCollection[] = dataEntries.map(entry => {
       const emissions = calculateEmissions(entry.activityDataValue, template.emissionFactor);
 
       return {
-        id: entry.id,
+        _id: entry._id || null,
         sourceTemplateId: template._id,
-        reportingPeriod: `${selectedMonth} ${selectedYear}`,
-        reportingMonth: selectedMonth,
+        reportingPeriod: `${selectedFrequency} ${selectedYear}`,
+        reportingMonth: entry.periodName,
         reportingYear: selectedYear,
         activityDataValue: entry.activityDataValue,
         emissionCO2: emissions.co2,
@@ -154,11 +242,10 @@ export const DataCollectionForm = () => {
       };
     });
 
-    const key = `scope1_data_collections_${template._id}_${selectedMonth}_${selectedYear}`;
+    const key = `scope1_data_collections_${template._id}_${selectedFrequency}_${selectedYear}`;
     localStorage.setItem(key, JSON.stringify(collections));
 
-    // Also save status
-    const statusKey = `scope1_status_${template._id}_${selectedMonth}_${selectedYear}`;
+    const statusKey = `scope1_status_${template._id}_${selectedFrequency}_${selectedYear}`;
     localStorage.setItem(statusKey, 'Draft');
 
     toast({
@@ -168,22 +255,25 @@ export const DataCollectionForm = () => {
   };
 
   const handleSubmitForReview = async () => {
-    if (dataEntries.some(e => e.activityDataValue === 0)) {
-      toast({
-        title: "Incomplete Data",
-        description: "Please enter activity data for all entries before submitting.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    // if (dataEntries.some(e => e.activityDataValue === 0)) {
+    //   toast({
+    //     title: "Incomplete Data",
+    //     description: "Please enter activity data for all entries before submitting.",
+    //     variant: "destructive",
+    //   });
+    //   return;
+    // }
+    debugger;
     const collections: GHGDataCollection[] = dataEntries.map(entry => {
       const emissions = calculateEmissions(entry.activityDataValue, template.emissionFactor);
+      console.log("Evidence for entry:", entry.id, evidenceByEntry, `${templateId}-${entry.periodName}-${selectedYear}`);
+      let files = evidenceByEntry[`${templateId}-${entry.periodName}-${selectedYear}`] || [];
 
       return {
+        _id: entry._id || null,
         sourceTemplateId: template._id,
-        reportingPeriod: `${selectedMonth} ${selectedYear}`,
-        reportingMonth: selectedMonth,
+        reportingPeriod: `${selectedFrequency} ${selectedYear}`,
+        reportingMonth: entry.periodName,
         reportingYear: selectedYear,
         activityDataValue: entry.activityDataValue,
         emissionCO2: emissions.co2,
@@ -196,36 +286,16 @@ export const DataCollectionForm = () => {
         verifiedBy,
         verificationStatus: 'Pending',
         notes: entry.notes,
+        scope: 'Scope1',
+        evidenceFiles: (evidenceByEntry[`${templateId}-${entry.periodName}-${selectedYear}`] || []).map(file => ({ name: file.name, type: file.type })),
       };
     });
-    console.log("Submitting collections for review:", collections);
 
-    // const key = `scope1_data_collections_${template._id}_${selectedMonth}_${selectedYear}`;
+    // const key = `scope1_data_collections_${template._id}_${selectedFrequency}_${selectedYear}`;
     // localStorage.setItem(key, JSON.stringify(collections));
 
-    // // Update status to Under Review
-    // const statusKey = `scope1_status_${template._id}_${selectedMonth}_${selectedYear}`;
+    // const statusKey = `scope1_status_${template._id}_${selectedFrequency}_${selectedYear}`;
     // localStorage.setItem(statusKey, 'Under Review');
-    try {
-      // Simulate API call
-      let dataSubmissionResponse=await httpClient.post('ghg-accounting/collect-ghg-data', 
-        collections
-      );
-      if(dataSubmissionResponse.status === 201){
-        toast({
-          title: "Submitted for Review",
-          description: "Your data has been submitted and is now under review.",
-        });
-        navigate('/ghg-accounting', { state: { activeTab: 'scope1' } });
-      }
-    }
-    catch (error) {
-      toast({
-        title: "Submission Failed",
-        description: "There was an error submitting your data. Please try again.",
-        variant: "destructive",
-      });
-    }
 
     // toast({
     //   title: "Submitted for Review",
@@ -233,15 +303,58 @@ export const DataCollectionForm = () => {
     // });
 
     // navigate('/ghg-accounting', { state: { activeTab: 'scope1' } });
+    try {
+      // Simulate API call
+      let dataSubmissionResponse = await httpClient.post('ghg-accounting/collect-ghg-data',
+        collections
+      );
+      if (dataSubmissionResponse.status === 201) {
+        await Promise.all(
+          Object.keys(evidenceByEntry).map(entryKey =>
+            startEvidenceUpload(entryKey, dataSubmissionResponse.data['getUploadUrls'])
+          )
+        );
+        setIsBulkUploadOpen(false);
+        toast({
+          title: status === 'Draft' ? "Data Saved" : "Data Submitted",
+          description: `Activity data has been ${status === 'Draft' ? 'saved as draft' : 'submitted for review'}.`,
+        });
+        navigate('/ghg-accounting', { state: { activeTab: 'scope2' } });
+      }
+    }
+    catch (error) {
+      toast({
+        title: "Error",
+        description: "There was an error submitting the data. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleBulkUpload = (entries: DataEntry[]) => {
-    setDataEntries([...dataEntries, ...entries]);
-    setIsBulkUploadOpen(false);
-    toast({
-      title: "Bulk Upload Complete",
-      description: `Successfully added ${entries.length} data entries.`,
+    debugger;
+    dataEntries.map(de => {
+      const duplicate = entries.find(e => e.periodName === de.periodName);
+      if (duplicate) {
+        de.activityDataValue = duplicate.activityDataValue;
+        de.notes = duplicate.notes;
+      }
+      return de;
     });
+    setDataEntries(dataEntries.map(de => {
+      const duplicate = entries.find(e => e.periodName === de.periodName);
+      if (duplicate) {
+        de.activityDataValue = duplicate.activityDataValue;
+        de.notes = duplicate.notes;
+      }
+      return de;
+    }));
+    handleSubmitForReview();
+    // setIsBulkUploadOpen(false);
+    // toast({
+    //   title: "Bulk Upload Complete",
+    //   description: `Successfully added ${entries.length} data entries.`,
+    // });
   };
 
   const downloadBulkTemplate = () => {
@@ -260,28 +373,9 @@ export const DataCollectionForm = () => {
 
   const totalEmissions = calculateTotalEmissions();
 
-  const getDataCollected = async () => {
-    try {
-      // Add your data fetching logic here
-      let dataCollectedResponse: { status: number; data: any[] } = await httpClient.get(`ghg-accounting/${template._id}/ghg-data-collection`);
-      console.log("dataCollectedResponse", dataCollectedResponse);
-      if(dataCollectedResponse.status === 200){
-        // Process the fetched data as needed
-        setDataEntries(dataCollectedResponse.data.map(item => ({
-          id: item._id,
-          date: item.collectedDate,
-          activityDataValue: item.activityDataValue,
-          notes: item.notes,
-        })));
-      }
-    } catch (error) {
-      console.error("Error fetching data collected:", error);
-    }
-  };
-
   useEffect(() => {
-    getDataCollected();
-  }, []);
+    logger.debug("Data Entries Updated:", evidenceByEntry);
+  }, [evidenceByEntry]);
 
   return (
     <UnifiedSidebarLayout>
@@ -334,42 +428,31 @@ export const DataCollectionForm = () => {
 
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>Reporting Period</CardTitle>
-                <CardDescription>Select the month and year for data collection</CardDescription>
-              </div>
-              <div className="flex gap-2">
-                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger className="w-[150px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map(m => (
-                      <SelectItem key={m} value={m}>{m}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <CardTitle>Reporting Period & Frequency</CardTitle>
+            <CardDescription>Select the frequency and year for data collection</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FrequencySelector
+                value={selectedFrequency}
+                onChange={handleFrequencyChange}
+                defaultFrequency={template.measurementFrequency}
+                disabled={true}
+              />
+              <div className="space-y-2">
+                <Label>Reporting Year</Label>
                 <Select value={selectedYear.toString()} onValueChange={(val) => setSelectedYear(parseInt(val))}>
-                  <SelectTrigger className="w-[120px]">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[2022, 2023, 2024, 2025].map(y => (
+                    {[2022, 2023, 2024, 2025, 2026].map(y => (
                       <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            {expectedEntries > 0 && (
-              <p className="text-sm text-muted-foreground">
-                Based on <strong>{template.measurementFrequency}</strong> frequency,
-                you need <strong>{expectedEntries}</strong> data point(s) for this month.
-              </p>
-            )}
           </CardContent>
         </Card>
 
@@ -378,7 +461,9 @@ export const DataCollectionForm = () => {
             <div className="flex justify-between items-center">
               <div>
                 <CardTitle>Activity Data Entries</CardTitle>
-                <CardDescription>Enter activity data for each measurement period</CardDescription>
+                <CardDescription>
+                  Enter activity data for each {selectedFrequency.toLowerCase()} period ({dataEntries.length} periods)
+                </CardDescription>
               </div>
               <div className="flex gap-2">
                 <Button onClick={() => setIsConverterOpen(true)} variant="outline" size="sm">
@@ -389,10 +474,6 @@ export const DataCollectionForm = () => {
                   <Upload className="mr-2 h-4 w-4" />
                   Bulk Upload
                 </Button>
-                <Button onClick={addEntry} variant="outline" size="sm">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Entry
-                </Button>
               </div>
             </div>
           </CardHeader>
@@ -400,16 +481,12 @@ export const DataCollectionForm = () => {
             {dataEntries.map((entry, index) => (
               <div key={entry.id} className="border rounded-lg p-4 space-y-4">
                 <div className="flex justify-between items-center">
-                  <h4 className="font-medium">Entry {index + 1}</h4>
-                  {dataEntries.length > 1 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeEntry(entry.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
+                  <div className="flex items-center gap-3">
+                    <Badge variant="secondary" className="text-sm">
+                      {entry.periodName}
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">Period {index + 1} of {dataEntries.length}</span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -457,12 +534,18 @@ export const DataCollectionForm = () => {
 
                   <div className="space-y-2">
                     <EvidenceFileUpload
-                      value={entry.evidenceUrls || []}
-                      onChange={(urls) => updateEntry(entry.id, 'evidenceUrls', urls)}
+                      value={evidenceByEntry[`${templateId}-${entry.periodName}-${selectedYear}`] || []}
+                      onChange={(files) =>
+                        setEvidenceByEntry(prev => ({ ...prev, [`${templateId}-${entry.periodName}-${selectedYear}`]: files }))
+                      }
                       label="Evidence (Optional)"
                       description="Upload supporting documents"
                       maxFiles={3}
-                      scope="scope1"
+                      scope={`scope1-${templateId}-${entry.periodName}-${selectedYear}`}
+                      uploadedFiles={entry.evidenceFiles}
+                      templateId={templateId || undefined}
+                      entryId={entry._id}
+                      setReloadData={setReloadData}
                     />
                   </div>
                 </div>
@@ -571,6 +654,46 @@ export const DataCollectionForm = () => {
             </DialogHeader>
 
             <div className="space-y-4">
+              {/* {JSON.stringify(dataEntries)} */}
+              {periodNames.filter(p => !dataEntries.some(
+                e => e.periodName === p && e.activityDataValue > 0
+              )).length > 0 && (
+                  <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+                    <p className="font-medium mb-2">
+                      ⚠️ Some periods are missing data
+                    </p>
+
+                    <p className="mb-2">
+                      Periods marked in <span className="font-semibold text-red-600">red</span> above
+                      are not filled. Please provide data for the following period(s):
+                    </p>
+
+                    <div className="flex flex-wrap gap-2">
+                      {periodNames.filter(p => dataEntries.some(
+                        e => e.periodName === p && e.activityDataValue > 0
+                      )).map(p => (
+                        <span
+                          key={p}
+                          className="rounded bg-green-500 px-2 py-1 text-xs font-medium text-green-700"
+                          style={{ color: 'white' }}
+                        >
+                          {p}
+                        </span>
+                      ))}
+
+                      {periodNames.filter(p => !dataEntries.some(
+                        e => e.periodName === p && e.activityDataValue > 0
+                      )).map(p => (
+                        <span
+                          key={p}
+                          className="rounded bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
+                        >
+                          {p}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               <Button onClick={downloadBulkTemplate} variant="outline" className="w-full">
                 Download Template
               </Button>
@@ -587,14 +710,42 @@ export const DataCollectionForm = () => {
                     const workbook = XLSX.read(data);
                     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                     const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
+                    let errorList: string[] = [];
 
-                    const entries: DataEntry[] = jsonData.map(row => ({
+                    jsonData.forEach((row, idx) => {
+                      if (!row['Activity Value'] || isNaN(parseFloat(row['Activity Value']))) {
+                        errorList.push(`Row ${idx + 2}: Invalid or missing 'Activity Value'`);
+                      }
+                      if(!row['Period']){
+                        errorList.push(`Row ${idx + 2}: Missing 'Period' value`);
+                      }
+                      if (row['Period'] && !periodNames.includes(row['Period'])) {
+                        errorList.push(`Row ${idx + 2}: 'Period' value '${row['Period']}' is not valid for the selected frequency.`);
+                      }
+                      if (row['Period'] && dataEntries.some(
+                        e => e.periodName === row['Period'] && e.activityDataValue > 0
+                      )) {
+                        errorList.push(`Row ${idx + 2}: Data for period '${row['Period']}' already exists.`);
+                      }
+                    });
+                    if (errorList.length > 0) {
+                      setBulkUploadErrors(errorList);
+                      return;
+                    }
+
+                    // ✅ Clear errors if valid
+                    setBulkUploadErrors([]);
+
+
+                    const entries: DataEntry[] = jsonData.map((row, idx) => ({
                       id: uuidv4(),
+                      periodName: row['Period'] || `Entry ${idx + 1}`,
                       date: row['Date'] || new Date().toISOString().split('T')[0],
                       activityDataValue: parseFloat(row['Activity Value']) || 0,
                       notes: row['Notes'] || '',
                       evidenceUrls: [],
                       selectedUnit: row['Unit'] || template.activityDataUnit,
+                      reportingYear: selectedYear,
                     }));
 
                     handleBulkUpload(entries);
@@ -608,7 +759,26 @@ export const DataCollectionForm = () => {
                 }}
                 className="w-full"
               />
+
             </div>
+            {bulkUploadErrors.length > 0 && (
+              <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+                <p className="font-medium mb-2">
+                  ❌ Upload Validation Errors
+                </p>
+
+                <ul className="list-disc pl-5 space-y-1">
+                  {bulkUploadErrors.map((err, idx) => (
+                    <li key={idx}>{err}</li>
+                  ))}
+                </ul>
+
+                <p className="mt-2 text-xs text-red-600">
+                  Please fix the above errors and re-upload the file.
+                </p>
+              </div>
+            )}
+
           </DialogContent>
         </Dialog>
 
@@ -617,6 +787,43 @@ export const DataCollectionForm = () => {
           onOpenChange={setIsConverterOpen}
           initialFromUnit={template.activityDataUnit}
         />
+
+        {/* File Upload Dialog */}
+        <Dialog open={isFileUploadOpen} onOpenChange={setIsFileUploadOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>File Upload</DialogTitle>
+              <DialogDescription>
+                File Upload will be in progress.Don't close this dialog.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 max-h-[400px] overflow-y-auto">
+              {Object.keys(uploadProgress).map((key) => (
+                <div key={key} className="space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <span className="truncate">
+                      {key.split("-").slice(-1)[0]}
+                    </span>
+                    <span>{uploadProgress[key]}%</span>
+                  </div>
+
+                  <div className="w-full h-2 bg-muted rounded">
+                    <div
+                      className={`h-2 rounded transition-all ${uploadStatus[key] === "error"
+                        ? "bg-destructive"
+                        : uploadStatus[key] === "done"
+                          ? "bg-green-600"
+                          : "bg-primary"
+                        }`}
+                      style={{ width: `${uploadProgress[key]}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </UnifiedSidebarLayout>
   );
