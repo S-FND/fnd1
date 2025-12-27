@@ -99,9 +99,9 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     }
   }, [pageAccessList]);
 
-  useEffect(() => {
-    logger.debug("🔵 SidebarNavigation: Updated visibleItems:", visibleItems);
-  }, [visibleItems]);
+  // useEffect(() => {
+  //   logger.debug("🔵 SidebarNavigation: Updated visibleItems:", visibleItems);
+  // }, [visibleItems]);
 
   // useEffect(() => {
   //   let userData = user;
@@ -113,6 +113,10 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   //   console.log("🔵 SidebarNavigation: Checking page access for visibleItems:", visibleItems);
   //   logger.debug("🔵 SidebarNavigation: Current user checkPageAccess:", checkPageAccess('/admin'));
   // }, []);
+
+  useEffect(() => {
+    logger.debug("🔵 SidebarNavigation: Expanded menus state changed:", expandedMenus);
+  }, [expandedMenus]);
 
   return (
     <SidebarGroup>
