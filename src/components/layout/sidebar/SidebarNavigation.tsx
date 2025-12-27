@@ -17,6 +17,7 @@ import { SidebarSubmenu } from './SidebarSubmenu';
 import { FileSearch } from 'lucide-react';
 import { useAuthProvider } from '@/hooks/useAuthProvider';
 import { log } from 'console';
+import { useVerifierStatus } from '@/hooks/useVerifierStatus';
 
 interface SidebarNavigationProps {
   role: string;
@@ -38,6 +39,19 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
   const [visibleItems, setVisibleItems] = useState([]);
   const [allowedUrlsList, setAllowedUrlsList] = useState<string[]>([]);
+
+  const { isVerifier, loading: verifierLoading } = useVerifierStatus();
+
+  // Filter items based on verifier status
+//  const visibleItems = getNavigationItems(role).filter(item => {
+//     // Show "Approvals to be Done" for admins, managers, unit_admins, or verified verifiers
+//     if (item.name === 'Approvals to be Done') {
+//       // Show for admin roles always (don't wait for verifier check), or if user is specifically a verifier
+//       const isAdminRole = ['admin', 'manager', 'unit_admin', 'portfolio_company_admin', 'super_admin'].includes(role);
+//       return isAdminRole || isVerifier;
+//     }
+//     return true;
+//   });
 
 
   useEffect(() => {
