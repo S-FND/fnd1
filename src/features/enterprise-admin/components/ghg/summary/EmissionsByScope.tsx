@@ -20,7 +20,7 @@ interface EmissionsByScopeProps {
   }
 }
 
-const EmissionsByScope: React.FC<EmissionsByScopeProps> = ({ emissionsByScope,scopeByData }) => {
+const EmissionsByScope: React.FC<EmissionsByScopeProps> = ({ emissionsByScope,scopeByData={} }) => {
   logger.log(`emissionsByScope`,emissionsByScope)
   logger.log(`scopeByData`,scopeByData)
   const { user } = useAuth();
