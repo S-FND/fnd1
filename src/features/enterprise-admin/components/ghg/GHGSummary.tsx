@@ -182,7 +182,7 @@ export const GHGSummary = () => {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <EmissionsByScope emissionsByScope={emissionsByScope} scopeByData={ghgSummary?.emissionByScope} />
+        {ghgSummary?.emissionByScope && <EmissionsByScope emissionsByScope={emissionsByScope} scopeByData={ghgSummary?.emissionByScope} />}
         <Card>
           <CardHeader>
             <CardTitle>Emissions Breakdown</CardTitle>
