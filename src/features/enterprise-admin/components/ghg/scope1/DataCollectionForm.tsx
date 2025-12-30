@@ -77,11 +77,15 @@ export const DataCollectionForm = () => {
   const [uploadStatus, setUploadStatus] =
     useState<Record<string, "uploading" | "done" | "error">>({});
 
+  const [teamMembers, setTeamMembers] = useState<{ _id: string; name: string }[]>([]);
+
   const [reloadData, setReloadData] = useState(false);
 
   const [bulkUploadErrors, setBulkUploadErrors] = useState<string[]>([]);
 
+
   const periodNames = generatePeriodNames(selectedFrequency);
+  logger.log('periodnames', periodNames)
 
   const [params] = useSearchParams();
   const templateId = params.get('templateId');
@@ -115,16 +119,50 @@ export const DataCollectionForm = () => {
             setSelectedFrequency(data.templateDetails.measurementFrequency);
           }
           if (data.collectedData && data.collectedData.length > 0) {
-            data
-            const entries: DataEntry[] = data.collectedData.map(c => ({
-              _id: c._id,
-              id: c._id,
-              periodName: c.reportingMonth || '',
-              date: c.collectedDate,
-              activityDataValue: c.activityDataValue,
-              evidenceFiles: c.evidenceFiles ? c.evidenceFiles.map(ef => ({ key: ef.key, name: ef.name, type: ef.type, url: ef.key })) : [],
-              notes: c.notes,
-            }));
+
+            // const entries: DataEntry[] = data.collectedData.map(c => ({
+            //   _id: c._id,
+            //   id: c._id,
+            //   periodName: c.reportingMonth || '',
+            //   date: c.collectedDate,
+            //   activityDataValue: c.activityDataValue,
+            //   evidenceFiles: c.evidenceFiles ? c.evidenceFiles.map(ef => ({ key: ef.key, name: ef.name, type: ef.type, url: ef.key })) : [],
+            //   notes: c.notes,
+            // }));
+
+            const entries: DataEntry[] = periodNames.map((p) => {
+              let collection = data.collectedData.find((c) => c.reportingMonth == p && c.reportingYear == selectedYear);
+              if (collection) {
+                return {
+                  _id: collection._id,
+                  id: collection._id,
+                  periodName: collection.reportingMonth || '',
+                  date: collection.collectedDate,
+                  activityDataValue: collection.activityDataValue,
+                  evidenceFiles: collection.evidenceFiles ? collection.evidenceFiles.map(ef => ({ key: ef.key, name: ef.name, type: ef.type, url: ef.key })) : [],
+                  notes: collection.notes,
+                }
+              }
+              else {
+                return {
+                  id: uuidv4(),
+                  periodName:p,
+                  date: new Date().toISOString().split('T')[0],
+                  activityDataValue: 0,
+                  notes: '',
+                  evidenceUrls: []
+                }
+              }
+            })
+            // data.collectedData.map(c => ({
+            //   _id: c._id,
+            //   id: c._id,
+            //   periodName: c.reportingMonth || '',
+            //   date: c.collectedDate,
+            //   activityDataValue: c.activityDataValue,
+            //   evidenceFiles: c.evidenceFiles ? c.evidenceFiles.map(ef => ({ key: ef.key, name: ef.name, type: ef.type, url: ef.key })) : [],
+            //   notes: c.notes,
+            // }));
             setDataEntries(entries);
           }
         }
@@ -134,6 +172,7 @@ export const DataCollectionForm = () => {
 
   useEffect(() => {
     initializeEntries();
+    setVerifiedBy(template.assignedDataCollectors[0])
   }, [selectedFrequency, template._id]);
 
   // useEffect(() => {
@@ -218,41 +257,7 @@ export const DataCollectionForm = () => {
   // 
 
 
-  const handleSaveDraft = () => {
-    const collections: GHGDataCollection[] = dataEntries.map(entry => {
-      const emissions = calculateEmissions(entry.activityDataValue, template.emissionFactor);
-
-      return {
-        _id: entry._id || null,
-        sourceTemplateId: template._id,
-        reportingPeriod: `${selectedFrequency} ${selectedYear}`,
-        reportingMonth: entry.periodName,
-        reportingYear: selectedYear,
-        activityDataValue: entry.activityDataValue,
-        emissionCO2: emissions.co2,
-        emissionCH4: emissions.ch4,
-        emissionN2O: emissions.n2o,
-        totalEmission: emissions.total,
-        dataQuality,
-        collectedDate: entry.date,
-        collectedBy: 'Current User',
-        verifiedBy,
-        verificationStatus: 'Pending',
-        notes: entry.notes,
-      };
-    });
-
-    const key = `scope1_data_collections_${template._id}_${selectedFrequency}_${selectedYear}`;
-    localStorage.setItem(key, JSON.stringify(collections));
-
-    const statusKey = `scope1_status_${template._id}_${selectedFrequency}_${selectedYear}`;
-    localStorage.setItem(statusKey, 'Draft');
-
-    toast({
-      title: "Draft Saved",
-      description: "Your data collection has been saved as draft.",
-    });
-  };
+  
 
   const handleSubmitForReview = async () => {
     // if (dataEntries.some(e => e.activityDataValue === 0)) {
@@ -263,7 +268,7 @@ export const DataCollectionForm = () => {
     //   });
     //   return;
     // }
-    debugger;
+    // debugger;
     const collections: GHGDataCollection[] = dataEntries.map(entry => {
       const emissions = calculateEmissions(entry.activityDataValue, template.emissionFactor);
       console.log("Evidence for entry:", entry.id, evidenceByEntry, `${templateId}-${entry.periodName}-${selectedYear}`);
@@ -331,6 +336,43 @@ export const DataCollectionForm = () => {
     }
   };
 
+  const handleSaveDraft = () => {
+    handleSubmitForReview()
+    // const collections: GHGDataCollection[] = dataEntries.map(entry => {
+    //   const emissions = calculateEmissions(entry.activityDataValue, template.emissionFactor);
+
+    //   return {
+    //     _id: entry._id || null,
+    //     sourceTemplateId: template._id,
+    //     reportingPeriod: `${selectedFrequency} ${selectedYear}`,
+    //     reportingMonth: entry.periodName,
+    //     reportingYear: selectedYear,
+    //     activityDataValue: entry.activityDataValue,
+    //     emissionCO2: emissions.co2,
+    //     emissionCH4: emissions.ch4,
+    //     emissionN2O: emissions.n2o,
+    //     totalEmission: emissions.total,
+    //     dataQuality,
+    //     collectedDate: entry.date,
+    //     collectedBy: 'Current User',
+    //     verifiedBy,
+    //     verificationStatus: 'Pending',
+    //     notes: entry.notes,
+    //   };
+    // });
+
+    // const key = `scope1_data_collections_${template._id}_${selectedFrequency}_${selectedYear}`;
+    // localStorage.setItem(key, JSON.stringify(collections));
+
+    // const statusKey = `scope1_status_${template._id}_${selectedFrequency}_${selectedYear}`;
+    // localStorage.setItem(statusKey, 'Draft');
+
+    // toast({
+    //   title: "Draft Saved",
+    //   description: "Your data collection has been saved as draft.",
+    // });
+  };
+
   const handleBulkUpload = (entries: DataEntry[]) => {
     debugger;
     dataEntries.map(de => {
@@ -373,9 +415,36 @@ export const DataCollectionForm = () => {
 
   const totalEmissions = calculateTotalEmissions();
 
+  const getTeamList = async () => {
+    try {
+      let teamList = await httpClient.get('subuser');
+      console.log("teamList", teamList);
+      console.log("teamList.data['data']", teamList.data['data']);
+      if (teamList && teamList.status === 200) {
+        // setTeamMembers(teamList.data);
+        if (teamList.data && teamList.data['data'] && Array.isArray(teamList.data['data'])) {
+          console.log("teamList.data['data']['subusers']", teamList.data['data'][0]['subuser']);
+          setTeamMembers(teamList.data['data'][0]['subuser']);
+        }
+
+      }
+    } catch (error) {
+      console.error('Error fetching team members:', error);
+      toast({
+        title: "Error Loading Team Members",
+        description: "Could not load team members. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }
+
   useEffect(() => {
-    logger.debug("Data Entries Updated:", evidenceByEntry);
-  }, [evidenceByEntry]);
+    getTeamList();
+  }, [])
+
+  // useEffect(() => {
+  //   logger.debug("Data Entries Updated:", evidenceByEntry);
+  // }, [evidenceByEntry]);
 
   return (
     <UnifiedSidebarLayout>
@@ -604,14 +673,12 @@ export const DataCollectionForm = () => {
 
               <div className="space-y-2">
                 <Label>Verified By (Optional)</Label>
-                <Select value={verifiedBy} onValueChange={setVerifiedBy}>
+                <Select value={verifiedBy} onValueChange={setVerifiedBy} disabled={true}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select verifier..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {MOCK_TEAM_MEMBERS.filter(m => template.assignedVerifiers?.includes(m.id)).map(member => (
-                      <SelectItem key={member.id} value={member.name}>{member.name}</SelectItem>
-                    ))}
+                    {teamMembers.map((member) => <SelectItem key={member._id} value={member._id}>{member.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -716,7 +783,7 @@ export const DataCollectionForm = () => {
                       if (!row['Activity Value'] || isNaN(parseFloat(row['Activity Value']))) {
                         errorList.push(`Row ${idx + 2}: Invalid or missing 'Activity Value'`);
                       }
-                      if(!row['Period']){
+                      if (!row['Period']) {
                         errorList.push(`Row ${idx + 2}: Missing 'Period' value`);
                       }
                       if (row['Period'] && !periodNames.includes(row['Period'])) {

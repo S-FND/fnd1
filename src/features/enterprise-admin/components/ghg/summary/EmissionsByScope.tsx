@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContext';
+import { logger } from '@/hooks/logger';
 
 interface EmissionsByScopeProps {
   emissionsByScope: Array<{
@@ -11,9 +12,17 @@ interface EmissionsByScopeProps {
     statusColor?: string;
     completeness?: number;
   }>;
+  scopeByData:{
+    'Scope 1': number;
+    'Scope 2': number;
+    'Scope 3': number;
+    'Scope 4': number;
+  }
 }
 
-const EmissionsByScope: React.FC<EmissionsByScopeProps> = ({ emissionsByScope }) => {
+const EmissionsByScope: React.FC<EmissionsByScopeProps> = ({ emissionsByScope,scopeByData }) => {
+  logger.log(`emissionsByScope`,emissionsByScope)
+  logger.log(`scopeByData`,scopeByData)
   const { user } = useAuth();
   const isUnitAdmin = user?.role === 'unit_admin';
   const unitName = isUnitAdmin && user?.units?.find(unit => unit.id === user?.unitId)?.name;
@@ -41,7 +50,8 @@ const EmissionsByScope: React.FC<EmissionsByScopeProps> = ({ emissionsByScope })
               <div key={item.scope} className="mb-2">
                 <div className="flex justify-between mb-1">
                   <span className="text-sm font-medium">{item.scope}</span>
-                  <span className="text-sm font-medium">{item.value}</span>
+                  <span className="text-sm font-medium">{scopeByData[item.scope].toFixed(2)}</span>
+                  {/* <span className="text-sm font-medium">{item.value}</span> */}
                 </div>
                 <div className="w-full bg-muted rounded-full h-2.5">
                   <div
@@ -54,7 +64,7 @@ const EmissionsByScope: React.FC<EmissionsByScopeProps> = ({ emissionsByScope })
             <div className="text-xs text-muted-foreground mt-4">
               <div className="flex justify-between">
                 <span>Total Emissions</span>
-                <span>{emissionsByScope.reduce((sum, item) => sum + item.value, 0)} tCO₂e</span>
+                <span>{Object.values(scopeByData).reduce((sum, item) => sum + item, 0).toFixed(2)} tCO₂e</span>
               </div>
             </div>
           </div>
