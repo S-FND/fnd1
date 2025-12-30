@@ -9,6 +9,9 @@ import { Scope1Entry } from '@/types/scope1-ghg';
 import { Scope2Entry } from '@/types/scope2-ghg';
 import { Scope3Entry } from '@/types/scope3-ghg';
 import { Scope4Entry } from '@/types/scope4-ghg';
+import { toast } from 'sonner';
+import { httpClient } from '@/lib/httpClient';
+import { logger } from '@/hooks/logger';
 
 interface EmissionsByScope {
   scope: string;
@@ -23,11 +26,24 @@ interface CompletenessItem {
   statusColor: string;
 }
 
+export interface EmissionSummary {
+  totalEmission: number;
+  avoidedEmission: number;
+  emissionByScope: {
+    'Scope 1': number;
+    'Scope 2': number;
+    'Scope 3': number;
+    'Scope 4': number;
+  };
+}
+
+
 export const GHGSummary = () => {
   const [emissionsByScope, setEmissionsByScope] = useState<EmissionsByScope[]>([]);
   const [completenessData, setCompletenessData] = useState<CompletenessItem[]>([]);
   const [totalEmissions, setTotalEmissions] = useState(0);
   const [scope4AvoidedEmissions, setScope4AvoidedEmissions] = useState(0);
+  const [ghgSummary,setGhgSummary]=useState<EmissionSummary>(null)
 
   useEffect(() => {
     // Load data from localStorage for all scopes
@@ -98,6 +114,33 @@ export const GHGSummary = () => {
   }, []);
 
   const netEmissions = totalEmissions - scope4AvoidedEmissions;
+
+  let getSummaryDetails= async()=>{
+    try {
+      let summaryResponse=await httpClient.get('ghg-accounting/summary');
+      logger.log(`summaryResponse`,summaryResponse)
+      if(summaryResponse['status'] == 200){
+        setGhgSummary(summaryResponse['data']['emmissonData'])
+      }
+    } catch (error) {
+      toast(error.message)
+    }
+  }
+
+  useEffect(()=>{
+    getSummaryDetails()
+  },[])
+
+  // useEffect(()=>{
+  //   setEmissionsByScope(emissionsByScope.map((emmission)=>{
+  //     if(Object.keys(ghgSummary.emissionByScope).includes(emmission.scope)){
+  //       return {...emmission,value:ghgSummary.emissionByScope[emmission.scope],percentage:(ghgSummary.emissionByScope[emmission.scope]/ghgSummary.totalEmission)*100}
+  //     }
+  //     else{
+  //       return emmission
+  //     }
+  //   }))
+  // },[ghgSummary])
   
   return (
     <div className="space-y-6">
@@ -112,17 +155,17 @@ export const GHGSummary = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-muted p-4 rounded-lg">
               <h3 className="text-sm font-medium mb-1">Total Emissions</h3>
-              <p className="text-2xl font-bold">{totalEmissions.toFixed(2)} tCO₂e</p>
+              <p className="text-2xl font-bold">{ghgSummary?.totalEmission.toFixed(2)} tCO₂e</p>
               <p className="text-xs text-muted-foreground">Scope 1, 2 & 3</p>
             </div>
             <div className="bg-muted p-4 rounded-lg">
               <h3 className="text-sm font-medium mb-1">Avoided Emissions</h3>
-              <p className="text-2xl font-bold text-green-600">-{scope4AvoidedEmissions.toFixed(2)} tCO₂e</p>
+              <p className="text-2xl font-bold text-green-600">-{ghgSummary?.avoidedEmission.toFixed(2)} tCO₂e</p>
               <p className="text-xs text-muted-foreground">Scope 4 reductions</p>
             </div>
             <div className="bg-muted p-4 rounded-lg">
               <h3 className="text-sm font-medium mb-1">Net Emissions</h3>
-              <p className="text-2xl font-bold text-primary">{netEmissions.toFixed(2)} tCO₂e</p>
+              <p className="text-2xl font-bold text-primary">{(ghgSummary?.totalEmission-ghgSummary?.avoidedEmission).toFixed(2)} tCO₂e</p>
               <p className="text-xs text-muted-foreground">After avoided emissions</p>
             </div>
             <div className="bg-muted p-4 rounded-lg">
@@ -139,7 +182,7 @@ export const GHGSummary = () => {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <EmissionsByScope emissionsByScope={emissionsByScope} />
+        <EmissionsByScope emissionsByScope={emissionsByScope} scopeByData={ghgSummary?.emissionByScope} />
         <Card>
           <CardHeader>
             <CardTitle>Emissions Breakdown</CardTitle>
@@ -163,8 +206,8 @@ export const GHGSummary = () => {
                       />
                     </div>
                     <div className="flex justify-between text-xs mt-1">
-                      <span>{scope.value.toFixed(2)} tCO₂e</span>
-                      <span className="text-muted-foreground">{scope.percentage.toFixed(1)}%</span>
+                      <span>{ghgSummary?.emissionByScope[scope.scope].toFixed(2)} tCO₂e</span>
+                      <span className="text-muted-foreground">{((ghgSummary?.emissionByScope[scope.scope]/ghgSummary.totalEmission)*100).toFixed(2)}%</span>
                     </div>
                   </div>
                 </div>

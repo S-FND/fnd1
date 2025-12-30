@@ -224,7 +224,7 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
             <div>
               <CardTitle>Scope 1: Direct Emissions</CardTitle>
               <CardDescription>
-                Define emission sources and collect activity data 
+                Define emission sources and collect activity data
               </CardDescription>
             </div>
             {isParent && <div className="flex gap-2">
@@ -345,20 +345,22 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
                               <Database className="h-4 w-4 mr-1" />
                               Verify Data
                             </Button>}
-                            <Button
+                            {isParent && <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => handleEditSource(template)}
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button
+                            }
+                            {isParent && <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => handleDeleteSource(template._id)}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
+                            }
                           </div>
                         </TableCell>
                       </TableRow>

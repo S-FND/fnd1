@@ -170,7 +170,7 @@ export const Scope3SourceTemplateForm = () => {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loadingFacilities, setLoadingFacilities] = useState(true);
   const [selectedFacilities, setSelectedFacilities] = useState<string[]>(
-    editTemplate ? [editTemplate.facilityName] : ['Others']
+    editTemplate ? [editTemplate.facilityName] : []
   );
   const [selectedCollectors, setSelectedCollectors] = useState<string[]>(editTemplate?.assignedDataCollectors || []);
   const [selectedVerifiers, setSelectedVerifiers] = useState<string[]>(editTemplate?.assignedVerifiers || []);
@@ -196,7 +196,7 @@ export const Scope3SourceTemplateForm = () => {
       dataSource: editTemplate.dataSource,
       notes: editTemplate.notes,
     } : {
-      facilityNames: ['Others'],
+      facilityNames: [],
       scope3Category: SCOPE3_CATEGORIES[0],
       calculationMethodology: 'GHG Protocol - Activity-based',
       countryRegion: 'India',
@@ -459,7 +459,7 @@ export const Scope3SourceTemplateForm = () => {
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="max-h-[300px] overflow-y-auto">
-                      <SelectItem value="Others">Others</SelectItem>
+                      {/* <SelectItem value="Others">Others</SelectItem> */}
                       {loadingFacilities ? (
                         <div className="p-2 text-sm text-muted-foreground">Loading facilities...</div>
                       ) : (

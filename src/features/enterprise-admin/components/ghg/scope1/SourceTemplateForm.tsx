@@ -68,7 +68,7 @@ export const SourceTemplateForm = () => {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loadingFacilities, setLoadingFacilities] = useState(true);
   const [selectedFacilities, setSelectedFacilities] = useState<string[]>(
-    editTemplate ? [editTemplate.facilityName] : ['Others']
+    editTemplate ? [editTemplate.facilityName] : []
   );
 
   const [teamMembers, setTeamMembers] = useState<{ _id: string; name: string }[]>([]);
@@ -95,7 +95,7 @@ export const SourceTemplateForm = () => {
       dataSource: editTemplate.dataSource,
       notes: editTemplate.notes,
     } : {
-      facilityNames: ['Others'],
+      facilityNames: [],
       sourceType: initialSourceType || 'Stationary',
       calculationMethodology: 'GHG Protocol - Activity-based',
     }
@@ -375,7 +375,7 @@ export const SourceTemplateForm = () => {
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent className="max-h-[300px] overflow-y-auto">
-                  <SelectItem value="Others">Others</SelectItem>
+                  {/* <SelectItem value="Others">Others</SelectItem> */}
                   {loadingFacilities ? (
                     <div className="p-2 text-sm text-muted-foreground">Loading facilities...</div>
                   ) : (

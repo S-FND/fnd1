@@ -91,7 +91,7 @@ export const useAuthProvider = () => {
       let teamAccess = localStorage.getItem("fandoro-team-access");
       if(teamAccess){
         let teamAccessList = JSON.parse(teamAccess);
-        let dashboardAccess = teamAccessList.find((item) => item.accessLevel !== 'no_access');
+        let dashboardAccess = teamAccessList.find((item) => item.accessLevel !== 'no_access' && item.url && item.url !== 'N/A');
         if(dashboardAccess && dashboardAccess.url){
           employeeNavigateUrl = dashboardAccess.url;
         }
