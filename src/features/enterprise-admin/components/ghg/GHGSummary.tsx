@@ -54,23 +54,62 @@ export const GHGSummary = () => {
     }
   });
 
+  const scopes: EmissionsByScope[] = [
+    {
+      scope: 'Scope 1',
+      value: 0,
+      percentage: 0,
+      color: '#8B5CF6'
+    },
+    {
+      scope: 'Scope 2',
+      value: 0,
+      percentage: 0,
+      color: '#EC4899'
+    },
+    {
+      scope: 'Scope 3',
+      value: 0,
+      percentage: 0,
+      color: '#F59E0B'
+    }
+  ];
+
+
+
+
+  useEffect(() => {
+    if (!ghgSummary.totalEmission) return;
+
+    setEmissionsByScope(prev =>
+      prev.map(scope => {
+        const value = ghgSummary.emissionByScope[scope.scope] || 0;
+        return {
+          ...scope,
+          value,
+          percentage: (value / ghgSummary.totalEmission) * 100
+        };
+      })
+    );
+  }, [ghgSummary]);
+
   const getSummaryDetails = async () => {
     try {
-      let summaryResponse:any  = await httpClient.get('ghg-accounting/summary');
+      let summaryResponse: any = await httpClient.get('ghg-accounting/summary');
       logger.log(`summaryResponse`, summaryResponse);
-      
+
       if (summaryResponse['status'] === 200) {
         const data = summaryResponse['data']?.emmissionData || summaryResponse['data'];
-        
+
         if (data) {
           setGhgSummary({
-            totalEmission: data.totalEmission || 0,
-            avoidedEmission: data.avoidedEmission || 0,
+            totalEmission: data.emmissonData.totalEmission || 0,
+            avoidedEmission: data.emmissonData.avoidedEmission || 0,
             emissionByScope: {
-              'Scope 1': data.emissionByScope?.['Scope 1'] || 0,
-              'Scope 2': data.emissionByScope?.['Scope 2'] || 0,
-              'Scope 3': data.emissionByScope?.['Scope 3'] || 0,
-              'Scope 4': data.emissionByScope?.['Scope 4'] || 0
+              'Scope 1': data.emmissonData.emissionByScope?.['Scope 1'] || 0,
+              'Scope 2': data.emmissonData.emissionByScope?.['Scope 2'] || 0,
+              'Scope 3': data.emmissonData.emissionByScope?.['Scope 3'] || 0,
+              'Scope 4': data.emmissonData.emissionByScope?.['Scope 4'] || 0
             }
           });
         }
@@ -78,7 +117,7 @@ export const GHGSummary = () => {
     } catch (error) {
       logger.error('Failed to fetch GHG summary:', error);
       toast.error('Failed to load GHG summary data');
-      
+
       // Fallback to localStorage data
       const scope1Data: Scope1Entry[] = JSON.parse(localStorage.getItem('scope1Entries') || '[]');
       const scope2Data: Scope2Entry[] = JSON.parse(localStorage.getItem('scope2Entries') || '[]');
@@ -89,9 +128,9 @@ export const GHGSummary = () => {
       const scope2Total = scope2Data.reduce((sum, entry) => sum + (entry.totalEmission || 0), 0);
       const scope3Total = scope3Data.reduce((sum, entry) => sum + (entry.totalEmission || 0), 0);
       const scope4Total = scope4Data.reduce((sum, entry) => sum + (entry.totalAvoidedEmission || 0), 0);
-      
+
       const total = scope1Total + scope2Total + scope3Total;
-      
+
       setGhgSummary({
         totalEmission: total,
         avoidedEmission: scope4Total,
@@ -106,20 +145,21 @@ export const GHGSummary = () => {
   };
 
   useEffect(() => {
+    setEmissionsByScope(scopes);
     getSummaryDetails();
   }, []);
 
-  useEffect(() => {
-    // Calculate percentages for emissionsByScope based on ghgSummary
-    if (ghgSummary.totalEmission > 0) {
-      const newEmissionsByScope = emissionsByScope.map((emission) => ({
-        ...emission,
-        value: ghgSummary.emissionByScope?.[emission.scope] || 0,
-        percentage: ((ghgSummary.emissionByScope?.[emission.scope] || 0) / ghgSummary.totalEmission) * 100
-      }));
-      setEmissionsByScope(newEmissionsByScope);
-    }
-  }, [ghgSummary]);
+  // useEffect(() => {
+  //   // Calculate percentages for emissionsByScope based on ghgSummary
+  //   if (ghgSummary.totalEmission > 0) {
+  //     const newEmissionsByScope = emissionsByScope.map((emission) => ({
+  //       ...emission,
+  //       value: ghgSummary.emissionByScope?.[emission.scope] || 0,
+  //       percentage: ((ghgSummary.emissionByScope?.[emission.scope] || 0) / ghgSummary.totalEmission) * 100
+  //     }));
+  //     setEmissionsByScope(newEmissionsByScope);
+  //   }
+  // }, [ghgSummary]);
 
   // useEffect(()=>{
   //   setEmissionsByScope(emissionsByScope.map((emmission)=>{
@@ -131,7 +171,11 @@ export const GHGSummary = () => {
   //     }
   //   }))
   // },[ghgSummary])
-  
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }, []);
+
   return (
     <div className="space-y-6">
       <Card className="mb-4">
@@ -155,7 +199,7 @@ export const GHGSummary = () => {
             </div>
             <div className="bg-muted p-4 rounded-lg">
               <h3 className="text-sm font-medium mb-1">Net Emissions</h3>
-              <p className="text-2xl font-bold text-primary">{(ghgSummary?.totalEmission-ghgSummary?.avoidedEmission).toFixed(2)} tCO₂e</p>
+              <p className="text-2xl font-bold text-primary">{(ghgSummary?.totalEmission - ghgSummary?.avoidedEmission).toFixed(2)} tCO₂e</p>
               <p className="text-xs text-muted-foreground">After avoided emissions</p>
             </div>
             <div className="bg-muted p-4 rounded-lg">
@@ -163,7 +207,7 @@ export const GHGSummary = () => {
               <p className="text-2xl font-bold">
                 {companyInfo.businessUnits.reduce((sum, unit) => sum + unit.employees, 0) > 0
                   ? (totalEmissions / companyInfo.businessUnits.reduce((sum, unit) => sum + unit.employees, 0)).toFixed(2)
-                  : '0.00'} 
+                  : '0.00'}
               </p>
               <p className="text-xs text-muted-foreground">tCO₂e/employee</p>
             </div>
@@ -172,7 +216,7 @@ export const GHGSummary = () => {
       </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* {ghgSummary?.emissionByScope && <EmissionsByScope emissionsByScope={emissionsByScope} scopeByData={ghgSummary?.emissionByScope} />} */}
+        {ghgSummary?.emissionByScope && <EmissionsByScope emissionsByScope={emissionsByScope} scopeByData={ghgSummary?.emissionByScope} />}
         <Card>
           <CardHeader>
             <CardTitle>Emissions Breakdown</CardTitle>
@@ -189,7 +233,7 @@ export const GHGSummary = () => {
                     <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden">
                       <div
                         className="h-2.5"
-                        style={{ 
+                        style={{
                           width: `${scope.percentage}%`,
                           backgroundColor: scope.color
                         }}
@@ -197,7 +241,7 @@ export const GHGSummary = () => {
                     </div>
                     <div className="flex justify-between text-xs mt-1">
                       <span>{ghgSummary?.emissionByScope[scope.scope].toFixed(2)} tCO₂e</span>
-                      <span className="text-muted-foreground">{((ghgSummary?.emissionByScope[scope.scope]/ghgSummary.totalEmission)*100).toFixed(2)}%</span>
+                      <span className="text-muted-foreground">{((ghgSummary?.emissionByScope[scope.scope] / ghgSummary.totalEmission) * 100).toFixed(2)}%</span>
                     </div>
                   </div>
                 </div>
@@ -212,7 +256,7 @@ export const GHGSummary = () => {
                     <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden">
                       <div
                         className="h-2.5 bg-green-600"
-                        style={{ 
+                        style={{
                           width: `${totalEmissions > 0 ? (scope4AvoidedEmissions / totalEmissions) * 100 : 0}%`
                         }}
                       />
@@ -232,7 +276,7 @@ export const GHGSummary = () => {
       </div>
 
       <MonthlyEmissionsTrend monthlyData={monthlyEmissionsData} />
-      
+
       {completenessData.length > 0 && (
         <DataCompleteness completenessData={completenessData} />
       )}

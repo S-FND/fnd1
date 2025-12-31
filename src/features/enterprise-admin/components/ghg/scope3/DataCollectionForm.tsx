@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+// import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save, Send, Upload, Download, Calculator } from "lucide-react";
 import EvidenceFileUpload from '@/components/ghg/EvidenceFileUpload';
 import UnitSelector from '@/components/ghg/UnitSelector';
@@ -23,6 +23,7 @@ import UnifiedSidebarLayout from '@/components/layout/UnifiedSidebarLayout';
 import { logger } from '@/hooks/logger';
 import { httpClient } from '@/lib/httpClient';
 import { SignedUploadUrl, uploadFilesInParallel } from '@/utils/parallelUploader';
+import { toast } from 'sonner';
 
 interface DataEntry {
   _id?: string;
@@ -45,7 +46,7 @@ const MOCK_TEAM_MEMBERS = [
 export const DataCollectionForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
+  // const { toast } = useToast();
   const { template, year } = location.state as { template: GHGSourceTemplate; month: string; year: number; };
 
   const [selectedYear, setSelectedYear] = useState(year || new Date().getFullYear());
@@ -185,19 +186,12 @@ export const DataCollectionForm = () => {
             startEvidenceUpload(entryKey, dataSubmissionResponse.data['getUploadUrls'])
           )
         );
-        toast({
-          title: status === 'draft' ? "Data Saved" : "Data Submitted",
-          description: `Activity data has been ${status === 'draft' ? 'saved as draft' : 'submitted for review'}.`,
-        });
+        toast.success(`Activity data has been ${status === 'draft' ? 'saved as draft' : 'submitted for review'}.`);
         navigate('/ghg-accounting', { state: { activeTab: 'scope2' } });
       }
     }
     catch (error) {
-      toast({
-        title: "Error",
-        description: "There was an error submitting the data. Please try again.",
-        variant: "destructive",
-      });
+      toast.warning("There was an error submitting the data. Please try again.");
     }
     // localStorage.setItem(`scope3_data_collections_${template._id}_${selectedFrequency}_${selectedYear}`, JSON.stringify(collections));
     // toast({ title: status === 'draft' ? 'Draft Saved' : 'Data Submitted', description: `Activity data ${status === 'draft' ? 'saved as draft' : 'submitted for verification'}` });
