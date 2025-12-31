@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+// import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Save, Send, Trash2 } from "lucide-react";
 import { GHGSourceTemplate, GHGDataCollection } from '@/types/ghg-source-template';
 import { MeasurementFrequency, generatePeriodNames } from '@/types/ghg-data-collection';
@@ -20,6 +20,7 @@ import { logger } from '@/hooks/logger';
 import EvidenceFileUpload from '@/components/ghg/EvidenceFileUpload';
 import { SignedUploadUrl, uploadFilesInParallel } from '@/utils/parallelUploader';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toast } from 'sonner';
 
 interface DataEntry {
   _id?: string;
@@ -43,7 +44,7 @@ const MOCK_TEAM_MEMBERS = [
 export const Scope2DataCollectionForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
+  // const { toast } = useToast();
   const { template } = location.state as { template: GHGSourceTemplate };
 
   const [params] = useSearchParams();
@@ -245,19 +246,12 @@ export const Scope2DataCollectionForm = () => {
             startEvidenceUpload(entryKey, dataSubmissionResponse.data['getUploadUrls'])
           )
         );
-        toast({
-          title: status === 'Draft' ? "Data Saved" : "Data Submitted",
-          description: `Activity data has been ${status === 'Draft' ? 'saved as draft' : 'submitted for review'}.`,
-        });
+        toast.success(`Activity data has been ${status === 'Draft' ? 'saved as draft' : 'submitted for review'}.`,);
         navigate('/ghg-accounting', { state: { activeTab: 'scope2' } });
       }
     }
     catch (error) {
-      toast({
-        title: "Error",
-        description: "There was an error submitting the data. Please try again.",
-        variant: "destructive",
-      });
+      toast.warning("There was an error submitting the data. Please try again.");
     }
   };
 

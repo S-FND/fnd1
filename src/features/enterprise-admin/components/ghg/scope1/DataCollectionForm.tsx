@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+// import { toast } from "@/hooks/use-toast";
 import { ArrowLeft, Save, Send, Plus, Trash2, Upload, Calculator } from "lucide-react";
 import EvidenceFileUpload from '@/components/ghg/EvidenceFileUpload';
 import UnitSelector from '@/components/ghg/UnitSelector';
@@ -27,6 +27,7 @@ import { httpClient } from '@/lib/httpClient';
 import { logger } from '@/hooks/logger';
 import { SignedUploadUrl, uploadFilesInParallel } from '@/utils/parallelUploader';
 import { start } from 'repl';
+import { toast } from 'sonner';
 
 interface DataEntry {
   _id?: string;
@@ -51,7 +52,7 @@ const MOCK_TEAM_MEMBERS = [
 export const DataCollectionForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
+  // const { toast } = useToast();
   const { template, month, year } = location.state as {
     template: GHGSourceTemplate;
     month: string;
@@ -146,7 +147,7 @@ export const DataCollectionForm = () => {
               else {
                 return {
                   id: uuidv4(),
-                  periodName:p,
+                  periodName: p,
                   date: new Date().toISOString().split('T')[0],
                   activityDataValue: 0,
                   notes: '',
@@ -257,9 +258,9 @@ export const DataCollectionForm = () => {
   // 
 
 
-  
 
-  const handleSubmitForReview = async () => {
+
+  const handleSubmitForReview = async (type = null) => {
     // if (dataEntries.some(e => e.activityDataValue === 0)) {
     //   toast({
     //     title: "Incomplete Data",
@@ -320,24 +321,17 @@ export const DataCollectionForm = () => {
           )
         );
         setIsBulkUploadOpen(false);
-        toast({
-          title: status === 'Draft' ? "Data Saved" : "Data Submitted",
-          description: `Activity data has been ${status === 'Draft' ? 'saved as draft' : 'submitted for review'}.`,
-        });
+        toast.success(`Activity data has been ${type === 'Draft' ? 'saved as draft' : 'submitted for review'}.`, );
         navigate('/ghg-accounting', { state: { activeTab: 'scope2' } });
       }
     }
     catch (error) {
-      toast({
-        title: "Error",
-        description: "There was an error submitting the data. Please try again.",
-        variant: "destructive",
-      });
+      toast.warning("There was an error submitting the data. Please try again.");
     }
   };
 
   const handleSaveDraft = () => {
-    handleSubmitForReview()
+    handleSubmitForReview('draft')
     // const collections: GHGDataCollection[] = dataEntries.map(entry => {
     //   const emissions = calculateEmissions(entry.activityDataValue, template.emissionFactor);
 
@@ -430,16 +424,13 @@ export const DataCollectionForm = () => {
       }
     } catch (error) {
       console.error('Error fetching team members:', error);
-      toast({
-        title: "Error Loading Team Members",
-        description: "Could not load team members. Please try again.",
-        variant: "destructive",
-      });
+      toast.warning("Could not load team members. Please try again.");
     }
   }
 
   useEffect(() => {
     getTeamList();
+    toast.success( "Your carbon reduction goal has been created");
   }, [])
 
   // useEffect(() => {
@@ -817,11 +808,7 @@ export const DataCollectionForm = () => {
 
                     handleBulkUpload(entries);
                   } catch (error) {
-                    toast({
-                      title: "Upload Failed",
-                      description: "Failed to parse the Excel file.",
-                      variant: "destructive",
-                    });
+                    toast.warning("Failed to parse the Excel file.");
                   }
                 }}
                 className="w-full"
