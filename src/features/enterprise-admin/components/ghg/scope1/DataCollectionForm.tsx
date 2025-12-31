@@ -430,7 +430,7 @@ export const DataCollectionForm = () => {
 
   useEffect(() => {
     getTeamList();
-    toast.success( "Your carbon reduction goal has been created");
+    // toast.success( "Your carbon reduction goal has been created");
   }, [])
 
   // useEffect(() => {
