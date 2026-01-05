@@ -30,6 +30,7 @@ const IRLPage = () => {
   const [buttonEnabled, setButtonEnabled] = useState(false);
   const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
   const [irlDate, setIrlDate] = useState<string | null>(null);
+  const [previousIrlDate, setPreviousIrlDate] = useState<string | null>(null);
   const [alertType, setAlertType] = useState<"success" | "warning" | "danger" | null>(null);
 
   if (isLoading) {
@@ -55,20 +56,19 @@ const IRLPage = () => {
 
   useEffect(() => {
     const fetchIrlDate = async () => {
-      try {
-        const res = await httpClient.get("company/entity");
-        const data = res?.data as any;
-        if (res.status === 200 && data?.data?.irl_date) {
-          setIrlDate(data?.data.irl_date);
-          checkIrlDate(data?.data.irl_date);
-        }
-      } catch (err) {
-        console.error("Failed to fetch IRL date:", err);
+      const res: any = await httpClient.get("company/entity");
+      const data = res?.data?.data;
+  
+      if (res.status === 200) {
+        setIrlDate(data?.irl_date ? data.irl_date.split("T")[0] : "");
+        setPreviousIrlDate(data?.previous_irl_date || null);
+        checkIrlDate(data?.irl_date);
       }
     };
   
     fetchIrlDate();
   }, []);
+  
 
   const checkIrlDate = (dateStr: string) => {
     const today = new Date();
@@ -94,6 +94,12 @@ const IRLPage = () => {
     danger: "bg-red-50 border-red-400 text-red-900",
   };
 
+  const activeIrlDate = irlDate || previousIrlDate;
+
+  const isExtended =
+  irlDate &&
+  previousIrlDate &&
+  new Date(irlDate) > new Date(previousIrlDate);
 
   return (
     <UnifiedSidebarLayout>
@@ -105,7 +111,7 @@ const IRLPage = () => {
           </p>
         </div>
 
-        {alertType && (
+        {alertType && activeIrlDate && (
           <Alert className={alertStyles[alertType]}>
             <Info className="h-5 w-5" />
             <AlertTitle>
@@ -115,15 +121,35 @@ const IRLPage = () => {
                 ? "Deadline Approaching"
                 : "On Track"}
             </AlertTitle>
+
             <AlertDescription>
               {alertType === "danger" && (
-                <>Your IRL submission deadline <b>{new Date(irlDate!).toLocaleDateString()}</b> has passed.</>
+                <>
+                  Your IRL submission deadline{" "}
+                  <b>{new Date(activeIrlDate).toLocaleDateString()}</b> has passed.
+                </>
               )}
+
               {alertType === "warning" && (
-                <>Your IRL submission deadline is approaching on <b>{new Date(irlDate!).toLocaleDateString()}</b>.</>
+                <>
+                  Your IRL submission deadline is approaching on{" "}
+                  <b>{new Date(activeIrlDate).toLocaleDateString()}</b>.
+                </>
               )}
+
               {alertType === "success" && (
-                <>Your IRL submission deadline is <b>{new Date(irlDate!).toLocaleDateString()}</b>. Everything looks good!</>
+                <>
+                  Your IRL submission deadline is{" "}
+                  <b>{new Date(activeIrlDate).toLocaleDateString()}</b>. Everything looks good!
+                </>
+              )}
+
+              {isExtended && (
+                <div className="mt-2 text-xs text-muted-foreground">
+                  Deadline extended from{" "}
+                  <b>{new Date(previousIrlDate!).toLocaleDateString()}</b> to{" "}
+                  <b>{new Date(irlDate!).toLocaleDateString()}</b>.
+                </div>
               )}
             </AlertDescription>
           </Alert>
