@@ -5,10 +5,12 @@ import MonthlyEmissionsTrend from './summary/MonthlyEmissionsTrend';
 import DataCompleteness from './summary/DataCompleteness';
 import { emissionsTrend, monthlyEmissionsData, companyInfo, emissionsByLocation, emissionsByActivity } from './summary/mockData';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Scope1Entry } from '@/types/scope1-ghg';
 import { Scope2Entry } from '@/types/scope2-ghg';
 import { Scope3Entry } from '@/types/scope3-ghg';
 import { Scope4Entry } from '@/types/scope4-ghg';
+import { yearsToShow } from '@/data/ghg/calculator';
 
 interface EmissionsByScope {
   scope: string;
@@ -28,6 +30,7 @@ export const GHGSummary = () => {
   const [completenessData, setCompletenessData] = useState<CompletenessItem[]>([]);
   const [totalEmissions, setTotalEmissions] = useState(0);
   const [scope4AvoidedEmissions, setScope4AvoidedEmissions] = useState(0);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
     // Load data from localStorage for all scopes
@@ -103,10 +106,31 @@ export const GHGSummary = () => {
     <div className="space-y-6">
       <Card className="mb-4">
         <CardHeader className="pb-2">
-          <CardTitle>GHG Emissions Overview</CardTitle>
-          <CardDescription>
-            Total carbon footprint across operations in {new Date().getFullYear()}
-          </CardDescription>
+          <div className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>GHG Emissions Overview</CardTitle>
+              <CardDescription>
+                Total carbon footprint across operations in {selectedYear}
+              </CardDescription>
+            </div>
+            <div className="w-[120px]">
+              <Select
+                value={selectedYear.toString()}
+                onValueChange={(value) => setSelectedYear(parseInt(value))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {yearsToShow.map((year) => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
