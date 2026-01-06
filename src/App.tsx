@@ -139,7 +139,7 @@ function App() {
         <Route path="/reports/gri" element={<GRIReport />} />
         <Route path="/reports/tcfd" element={<TCFDReport />} />
         <Route path="/reports/impact" element={<ImpactReport />} />
-
+        <Route path="/action-log" element={<ActionLogPage />} />
         {/* Stakeholder Management Routes */}
         <Route path="/stakeholders" element={<StakeholdersOverviewPage />} />
         <Route path="/stakeholders/manage" element={<ManageStakeholdersPage />} />
