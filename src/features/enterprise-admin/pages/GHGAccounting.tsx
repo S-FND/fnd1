@@ -61,46 +61,30 @@ const GHGAccountingPage = () => {
     scope4Sources: [],
   });
 
-  const hasCollectorAccess = (sources?: ScopeSource[]) =>
-    Array.isArray(sources)
-      ? sources.some(src => src.access === 'data-collector')
-      : false;
-
-
-  if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  }
-
-  if (!isAuthenticated || (user?.role !== 'admin' && user?.role !== 'unit_admin' && user?.role !== 'employee')) {
-    return <Navigate to="/" />;
-  }
-
-  const isUnitAdmin = user?.role === 'unit_admin';
-  const unitName = isUnitAdmin && user?.units?.find(unit => unit.id === user?.unitId)?.name;
-
-  useEffect(() => {
-    // You can set the default active tab based on user role or other criteria
-    let user = localStorage.getItem('fandoro-user');
-    if (user) {
-      const parsedUser = JSON.parse(user);
-      setIsParent(parsedUser.isParent || false);
-      if (parsedUser.assignedSource) {
-        console.log("Assigned Sources:", parsedUser.assignedSource);
-        setAssignedSources(parsedUser.assignedSource);
-      }
-
-    }
-  }, []);
-
   const [scopeAccess, setScopeAccess] = useState<ScopeAccessState>({
     scope1: false,
     scope2: false,
     scope3: false,
     scope4: false
   });
-  useEffect(() => {
-    if (!assignedSources) return;
 
+  const hasCollectorAccess = (sources?: ScopeSource[]) =>
+    Array.isArray(sources)
+      ? sources.some(src => src.access === 'data-collector')
+      : false;
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('fandoro-user');
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setIsParent(parsedUser.isParent || false);
+      if (parsedUser.assignedSource) {
+        setAssignedSources(parsedUser.assignedSource);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     setScopeAccess({
       scope1: hasCollectorAccess(assignedSources.scope1Sources),
       scope2: hasCollectorAccess(assignedSources.scope2Sources),
@@ -108,6 +92,23 @@ const GHGAccountingPage = () => {
       scope4: hasCollectorAccess(assignedSources.scope4Sources),
     });
   }, [assignedSources]);
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!isAuthenticated || !user) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (user.role !== 'admin' && user.role !== 'unit_admin' && user.role !== 'employee') {
+    return <Navigate to="/" replace />;
+  }
+
+  const isUnitAdmin = user.role === 'admin';
+  const unitName = isUnitAdmin
+    ? user.units?.find(unit => unit.id === user.unitId)?.name
+    : null;
 
   return (
     <UnifiedSidebarLayout>
