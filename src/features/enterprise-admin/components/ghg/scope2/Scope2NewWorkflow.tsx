@@ -297,12 +297,13 @@ export const Scope2NewWorkflow: React.FC<Scope2NewWorkflowProps> = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Source Name</TableHead>
+                  {/* <TableHead>Source Name</TableHead> */}
                   <TableHead>Facility</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Category</TableHead>
+                  <TableHead>Business Unit</TableHead>
+                  <TableHead>Source Type</TableHead>
+                  <TableHead>Source Category</TableHead>
                   <TableHead>Frequency</TableHead>
-                  <TableHead>Data Status</TableHead>
+                  {/* <TableHead>Data Status</TableHead> */}
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -311,16 +312,17 @@ export const Scope2NewWorkflow: React.FC<Scope2NewWorkflowProps> = ({
                   const status = getDataStatus(template._id);
                   return (
                     <TableRow key={template._id}>
-                      <TableCell className="font-medium">{template.sourceDescription}</TableCell>
+                      {/* <TableCell className="font-medium">{template.sourceDescription}</TableCell> */}
                       <TableCell>{template.facilityName}</TableCell>
+                      <TableCell>{template.businessUnit}</TableCell>
                       <TableCell>{template.sourceType}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{template.scope2Category}</Badge>
+                        <Badge variant="outline">{template.sourceCategory}</Badge>
                       </TableCell>
                       <TableCell>
                         <Badge variant="secondary">{template.measurementFrequency}</Badge>
                       </TableCell>
-                      <TableCell>{getStatusBadge(status)}</TableCell>
+                      {/* <TableCell>{getStatusBadge(status)}</TableCell> */}
                       <TableCell>
                         <div className="flex gap-2">
                           <Button

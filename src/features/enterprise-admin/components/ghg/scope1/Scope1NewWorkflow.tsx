@@ -304,12 +304,13 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Source Name</TableHead>
                       <TableHead>Facility</TableHead>
-                      <TableHead>Category</TableHead>
+                      <TableHead>Business Unit</TableHead>
+                      <TableHead>Source Type</TableHead>
+                      <TableHead>Source Category</TableHead>
                       <TableHead>Frequency</TableHead>
-                      <TableHead>Access</TableHead>
-                      <TableHead>Status ({viewMode === 'monthly' ? selectedMonth : 'Year'} {selectedYear})</TableHead>
+                      {/* <TableHead>Access</TableHead> */}
+                      {/* <TableHead>Status ({viewMode === 'monthly' ? selectedMonth : 'Year'} {selectedYear})</TableHead> */}
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -319,14 +320,15 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
                       return (
                         <TableRow key={template._id} className="cursor-pointer hover:bg-accent/50"
                           onClick={() => handleCollectData(template)}>
-                          <TableCell className="font-medium">{template.sourceDescription}</TableCell>
                           <TableCell>{template.facilityName}</TableCell>
+                          <TableCell>{template.businessUnit}</TableCell>
+                          <TableCell className="font-medium">{template.sourceType}</TableCell>
                           <TableCell><Badge variant="outline">{template.sourceCategory}</Badge></TableCell>
                           <TableCell><Badge variant="secondary">{template.measurementFrequency}</Badge></TableCell>
-                          <TableCell>
+                          {/* <TableCell>
                             {template.access}
-                          </TableCell>
-                          <TableCell>{getStatusBadge(status)}</TableCell>
+                          </TableCell> */}
+                          {/* <TableCell>{getStatusBadge(status)}</TableCell> */}
                           <TableCell>
                             <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                               {template.access == 'data-collector' && <Button
