@@ -84,7 +84,9 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
 
           createdDate: item.createdAt,  // mapping backend → frontend naming
           createdBy: "",                // backend doesn’t have this value
-          access: currentAccess.find(ca => ca.id === item._id)?.access || 'data-collector',
+          access: isParent
+            ? 'data-collector'
+            : currentAccess.find(ca => ca.id === item._id)?.access ?? null,
         }));
         // let dataCollections: GHGSourceTemplate[] = dataSourceResponse.data;
         setSourceTemplates(dataCollections);
@@ -217,74 +219,73 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
   }
 
   return (
-    <>
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <div>
-                <CardTitle>Scope 1: Direct Emissions</CardTitle>
-                <CardDescription>
-                  Define emission sources and collect activity data
-                </CardDescription>
-              </div>
-              {isParent && <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setShowDashboard(true)}>
-                  <Database className="mr-2 h-4 w-4" />
-                  View Dashboard
-                </Button>
-                <Button onClick={handleDefineNewSource}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Define New Source
-                </Button>
-              </div>}
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Scope 1: Direct Emissions</CardTitle>
+              <CardDescription>
+                Define emission sources and collect activity data
+              </CardDescription>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <TimePeriodFilter
-              viewMode={viewMode}
-              selectedMonth={selectedMonth}
-              selectedYear={selectedYear}
-              onViewModeChange={setViewMode}
-              onMonthChange={setSelectedMonth}
-              onYearChange={setSelectedYear}
-            />
+            {isParent && <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowDashboard(true)}>
+                <Database className="mr-2 h-4 w-4" />
+                View Dashboard
+              </Button>
+              <Button onClick={handleDefineNewSource}>
+                <Plus className="mr-2 h-4 w-4" />
+                Define New Source
+              </Button>
+            </div>}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <TimePeriodFilter
+            viewMode={viewMode}
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            onViewModeChange={setViewMode}
+            onMonthChange={setSelectedMonth}
+            onYearChange={setSelectedYear}
+          />
 
-            {/* Category Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {(['Stationary', 'Mobile', 'Fugitive', 'Process'] as SourceType[]).map(cat => {
-                const summary = categorySummary.get(cat) || { count: 0, withData: 0 };
-                return (
-                  <Card key={cat} className="cursor-pointer hover:bg-accent/50 transition-colors"
-                    onClick={() => setSelectedCategory(cat)}>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium">{cat}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">{summary.count}</div>
-                      <p className="text-xs text-muted-foreground">
-                        {summary.withData} with data for {viewMode === 'monthly' ? selectedMonth : selectedYear}
-                      </p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+          {/* Category Summary */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {(['Stationary', 'Mobile', 'Fugitive', 'Process'] as SourceType[]).map(cat => {
+              const summary = categorySummary.get(cat) || { count: 0, withData: 0 };
+              return (
+                <Card key={cat} className="cursor-pointer hover:bg-accent/50 transition-colors"
+                  onClick={() => setSelectedCategory(cat)}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">{cat}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{summary.count}</div>
+                    <p className="text-xs text-muted-foreground">
+                      {summary.withData} with data for {viewMode === 'monthly' ? selectedMonth : selectedYear}
+                    </p>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
 
-            {/* Category Filter */}
-            <div className="flex gap-2">
-              {categories.map(cat => (
-                <Button
-                  key={cat}
-                  variant={selectedCategory === cat ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedCategory(cat)}
-                >
-                  {cat}
-                  {cat !== 'All' && ` (${sourceTemplates.filter(t => t.sourceType === cat).length})`}
-                </Button>
-              ))}
-            </div>
+          {/* Category Filter */}
+          <div className="flex gap-2">
+            {categories.map(cat => (
+              <Button
+                key={cat}
+                variant={selectedCategory === cat ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedCategory(cat)}
+              >
+                {cat}
+                {cat !== 'All' && ` (${sourceTemplates.filter(t => t.sourceType === cat).length})`}
+              </Button>
+            ))}
+          </div>
 
             {/* Source Templates Table */}
             {filteredTemplates.length === 0 ? (
@@ -340,14 +341,14 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
                                 Collect Data
                               </Button>}
 
-                              {template.access == 'data-verifier' && <Button
+                              {/* {template.access == 'data-verifier' && <Button
                                 size="sm"
                                 variant="default"
                                 onClick={() => handleCollectData(template)}
                               >
                                 <Database className="h-4 w-4 mr-1" />
                                 Verify Data
-                              </Button>}
+                              </Button>} */}
                               {isParent && <Button
                                 size="sm"
                                 variant="ghost"
@@ -376,7 +377,7 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
           </CardContent>
         </Card>
       </div>
-    </>
+    
   );
 };
 

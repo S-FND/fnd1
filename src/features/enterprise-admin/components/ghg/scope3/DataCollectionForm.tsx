@@ -114,7 +114,7 @@ export const DataCollectionForm = () => {
         }
       });
     }
-  }, [templateId]);
+  }, [templateId,selectedYear]);
 
   useEffect(() => {
     const periods = generatePeriodNames(selectedFrequency);

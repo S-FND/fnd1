@@ -64,6 +64,25 @@ export const Scope2DataCollectionForm = () => {
   };
 
 
+  
+
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedFrequency, setSelectedFrequency] = useState<MeasurementFrequency>(template.measurementFrequency);
+  const [dataEntries, setDataEntries] = useState<DataEntry[]>([]);
+  const [dataQuality, setDataQuality] = useState<DataQuality>('Medium');
+  const [verifiedBy, setVerifiedBy] = useState('');
+  const [collectionNotes, setCollectionNotes] = useState('');
+
+  const [evidenceByEntry, setEvidenceByEntry] = useState<Record<string, File[]>>({});
+  const [isFileUploadOpen, setIsFileUploadOpen] = useState(false);
+  const [uploadProgress, setUploadProgress] =
+    useState<Record<string, number>>({});
+
+  const [uploadStatus, setUploadStatus] =
+    useState<Record<string, "uploading" | "done" | "error">>({});
+
+  const [reloadData, setReloadData] = useState(false);
+
   useEffect(() => {
     if (templateId) {
       // Fetch template details using templateId if needed
@@ -94,28 +113,13 @@ export const Scope2DataCollectionForm = () => {
         }
       });
     }
-  }, [templateId]);
-
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedFrequency, setSelectedFrequency] = useState<MeasurementFrequency>(template.measurementFrequency);
-  const [dataEntries, setDataEntries] = useState<DataEntry[]>([]);
-  const [dataQuality, setDataQuality] = useState<DataQuality>('Medium');
-  const [verifiedBy, setVerifiedBy] = useState('');
-  const [collectionNotes, setCollectionNotes] = useState('');
-
-  const [evidenceByEntry, setEvidenceByEntry] = useState<Record<string, File[]>>({});
-  const [isFileUploadOpen, setIsFileUploadOpen] = useState(false);
-  const [uploadProgress, setUploadProgress] =
-    useState<Record<string, number>>({});
-
-  const [uploadStatus, setUploadStatus] =
-    useState<Record<string, "uploading" | "done" | "error">>({});
-
-  const [reloadData, setReloadData] = useState(false);
+  }, [templateId,selectedYear]);
 
   useEffect(() => {
     initializeEntries();
   }, [selectedFrequency, template._id]);
+
+
 
   // useEffect(() => {
   //   loadExistingCollections();
