@@ -191,7 +191,7 @@ export const ESGDDSubmenu: React.FC<ESGDDSubmenuProps> = ({
         const isActive = location.pathname === item.href;
         return (
           //Show additional DD Details only for advanced funding stages if applicable
-          <React.Fragment key={item.href}>
+          <div key={item.href}>
             {item.href !== '/esg-dd/manual' && item.href !== '/esg-dd/automated' && <SidebarMenuSubItem>
               <SidebarMenuSubButton asChild isActive={isActive}>
                 <Link to={item.href}>
@@ -249,7 +249,7 @@ export const ESGDDSubmenu: React.FC<ESGDDSubmenuProps> = ({
                 </SidebarMenuSubButton>
               </SidebarMenuSubItem>
             )}
-          </React.Fragment>
+          </div>
         );
       })}
 
