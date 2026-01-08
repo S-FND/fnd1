@@ -78,6 +78,9 @@ export const Scope3NewWorkflow: React.FC<Scope3NewWorkflowProps> = ({
           scope3Category: item.scope3Category,
           createdDate: item.createdAt,  // mapping backend → frontend naming
           createdBy: "",                // backend doesn’t have this value
+          access: isParent
+            ? 'data-collector'
+            : currentAccess.find(ca => ca.id === item._id)?.access ?? null
         }));
         // let dataCollections: GHGSourceTemplate[] = dataSourceResponse.data;
         setSourceTemplates(dataCollections);
@@ -319,14 +322,22 @@ export const Scope3NewWorkflow: React.FC<Scope3NewWorkflowProps> = ({
                       <TableCell>{getStatusBadge(status)}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button
+                          {template.access == 'data-collector' && <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => handleCollectData(template)}
+                          >
+                            <Database className="h-4 w-4 mr-1" />
+                            Collect Data
+                          </Button>}
+                          {/* <Button
                             size="sm"
                             variant="default"
                             onClick={() => handleCollectData(template)}
                           >
                             Collect Data
-                          </Button>
-                          <Button
+                          </Button> */}
+                          {/* <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => handleEditSource(template)}
@@ -339,7 +350,23 @@ export const Scope3NewWorkflow: React.FC<Scope3NewWorkflowProps> = ({
                             onClick={() => handleDeleteSource(template._id)}
                           >
                             <Trash2 className="h-4 w-4" />
+                          </Button> */}
+                          {isParent && <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEditSource(template)}
+                          >
+                            <Edit className="h-4 w-4" />
                           </Button>
+                          }
+                          {isParent && <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteSource(template._id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                          }
                         </div>
                       </TableCell>
                     </TableRow>

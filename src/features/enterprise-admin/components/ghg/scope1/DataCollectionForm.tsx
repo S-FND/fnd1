@@ -169,7 +169,7 @@ export const DataCollectionForm = () => {
         }
       });
     }
-  }, [templateId, reloadData]);
+  }, [templateId, reloadData,selectedYear]);
 
   useEffect(() => {
     initializeEntries();

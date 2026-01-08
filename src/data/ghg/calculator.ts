@@ -91,7 +91,7 @@ export const months = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-export const yearsToShow = [2022, 2023, 2024, 2025];
+export const yearsToShow = [2022, 2023, 2024, 2025,2026];
 
 // Helper functions for emissions calculations with correct typing
 export const calculateMonthlyTotal = (monthlyData: Record<string, number> | undefined, categoryId: string): number => {
