@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from '@/context/AuthContext';
 
 import { useRouteProtection } from '@/hooks/useRouteProtection';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { GHGScope1Form } from '../components/ghg/GHGScope1Form';
 import { GHGScope2Form } from '../components/ghg/GHGScope2Form';
 import { GHGScope3Form } from '../components/ghg/GHGScope3Form';
@@ -51,8 +51,11 @@ export type AssignedGHGSources = Record<GHGScope, GHGSource[]>;
 const GHGAccountingPage = () => {
   const { isLoading } = useRouteProtection(['admin', 'unit_admin', 'employee']);
   const { user, isAuthenticated } = useAuth();
-  const [activeTab, setActiveTab] = useState("summary");
+  
   const [isParent, setIsParent] = useState(false);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState( searchParams.get('tab') ??"summary");
 
   const [assignedSources, setAssignedSources] = useState<AssignedGHGSources>({
     scope1Sources: [],
@@ -92,6 +95,11 @@ const GHGAccountingPage = () => {
       scope4: hasCollectorAccess(assignedSources.scope4Sources),
     });
   }, [assignedSources]);
+
+  const handleTabChange = (tab: string) => {
+    setSearchParams({ tab });
+    setActiveTab(tab)
+  };
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -159,7 +167,7 @@ const GHGAccountingPage = () => {
           </CardContent>
         </Card>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={ handleTabChange} className="w-full">
           <TabsList className="mb-4 w-full sm:w-auto">
             <TabsTrigger value="summary">Summary</TabsTrigger> 
             {/* //{isParent ? " (Parent)" : ""} */}

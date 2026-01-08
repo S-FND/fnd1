@@ -24,6 +24,7 @@ import { logger } from '@/hooks/logger';
 import { httpClient } from '@/lib/httpClient';
 import { SignedUploadUrl, uploadFilesInParallel } from '@/utils/parallelUploader';
 import { toast } from 'sonner';
+import { verificationStatusStyles } from '../scope1/DataCollectionForm';
 
 interface DataEntry {
   _id?: string;
@@ -35,6 +36,7 @@ interface DataEntry {
   evidenceUrls?: string[];
   selectedUnit?: string;
   evidenceFiles?: { url?: string; name?: string; key?: string; type?: string }[];
+  verificationStatus?:string;
 }
 
 const MOCK_TEAM_MEMBERS = [
@@ -106,7 +108,7 @@ export const DataCollectionForm = () => {
               evidenceFiles: c.evidenceFiles ? c.evidenceFiles.map(ef => ({ key: ef.key, name: ef.name, type: ef.type, url: ef.key })) : [],
 
               activityDataValue: c.activityDataValue,
-
+              verificationStatus: c.verificationStatus,
               notes: c.notes,
             }));
             setDataEntries(entries);
@@ -239,6 +241,12 @@ export const DataCollectionForm = () => {
               <Card key={entry.id}>
                 <CardContent className="pt-6 space-y-4">
                   <Badge variant="secondary">{entry.periodName}</Badge>
+                  <Badge
+                      variant="secondary"
+                      className={`text-sm ${verificationStatusStyles[entry.verificationStatus]}`}
+                    >
+                      {entry.verificationStatus}
+                    </Badge>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <UnitSelector label="Activity Data" value={entry.activityDataValue} onChange={(v) => updateEntry(entry.id, 'activityDataValue', v)} baseUnit={template.activityDataUnit} selectedUnit={entry.selectedUnit || template.activityDataUnit} onUnitChange={(u) => updateEntry(entry.id, 'selectedUnit', u)} />
                     <div className="p-3 bg-muted rounded-lg">
