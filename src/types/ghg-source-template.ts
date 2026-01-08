@@ -39,6 +39,7 @@ export interface GHGSourceTemplate {
   baselineScenario?: string; // Scope 4
 
   access?: 'data-collector' | 'data-verifier'; // User access type
+  verifiers?:{_id:string;name:string;}[]
 }
 
 export interface GHGDataCollection {

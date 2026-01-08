@@ -39,6 +39,7 @@ interface DataEntry {
   evidenceUrls?: string[];
   selectedUnit?: string;
   evidenceFiles?: { url?: string; name?: string; key?: string; type?: string }[];
+  verificationStatus?: string;
 }
 
 const MOCK_TEAM_MEMBERS = [
@@ -48,6 +49,14 @@ const MOCK_TEAM_MEMBERS = [
   { id: '4', name: 'Amit Singh' },
   { id: '5', name: 'Sanjana Reddy' },
 ];
+
+type VerificationStatus = 'Pending' | 'Verified' | 'Rejected';
+
+export const verificationStatusStyles: Record<VerificationStatus, string> = {
+  Pending: 'bg-yellow-100 text-yellow-800 border border-yellow-300',
+  Verified: 'bg-green-100 text-green-800 border border-green-300',
+  Rejected: 'bg-red-100 text-red-800 border border-red-300',
+};
 
 export const DataCollectionForm = () => {
   const navigate = useNavigate();
@@ -83,6 +92,8 @@ export const DataCollectionForm = () => {
   const [reloadData, setReloadData] = useState(false);
 
   const [bulkUploadErrors, setBulkUploadErrors] = useState<string[]>([]);
+  const [isParent, setIsParent] = useState<Boolean>(localStorage.getItem("fandoro-user") ? JSON.parse(localStorage.getItem("fandoro-user")).isParent : false)
+
 
 
   const periodNames = generatePeriodNames(selectedFrequency);
@@ -117,6 +128,7 @@ export const DataCollectionForm = () => {
           // setTemplate(data.templateDetails);
           // setDataEntries(...) based on data.collectedData
           if (data.templateDetails && data.templateDetails.measurementFrequency) {
+            setTeamMembers([{ _id: data.templateDetails.verifiers[0]['_id'], name: data.templateDetails.verifiers[0]['name'] }])
             setSelectedFrequency(data.templateDetails.measurementFrequency);
           }
           if (data.collectedData && data.collectedData.length > 0) {
@@ -142,6 +154,7 @@ export const DataCollectionForm = () => {
                   activityDataValue: collection.activityDataValue,
                   evidenceFiles: collection.evidenceFiles ? collection.evidenceFiles.map(ef => ({ key: ef.key, name: ef.name, type: ef.type, url: ef.key })) : [],
                   notes: collection.notes,
+                  verificationStatus: collection.verificationStatus
                 }
               }
               else {
@@ -151,7 +164,8 @@ export const DataCollectionForm = () => {
                   date: new Date().toISOString().split('T')[0],
                   activityDataValue: 0,
                   notes: '',
-                  evidenceUrls: []
+                  evidenceUrls: [],
+                  verificationStatus: 'Pending'
                 }
               }
             })
@@ -166,14 +180,15 @@ export const DataCollectionForm = () => {
             // }));
             setDataEntries(entries);
           }
+
         }
       });
     }
-  }, [templateId, reloadData,selectedYear]);
+  }, [templateId, reloadData, selectedYear]);
 
   useEffect(() => {
     initializeEntries();
-    setVerifiedBy(template.assignedDataCollectors[0])
+    setVerifiedBy(template.assignedVerifiers[0])
   }, [selectedFrequency, template._id]);
 
   // useEffect(() => {
@@ -321,7 +336,7 @@ export const DataCollectionForm = () => {
           )
         );
         setIsBulkUploadOpen(false);
-        toast.success(`Activity data has been ${type === 'Draft' ? 'saved as draft' : 'submitted for review'}.`, );
+        toast.success(`Activity data has been ${type === 'Draft' ? 'saved as draft' : 'submitted for review'}.`,);
         navigate('/ghg-accounting', { state: { activeTab: 'scope2' } });
       }
     }
@@ -409,37 +424,40 @@ export const DataCollectionForm = () => {
 
   const totalEmissions = calculateTotalEmissions();
 
-  const getTeamList = async () => {
-    try {
-      let teamList = await httpClient.get('subuser');
-      console.log("teamList", teamList);
-      console.log("teamList.data['data']", teamList.data['data']);
-      if (teamList && teamList.status === 200) {
-        // setTeamMembers(teamList.data);
-        if (teamList.data && teamList.data['data'] && Array.isArray(teamList.data['data'])) {
-          console.log("teamList.data['data']['subusers']", teamList.data['data'][0]['subuser']);
-          setTeamMembers(teamList.data['data'][0]['subuser']);
-        }
+  // const getTeamList = async () => {
+  //   try {
+  //     let teamList = await httpClient.get('subuser');
+  //     console.log("teamList", teamList);
+  //     console.log("teamList.data['data']", teamList.data['data']);
+  //     if (teamList && teamList.status === 200) {
+  //       // setTeamMembers(teamList.data);
+  //       if (teamList.data && teamList.data['data'] && Array.isArray(teamList.data['data'])) {
+  //         console.log("teamList.data['data']['subusers']", teamList.data['data'][0]['subuser']);
+  //         setTeamMembers(teamList.data['data'][0]['subuser']);
+  //       }
 
-      }
-    } catch (error) {
-      console.error('Error fetching team members:', error);
-      toast.warning("Could not load team members. Please try again.");
-    }
-  }
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching team members:', error);
+  //     toast.warning("Could not load team members. Please try again.");
+  //   }
+  // }
 
-  useEffect(() => {
-    getTeamList();
-    // toast.success( "Your carbon reduction goal has been created");
-  }, [])
+  // useEffect(() => {
+  //   //No Team list required as on data collection form only user selected as verifier will be shown
+  //   getTeamList();
+  //   // toast.success( "Your carbon reduction goal has been created");
+  // }, [])
 
   // useEffect(() => {
   //   logger.debug("Data Entries Updated:", evidenceByEntry);
   // }, [evidenceByEntry]);
+
+  
   const totalEmissionsKg = dataEntries.reduce((sum, entry) => {
     const rowEmissionKg =
       entry.activityDataValue * (template.emissionFactor || 0);
-  
+
     return sum + rowEmissionKg;
   }, 0);
   const totalEmissionsTonnes = totalEmissionsKg / 1000;
@@ -512,11 +530,11 @@ export const DataCollectionForm = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                  {[2026, 2025, 2024, 2023, 2022].map((startYear) => (
-                    <SelectItem key={startYear} value={startYear.toString()}>
-                      FY {startYear}–{(startYear + 1).toString().slice(-2)}
-                    </SelectItem>
-                  ))}
+                    {[2026, 2025, 2024, 2023, 2022].map((startYear) => (
+                      <SelectItem key={startYear} value={startYear.toString()}>
+                        FY {startYear}–{(startYear + 1).toString().slice(-2)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -552,6 +570,12 @@ export const DataCollectionForm = () => {
                   <div className="flex items-center gap-3">
                     <Badge variant="secondary" className="text-sm">
                       {entry.periodName}
+                    </Badge>
+                    <Badge
+                      variant="secondary"
+                      className={`text-sm ${verificationStatusStyles[entry.verificationStatus]}`}
+                    >
+                      {entry.verificationStatus}
                     </Badge>
                     <span className="text-sm text-muted-foreground">Period {index + 1} of {dataEntries.length}</span>
                   </div>

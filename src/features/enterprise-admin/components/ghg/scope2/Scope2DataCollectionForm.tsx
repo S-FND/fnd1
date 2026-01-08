@@ -21,6 +21,7 @@ import EvidenceFileUpload from '@/components/ghg/EvidenceFileUpload';
 import { SignedUploadUrl, uploadFilesInParallel } from '@/utils/parallelUploader';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from 'sonner';
+import { verificationStatusStyles } from '../scope1/DataCollectionForm';
 
 interface DataEntry {
   _id?: string;
@@ -31,6 +32,7 @@ interface DataEntry {
   notes: string;
   evidenceUrls?: string[];
   evidenceFiles?: { url?: string; name?: string; key?: string; type?: string }[];
+  verificationStatus?:string;
 }
 
 const MOCK_TEAM_MEMBERS = [
@@ -64,7 +66,7 @@ export const Scope2DataCollectionForm = () => {
   };
 
 
-  
+
 
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedFrequency, setSelectedFrequency] = useState<MeasurementFrequency>(template.measurementFrequency);
@@ -98,7 +100,6 @@ export const Scope2DataCollectionForm = () => {
             setSelectedFrequency(data.templateDetails.measurementFrequency);
           }
           if (data.collectedData && data.collectedData.length > 0) {
-            data
             const entries: DataEntry[] = data.collectedData.map(c => ({
               _id: c._id,
               id: c._id,
@@ -107,13 +108,14 @@ export const Scope2DataCollectionForm = () => {
               evidenceFiles: c.evidenceFiles ? c.evidenceFiles.map(ef => ({ key: ef.key, name: ef.name, type: ef.type, url: ef.key })) : [],
               activityDataValue: c.activityDataValue,
               notes: c.notes,
+              verificationStatus: c.verificationStatus
             }));
             setDataEntries(entries);
           }
         }
       });
     }
-  }, [templateId,selectedYear]);
+  }, [templateId, selectedYear]);
 
   useEffect(() => {
     initializeEntries();
@@ -261,7 +263,7 @@ export const Scope2DataCollectionForm = () => {
   const totalEmissionsKg = dataEntries.reduce((sum, entry) => {
     const rowEmissionKg =
       entry.activityDataValue * (template.emissionFactor || 0);
-  
+
     return sum + rowEmissionKg;
   }, 0);
   const totalEmissionsTonnes = totalEmissionsKg / 1000;
@@ -333,6 +335,12 @@ export const Scope2DataCollectionForm = () => {
                     <div className="col-span-2">
                       <div className="flex items-center gap-2 mb-2">
                         <Badge variant="secondary">{entry.periodName}</Badge>
+                        <Badge
+                          variant="secondary"
+                          className={`text-sm ${verificationStatusStyles[entry.verificationStatus]}`}
+                        >
+                          {entry.verificationStatus}
+                        </Badge>
                       </div>
                       <Label>Date</Label>
                       <Input
