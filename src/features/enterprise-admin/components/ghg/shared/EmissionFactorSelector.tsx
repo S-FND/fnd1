@@ -32,7 +32,7 @@ export const EmissionFactorSelector: React.FC<EmissionFactorSelectorProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredFactors, setFilteredFactors] = useState<EmissionFactor[]>([]);
   const [selectedFactor, setSelectedFactor] = useState<EmissionFactor | null>(null);
-
+console.log('value',value);
   useEffect(() => {
     let factors: EmissionFactor[];
     

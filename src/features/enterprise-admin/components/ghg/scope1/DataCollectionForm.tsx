@@ -436,7 +436,13 @@ export const DataCollectionForm = () => {
   // useEffect(() => {
   //   logger.debug("Data Entries Updated:", evidenceByEntry);
   // }, [evidenceByEntry]);
-
+  const totalEmissionsKg = dataEntries.reduce((sum, entry) => {
+    const rowEmissionKg =
+      entry.activityDataValue * (template.emissionFactor || 0);
+  
+    return sum + rowEmissionKg;
+  }, 0);
+  const totalEmissionsTonnes = totalEmissionsKg / 1000;
   return (
     <UnifiedSidebarLayout>
       <div className="container mx-auto py-6 space-y-6">
@@ -506,9 +512,11 @@ export const DataCollectionForm = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[2022, 2023, 2024, 2025, 2026].map(y => (
-                      <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
-                    ))}
+                  {[2026, 2025, 2024, 2023, 2022].map((startYear) => (
+                    <SelectItem key={startYear} value={startYear.toString()}>
+                      FY {startYear}–{(startYear + 1).toString().slice(-2)}
+                    </SelectItem>
+                  ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -687,19 +695,32 @@ export const DataCollectionForm = () => {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end gap-4">
-          <Button variant="outline" onClick={() => navigate(-1)}>
-            Cancel
-          </Button>
-          <Button variant="outline" onClick={handleSaveDraft}>
-            <Save className="mr-2 h-4 w-4" />
-            Save as Draft
-          </Button>
-          <Button onClick={handleSubmitForReview}>
-            <Send className="mr-2 h-4 w-4" />
-            Submit for Review
-          </Button>
-        </div>
+        <Card className="bg-primary/5">
+          <CardContent className="pt-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Total Emissions</p>
+              <p className="text-3xl font-bold">
+                {totalEmissionsTonnes.toFixed(2)} T CO₂e
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-4">
+              <Button variant="outline" onClick={() => navigate(-1)}>
+                Cancel
+              </Button>
+
+              <Button variant="outline" onClick={handleSaveDraft}>
+                <Save className="mr-2 h-4 w-4" />
+                Save as Draft
+              </Button>
+
+              <Button onClick={handleSubmitForReview}>
+                <Send className="mr-2 h-4 w-4" />
+                Submit for Review
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Bulk Upload Dialog */}
         <Dialog open={isBulkUploadOpen} onOpenChange={setIsBulkUploadOpen}>

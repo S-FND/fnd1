@@ -524,7 +524,7 @@ export const Scope3SourceTemplateForm = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="scope3Category">Scope 3 Category *</Label>
+                <Label htmlFor="scope3Category">Source Category *</Label>
                 <Select onValueChange={(value) => setValue('scope3Category', value)} value={scope3Category}>
                   <SelectTrigger>
                     <SelectValue />

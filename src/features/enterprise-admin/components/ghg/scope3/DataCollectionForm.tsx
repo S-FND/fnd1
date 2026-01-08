@@ -219,7 +219,11 @@ export const DataCollectionForm = () => {
               <Label>Reporting Year</Label>
               <Select value={selectedYear.toString()} onValueChange={(val) => setSelectedYear(parseInt(val))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{[2023, 2024, 2025, 2026].map(y => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}</SelectContent>
+                <SelectContent>{[2026, 2025, 2024, 2023, 2022].map((startYear) => (
+                      <SelectItem key={startYear} value={startYear.toString()}>
+                        FY {startYear}–{(startYear + 1).toString().slice(-2)}
+                      </SelectItem>
+                    ))}</SelectContent>
               </Select>
             </div>
           </CardContent>
@@ -239,7 +243,7 @@ export const DataCollectionForm = () => {
                     <UnitSelector label="Activity Data" value={entry.activityDataValue} onChange={(v) => updateEntry(entry.id, 'activityDataValue', v)} baseUnit={template.activityDataUnit} selectedUnit={entry.selectedUnit || template.activityDataUnit} onUnitChange={(u) => updateEntry(entry.id, 'selectedUnit', u)} />
                     <div className="p-3 bg-muted rounded-lg">
                       <p className="text-sm font-medium">Calculated Emissions</p>
-                      <p className="text-xl font-bold">{calculateEmissions(entry.activityDataValue, template.emissionFactor || 0).total.toFixed(2)} kg CO₂e</p>
+                      <p className="text-xl font-bold">{calculateEmissions(entry.activityDataValue, template.emissionFactor || 0).total.toFixed(2)} t CO₂e</p>
                     </div>
                   </div>
                   <Textarea value={entry.notes} onChange={(e) => updateEntry(entry.id, 'notes', e.target.value)} placeholder="Notes..." />
@@ -268,7 +272,7 @@ export const DataCollectionForm = () => {
 
         <Card className="bg-primary/5">
           <CardContent className="pt-6 flex items-center justify-between">
-            <div><p className="text-sm text-muted-foreground">Total Emissions</p><p className="text-3xl font-bold">{totalEmissions.toFixed(2)} kg CO₂e</p></div>
+            <div><p className="text-sm text-muted-foreground">Total Emissions</p><p className="text-3xl font-bold">{totalEmissions.toFixed(2)} T CO₂e</p></div>
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => handleSave('draft')}><Save className="h-4 w-4 mr-2" />Save as Draft</Button>
               <Button onClick={() => handleSave('submitted')}><Send className="h-4 w-4 mr-2" />Submit for Verification</Button>
