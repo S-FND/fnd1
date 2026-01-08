@@ -146,6 +146,7 @@ export const SourceTemplateForm = () => {
   }, [watchSourceType, setValue, editTemplate]);
 
   const handleEmissionFactorSelect = (factor: EmissionFactor) => {
+    console.log('object++++++++++++++',factor);
     setSelectedEmissionFactor(factor);
   };
 
@@ -281,32 +282,47 @@ export const SourceTemplateForm = () => {
       let dataSourceResponse: { status: number; data: any[] } = await httpClient.get(`ghg-accounting/source/1?id=${id}`);
       console.log("dataSourceResponse", dataSourceResponse);
       if (dataSourceResponse.status === 200) {
-        const dataCollections: GHGSourceTemplate[] = dataSourceResponse.data.map(item => ({
-          _id: item._id,
-          scope: 1, // or from item if available
-          facilityName: item.facilityName,
-          businessUnit: item.businessUnit,
-          sourceCategory: item.sourceCategory,
-          sourceDescription: item.sourceDescription,
-          emissionFactorId: item.emissionFactorId,
-          emissionFactor: item.emissionFactor,
-          emissionFactorUnit: item.emissionFactorUnit,
-          emissionFactorSource: item.emissionFactorSource,
-          activityDataUnit: item.activityDataUnit,
-          measurementFrequency: item.measurementFrequency,
-          assignedDataCollectors: item.assignedDataCollectors,
-          assignedVerifiers: item.assignedVerifiers,
-          ghgIncluded: item.ghgIncluded,
-          calculationMethodology: item.calculationMethodology,
-          dataSource: item.dataSource,
-          isActive: item.isActive,
-          notes: item.notes,
+        // const dataCollections: GHGSourceTemplate[] = dataSourceResponse.data.map(item => ({
+        //   _id: item._id,
+        //   scope: 1, // or from item if available
+        //   facilityName: item.facilityName,
+        //   businessUnit: item.businessUnit,
+        //   sourceCategory: item.sourceCategory,
+        //   sourceDescription: item.sourceDescription,
+        //   emissionFactorId: item.emissionFactorId,
+        //   emissionFactor: item.emissionFactor,
+        //   emissionFactorUnit: item.emissionFactorUnit,
+        //   emissionFactorSource: item.emissionFactorSource,
+        //   activityDataUnit: item.activityDataUnit,
+        //   measurementFrequency: item.measurementFrequency,
+        //   assignedDataCollectors: item.assignedDataCollectors,
+        //   assignedVerifiers: item.assignedVerifiers,
+        //   ghgIncluded: item.ghgIncluded,
+        //   calculationMethodology: item.calculationMethodology,
+        //   dataSource: item.dataSource,
+        //   isActive: item.isActive,
+        //   notes: item.notes,
 
-          createdDate: item.createdAt,  // mapping backend → frontend naming
-          createdBy: "",                // backend doesn’t have this value
-        }));
+        //   createdDate: item.createdAt,  // mapping backend → frontend naming
+        //   createdBy: "",                // backend doesn’t have this value
+        // }));
         // let dataCollections: GHGSourceTemplate[] = dataSourceResponse.data;
         // setSourceType(dataCollections[0]?.sourceType as SourceType);
+
+        const item = dataSourceResponse.data[0];
+
+        // ✅ SET EMISSION FACTOR STATE
+        setSelectedEmissionFactor({
+          id: item.emissionFactorId,
+          name: item.emissionFactorSource,
+          factor: item.emissionFactor,
+          unit: item.emissionFactorUnit,
+          fuelType: item.fuelType,
+          source: item.emissionFactorSource,
+          year: item.year || '',
+          gases: item.ghgIncluded,
+          category: item.sourceCategory,
+        } as EmissionFactor);
       }
     } catch (error) {
       console.error("Error fetching data collections:", error);
@@ -466,7 +482,7 @@ export const SourceTemplateForm = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="sourceCategory">Emission Source Category *</Label>
+                <Label htmlFor="sourceCategory"> Source Category *</Label>
                 <Select
                   value={watch('sourceCategory')}
                   onValueChange={(value) => setValue('sourceCategory', value)}

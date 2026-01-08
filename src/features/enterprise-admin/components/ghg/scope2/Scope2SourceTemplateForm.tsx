@@ -274,13 +274,25 @@ export const Scope2SourceTemplateForm = () => {
       console.log("dataSourceResponse", dataSourceResponse);
       if (dataSourceResponse.status === 200) {
         if(dataSourceResponse.data && dataSourceResponse.data.length>0){
-          editTemplate=dataSourceResponse.data[0];
+          // editTemplate=dataSourceResponse.data[0];
           if(dataSourceResponse.data[0]['sourceType']){
             setSourceType(dataSourceResponse.data[0]['sourceType'])
           }
           setValue('utilityProviderName',dataSourceResponse.data[0]['utilityProviderName'])
           setValue('countryRegion',dataSourceResponse.data[0]['countryRegion'])
           setValue('scope2Category',dataSourceResponse.data[0]['scope2Category'])
+          setValue('businessUnit',dataSourceResponse.data[0]['businessUnit'])
+          setValue('sourceType',dataSourceResponse.data[0]['sourceType'])
+          setValue('sourceDescription',dataSourceResponse.data[0]['sourceDescription'])
+          // setValue('supplierName',dataSourceResponse.data[0]['supplierName'])
+          setValue('activityDataUnit',dataSourceResponse.data[0]['activityDataUnit'])
+          setValue('measurementFrequency',dataSourceResponse.data[0]['measurementFrequency'])
+          setValue('calculationMethodology',dataSourceResponse.data[0]['calculationMethodology'])
+          setValue('dataSource',dataSourceResponse.data[0]['dataSource'])
+          setValue('notes',dataSourceResponse.data[0]['notes'])
+          setSelectedFacilities([dataSourceResponse.data[0]['facilityName']])
+          setSourceType(dataSourceResponse.data[0]['sourceType'])
+          setValue('countryRegion',dataSourceResponse.data[0]['countryRegion'])
           // setValue('emissionFactorSource',dataSourceResponse.data[0]['emissionFactorSource'])
         }
         // const dataCollections: GHGSourceTemplate[] = dataSourceResponse.data.map(item => ({

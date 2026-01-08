@@ -58,6 +58,7 @@ export const Scope3NewWorkflow: React.FC<Scope3NewWorkflowProps> = ({
           businessUnit: item.businessUnit,
           sourceCategory: item.sourceCategory,
           sourceDescription: item.sourceDescription,
+          sourceType: item.sourceType,
           emissionFactorId: item.emissionFactorId,
           emissionFactor: item.emissionFactor,
           emissionFactorUnit: item.emissionFactorUnit,
@@ -197,6 +198,8 @@ export const Scope3NewWorkflow: React.FC<Scope3NewWorkflowProps> = ({
   };
 
   const categorySummary = getCategorySummary();
+  const sourceTypes = ['Purchased Electricity', 'Purchased Steam', 'Purchased Heating', 'Purchased Cooling'];
+
   const topCategories = Array.from(categorySummary.entries())
     .sort((a, b) => b[1].count - a[1].count)
     .slice(0, 5);
@@ -297,12 +300,14 @@ export const Scope3NewWorkflow: React.FC<Scope3NewWorkflowProps> = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Source Name</TableHead>
+                  {/* <TableHead>Source Name</TableHead> */}
                   <TableHead>Facility</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Supplier</TableHead>
+                  <TableHead>Business Unit</TableHead>
+                  <TableHead>Source Category</TableHead>
+                  {/* <TableHead>Supplier</TableHead> */}
+                  <TableHead>Source Type</TableHead>
                   <TableHead>Frequency</TableHead>
-                  <TableHead>Data Status</TableHead>
+                  {/* <TableHead>Data Status</TableHead> */}
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -312,14 +317,15 @@ export const Scope3NewWorkflow: React.FC<Scope3NewWorkflowProps> = ({
                   console.log("Template Status:", template._id, status, template.supplierName);
                   return (
                     <TableRow key={template._id}>
-                      <TableCell className="font-medium">{template.sourceDescription}</TableCell>
+                      {/* <TableCell className="font-medium">{template.sourceDescription}</TableCell> */}
                       <TableCell>{template.facilityName}</TableCell>
+                      <TableCell>{template.businessUnit}</TableCell>
                       <TableCell className="text-xs">{template.scope3Category}</TableCell>
-                      <TableCell>{template.supplierName || '-'}</TableCell>
+                      <TableCell>{template.sourceType || '-'}</TableCell>
                       <TableCell>
                         <Badge variant="secondary">{template.measurementFrequency}</Badge>
                       </TableCell>
-                      <TableCell>{getStatusBadge(status)}</TableCell>
+                      {/* <TableCell>{getStatusBadge(status)}</TableCell> */}
                       <TableCell>
                         <div className="flex gap-2">
                           {template.access == 'data-collector' && <Button

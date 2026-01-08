@@ -287,94 +287,97 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
             ))}
           </div>
 
-          {/* Source Templates Table */}
-          {filteredTemplates.length === 0 ? (
-            <div className="text-center py-12 border rounded-lg">
-              <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No Emission Sources Defined</h3>
-              <p className="text-muted-foreground mb-4">
-                Start by defining emission sources. You'll then be able to collect data against them.
-              </p>
-              <Button onClick={handleDefineNewSource}>
-                <Plus className="mr-2 h-4 w-4" />
-                Define First Source
-              </Button>
-            </div>
-          ) : (
-            <div className="border rounded-lg">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Source Name</TableHead>
-                    <TableHead>Facility</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Frequency</TableHead>
-                    <TableHead>Access</TableHead>
-                    <TableHead>Status ({viewMode === 'monthly' ? selectedMonth : 'Year'} {selectedYear})</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTemplates.map(template => {
-                    const status = getDataStatus(template._id);
-                    return (
-                      <TableRow key={template._id} className="cursor-pointer hover:bg-accent/50"
-                        onClick={() => handleCollectData(template)}>
-                        <TableCell className="font-medium">{template.sourceDescription}</TableCell>
-                        <TableCell>{template.facilityName}</TableCell>
-                        <TableCell><Badge variant="outline">{template.sourceCategory}</Badge></TableCell>
-                        <TableCell><Badge variant="secondary">{template.measurementFrequency}</Badge></TableCell>
-                        <TableCell>
-                          {template.access}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(status)}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-                            {template.access == 'data-collector' && <Button
-                              size="sm"
-                              variant="default"
-                              onClick={() => handleCollectData(template)}
-                            >
-                              <Database className="h-4 w-4 mr-1" />
-                              Collect Data
-                            </Button>}
+            {/* Source Templates Table */}
+            {filteredTemplates.length === 0 ? (
+              <div className="text-center py-12 border rounded-lg">
+                <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Emission Sources Defined</h3>
+                <p className="text-muted-foreground mb-4">
+                  Start by defining emission sources. You'll then be able to collect data against them.
+                </p>
+                <Button onClick={handleDefineNewSource}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Define First Source
+                </Button>
+              </div>
+            ) : (
+              <div className="border rounded-lg">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Facility</TableHead>
+                      <TableHead>Business Unit</TableHead>
+                      <TableHead>Source Type</TableHead>
+                      <TableHead>Source Category</TableHead>
+                      <TableHead>Frequency</TableHead>
+                      {/* <TableHead>Access</TableHead> */}
+                      {/* <TableHead>Status ({viewMode === 'monthly' ? selectedMonth : 'Year'} {selectedYear})</TableHead> */}
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredTemplates.map(template => {
+                      const status = getDataStatus(template._id);
+                      return (
+                        <TableRow key={template._id} className="cursor-pointer hover:bg-accent/50"
+                          onClick={() => handleCollectData(template)}>
+                          <TableCell>{template.facilityName}</TableCell>
+                          <TableCell>{template.businessUnit}</TableCell>
+                          <TableCell className="font-medium">{template.sourceType}</TableCell>
+                          <TableCell><Badge variant="outline">{template.sourceCategory}</Badge></TableCell>
+                          <TableCell><Badge variant="secondary">{template.measurementFrequency}</Badge></TableCell>
+                          {/* <TableCell>
+                            {template.access}
+                          </TableCell> */}
+                          {/* <TableCell>{getStatusBadge(status)}</TableCell> */}
+                          <TableCell>
+                            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                              {template.access == 'data-collector' && <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => handleCollectData(template)}
+                              >
+                                <Database className="h-4 w-4 mr-1" />
+                                Collect Data
+                              </Button>}
 
-                            {/* {template.access == 'data-verifier' && <Button
-                              size="sm"
-                              variant="default"
-                              onClick={() => handleCollectData(template)}
-                            >
-                              <Database className="h-4 w-4 mr-1" />
-                              Verify Data
-                            </Button>} */}
-                            {isParent && <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditSource(template)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            }
-                            {isParent && <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDeleteSource(template._id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                            }
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+                              {/* {template.access == 'data-verifier' && <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => handleCollectData(template)}
+                              >
+                                <Database className="h-4 w-4 mr-1" />
+                                Verify Data
+                              </Button>} */}
+                              {isParent && <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleEditSource(template)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              }
+                              {isParent && <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDeleteSource(template._id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                              }
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    
   );
 };
 

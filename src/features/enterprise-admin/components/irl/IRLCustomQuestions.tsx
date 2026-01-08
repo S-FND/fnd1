@@ -1703,20 +1703,29 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                           />
                         ) : question.question_type === 'dropdown' ? (
                           <Select
-                            value={answer as string}
-                            onValueChange={(value) => handleAnswerChange(question._id, value)}
+                            value={answer || undefined}
+                            onValueChange={(value) =>
+                              handleAnswerChange(question._id, value)
+                            }
                             disabled={!buttonEnabled}
                           >
-                            <SelectTrigger className={errorMessage && isTouched ? 'border-red-500' : ''}>
+                            <SelectTrigger
+                              className={errorMessage && isTouched ? 'border-red-500' : ''}
+                            >
                               <SelectValue placeholder="Select an option" />
                             </SelectTrigger>
+                        
                             <SelectContent>
-                              <SelectItem value="">Select an option</SelectItem>
-                              {question.options?.map((option, optionIndex) => (
-                                <SelectItem key={optionIndex} value={option}>
-                                  {option}
-                                </SelectItem>
-                              ))}
+                              {question.options
+                                ?.filter(opt => opt && opt.trim() !== '')
+                                .map((option, optionIndex) => (
+                                  <SelectItem
+                                    key={optionIndex}
+                                    value={option}   // ✅ always non-empty
+                                  >
+                                    {option}
+                                  </SelectItem>
+                                ))}
                             </SelectContent>
                           </Select>
                         ) : question.question_type === 'checkbox' ? (
