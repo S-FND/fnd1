@@ -77,7 +77,7 @@ export const DataCollectionForm = () => {
     const startYear = month >= 3 ? year : year - 1;
     const endYear = startYear + 1;
 
-    return `${startYear}–${endYear}`; // EN DASH
+    return `${startYear}-${endYear}`;
   };
 
   const [selectedMonth, setSelectedMonth] = useState(month || new Date().toLocaleString('en-US', { month: 'long' }));
@@ -116,7 +116,7 @@ export const DataCollectionForm = () => {
 
   const getTemplateData = async (templateId: string) => {
     try {
-      let response = await httpClient.get(`ghg-accounting/${templateId}/ghg-data-collection`);
+      let response = await httpClient.get(`ghg-accounting/${templateId}/ghg-data-collection?financialYear=${selectedYear}`);
       logger.debug("Template data response:", response);
       if (response.status === 200) {
         return response.data as { collectedData: GHGDataCollection[], templateDetails: GHGSourceTemplate };
@@ -155,32 +155,47 @@ export const DataCollectionForm = () => {
             //   notes: c.notes,
             // }));
 
-            const entries: DataEntry[] = periodNames.map((p) => {
-              let collection = data.collectedData.find((c) => c.reportingMonth == p && c.reportingYear == selectedYear);
+            const entries: DataEntry[] = periodNames.map(p => {
+              const collection = data.collectedData.find(
+                c => c.reportingMonth === p && c.reportingYear === selectedYear
+              );
+          
               if (collection) {
                 return {
                   _id: collection._id,
                   id: collection._id,
-                  periodName: collection.reportingMonth || '',
+                  periodName: p,
                   date: collection.collectedDate,
                   activityDataValue: collection.activityDataValue,
-                  evidenceFiles: collection.evidenceFiles ? collection.evidenceFiles.map(ef => ({ key: ef.key, name: ef.name, type: ef.type, url: ef.key })) : [],
-                  notes: collection.notes,
-                  verificationStatus: collection.verificationStatus
-                }
+                  notes: collection.notes || '',
+                  evidenceFiles: collection.evidenceFiles?.map(ef => ({
+                    key: ef.key,
+                    name: ef.name,
+                    type: ef.type,
+                    url: ef.key
+                  })) || [],
+                  verificationStatus: collection.verificationStatus || 'Pending',
+                  selectedUnit: template.activityDataUnit
+                };
               }
-              else {
-                return {
-                  id: uuidv4(),
-                  periodName: p,
-                  date: new Date().toISOString().split('T')[0],
-                  activityDataValue: 0,
-                  notes: '',
-                  evidenceUrls: [],
-                  verificationStatus: 'Pending'
-                }
-              }
-            })
+          
+              // Empty row for missing month
+              return {
+                id: uuidv4(),
+                periodName: p,
+                date: new Date().toISOString().split('T')[0],
+                activityDataValue: 0,
+                notes: '',
+                verificationStatus: 'Pending',
+                selectedUnit: template.activityDataUnit
+              };
+            });
+          
+            setDataEntries(entries);
+          } else {
+            initializeEntries(); // only when nothing exists
+          }
+            
             // data.collectedData.map(c => ({
             //   _id: c._id,
             //   id: c._id,
@@ -190,8 +205,8 @@ export const DataCollectionForm = () => {
             //   evidenceFiles: c.evidenceFiles ? c.evidenceFiles.map(ef => ({ key: ef.key, name: ef.name, type: ef.type, url: ef.key })) : [],
             //   notes: c.notes,
             // }));
-            setDataEntries(entries);
-          }
+            // setDataEntries(entries);
+          // }
 
         }
       });
@@ -548,10 +563,10 @@ export const DataCollectionForm = () => {
                   <SelectContent>
                     {Array.from({ length: 5 }, (_, i) => {
                       const start = new Date().getFullYear() - i;
-                      const fy = `${start}–${start + 1}`;
+                      const fy = `${start}-${start + 1}`;
                       return (
                         <SelectItem key={fy} value={fy}>
-                          FY {start}–{(start + 1).toString().slice(-2)}
+                          FY {start}-{(start + 1).toString().slice(-2)}
                         </SelectItem>
                       );
                     })}

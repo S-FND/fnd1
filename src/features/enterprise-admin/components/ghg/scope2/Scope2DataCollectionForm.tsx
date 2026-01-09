@@ -54,7 +54,7 @@ export const Scope2DataCollectionForm = () => {
 
   const getTemplateData = async (templateId: string) => {
     try {
-      let response = await httpClient.get(`ghg-accounting/${templateId}/ghg-data-collection`);
+      let response = await httpClient.get(`ghg-accounting/${templateId}/ghg-data-collection?financialYear=${selectedYear}`);
       logger.debug("Template data response:", response);
       if (response.status === 200) {
         return response.data as { collectedData: GHGDataCollection[], templateDetails: GHGSourceTemplate };
@@ -74,7 +74,7 @@ export const Scope2DataCollectionForm = () => {
     const startYear = month >= 3 ? year : year - 1;
     const endYear = startYear + 1;
 
-    return `${startYear}–${endYear}`; // EN DASH
+    return `${startYear}-${endYear}`;
   };
 
   const [selectedYear, setSelectedYear] = useState<string>(getCurrentFinancialYear());
@@ -93,6 +93,7 @@ export const Scope2DataCollectionForm = () => {
     useState<Record<string, "uploading" | "done" | "error">>({});
 
   const [reloadData, setReloadData] = useState(false);
+  const periodNames = generatePeriodNames(selectedFrequency);
 
   useEffect(() => {
     if (templateId) {
@@ -109,25 +110,65 @@ export const Scope2DataCollectionForm = () => {
             setSelectedFrequency(data.templateDetails.measurementFrequency);
           }
           if (data.collectedData && data.collectedData.length > 0) {
-            const entries: DataEntry[] = data.collectedData.map(c => ({
-              _id: c._id,
-              id: c._id,
-              periodName: c.reportingMonth || '',
-              date: c.collectedDate,
-              evidenceFiles: c.evidenceFiles ? c.evidenceFiles.map(ef => ({ key: ef.key, name: ef.name, type: ef.type, url: ef.key })) : [],
-              activityDataValue: c.activityDataValue,
-              notes: c.notes,
-              verificationStatus: c.verificationStatus
-            }));
+            // const entries: DataEntry[] = data.collectedData.map(c => ({
+            //   _id: c._id,
+            //   id: c._id,
+            //   periodName: c.reportingMonth || '',
+            //   date: c.collectedDate,
+            //   evidenceFiles: c.evidenceFiles ? c.evidenceFiles.map(ef => ({ key: ef.key, name: ef.name, type: ef.type, url: ef.key })) : [],
+            //   activityDataValue: c.activityDataValue,
+            //   notes: c.notes,
+            //   verificationStatus: c.verificationStatus
+            // }));
+            // setDataEntries(entries);
+            const entries: DataEntry[] = periodNames.map(p => {
+              const collection = data.collectedData.find(
+                c => c.reportingMonth === p && c.reportingYear === selectedYear
+              );
+          
+              if (collection) {
+                return {
+                  _id: collection._id,
+                  id: collection._id,
+                  periodName: p,
+                  date: collection.collectedDate,
+                  activityDataValue: collection.activityDataValue,
+                  notes: collection.notes || '',
+                  evidenceFiles: collection.evidenceFiles?.map(ef => ({
+                    key: ef.key,
+                    name: ef.name,
+                    type: ef.type,
+                    url: ef.key
+                  })) || [],
+                  verificationStatus: collection.verificationStatus || 'Pending',
+                  selectedUnit: template.activityDataUnit
+                };
+              }
+          
+              // Empty row for missing month
+              return {
+                id: uuidv4(),
+                periodName: p,
+                date: new Date().toISOString().split('T')[0],
+                activityDataValue: 0,
+                notes: '',
+                verificationStatus: 'Pending',
+                selectedUnit: template.activityDataUnit
+              };
+            });
+          
             setDataEntries(entries);
+          } else {
+            initializeEntries(); // only when nothing exists
           }
         }
       });
     }
-  }, [templateId, selectedYear]);
+  }, [templateId, reloadData, selectedYear]);
 
   useEffect(() => {
     initializeEntries();
+    setVerifiedBy(template.assignedVerifiers[0])
   }, [selectedFrequency, template._id]);
 
 
@@ -318,10 +359,10 @@ export const Scope2DataCollectionForm = () => {
                   <SelectContent>
                     {Array.from({ length: 5 }, (_, i) => {
                       const start = new Date().getFullYear() - i;
-                      const fy = `${start}–${start + 1}`;
+                      const fy = `${start}-${start + 1}`;
                       return (
                         <SelectItem key={fy} value={fy}>
-                          FY {start}–{(start + 1).toString().slice(-2)}
+                          FY {start}-{(start + 1).toString().slice(-2)}
                         </SelectItem>
                       );
                     })}
