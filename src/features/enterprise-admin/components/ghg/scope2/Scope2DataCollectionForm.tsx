@@ -65,10 +65,19 @@ export const Scope2DataCollectionForm = () => {
     return null;
   };
 
+  const getCurrentFinancialYear = (): string => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth(); // 0 = Jan
 
+    // Financial year starts in April (month >= 3)
+    const startYear = month >= 3 ? year : year - 1;
+    const endYear = startYear + 1;
 
+    return `${startYear}–${endYear}`; // EN DASH
+  };
 
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState<string>(getCurrentFinancialYear());
   const [selectedFrequency, setSelectedFrequency] = useState<MeasurementFrequency>(template.measurementFrequency);
   const [dataEntries, setDataEntries] = useState<DataEntry[]>([]);
   const [dataQuality, setDataQuality] = useState<DataQuality>('Medium');
@@ -299,16 +308,23 @@ export const Scope2DataCollectionForm = () => {
               />
               <div className="space-y-2">
                 <Label>Reporting Year</Label>
-                <Select value={selectedYear.toString()} onValueChange={(val) => setSelectedYear(parseInt(val))}>
+                <Select
+                  value={selectedYear}
+                  onValueChange={setSelectedYear}
+                >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select Financial Year" />
                   </SelectTrigger>
                   <SelectContent>
-                    {[2026, 2025, 2024, 2023, 2022].map((startYear) => (
-                      <SelectItem key={startYear} value={startYear.toString()}>
-                        FY {startYear}–{(startYear + 1).toString().slice(-2)}
-                      </SelectItem>
-                    ))}
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const start = new Date().getFullYear() - i;
+                      const fy = `${start}–${start + 1}`;
+                      return (
+                        <SelectItem key={fy} value={fy}>
+                          FY {start}–{(start + 1).toString().slice(-2)}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>

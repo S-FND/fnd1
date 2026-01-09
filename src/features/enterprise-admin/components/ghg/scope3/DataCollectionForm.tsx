@@ -45,13 +45,25 @@ const MOCK_TEAM_MEMBERS = [
   { id: '3', name: 'Priya Patel' },
 ];
 
+const getCurrentFinancialYear = (): string => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth(); // 0 = Jan
+
+  // Financial year starts in April (month >= 3)
+  const startYear = month >= 3 ? year : year - 1;
+  const endYear = startYear + 1;
+
+  return `${startYear}–${endYear}`; // EN DASH
+};
+
 export const DataCollectionForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   // const { toast } = useToast();
-  const { template, year } = location.state as { template: GHGSourceTemplate; month: string; year: number; };
+  const { template, year } = location.state as { template: GHGSourceTemplate; month: string; year: string; };
 
-  const [selectedYear, setSelectedYear] = useState(year || new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState<string>(getCurrentFinancialYear());
   const [selectedFrequency, setSelectedFrequency] = useState<MeasurementFrequency>(template.measurementFrequency);
   const [dataEntries, setDataEntries] = useState<DataEntry[]>([]);
   const [dataQuality, setDataQuality] = useState<DataQuality>('Medium');
@@ -206,7 +218,7 @@ export const DataCollectionForm = () => {
     <UnifiedSidebarLayout>
       <div className="container mx-auto p-6 max-w-7xl space-y-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/ghg-accounting')}><ArrowLeft className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-4 w-4" /></Button>
           <div>
             <h1 className="text-3xl font-bold">Scope 3 Data Collection</h1>
             <p className="text-muted-foreground mt-1">{template.sourceDescription} - {template.scope3Category}</p>
@@ -218,16 +230,27 @@ export const DataCollectionForm = () => {
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FrequencySelector value={selectedFrequency} onChange={setSelectedFrequency} defaultFrequency={template.measurementFrequency} disabled={true} />
             <div className="space-y-2">
-              <Label>Reporting Year</Label>
-              <Select value={selectedYear.toString()} onValueChange={(val) => setSelectedYear(parseInt(val))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{[2026, 2025, 2024, 2023, 2022].map((startYear) => (
-                      <SelectItem key={startYear} value={startYear.toString()}>
-                        FY {startYear}–{(startYear + 1).toString().slice(-2)}
-                      </SelectItem>
-                    ))}</SelectContent>
-              </Select>
-            </div>
+                <Label>Reporting Year</Label>
+                <Select
+                  value={selectedYear}
+                  onValueChange={setSelectedYear}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Financial Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const start = new Date().getFullYear() - i;
+                      const fy = `${start}–${start + 1}`;
+                      return (
+                        <SelectItem key={fy} value={fy}>
+                          FY {start}–{(start + 1).toString().slice(-2)}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
           </CardContent>
         </Card>
 

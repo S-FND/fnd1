@@ -47,7 +47,7 @@ export interface GHGDataCollection {
   sourceTemplateId: string; // Links to GHGSourceTemplate
   reportingPeriod: string; // e.g., "FY 2024-25", "Q1 2025", "Jan 2025"
   reportingMonth?: string;
-  reportingYear?: number;
+  reportingYear?: string;
   activityDataValue: number;
   emissionCO2: number;
   emissionCH4: number;
