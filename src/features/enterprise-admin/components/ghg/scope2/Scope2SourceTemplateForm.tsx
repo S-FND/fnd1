@@ -318,6 +318,21 @@ export const Scope2SourceTemplateForm = () => {
         // }));
         // let dataCollections: GHGSourceTemplate[] = dataSourceResponse.data;
         // setSourceType(dataCollections[0]?.sourceType as SourceType);
+
+        const item = dataSourceResponse.data[0];
+
+        // ✅ SET EMISSION FACTOR STATE
+        setSelectedEmissionFactor({
+          id: item.emissionFactorId,
+          name: item.emissionFactorSource,
+          factor: item.emissionFactor,
+          unit: item.emissionFactorUnit,
+          fuelType: item.fuelType,
+          source: item.emissionFactorSource,
+          year: item.year || '',
+          gases: item.ghgIncluded,
+          category: item.sourceCategory,
+        } as EmissionFactor);
       }
     } catch (error) {
       console.error("Error fetching data collections:", error);
@@ -343,7 +358,7 @@ export const Scope2SourceTemplateForm = () => {
     <UnifiedSidebarLayout>
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/ghg-accounting')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>

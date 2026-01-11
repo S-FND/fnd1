@@ -84,9 +84,10 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
 
           createdDate: item.createdAt,  // mapping backend → frontend naming
           createdBy: "",                // backend doesn’t have this value
-          access: isParent
-            ? 'data-collector'
-            : currentAccess.find(ca => ca.id === item._id)?.access ?? null,
+          // access: isParent
+          //   ? 'data-collector'
+          //   : currentAccess.find(ca => ca.id === item._id)?.access ?? null,
+          access: null,
         }));
         // let dataCollections: GHGSourceTemplate[] = dataSourceResponse.data;
         setSourceTemplates(dataCollections);
@@ -101,6 +102,20 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
     }
   }
 
+  useEffect(() => {
+    if (!sourceTemplates.length) return;
+    if (!isParent && currentAccess.length === 0) return;
+  
+    setSourceTemplates(prev =>
+      prev.map(template => ({
+        ...template,
+        access: isParent
+          ? 'data-collector'
+          : currentAccess.find(ca => ca.id === template._id)?.access ?? template.access,
+      }))
+    );
+  }, [currentAccess, isParent, sourceTemplates.length]);
+  
   const getDataStatus = (templateId: string): DataStatus => {
     const statusKey = `scope1_status_${templateId}_${selectedMonth}_${selectedYear}`;
     const status = localStorage.getItem(statusKey);

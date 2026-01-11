@@ -45,13 +45,25 @@ const MOCK_TEAM_MEMBERS = [
   { id: '3', name: 'Priya Patel' },
 ];
 
+const getCurrentFinancialYear = (): string => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth(); // 0 = Jan
+
+  // Financial year starts in April (month >= 3)
+  const startYear = month >= 3 ? year : year - 1;
+  const endYear = startYear + 1;
+
+  return `${startYear}-${endYear}`; // EN DASH
+};
+
 export const DataCollectionForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   // const { toast } = useToast();
-  const { template, year } = location.state as { template: GHGSourceTemplate; month: string; year: number; };
+  const { template, year } = location.state as { template: GHGSourceTemplate; month: string; year: string; };
 
-  const [selectedYear, setSelectedYear] = useState(year || new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState<string>(getCurrentFinancialYear());
   const [selectedFrequency, setSelectedFrequency] = useState<MeasurementFrequency>(template.measurementFrequency);
   const [dataEntries, setDataEntries] = useState<DataEntry[]>([]);
   const [dataQuality, setDataQuality] = useState<DataQuality>('Medium');
@@ -73,7 +85,7 @@ export const DataCollectionForm = () => {
 
   const getTemplateData = async (templateId: string) => {
     try {
-      let response = await httpClient.get(`ghg-accounting/${templateId}/ghg-data-collection`);
+      let response = await httpClient.get(`ghg-accounting/${templateId}/ghg-data-collection?financialYear=${selectedYear}`);
       logger.debug("Template data response:", response);
       if (response.status === 200) {
         return response.data as { collectedData: GHGDataCollection[], templateDetails: GHGSourceTemplate };
@@ -84,6 +96,7 @@ export const DataCollectionForm = () => {
     return null;
   };
 
+  const periodNames = generatePeriodNames(selectedFrequency);
 
   useEffect(() => {
     if (templateId) {
@@ -100,23 +113,80 @@ export const DataCollectionForm = () => {
           }
           if (data.collectedData && data.collectedData.length > 0) {
             data
-            const entries: DataEntry[] = data.collectedData.map(c => ({
-              _id: c._id,
-              id: c._id,
-              periodName: c.reportingMonth || '',
-              date: c.collectedDate,
-              evidenceFiles: c.evidenceFiles ? c.evidenceFiles.map(ef => ({ key: ef.key, name: ef.name, type: ef.type, url: ef.key })) : [],
+            // const entries: DataEntry[] = data.collectedData.map(c => ({
+            //   _id: c._id,
+            //   id: c._id,
+            //   periodName: c.reportingMonth || '',
+            //   date: c.collectedDate,
+            //   evidenceFiles: c.evidenceFiles ? c.evidenceFiles.map(ef => ({ key: ef.key, name: ef.name, type: ef.type, url: ef.key })) : [],
 
-              activityDataValue: c.activityDataValue,
-              verificationStatus: c.verificationStatus,
-              notes: c.notes,
-            }));
+            //   activityDataValue: c.activityDataValue,
+            //   verificationStatus: c.verificationStatus,
+            //   notes: c.notes,
+            // }));
+            // setDataEntries(entries);
+            const entries: DataEntry[] = periodNames.map(p => {
+              const collection = data.collectedData.find(
+                c => c.reportingMonth === p && c.reportingYear === selectedYear
+              );
+          
+              if (collection) {
+                return {
+                  _id: collection._id,
+                  id: collection._id,
+                  periodName: p,
+                  date: collection.collectedDate,
+                  activityDataValue: collection.activityDataValue,
+                  notes: collection.notes || '',
+                  evidenceFiles: collection.evidenceFiles?.map(ef => ({
+                    key: ef.key,
+                    name: ef.name,
+                    type: ef.type,
+                    url: ef.key
+                  })) || [],
+                  verificationStatus: collection.verificationStatus || 'Pending',
+                  selectedUnit: template.activityDataUnit
+                };
+              }
+          
+              // Empty row for missing month
+              return {
+                id: uuidv4(),
+                periodName: p,
+                date: new Date().toISOString().split('T')[0],
+                activityDataValue: 0,
+                notes: '',
+                verificationStatus: 'Pending',
+                selectedUnit: template.activityDataUnit
+              };
+            });
+          
             setDataEntries(entries);
+          } else {
+            initializeEntries(); // only when nothing exists
           }
         }
       });
     }
   }, [templateId,selectedYear]);
+
+  useEffect(() => {
+    initializeEntries();
+    setVerifiedBy(template.assignedVerifiers[0])
+  }, [selectedFrequency, template._id]);
+
+  const initializeEntries = () => {
+    const periods = generatePeriodNames(selectedFrequency);
+    const entries: DataEntry[] = periods.map((periodName) => ({
+      id: uuidv4(),
+      periodName,
+      date: new Date().toISOString().split('T')[0],
+      activityDataValue: 0,
+      notes: '',
+      evidenceUrls: [],
+    }));
+    setDataEntries(entries);
+  };
 
   useEffect(() => {
     const periods = generatePeriodNames(selectedFrequency);
@@ -189,7 +259,11 @@ export const DataCollectionForm = () => {
           )
         );
         toast.success(`Activity data has been ${status === 'draft' ? 'saved as draft' : 'submitted for review'}.`);
-        navigate('/ghg-accounting', { state: { activeTab: 'scope2' } });
+        // navigate('/ghg-accounting', { state: { activeTab: 'scope2' } });
+        // store tab
+        sessionStorage.setItem('activeTab', 'scope3');
+        // go back
+        navigate(-1);
       }
     }
     catch (error) {
@@ -206,7 +280,7 @@ export const DataCollectionForm = () => {
     <UnifiedSidebarLayout>
       <div className="container mx-auto p-6 max-w-7xl space-y-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/ghg-accounting')}><ArrowLeft className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}><ArrowLeft className="h-4 w-4" /></Button>
           <div>
             <h1 className="text-3xl font-bold">Scope 3 Data Collection</h1>
             <p className="text-muted-foreground mt-1">{template.sourceDescription} - {template.scope3Category}</p>
@@ -218,16 +292,27 @@ export const DataCollectionForm = () => {
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FrequencySelector value={selectedFrequency} onChange={setSelectedFrequency} defaultFrequency={template.measurementFrequency} disabled={true} />
             <div className="space-y-2">
-              <Label>Reporting Year</Label>
-              <Select value={selectedYear.toString()} onValueChange={(val) => setSelectedYear(parseInt(val))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{[2026, 2025, 2024, 2023, 2022].map((startYear) => (
-                      <SelectItem key={startYear} value={startYear.toString()}>
-                        FY {startYear}–{(startYear + 1).toString().slice(-2)}
-                      </SelectItem>
-                    ))}</SelectContent>
-              </Select>
-            </div>
+                <Label>Reporting Year</Label>
+                <Select
+                  value={selectedYear}
+                  onValueChange={setSelectedYear}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Financial Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const start = new Date().getFullYear() - i;
+                      const fy = `${start}-${start + 1}`;
+                      return (
+                        <SelectItem key={fy} value={fy}>
+                          FY {start}-{(start + 1).toString().slice(-2)}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
           </CardContent>
         </Card>
 

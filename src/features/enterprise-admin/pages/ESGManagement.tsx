@@ -259,8 +259,16 @@ const ESGManagementPage = () => {
           section.documents.filter(doc => doc.isApplicable === "yes")
         );
         const allUploadedDocuments = allApplicableDocuments.filter(doc => doc.fileChange);
-        const calculatedProgress = allApplicableDocuments.length > 0 ?
-          (allUploadedDocuments.length / allApplicableDocuments.length) * 100 : 100;
+        // const calculatedProgress = allApplicableDocuments.length > 0 ?
+        //   (allUploadedDocuments.length / allApplicableDocuments.length) * 100 : 100;
+        const totalApplicable = allApplicableDocuments.length;
+        const totalUploaded = allUploadedDocuments.length;
+
+        const calculatedProgress =
+          totalApplicable === 0
+            ? 0
+            : Math.round((totalUploaded / totalApplicable) * 100);
+        const safeProgress = Math.min(Math.max(calculatedProgress, 0), 100);
 
         // Calculate section progress
         const complianceSection = updatedSections.find(s => s.id === 'compliance');
@@ -271,7 +279,7 @@ const ESGManagementPage = () => {
         const policiesApplicable = policiesSection?.documents.filter(d => d.isApplicable === "yes") || [];
         const policiesUploaded = policiesApplicable.filter(d => d.fileChange);
 
-        setEsmsProgress(calculatedProgress);
+        setEsmsProgress(safeProgress);
         setEsmsCompletedCount(allUploadedDocuments.length);
         setEsmsTotalCount(allApplicableDocuments.length);
         setComplianceCompleted(complianceUploaded.length);
@@ -358,19 +366,32 @@ const ESGManagementPage = () => {
       setTopicsLoading(false);
     }
   };
+  const totalMetricTargets = Math.max(
+    materialTopicsCount,
+    customTopics
+  );
+  
 
   // Calculate metrics status based on meaningful criteria
   const getMetricsStatus = () => {
-    if (metricsLoading || metricsError) return 'loading';
-
-    if (materialTopicsCount === 0) {
-      return 'no-topics'; // No material topics selected yet
-    } else if (configuredMetrics === 0) {
-      return 'no-metrics'; // Topics exist but no metrics configured
-    } else {
-      return 'complete'; // Metrics are configured
+    if (metricsLoading) return 'loading';
+    if (metricsError) return 'error';
+  
+    if (totalMetricTargets === 0) {
+      return 'no-topics';
     }
+  
+    if (configuredMetrics === 0) {
+      return 'no-metrics';
+    }
+  
+    if (configuredMetrics < totalMetricTargets) {
+      return 'in-progress';
+    }
+  
+    return 'complete';
   };
+  
 
   // Get progress percentage for metrics
   const getMetricsProgressPercentage = () => {
@@ -473,7 +494,7 @@ const ESGManagementPage = () => {
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className="bg-primary h-2 rounded-full transition-all duration-300"
-                style={{ width: `${esmsProgress !== null ? esmsProgress : 0}%` }}
+                style={{ width: `${Number.isFinite(esmsProgress) ? esmsProgress : 0}%` }}
               />
             </div>
             <div className="space-y-2 text-sm">
@@ -483,13 +504,13 @@ const ESGManagementPage = () => {
                 <>
                   <div className="flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-red-600" />
-                    <span className="text-red-600">Error loading</span>
+                    <span className="text-red-600"> loading</span>
                   </div>
                 </>
               ) : (
                 <>
                   <div className="flex items-center gap-2">
-                    {esmsProgress !== null && esmsProgress >= 100 ? (
+                  {esmsCompletedCount === esmsTotalCount && esmsTotalCount > 0 ? (
                       <>
                         <CheckCircle className="h-4 w-4 text-green-600" />
                         <span className="text-green-600">Complete</span>
@@ -543,15 +564,22 @@ const ESGManagementPage = () => {
                 <span className="text-sm text-red-600">Error</span>
               ) : (
                 // Updated Badge text to show {configuredMetrics}/{customTopicsCount}
-                <Badge variant={configuredMetrics >= customTopics ? "default" : "secondary"}>
-                  {configuredMetrics}/{customTopics}
+                <Badge
+                  variant={configuredMetrics >= totalMetricTargets ? "default" : "secondary"}
+                >
+                  {configuredMetrics}/{totalMetricTargets}
                 </Badge>
               )}
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className="bg-primary h-2 rounded-full transition-all duration-300"
-                style={{ width: customTopics > 0 ? `${(configuredMetrics / customTopics) * 100}%` : '0%' }}
+                style={{
+                  width:
+                    totalMetricTargets > 0
+                      ? `${Math.min((configuredMetrics / totalMetricTargets) * 100, 100)}%`
+                      : '0%'
+                }}
               />
             </div>
             <div className="flex items-center gap-2 text-sm">
@@ -562,7 +590,8 @@ const ESGManagementPage = () => {
                   <AlertCircle className="h-4 w-4 text-red-600" />
                   <span className="text-red-600">Error loading</span>
                 </>
-              ) : configuredMetrics >= customTopics ? ( // Updated condition
+              ) : configuredMetrics >= totalMetricTargets && totalMetricTargets > 0
+              ? ( // Updated condition
                 <>
                   <CheckCircle className="h-4 w-4 text-green-600" />
                   <span className="text-green-600">Complete</span>
