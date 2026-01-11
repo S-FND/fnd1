@@ -303,7 +303,11 @@ export const Scope2DataCollectionForm = () => {
           )
         );
         toast.success(`Activity data has been ${status === 'Draft' ? 'saved as draft' : 'submitted for review'}.`,);
-        navigate('/ghg-accounting', { state: { activeTab: 'scope2' } });
+        // navigate('/ghg-accounting', { state: { activeTab: 'scope2' } });
+        // store tab
+        sessionStorage.setItem('activeTab', 'scope2');
+        // go back
+        navigate(-1);
       }
     }
     catch (error) {

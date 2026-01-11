@@ -364,7 +364,10 @@ export const DataCollectionForm = () => {
         );
         setIsBulkUploadOpen(false);
         toast.success(`Activity data has been ${type === 'Draft' ? 'saved as draft' : 'submitted for review'}.`,);
-        navigate('/ghg-accounting', { state: { activeTab: 'scope2' } });
+        // store tab
+        sessionStorage.setItem('activeTab', 'scope1');
+        // go back
+        navigate(-1);
       }
     }
     catch (error) {

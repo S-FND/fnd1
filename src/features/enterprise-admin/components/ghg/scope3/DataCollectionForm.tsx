@@ -259,7 +259,11 @@ export const DataCollectionForm = () => {
           )
         );
         toast.success(`Activity data has been ${status === 'draft' ? 'saved as draft' : 'submitted for review'}.`);
-        navigate('/ghg-accounting', { state: { activeTab: 'scope2' } });
+        // navigate('/ghg-accounting', { state: { activeTab: 'scope2' } });
+        // store tab
+        sessionStorage.setItem('activeTab', 'scope3');
+        // go back
+        navigate(-1);
       }
     }
     catch (error) {
