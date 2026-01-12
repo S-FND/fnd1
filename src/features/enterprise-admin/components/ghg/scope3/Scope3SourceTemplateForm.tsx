@@ -418,7 +418,7 @@ export const Scope3SourceTemplateForm = () => {
     <UnifiedSidebarLayout>
       <div className="container mx-auto py-6 space-y-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/ghg-accounting')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
