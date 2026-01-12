@@ -1,6 +1,12 @@
 import React from 'react';
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { months } from '@/data/ghg/calculator';
 
@@ -9,12 +15,39 @@ export type ViewMode = 'monthly' | 'yearly';
 interface TimePeriodFilterProps {
   viewMode: ViewMode;
   selectedMonth?: string;
-  selectedYear: number;
+  selectedYear: string;
   onViewModeChange: (mode: ViewMode) => void;
-  onMonthChange?: (month: string) => void;
-  onYearChange: (year: number) => void;
-  availableYears?: number[];
+  onMonthChange: (month: string) => void;
+  onYearChange: (year: string) => void;
 }
+
+/* ✅ Current Financial Year */
+const getCurrentFinancialYear = (): string => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth(); // 0 = Jan
+
+  const startYear = month >= 3 ? year : year - 1;
+  return `${startYear}-${startYear + 1}`;
+};
+
+/* ✅ Generate FY list */
+const generateFinancialYears = (count = 5): string[] => {
+  const startYear = Number(getCurrentFinancialYear().split('-')[0]);
+  return Array.from({ length: count }, (_, i) => {
+    const y = startYear - i;
+    return `${y}-${y + 1}`;
+  });
+};
+
+/* ✅ Financial Year Month Order (Apr → Mar) */
+const fyMonthsOrder = [
+  'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep',
+  'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar',
+];
+
+/* ✅ Safe filtered months */
+const financialYearMonths = fyMonthsOrder;
 
 export const TimePeriodFilter: React.FC<TimePeriodFilterProps> = ({
   viewMode,
@@ -23,10 +56,13 @@ export const TimePeriodFilter: React.FC<TimePeriodFilterProps> = ({
   onViewModeChange,
   onMonthChange,
   onYearChange,
-  availableYears = [2022, 2023, 2024, 2025],
 }) => {
+  const financialYears = generateFinancialYears(5);
+
   return (
     <div className="flex flex-wrap gap-4 items-end">
+
+      {/* View Mode */}
       <div className="space-y-2">
         <Label>View Mode</Label>
         <div className="flex gap-2">
@@ -47,15 +83,19 @@ export const TimePeriodFilter: React.FC<TimePeriodFilterProps> = ({
         </div>
       </div>
 
-      {viewMode === 'monthly' && onMonthChange && selectedMonth && (
+      {/* Month (Monthly only) */}
+      {viewMode === 'monthly' && (
         <div className="space-y-2">
           <Label>Month</Label>
-          <Select value={selectedMonth} onValueChange={onMonthChange}>
+          <Select
+            value={selectedMonth}
+            onValueChange={onMonthChange}
+          >
             <SelectTrigger className="w-[150px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {months.map((month) => (
+              {financialYearMonths.map((month) => (
                 <SelectItem key={month} value={month}>
                   {month}
                 </SelectItem>
@@ -65,21 +105,23 @@ export const TimePeriodFilter: React.FC<TimePeriodFilterProps> = ({
         </div>
       )}
 
+      {/* Financial Year */}
       <div className="space-y-2">
-        <Label>Year</Label>
-        <Select value={selectedYear.toString()} onValueChange={(val) => onYearChange(parseInt(val))}>
-          <SelectTrigger className="w-[120px]">
+        <Label>Financial Year</Label>
+        <Select value={selectedYear} onValueChange={onYearChange}>
+          <SelectTrigger className="w-[170px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {availableYears.map((year) => (
-              <SelectItem key={year} value={year.toString()}>
-                {year}
+            {financialYears.map((fy) => (
+              <SelectItem key={fy} value={fy}>
+                FY {fy}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
+
     </div>
   );
 };

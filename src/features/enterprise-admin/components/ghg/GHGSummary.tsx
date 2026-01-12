@@ -55,7 +55,19 @@ export const GHGSummary = () => {
       'Scope 4': 0
     }
   });
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const getCurrentFinancialYear = (): string => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth(); // 0 = Jan
+
+    // Financial year starts in April (month >= 3)
+    const startYear = month >= 3 ? year : year - 1;
+    const endYear = startYear + 1;
+
+    return `${startYear}-${endYear}`;
+  };
+
+  const [selectedYear, setSelectedYear] = useState<string>(getCurrentFinancialYear());
 
   const scopes: EmissionsByScope[] = [
     {
@@ -194,23 +206,28 @@ export const GHGSummary = () => {
                 Total carbon footprint across operations in {selectedYear}
               </CardDescription>
             </div>
-            <div className="w-[120px]">
-              <Select
-                value={selectedYear.toString()}
-                onValueChange={(value) => setSelectedYear(parseInt(value))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {yearsToShow.map((year) => (
-                    <SelectItem key={year} value={year.toString()}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <div className="space-y-2">
+                <label>Year</label>
+                <Select
+                  value={selectedYear}
+                  onValueChange={setSelectedYear}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Financial Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const start = new Date().getFullYear() - i;
+                      const fy = `${start}-${start + 1}`;
+                      return (
+                        <SelectItem key={fy} value={fy}>
+                          FY {start}-{(start + 1).toString().slice(-2)}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
           </div>
         </CardHeader>
         <CardContent>
