@@ -265,7 +265,7 @@ const VerifierApprovalDetailPage: React.FC = () => {
     const details = getApprovalItemDetails(id || '', module);
     const ModuleIcon = details.moduleIcon;
 
-    let [itemDetails, setItemDetails] = React.useState<GHGCollectedDataResponse>(null);
+    let [itemDetails, setItemDetails] = React.useState<GHGCollectedDataResponse | null>(null);
 
     // Use title from URL if available
     const displayTitle = title || details.title;
@@ -378,6 +378,39 @@ const VerifierApprovalDetailPage: React.FC = () => {
         console.log('itemDetails', itemDetails)
     }, [itemDetails])
 
+    const getPriorityFromDataQuality = (quality?: string) => {
+        switch (quality?.toLowerCase()) {
+            case 'low':
+                return 'low';
+            case 'medium':
+                return 'medium';
+            case 'high':
+                return 'high';
+            default:
+                return 'medium';
+        }
+    };
+
+    const getStatusFromVerification = (status?: string) => {
+        switch (status) {
+            case 'Pending':
+                return 'pending_review';
+            case 'Verified':
+                return 'approved';
+            case 'Rejected':
+                return 'rejected';
+            default:
+                return 'submitted';
+        }
+    };
+    const selectedCollectedData = React.useMemo(() => {
+        if (!itemDetails?.collectedData?.length || !collectionId) return null;
+      
+        return itemDetails.collectedData.find(
+          d => d._id === collectionId
+        ) || null;
+      }, [itemDetails, collectionId]);
+      selectedCollectedData
     return (
         <UnifiedSidebarLayout>
             <div className="container mx-auto py-6 space-y-6">
@@ -404,12 +437,21 @@ const VerifierApprovalDetailPage: React.FC = () => {
                                 </div>
                                 <div>
                                     <CardTitle className="text-xl">{itemDetails?.templateDetails?.sourceType}, {itemDetails?.collectedData[0]['reportingMonth']} {itemDetails?.collectedData[0]['reportingYear']}</CardTitle>
-                                    <CardDescription>{details.description}</CardDescription>
+                                    <CardDescription>{itemDetails.templateDetails.sourceDescription}</CardDescription>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
-                                {getPriorityBadge(details.priority)}
-                                {getStatusBadge(details.status)}
+                                {getPriorityBadge(
+                                    getPriorityFromDataQuality(
+                                        selectedCollectedData?.dataQuality
+                                    )
+                                )}
+
+                                {getStatusBadge(
+                                    getStatusFromVerification(
+                                        selectedCollectedData?.verificationStatus
+                                    )
+                                )}
                             </div>
                         </div>
                     </CardHeader>
@@ -434,7 +476,7 @@ const VerifierApprovalDetailPage: React.FC = () => {
                                 <Calendar className="h-4 w-4 text-muted-foreground" />
                                 <div>
                                     <p className="text-xs text-muted-foreground">Submitted On</p>
-                                    <p className="text-sm font-medium">{format(new Date(itemDetails.collectedData[0]['updatedAt']), 'MMM d, yyyy')}</p>
+                                    <p className="text-sm font-medium">{format(new Date(selectedCollectedData['updatedAt']), 'MMM d, yyyy')}</p>
                                 </div>
                             </div>
                             {details.facility && (
@@ -541,14 +583,14 @@ const VerifierApprovalDetailPage: React.FC = () => {
                             <Button
                                 variant="outline"
                                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => handleApproveWithComment(itemDetails.templateDetails._id,itemDetails.collectedData[0]['_id'],'Rejected')}
+                                onClick={() => handleApproveWithComment(itemDetails.templateDetails._id, selectedCollectedData['_id'], 'Rejected')}
                             >
                                 <XCircle className="h-4 w-4 mr-2" />
                                 Reject
                             </Button>
                             <Button
                                 className="bg-green-600 hover:bg-green-700 text-white"
-                                onClick={() => handleApproveWithComment(itemDetails.templateDetails._id,itemDetails.collectedData[0]['_id'],'Approved')}
+                                onClick={() => handleApproveWithComment(itemDetails.templateDetails._id, selectedCollectedData['_id'], 'Approved')}
                             >
                                 <CheckCircle className="h-4 w-4 mr-2" />
                                 Approve

@@ -96,7 +96,7 @@ export const ReviewApprovalDialog: React.FC<ReviewApprovalDialogProps> = ({
   };
 
   if (!item) return null;
-
+console.log('item-------',item);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
@@ -142,7 +142,7 @@ export const ReviewApprovalDialog: React.FC<ReviewApprovalDialogProps> = ({
               )}
               <div className="flex items-center gap-2 text-muted-foreground">
                 <User className="h-4 w-4" />
-                <span>{item['submittedByName'] || 'Unknown'}</span>
+                <span>{item['submittedBy'] || 'Unknown'}</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Calendar className="h-4 w-4" />
