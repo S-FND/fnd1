@@ -292,6 +292,24 @@ export const Scope3SourceTemplateForm = () => {
       return;
     }
 
+    if (!selectedCollectors.length) {
+      alert("Please select a Collector");
+      toast({ description: "Please select a Collector" });
+      return;
+    }
+  
+    if (!selectedVerifiers.length) {
+      alert("Please select a Verifier");
+      toast({ description: "Please select a Verifier" });
+      return;
+    }
+
+    if (selectedCollectors.some(id => selectedVerifiers.includes(id))) {
+      alert('Collector and Verifier cannot be the same user')
+      toast({ description: "Collector and Verifier cannot be the same user" });
+      return;
+    }
+
     const templates = data.facilityNames.map(facilityName => ({
       // id: editTemplate?.id || uuidv4(),
       _id: editTemplate?._id || undefined,
@@ -348,7 +366,7 @@ export const Scope3SourceTemplateForm = () => {
         description: `Emission source "${templates[0].sourceDescription}" has been ${editTemplate ? 'updated' : 'saved'}. You can now collect data against this source.`,
       });
 
-      navigate('/ghg-accounting', { state: { activeTab: 'scope2' } });
+      navigate('/ghg-accounting', { state: { activeTab: 'scope3' } });
     } catch (error) {
       console.error('Error saving source template:', error);
       toast({
