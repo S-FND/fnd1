@@ -126,7 +126,7 @@ export interface GHGScopeItem {
   sourceDescription: string;
   sourceType: string;
 
-  fuelSubstanceType: string;
+  fuelType: string;
   measurementFrequency: 'Monthly' | 'Quarterly' | 'Yearly';
 
   dataCollections: GHGDataCollection;
@@ -145,12 +145,12 @@ export interface GHGScopeItem {
 }
 
 // Demo verifiers
-const DEMO_VERIFIERS: Verifier[] = [
-  { user_id: 'user-1', full_name: 'Rajesh Kumar', email: 'rajesh.kumar@company.com' },
-  { user_id: 'user-2', full_name: 'Priya Sharma', email: 'priya.sharma@company.com' },
-  { user_id: 'user-5', full_name: 'Vikram Singh', email: 'vikram.singh@company.com' },
-  { user_id: 'user-7', full_name: 'Karthik Iyer', email: 'karthik.iyer@company.com' },
-];
+// const DEMO_VERIFIERS: Verifier[] = [
+//   { user_id: 'user-1', full_name: 'Rajesh Kumar', email: 'rajesh.kumar@company.com' },
+//   { user_id: 'user-2', full_name: 'Priya Sharma', email: 'priya.sharma@company.com' },
+//   { user_id: 'user-5', full_name: 'Vikram Singh', email: 'vikram.singh@company.com' },
+//   { user_id: 'user-7', full_name: 'Karthik Iyer', email: 'karthik.iyer@company.com' },
+// ];
 
 // Demo data for showcasing the approval workflow
 // const DEMO_APPROVAL_ITEMS: ApprovalItem[] = [
@@ -344,13 +344,13 @@ const VerifierApprovalsPage: React.FC = () => {
   // }, [user]);
 
   // Use demo data if no real data is loaded
-  useEffect(() => {
-    if (!loading && approvalItems.length === 0) {
-      setUseDemoData(true);
-      // setApprovalItems(DEMO_APPROVAL_ITEMS);
-      setVerifiers(DEMO_VERIFIERS);
-    }
-  }, [loading, approvalItems.length]);
+  // useEffect(() => {
+  //   if (!loading && approvalItems.length === 0) {
+  //     setUseDemoData(true);
+  //     // setApprovalItems(DEMO_APPROVAL_ITEMS);
+  //     setVerifiers(DEMO_VERIFIERS);
+  //   }
+  // }, [loading, approvalItems.length]);
 
   const fetchUserProfile = async () => {
     if (!user?.email) return;
@@ -574,15 +574,15 @@ const VerifierApprovalsPage: React.FC = () => {
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case 'critical':
-        return <Badge className="bg-red-500 text-white">Critical</Badge>;
+        return <Badge className="bg-red-600 text-white">Critical</Badge>;
       case 'high':
         return <Badge className="bg-orange-500 text-white">High</Badge>;
       case 'medium':
-        return <Badge variant="secondary">Medium</Badge>;
+        return <Badge className="bg-green-500 text-white">Medium</Badge>;
       case 'low':
         return <Badge variant="outline">Low</Badge>;
       default:
-        return null;
+        return <Badge variant="outline">Unknown</Badge>;
     }
   };
 
@@ -674,32 +674,52 @@ const VerifierApprovalsPage: React.FC = () => {
   };
 
   const filteredItems = React.useMemo(() => {
-    return approvalItems.filter(item => {
+    if (!ghgApprovalItems.length) return [];
+  
+    return ghgApprovalItems.filter(item => {
+      // Module filter - all items are GHG
       if (selectedModule !== 'all' && item.module !== selectedModule) return false;
-
-      if (selectedPriority !== 'all' && item.priority !== selectedPriority) return false;
-
+      
+      // Priority filter - use the priority field directly (already mapped)
+      if (selectedPriority !== 'all' && item.priority !== selectedPriority) {
+        return false;
+      }
+      
+      // Scope filter - fix the scope comparison
       if (selectedScope !== 'all') {
-        if (!item.scope) return false;
-        if (!item.scope.toLowerCase().includes(selectedScope.replace('scope_', ''))) {
+        // Convert item scope to lowercase with underscore for comparison
+        const itemScope = item.scope?.toLowerCase().replace(' ', '_');
+        if (itemScope !== selectedScope) {
           return false;
         }
       }
-
+      
+      // Verifier filter
       if (selectedVerifier !== 'all' && item.assignedVerifierId !== selectedVerifier) {
         return false;
       }
-
+      
       return true;
     });
-  }, [approvalItems, selectedModule, selectedPriority, selectedScope, selectedVerifier]);
+  }, [ghgApprovalItems, selectedModule, selectedPriority, selectedScope, selectedVerifier]);
+
+
+  const hasActiveFilter =
+  selectedPriority !== 'all' ||
+  selectedScope !== 'all';
+
+  const displayItems = hasActiveFilter
+    ? filteredItems
+    : ghgApprovalItems;
+
+  const displayCount = displayItems.length;
 
 
   const getGetDataValueLabel=(item:GHGScopeItem)=>{
     let value;
     switch (item.scope) {
       case 'Scope 1':
-        value=item.fuelSubstanceType
+        value=item.fuelType
         break;
       case 'Scope 2':
         value=item.sourceType
@@ -716,63 +736,74 @@ const VerifierApprovalsPage: React.FC = () => {
   }
 
   // Count stats
-  const criticalCount = approvalItems.filter(item => item.priority === 'critical').length;
-  const highCount = approvalItems.filter(item => item.priority === 'high').length;
-  const overdueCount = approvalItems.filter(item => item.dueDate && new Date(item.dueDate) < new Date()).length;
-  const ghgCount = approvalItems.filter(item => item.module === 'GHG').length;
+  const criticalCount = ghgApprovalItems.filter(i => i.priority === 'critical').length;
+  const highCount     = ghgApprovalItems.filter(i => i.priority === 'high').length;
+  const mediumCount   = ghgApprovalItems.filter(i => i.priority === 'medium').length;
+  const lowCount      = ghgApprovalItems.filter(i => i.priority === 'low').length;
+
+
+  const overdueCount = ghgApprovalItems.filter(item => {
+    if (!item.dataCollections?.collectedDate) return false;
+    const collectedDate = new Date(item.dataCollections.collectedDate);
+    const now = new Date();
+    const daysDiff = (now.getTime() - collectedDate.getTime()) / (1000 * 3600 * 24);
+    return daysDiff > 7 && item.dataCollections.verificationStatus === 'Pending';
+  }).length;
+
+  const ghgCount = ghgApprovalItems.length;
 
   const getItemsToBeVerified = async () => {
     try {
       setLoading(true);
       let result = await httpClient.get('ghg-accounting/items/tobe-verified');
-      console.log('Items to be verified:', result);
-      setLoading(false);
       if (result.status !== 200) {
         throw new Error('Failed to load items to be verified');
       }
-      setGhgApprovalItems(result['data']['sourceDetails'].map((item: GHGScopeItem) => ({
-        _id: item._id,
-        type: 'ghg_activity',
-        module: 'GHG',
-        title: `${item.sourceCategory} - ${item.dataCollections.reportingPeriod} - ${item.dataCollections.reportingMonth} ${item.dataCollections.reportingYear}`,
-        description: item.sourceDescription,
-        submittedBy: item.collectors[0]?.name || 'Unknown',
-        submittedAt: item.dataCollections.updatedAt,
-        status: item.dataCollections.verificationStatus.toLowerCase(),
-        priority: item['dataCollections']['dataQuality'].toLowerCase(),
-        facility: item.facilityName,
-        scope: item.scope,
-        category: item.sourceCategory,
-        link: `/ghg-accounting/data-entry?source=${item._id}&dataCollectionId=${item.dataCollections._id}`,
-        assignedVerifierId: item.verifiers[0]?._id,
-        assignedVerifierName: item.verifiers[0]?.name || 'Unknown',
-        submittedByEmail: item.collectors[0]?.email || 'Unknown',
-        verifierEmail: item.verifiers[0]?.email || 'Unknown',
-        dataCollectionId: item.dataCollections._id,
-        activityDataValue: `${item.dataCollections.activityDataValue} ${item.activityDataUnit} of ${getGetDataValueLabel(item)}`,
-      })));
-      // setApprovalItems(result['data']['approvalItems'].map((item: any) => ({
-      //   _id: item._id,
-      //   type: 'ghg_activity',
-      //   module: 'GHG',
-      //   title: `${item.sourceCategory} - ${item.dataCollections.reportingPeriod}`,
-      //   description: item.description,
-      //   submittedBy: item.submittedBy,
-      //   submittedAt: item.submittedAt,
-      //   status: item.status,
-      //   priority: item['dataCollections']['dataQuality'].toLowerCase(),
-      //   facility: item.facilityName,
-      //   scope: item.scope,
-      //   category: item.sourceCategory,
-      //   link: `/ghg-accounting/data-entry?source=${item.sourceId}`,
-      //   assignedVerifierId: item.assignedVerifierId,
-      //   assignedVerifierName: item.assignedVerifierName,
-      // })));
-
+      
+      const transformedItems = result['data']['sourceDetails'].map((item: GHGScopeItem) => {
+        const dataQuality = item.dataCollections?.dataQuality?.toLowerCase() || 'medium';
+        let priority: 'low' | 'medium' | 'high' | 'critical';
+        
+        // Map dataQuality to priority
+        switch(dataQuality) {
+          case 'low': priority = 'low'; break;
+          case 'medium': priority = 'medium'; break;
+          case 'high': priority = 'high'; break;
+          default: priority = 'medium';
+        }
+        
+        return {
+          _id: item._id,
+          type: 'ghg_activity' as const,
+          module: 'GHG',
+          title: `${item.sourceCategory} - ${item.dataCollections.reportingPeriod} - ${item.dataCollections.reportingMonth} ${item.dataCollections.reportingYear}`,
+          description: item.sourceDescription,
+          submittedBy: item.collectors[0]?.name || 'Unknown',
+          submittedAt: item.dataCollections.updatedAt,
+          status: item.dataCollections.verificationStatus.toLowerCase(),
+          priority: priority, // This is the priority field that filters will use
+          facility: item.facilityName,
+          scope: item.scope,
+          category: item.sourceCategory,
+          link: `/ghg-accounting/data-entry?source=${item._id}&dataCollectionId=${item.dataCollections._id}`,
+          assignedVerifierId: item.verifiers[0]?._id,
+          assignedVerifierName: item.verifiers[0]?.name || 'Unknown',
+          submittedByEmail: item.collectors[0]?.email || 'Unknown',
+          verifierEmail: item.verifiers[0]?.email || 'Unknown',
+          dataCollectionId: item.dataCollections._id,
+          activityDataValue: `${item.dataCollections.activityDataValue} ${item.activityDataUnit} of ${getGetDataValueLabel(item)}`,
+          dataCollections: item.dataCollections,
+          dataQuality: dataQuality // Keep original dataQuality for filtering
+        };
+      });
+      
+      setGhgApprovalItems(transformedItems);
       return result.data;
     } catch (error) {
       console.error('Error fetching items to be verified:', error);
       toast.error('Failed to load items to be verified');
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -804,15 +835,10 @@ const VerifierApprovalsPage: React.FC = () => {
       </div>
     );
   }
-
-
-
-
-
   return (
     <UnifiedSidebarLayout>
       <div className="w-full px-4 py-6 space-y-6">
-        {/* Demo Mode Banner */}
+        {/* Demo Mode Banner
         {useDemoData && (
           <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
             <CardContent className="py-3">
@@ -822,7 +848,7 @@ const VerifierApprovalsPage: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-        )}
+        )} */}
 
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Approvals to be Done</h1>
@@ -838,13 +864,13 @@ const VerifierApprovalsPage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Pending</p>
-                  <p className="text-2xl font-bold">{approvalItems.length}</p>
+                  <p className="text-2xl font-bold">{ghgApprovalItems.length}</p>
                 </div>
-                <Clock className="h-8 w-8 text-amber-500" />
+                {/* <Clock className="h-8 w-8 text-amber-500" /> */}
               </div>
             </CardContent>
           </Card>
-          <Card>
+          {/* <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -854,15 +880,37 @@ const VerifierApprovalsPage: React.FC = () => {
                 <AlertTriangle className="h-8 w-8 text-red-500" />
               </div>
             </CardContent>
-          </Card>
-          <Card>
+          </Card> */}
+           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">High Priority</p>
                   <p className="text-2xl font-bold text-orange-600">{highCount}</p>
                 </div>
-                <AlertTriangle className="h-8 w-8 text-orange-500" />
+                {/* <AlertTriangle className="h-8 w-8 text-orange-500" /> */}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Medium Priority</p>
+                  <p className="text-2xl font-bold text-orange-600">{mediumCount}</p>
+                </div>
+                {/* <AlertTriangle className="h-8 w-8 text-orange-500" /> */}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Low Priority</p>
+                  <p className="text-2xl font-bold text-orange-600">{lowCount}</p>
+                </div>
+                {/* <AlertTriangle className="h-8 w-8 text-orange-500" /> */}
               </div>
             </CardContent>
           </Card>
@@ -873,11 +921,11 @@ const VerifierApprovalsPage: React.FC = () => {
                   <p className="text-sm text-muted-foreground">Overdue</p>
                   <p className="text-2xl font-bold text-destructive">{overdueCount}</p>
                 </div>
-                <XCircle className="h-8 w-8 text-destructive" />
+                {/* <XCircle className="h-8 w-8 text-destructive" /> */}
               </div>
             </CardContent>
           </Card>
-          <Card>
+          {/* <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -887,11 +935,11 @@ const VerifierApprovalsPage: React.FC = () => {
                 <Flame className="h-8 w-8 text-orange-500" />
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
         </div>
 
         <Tabs defaultValue="approvals" className="space-y-4">
-          <TabsList>
+          {/* <TabsList>
             <TabsTrigger value="approvals">
               <CheckCircle className="h-4 w-4 mr-2" />
               Pending Approvals ({approvalItems.length})
@@ -900,7 +948,7 @@ const VerifierApprovalsPage: React.FC = () => {
               <Settings className="h-4 w-4 mr-2" />
               Verification Settings
             </TabsTrigger>
-          </TabsList>
+          </TabsList> */}
 
           <TabsContent value="approvals" className="space-y-4">
             {/* Filters */}
@@ -911,7 +959,7 @@ const VerifierApprovalsPage: React.FC = () => {
                     <Filter className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm font-medium">Filters:</span>
                   </div>
-                  <Select value={selectedModule} onValueChange={setSelectedModule}>
+                  {/* <Select value={selectedModule} onValueChange={setSelectedModule}>
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="All Modules" />
                     </SelectTrigger>
@@ -923,14 +971,14 @@ const VerifierApprovalsPage: React.FC = () => {
                       <SelectItem value="ESG DD">ESG DD</SelectItem>
                       <SelectItem value="SDG Metrics">SDG Metrics</SelectItem>
                     </SelectContent>
-                  </Select>
+                  </Select> */}
                   <Select value={selectedPriority} onValueChange={setSelectedPriority}>
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="All Priorities" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Priorities</SelectItem>
-                      <SelectItem value="critical">Critical</SelectItem>
+                      {/* <SelectItem value="critical">Critical</SelectItem> */}
                       <SelectItem value="high">High</SelectItem>
                       <SelectItem value="medium">Medium</SelectItem>
                       <SelectItem value="low">Low</SelectItem>
@@ -945,10 +993,10 @@ const VerifierApprovalsPage: React.FC = () => {
                       <SelectItem value="scope_1">Scope 1</SelectItem>
                       <SelectItem value="scope_2">Scope 2</SelectItem>
                       <SelectItem value="scope_3">Scope 3</SelectItem>
-                      <SelectItem value="scope_4">Scope 4</SelectItem>
+                      {/* <SelectItem value="scope_4">Scope 4</SelectItem> */}
                     </SelectContent>
                   </Select>
-                  <Select value={selectedVerifier} onValueChange={setSelectedVerifier}>
+                  {/* <Select value={selectedVerifier} onValueChange={setSelectedVerifier}>
                     <SelectTrigger className="w-[180px]">
                       <div className="flex items-center gap-2">
                         <UserCheck className="h-4 w-4 text-muted-foreground" />
@@ -963,7 +1011,7 @@ const VerifierApprovalsPage: React.FC = () => {
                         </SelectItem>
                       ))}
                     </SelectContent>
-                  </Select>
+                  </Select> */}
                   <Button variant="outline" size="sm" onClick={getItemsToBeVerified}>
                     Refresh
                   </Button>
@@ -988,7 +1036,13 @@ const VerifierApprovalsPage: React.FC = () => {
                 <CardHeader>
                   <CardTitle>Pending Verifications</CardTitle>
                   <CardDescription>
-                    {ghgApprovalItems.length} item{ghgApprovalItems.length !== 1 ? 's' : ''} requiring your verification
+                    {/* {ghgApprovalItems.length} item{ghgApprovalItems.length !== 1 ? 's' : ''} requiring your verification */}
+                    {displayCount} item{displayCount !== 1 ? 's' : ''} requiring your verification
+                    {displayItems.length > 0 && filteredItems.length < ghgApprovalItems.length && (
+                      <span className="text-xs text-muted-foreground ml-2">
+                        (filtered from {ghgApprovalItems.length})
+                      </span>
+                    )}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -1000,24 +1054,22 @@ const VerifierApprovalsPage: React.FC = () => {
                         <TableHead className="w-[100px]">Priority</TableHead>
                         <TableHead>Verification Title</TableHead>
                         <TableHead className="w-[140px]">Submitted By</TableHead>
-                        <TableHead className="w-[180px]">Assigned Verifier</TableHead>
+                        {/* <TableHead className="w-[180px]">Assigned Verifier</TableHead> */}
                         <TableHead className="w-[100px]">Scope</TableHead>
                         <TableHead className="w-[80px]">Link</TableHead>
                         <TableHead className="w-[160px] text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {ghgApprovalItems.length > 0 &&
-                        ghgApprovalItems.map((item, index) => (
+                      {displayItems.length > 0 &&
+                        displayItems.map((item, index) => (
                           <TableRow key={item._id}>
                             <TableCell className="font-medium">{index + 1}</TableCell>
 
                             <TableCell>{getModuleBadge('GHG')}</TableCell>
 
                             <TableCell>
-                              {getPriorityBadge(
-                                item.dataCollections?.dataQuality || 'medium'
-                              )}
+                            {getPriorityBadge(item.priority|| 'medium')}
                             </TableCell>
 
                             <TableCell>
@@ -1042,11 +1094,11 @@ const VerifierApprovalsPage: React.FC = () => {
                               </span>
                             </TableCell>
 
-                            <TableCell>
+                            {/* <TableCell>
                               <span className="text-sm" title={item.verifierEmail}>
                                 {item.assignedVerifierName}
                               </span>
-                            </TableCell>
+                            </TableCell> */}
 
                             <TableCell>
                               <Badge variant="outline" className="text-xs">
