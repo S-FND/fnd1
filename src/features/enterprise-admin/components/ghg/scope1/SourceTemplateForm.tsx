@@ -205,6 +205,11 @@ export const SourceTemplateForm = () => {
       toast({ description: "Please select a Verifier" });
       return;
     }
+
+    if (selectedCollectors.some(id => selectedVerifiers.includes(id))) {
+      toast({ description: "Collector and Verifier cannot be the same user" });
+      return;
+    }
   
     // Optional: manually trigger RHF submit
     handleSubmit(onSubmit)();
