@@ -190,6 +190,31 @@ export const SourceTemplateForm = () => {
     }
   };
 
+  const handleValidateAndSubmit = () => {
+    // ✅ THIS WILL ALWAYS RUN
+    console.log("BUTTON CLICKED");
+  
+    if (!selectedCollectors.length) {
+      alert("Please select a Collector");
+      toast({ description: "Please select a Collector" });
+      return;
+    }
+  
+    if (!selectedVerifiers.length) {
+      alert("Please select a Verifier");
+      toast({ description: "Please select a Verifier" });
+      return;
+    }
+
+    if (selectedCollectors.some(id => selectedVerifiers.includes(id))) {
+      toast({ description: "Collector and Verifier cannot be the same user" });
+      return;
+    }
+  
+    // Optional: manually trigger RHF submit
+    handleSubmit(onSubmit)();
+  };
+
   const onSubmit = async (data: FormData) => {
     if (!selectedEmissionFactor) {
       toast({
@@ -700,7 +725,7 @@ export const SourceTemplateForm = () => {
           <Button type="button" variant="outline" onClick={() => navigate(-1)}>
             Cancel
           </Button>
-          <Button type="submit">
+          <Button type="button" onClick={handleValidateAndSubmit}>
             <Save className="mr-2 h-4 w-4" />
             {editTemplate ? 'Update Source' : 'Save Source Definition'}
           </Button>

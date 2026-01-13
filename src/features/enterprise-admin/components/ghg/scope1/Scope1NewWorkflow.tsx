@@ -28,6 +28,18 @@ export interface Scope1NewWorkflowProps {
   isParent?: boolean;
 }
 
+const getCurrentFinancialYear = (): string => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth(); // 0 = Jan
+
+  // Financial year starts in April (month >= 3)
+  const startYear = month >= 3 ? year : year - 1;
+  const endYear = startYear + 1;
+
+  return `${startYear}-${endYear}`;
+};
+
 export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
   currentAccess,
   isParent = false,
@@ -36,7 +48,7 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
   const { toast } = useToast();
   const [viewMode, setViewMode] = useState<ViewMode>('monthly');
   const [selectedMonth, setSelectedMonth] = useState(new Date().toLocaleString('en-US', { month: 'long' }));
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState(getCurrentFinancialYear());
   const [sourceTemplates, setSourceTemplates] = useState<GHGSourceTemplate[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<SourceType | 'All'>('All');
   const [showDashboard, setShowDashboard] = useState(false);

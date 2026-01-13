@@ -194,6 +194,24 @@ export const Scope2SourceTemplateForm = () => {
       return;
     }
 
+    if (!selectedCollectors.length) {
+      alert("Please select a Collector");
+      toast({ description: "Please select a Collector" });
+      return;
+    }
+  
+    if (!selectedVerifiers.length) {
+      alert("Please select a Verifier");
+      toast({ description: "Please select a Verifier" });
+      return;
+    }
+
+    if (selectedCollectors.some(id => selectedVerifiers.includes(id))) {
+      alert("Collector and Verifier cannot be the same user");
+      toast({ description: "Collector and Verifier cannot be the same user" });
+      return;
+    }
+
     const templates = data.facilityNames.map(facilityName => ({
       // id: editTemplate?.id || uuidv4(),
       _id: editTemplate?._id || undefined,
