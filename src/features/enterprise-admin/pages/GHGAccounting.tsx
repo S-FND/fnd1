@@ -15,7 +15,8 @@ import { GHGSummary } from '../components/ghg/GHGSummary';
 import { GHGDataAssignment } from '../components/ghg/GHGDataAssignment';
 import { companyInfo } from '../components/ghg/summary/mockData';
 import UnifiedSidebarLayout from '@/components/layout/UnifiedSidebarLayout';
-
+import { httpClient } from '@/lib/httpClient';
+import { AxiosResponse } from 'axios';
 export type GHGScope =
   | 'scope1Sources'
   | 'scope2Sources'
@@ -51,11 +52,32 @@ export type AssignedGHGSources = Record<GHGScope, GHGSource[]>;
 const GHGAccountingPage = () => {
   const { isLoading } = useRouteProtection(['admin', 'unit_admin', 'employee']);
   const { user, isAuthenticated } = useAuth();
-  
+
   const [isParent, setIsParent] = useState(false);
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState( searchParams.get('tab') ??"summary");
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') ?? "summary");
+
+  const [companyDetails, setCompanyDetails] = useState<any>(null);
+  const [locations, setLocations] = useState<any>(null);
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [companyRes, locationsRes] = await Promise.all([
+          httpClient.get<any>('company/entity'),
+          httpClient.get<any>('company/locations'),
+        ]);
+  
+        setCompanyDetails(companyRes.data?.data ?? companyRes.data);
+        setLocations(locationsRes.data?.data ?? locationsRes.data);
+      } catch (error) {
+        console.error('Error loading GHG page data:', error);
+      }
+    };
+  
+    fetchData();
+  }, []);
 
   const [assignedSources, setAssignedSources] = useState<AssignedGHGSources>({
     scope1Sources: [],
@@ -118,6 +140,7 @@ const GHGAccountingPage = () => {
     ? user.units?.find(unit => unit.id === user.unitId)?.name
     : null;
 
+
   return (
     <UnifiedSidebarLayout>
       <div className="space-y-6">
@@ -125,51 +148,53 @@ const GHGAccountingPage = () => {
           <h1 className="text-2xl font-bold tracking-tight">GHG Accounting</h1>
           <p className="text-muted-foreground">
             {isUnitAdmin
-              ? `Manage carbon emissions data for ${unitName || 'your unit'}.`
-              : `Manage enterprise-wide carbon emissions for ${companyInfo.name}.`}
+              ? `Manage carbon emissions data for ${unitName || 'your company'}.`
+              : `Manage enterprise-wide carbon emissions for ${companyDetails?.name}.`}
           </p>
         </div>
 
         <Card className="mb-6">
           <CardHeader className="pb-3">
             <CardTitle>Company Overview</CardTitle>
-            <CardDescription>Key information about IMR Resources</CardDescription>
+            <CardDescription>Key information about {companyDetails?.company_name}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <h3 className="text-sm font-medium">Headquarters</h3>
-                <p className="text-sm text-muted-foreground">{companyInfo.headquarters}</p>
+                <h3 className="text-sm font-medium">Legal Name</h3>
+                <p className="text-sm text-muted-foreground">{companyDetails?.legal_name}</p>
               </div>
               <div>
                 <h3 className="text-sm font-medium">Established</h3>
-                <p className="text-sm text-muted-foreground">{companyInfo.established}</p>
+                <p className="text-sm text-muted-foreground">{companyDetails?.founded}</p>
               </div>
               <div>
                 <h3 className="text-sm font-medium">Operations</h3>
-                <p className="text-sm text-muted-foreground">{companyInfo.operations.join(", ")}</p>
+                <p className="text-sm text-muted-foreground">{companyDetails?.industry}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium">Annual Trading Volume</h3>
-                <p className="text-sm text-muted-foreground">{companyInfo.annualTradingVolume}</p>
+                <h3 className="text-sm font-medium">Registered Address</h3>
+                <p className="text-sm text-muted-foreground">{companyDetails?.registered_office}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium">Business Units</h3>
-                <p className="text-sm text-muted-foreground">{companyInfo.businessUnits.length} units across {companyInfo.operations.length} countries</p>
+                <h3 className="text-sm font-medium">Number of Locations</h3>
+                {/* <p className="text-sm text-muted-foreground">{companyDetails?.businessUnits.length} units across {companyDetails?.operations.length} countries</p> */}
+                <p className="text-sm text-muted-foreground">{Array.isArray(locations) && locations.length > 0 ? locations.length : "-"} Units</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium">Total Employees</h3>
+                <h3 className="text-sm font-medium">Employees Strength</h3>
                 <p className="text-sm text-muted-foreground">
-                  {companyInfo.businessUnits.reduce((sum, unit) => sum + unit.employees, 0)} employees
+                  {/* {companyDetails?.businessUnits.reduce((sum, unit) => sum + unit.employees, 0)} employees */}
+                  <p className="text-sm text-muted-foreground">{companyDetails?.employee_strength} employees</p>
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Tabs value={activeTab} onValueChange={ handleTabChange} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="mb-4 w-full sm:w-auto">
-            <TabsTrigger value="summary">Summary</TabsTrigger> 
+            <TabsTrigger value="summary">Summary</TabsTrigger>
             {/* //{isParent ? " (Parent)" : ""} */}
             {/* {!isParent && assignedSources && assignedSources.scope1Sources && assignedSources.scope1Sources.length>0 && <TabsTrigger value="scope1">Scope 1</TabsTrigger>}
             {!isParent && assignedSources && assignedSources.scope2Sources && assignedSources.scope2Sources.length>0 && <TabsTrigger value="scope2">Scope 2</TabsTrigger>}
@@ -183,7 +208,7 @@ const GHGAccountingPage = () => {
               <TabsTrigger value="scope2">Scope 2</TabsTrigger>
             )}
 
-            {(isParent ||scopeAccess?.scope3) && (
+            {(isParent || scopeAccess?.scope3) && (
               <TabsTrigger value="scope3">Scope 3</TabsTrigger>
             )}
 

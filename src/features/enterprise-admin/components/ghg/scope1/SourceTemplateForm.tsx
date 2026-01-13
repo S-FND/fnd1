@@ -61,7 +61,7 @@ export const SourceTemplateForm = () => {
   const { toast } = useToast();
   const { sourceType: initialSourceType, template: editTemplate } = location.state || {};
 
-  const [sourceType, setSourceType] = useState<SourceType>(editTemplate?.sourceType || initialSourceType || 'Stationary');
+  // const [sourceType, setSourceType] = useState<SourceType>(editTemplate?.sourceType || initialSourceType || 'Stationary');
   const [selectedEmissionFactor, setSelectedEmissionFactor] = useState<EmissionFactor | null>(null);
   const [selectedCollectors, setSelectedCollectors] = useState<string[]>(editTemplate?.assignedDataCollectors || []);
   const [selectedVerifiers, setSelectedVerifiers] = useState<string[]>(editTemplate?.assignedVerifiers || []);
@@ -131,19 +131,31 @@ export const SourceTemplateForm = () => {
     fetchFacilities();
   }, [toast]);
 
-  useEffect(() => {
-    setSourceType(watchSourceType as SourceType);
+  // useEffect(() => {
+  //   setSourceType(watchSourceType as SourceType);
     
-    // Don't clear fields on initial render when editing
-    if (isInitialRender.current && editTemplate) {
+  //   // Don't clear fields on initial render when editing
+  //   if (isInitialRender.current && editTemplate) {
+  //     isInitialRender.current = false;
+  //     return;
+  //   }
+  //   if (!isInitialRender.current) {
+  //     setValue('sourceCategory', '');
+  //     setValue('fuelType', '');
+  //     setValue('activityDataUnit', '');
+  //   }
+  // }, [watchSourceType, setValue, editTemplate]);
+
+  useEffect(() => {
+    if (isInitialRender.current) {
       isInitialRender.current = false;
       return;
     }
-    
+  
     setValue('sourceCategory', '');
     setValue('fuelType', '');
     setValue('activityDataUnit', '');
-  }, [watchSourceType, setValue, editTemplate]);
+  }, [watchSourceType, setValue]);
 
   const handleEmissionFactorSelect = (factor: EmissionFactor) => {
     console.log('object++++++++++++++',factor);
@@ -336,6 +348,39 @@ export const SourceTemplateForm = () => {
 
         const item = dataSourceResponse.data[0];
 
+
+        setValue('sourceType', item.sourceType, {
+          shouldDirty: false,
+          shouldTouch: false,
+        });
+        
+        setValue('sourceCategory', item.sourceCategory, {
+          shouldDirty: false,
+          shouldTouch: false,
+        });
+        
+        setValue('fuelType', item.fuelType ?? '', {
+          shouldDirty: false,
+          shouldTouch: false,
+        });
+        
+        setValue('activityDataUnit', item.activityDataUnit, {
+          shouldDirty: false,
+          shouldTouch: false,
+        });
+        
+        setValue('measurementFrequency', item.measurementFrequency, {
+          shouldDirty: false,
+          shouldTouch: false,
+        });
+        
+        setValue('calculationMethodology', item.calculationMethodology);
+        setValue('dataSource', item.dataSource);
+        setValue('sourceDescription', item.sourceDescription);
+        setValue('businessUnit', item.businessUnit);
+        setValue('facilityNames', [item.facilityName]);
+        
+
         // ✅ SET EMISSION FACTOR STATE
         setSelectedEmissionFactor({
           id: item.emissionFactorId,
@@ -516,8 +561,10 @@ export const SourceTemplateForm = () => {
                     <SelectValue placeholder="Select category..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {EMISSION_SOURCE_CATEGORIES[sourceType]?.map((cat) => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    {EMISSION_SOURCE_CATEGORIES[watchSourceType]?.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -536,8 +583,10 @@ export const SourceTemplateForm = () => {
                     <SelectValue placeholder="Select fuel type..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {FUEL_SUBSTANCE_TYPES[sourceType]?.map((fuel) => (
-                      <SelectItem key={fuel} value={fuel}>{fuel}</SelectItem>
+                    {FUEL_SUBSTANCE_TYPES[watchSourceType]?.map((fuel) => (
+                      <SelectItem key={fuel} value={fuel}>
+                        {fuel}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -567,7 +616,7 @@ export const SourceTemplateForm = () => {
           <CardContent>
             <EmissionFactorSelector
               scope={1}
-              category={sourceType}
+              category={watchSourceType}
               value={selectedEmissionFactor?.id}
               onSelect={handleEmissionFactorSelect}
             />
@@ -591,8 +640,10 @@ export const SourceTemplateForm = () => {
                     <SelectValue placeholder="Select unit..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {ACTIVITY_UNITS[sourceType]?.map((unit) => (
-                      <SelectItem key={unit} value={unit}>{unit}</SelectItem>
+                    {ACTIVITY_UNITS[watchSourceType]?.map((unit) => (
+                      <SelectItem key={unit} value={unit}>
+                        {unit}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
