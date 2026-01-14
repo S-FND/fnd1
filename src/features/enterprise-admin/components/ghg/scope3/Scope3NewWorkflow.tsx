@@ -267,9 +267,9 @@ export const Scope3NewWorkflow: React.FC<Scope3NewWorkflowProps> = ({
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{summary.count}</div>
-                    <p className="text-xs text-muted-foreground">
+                    {/* <p className="text-xs text-muted-foreground">
                       {summary.withData} with data
-                    </p>
+                    </p> */}
                   </CardContent>
                 </Card>
               ))}

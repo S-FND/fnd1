@@ -41,14 +41,20 @@ export const EvidenceFileUpload: React.FC<EvidenceFileUploadProps> = ({
     if (!files || files.length === 0) return;
     const selectedFiles = Array.from(files);
 
-    if (value.length + files.length > maxFiles) {
-      toast({
-        title: "Too Many Files",
-        description: `Maximum ${maxFiles} files allowed. Currently ${value.length} uploaded.`,
-        variant: "destructive",
-      });
-      return;
-    }
+    const totalFiles =
+  (uploadedFiles?.length || 0) + selectedFiles.length;
+
+  if (totalFiles > maxFiles) {
+    alert(`You can upload a maximum of ${maxFiles} files.`)
+    toast({
+      title: "Upload limit reached",
+      description: `You can upload a maximum of ${maxFiles} files.`,
+      variant: "destructive",
+    });
+
+    event.target.value = ""; // reset input
+    return;
+  }
 
     // setUploading(true);
     onChange([...selectedFiles]);

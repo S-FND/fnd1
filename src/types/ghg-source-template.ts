@@ -57,6 +57,7 @@ export interface GHGDataCollection {
   collectedDate: string;
   collectedBy: string;
   verifiedBy: string;
+  verificationComments: string;
   verificationStatus: 'Pending' | 'Verified' | 'Rejected';
   notes: string;
   uploadedEvidenceFiles?: { url: string; name: string }[];

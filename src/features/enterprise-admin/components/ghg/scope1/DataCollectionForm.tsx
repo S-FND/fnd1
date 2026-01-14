@@ -29,8 +29,9 @@ import { toast } from 'sonner';
 type VerificationStatus = 'Pending' | 'Verified' | 'Rejected' | 'Draft';
 
 // Extended GHGDataCollection type to include 'Draft' status
-interface ExtendedGHGDataCollection extends Omit<GHGDataCollection, 'verificationStatus'> {
+interface ExtendedGHGDataCollection extends Omit<GHGDataCollection, 'verificationStatus' | 'verificationComments'> {
   verificationStatus: VerificationStatus;
+  verificationComments?: string;
 }
 
 interface DataEntry {
@@ -44,6 +45,7 @@ interface DataEntry {
   selectedUnit?: string;
   evidenceFiles?: { url?: string; name?: string; key?: string; type?: string }[];
   verificationStatus?: VerificationStatus;
+  verificationComments?: string;
 }
 
 export const verificationStatusStyles: Record<VerificationStatus, string> = {
@@ -133,6 +135,10 @@ export const DataCollectionForm = () => {
     setIsInitialized(true);
   }, [selectedFrequency, template.activityDataUnit]);
 
+  useEffect(() => {
+    setIsInitialized(false);
+  }, [selectedYear]);
+
   // Main data fetching effect - FIXED VERSION
   useEffect(() => {
     let isMounted = true;
@@ -192,10 +198,12 @@ export const DataCollectionForm = () => {
                     url: ef.key
                   })) || [],
                   verificationStatus: collection.verificationStatus || 'Pending',
-                  selectedUnit: template.activityDataUnit
+                  selectedUnit: template.activityDataUnit,
+                  verificationComments: collection.verificationComments,
                 };
               }
-          
+
+              
               // Empty row for missing month
               return {
                 id: uuidv4(),
@@ -213,6 +221,10 @@ export const DataCollectionForm = () => {
               setIsInitialized(true);
             }
           } else {
+            if (!data.collectedData || data.collectedData.length === 0) {
+              initializeEntries();
+              return;
+            }
             // Only initialize empty entries when NO data exists
             if (isMounted && !isInitialized) {
               initializeEntries();
@@ -455,7 +467,7 @@ export const DataCollectionForm = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Source Name</p>
+                <p className="text-sm text-muted-foreground">Emission Source Description</p>
                 <p className="font-medium">{template.sourceDescription}</p>
               </div>
               <div>
@@ -603,6 +615,22 @@ export const DataCollectionForm = () => {
                       placeholder="Any notes for this entry..."
                       rows={2}
                     />
+                    {entry.verificationComments && (
+                        <div className='text-left'> 
+                          <Badge variant="secondary" className="text-600 border-600">Verifier comment</Badge>
+                          &nbsp;
+                          <span
+                            className=" cursor-help text-sm"
+                            title={entry.verificationComments} // 👈 view full on hover
+                          >
+                            {entry.verificationComments}
+                          </span>
+
+                          {entry.verificationComments.length > 30 && (
+                            <span className="text-xs text-muted-foreground">View more</span>
+                          )}
+                        </div>
+                      )}
                   </div>
 
                   <div className="space-y-2">
@@ -616,7 +644,7 @@ export const DataCollectionForm = () => {
                       }
                       label="Evidence (Optional)"
                       description="Upload supporting documents"
-                      maxFiles={3}
+                      maxFiles={5}
                       scope={`scope1-${templateId}-${entry.periodName}-${selectedYear}`}
                       uploadedFiles={entry.evidenceFiles}
                       templateId={templateId || undefined}
@@ -679,7 +707,7 @@ export const DataCollectionForm = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Verified By (Optional)</Label>
+                <Label>Verified By </Label>
                 <Select 
                   value={verifiedBy || "placeholder"} 
                   onValueChange={(value) => {

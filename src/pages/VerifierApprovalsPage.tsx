@@ -120,7 +120,7 @@ export interface GHGScopeItem {
   type?: string;
   _id: string;
   entityId: string;
-
+  priority: 'low' | 'medium' | 'high' | 'critical';
   facilityName: string;
   sourceCategory: string;
   sourceDescription: string;
@@ -674,47 +674,24 @@ const VerifierApprovalsPage: React.FC = () => {
   };
 
   const filteredItems = React.useMemo(() => {
-    if (!ghgApprovalItems.length) return [];
-  
     return ghgApprovalItems.filter(item => {
-      // Module filter - all items are GHG
-      if (selectedModule !== 'all' && item.module !== selectedModule) return false;
-      
-      // Priority filter - use the priority field directly (already mapped)
+  
       if (selectedPriority !== 'all' && item.priority !== selectedPriority) {
         return false;
       }
-      
-      // Scope filter - fix the scope comparison
+  
       if (selectedScope !== 'all') {
-        // Convert item scope to lowercase with underscore for comparison
         const itemScope = item.scope?.toLowerCase().replace(' ', '_');
-        if (itemScope !== selectedScope) {
-          return false;
-        }
+        if (itemScope !== selectedScope) return false;
       }
-      
-      // Verifier filter
-      if (selectedVerifier !== 'all' && item.assignedVerifierId !== selectedVerifier) {
-        return false;
-      }
-      
+  
       return true;
     });
-  }, [ghgApprovalItems, selectedModule, selectedPriority, selectedScope, selectedVerifier]);
+  }, [ghgApprovalItems, selectedPriority, selectedScope]);
 
-
-  const hasActiveFilter =
-  selectedPriority !== 'all' ||
-  selectedScope !== 'all';
-
-  const displayItems = hasActiveFilter
-    ? filteredItems
-    : ghgApprovalItems;
-
-  const displayCount = displayItems.length;
-
-
+  const displayItems = filteredItems;
+  const displayCount = filteredItems.length;
+  
   const getGetDataValueLabel=(item:GHGScopeItem)=>{
     let value;
     switch (item.scope) {
@@ -1063,7 +1040,7 @@ const VerifierApprovalsPage: React.FC = () => {
                     <TableBody>
                       {displayItems.length > 0 &&
                         displayItems.map((item, index) => (
-                          <TableRow key={item._id}>
+                          <TableRow key={`${item._id}-${index}`}>
                             <TableCell className="font-medium">{index + 1}</TableCell>
 
                             <TableCell>{getModuleBadge('GHG')}</TableCell>
