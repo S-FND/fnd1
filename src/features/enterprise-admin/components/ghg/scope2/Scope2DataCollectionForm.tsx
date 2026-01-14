@@ -29,8 +29,9 @@ import { toast } from 'sonner';
 type VerificationStatus = 'Pending' | 'Verified' | 'Rejected' | 'Draft';
 
 // Extended GHGDataCollection type to include 'Draft' status
-interface ExtendedGHGDataCollection extends Omit<GHGDataCollection, 'verificationStatus'> {
+interface ExtendedGHGDataCollection extends Omit<GHGDataCollection, 'verificationStatus' | 'verificationComments'> {
   verificationStatus: VerificationStatus;
+  verificationComments?: string;
 }
 
 interface DataEntry {
@@ -44,6 +45,7 @@ interface DataEntry {
   selectedUnit?: string;
   evidenceFiles?: { url?: string; name?: string; key?: string; type?: string }[];
   verificationStatus?: VerificationStatus;
+  verificationComments?: string;
 }
 
 export const verificationStatusStyles: Record<VerificationStatus, string> = {
@@ -97,8 +99,8 @@ export const Scope2DataCollectionForm = () => {
   const templateId = params.get('templateId');
 
   // Memoize period names to prevent unnecessary recalculations
-  const periodNames = useMemo(() => 
-    generatePeriodNames(selectedFrequency), 
+  const periodNames = useMemo(() =>
+    generatePeriodNames(selectedFrequency),
     [selectedFrequency]
   );
 
@@ -128,6 +130,7 @@ export const Scope2DataCollectionForm = () => {
       evidenceUrls: [],
       selectedUnit: template.activityDataUnit,
       verificationStatus: 'Pending',
+      verificationComments: ''
     }));
     setDataEntries(entries);
     setIsInitialized(true);
@@ -149,12 +152,12 @@ export const Scope2DataCollectionForm = () => {
       try {
         setIsLoading(true);
         const data = await getTemplateData(templateId);
-        
+
         if (!isMounted) return;
-        
+
         if (data) {
           logger.debug("Fetched template data:", data);
-          
+
           // Set team members from template verifiers
           if (data.templateDetails?.verifiers && data.templateDetails.verifiers.length > 0) {
             const members = data.templateDetails.verifiers.map((verifier: any) => ({
@@ -165,18 +168,18 @@ export const Scope2DataCollectionForm = () => {
               setTeamMembers(members);
             }
           }
-          
+
           // Set frequency from template
           if (data.templateDetails?.measurementFrequency) {
             setSelectedFrequency(data.templateDetails.measurementFrequency);
           }
-          
+
           if (data.collectedData && data.collectedData.length > 0) {
             const entries: DataEntry[] = periodNames.map(p => {
               const collection = data.collectedData.find(
                 c => c.reportingMonth === p && c.reportingYear === selectedYear
               );
-          
+
               if (collection) {
                 return {
                   _id: collection._id,
@@ -192,10 +195,11 @@ export const Scope2DataCollectionForm = () => {
                     url: ef.key
                   })) || [],
                   verificationStatus: collection.verificationStatus || 'Pending',
+                  verificationComments: collection.verificationComments || '',
                   selectedUnit: template.activityDataUnit
                 };
               }
-          
+
               // Empty row for missing month
               return {
                 id: uuidv4(),
@@ -204,15 +208,20 @@ export const Scope2DataCollectionForm = () => {
                 activityDataValue: 0,
                 notes: '',
                 verificationStatus: 'Pending',
+                verificationComments: '',
                 selectedUnit: template.activityDataUnit
               };
             });
-            
+
             if (isMounted) {
               setDataEntries(entries);
               setIsInitialized(true);
             }
           } else {
+            if (!data.collectedData || data.collectedData.length === 0) {
+              initializeEntries();
+              return;
+            }
             // Only initialize empty entries when NO data exists
             if (isMounted && !isInitialized) {
               initializeEntries();
@@ -337,9 +346,9 @@ export const Scope2DataCollectionForm = () => {
           verificationStatus: verificationStatus,
           notes: entry.notes,
           scope: 'Scope2',
-          evidenceFiles: files.map(file => ({ 
-            name: file.name, 
-            type: file.type 
+          evidenceFiles: files.map(file => ({
+            name: file.name,
+            type: file.type
           })),
           emissionFactor: template.emissionFactor,
           emissionFactorUnit: template.emissionFactorUnit,
@@ -354,7 +363,7 @@ export const Scope2DataCollectionForm = () => {
         'ghg-accounting/collect-ghg-data',
         collections
       );
-      
+
       if (dataSubmissionResponse.status === 201 || dataSubmissionResponse.status === 200) {
         // Upload evidence files if any
         if (Object.keys(evidenceByEntry).length > 0 && dataSubmissionResponse.data['getUploadUrls']) {
@@ -364,10 +373,10 @@ export const Scope2DataCollectionForm = () => {
             )
           );
         }
-        
+
         setIsBulkUploadOpen(false);
         toast.success(`Activity data has been ${type === 'draft' ? 'saved as draft' : 'submitted for review'}.`);
-        
+
         // Store active tab and navigate back
         sessionStorage.setItem('activeTab', 'scope2');
         navigate(-1);
@@ -395,7 +404,7 @@ export const Scope2DataCollectionForm = () => {
       }
       return de;
     });
-    
+
     setDataEntries(updatedEntries);
     setIsBulkUploadOpen(false);
     toast.success("Data imported successfully. Please review and submit.");
@@ -416,7 +425,7 @@ export const Scope2DataCollectionForm = () => {
     const ws = XLSX.utils.json_to_sheet(templateData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Data Collection');
-    
+
     // Auto-size columns
     const wscols = [
       { wch: 15 }, // Period column width
@@ -426,7 +435,7 @@ export const Scope2DataCollectionForm = () => {
       { wch: 30 }, // Notes column width
     ];
     ws['!cols'] = wscols;
-    
+
     XLSX.writeFile(wb, `${template.sourceDescription}_DataCollection_Template.xlsx`);
   };
 
@@ -478,7 +487,7 @@ export const Scope2DataCollectionForm = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Source Name</p>
+                <p className="text-sm text-muted-foreground">Emission Source Description</p>
                 <p className="font-medium">{template.sourceDescription}</p>
               </div>
               <div>
@@ -516,7 +525,7 @@ export const Scope2DataCollectionForm = () => {
                 value={selectedFrequency}
                 onChange={handleFrequencyChange}
                 defaultFrequency={template.measurementFrequency}
-                disabled={false}
+                disabled={true}
               />
               <div className="space-y-2">
                 <Label>Reporting Year</Label>
@@ -626,20 +635,36 @@ export const Scope2DataCollectionForm = () => {
                       placeholder="Any notes for this entry..."
                       rows={2}
                     />
+                    {entry.verificationComments && (
+                      <div className='text-left'>
+                        <Badge variant="secondary" className="text-600 border-600">Verifier comment</Badge>
+                        &nbsp;
+                        <span
+                          className=" cursor-help text-sm"
+                          title={entry.verificationComments} // 👈 view full on hover
+                        >
+                          {entry.verificationComments}
+                        </span>
+
+                        {entry.verificationComments.length > 30 && (
+                          <span className="text-xs text-muted-foreground">View more</span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">
                     <EvidenceFileUpload
                       value={evidenceByEntry[`${templateId}-${entry.periodName}-${selectedYear}`] || []}
                       onChange={(files) =>
-                        setEvidenceByEntry(prev => ({ 
-                          ...prev, 
-                          [`${templateId}-${entry.periodName}-${selectedYear}`]: files 
+                        setEvidenceByEntry(prev => ({
+                          ...prev,
+                          [`${templateId}-${entry.periodName}-${selectedYear}`]: files
                         }))
                       }
                       label="Evidence (Optional)"
                       description="Upload supporting documents"
-                      maxFiles={3}
+                      maxFiles={5}
                       scope={`scope2-${templateId}-${entry.periodName}-${selectedYear}`}
                       uploadedFiles={entry.evidenceFiles}
                       templateId={templateId || undefined}
@@ -702,9 +727,9 @@ export const Scope2DataCollectionForm = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Verified By (Optional)</Label>
-                <Select 
-                  value={verifiedBy || "placeholder"} 
+                <Label>Verified By</Label>
+                <Select
+                  value={verifiedBy || "placeholder"}
                   onValueChange={(value) => {
                     if (value !== "placeholder") {
                       setVerifiedBy(value);
@@ -714,8 +739,8 @@ export const Scope2DataCollectionForm = () => {
                 >
                   <SelectTrigger>
                     <SelectValue>
-                      {teamMembers.length === 0 
-                        ? "No verifiers available" 
+                      {teamMembers.length === 0
+                        ? "No verifiers available"
                         : currentVerifierName || "Select verifier..."
                       }
                     </SelectValue>
@@ -725,7 +750,7 @@ export const Scope2DataCollectionForm = () => {
                       <SelectItem value="placeholder" disabled className="text-muted-foreground">
                         Select verifier...
                       </SelectItem>
-                      {teamMembers.map((member) => 
+                      {teamMembers.map((member) =>
                         <SelectItem key={member._id} value={member._id}>{member.name}</SelectItem>
                       )}
                     </SelectContent>
@@ -823,7 +848,7 @@ export const Scope2DataCollectionForm = () => {
                     </div>
                   </div>
                 )}
-              
+
               <Button onClick={downloadBulkTemplate} variant="outline" className="w-full">
                 <Download className="mr-2 h-4 w-4" />
                 Download Excel Template
@@ -858,7 +883,7 @@ export const Scope2DataCollectionForm = () => {
                           errorList.push(`Row ${idx + 2}: 'Period' value '${row['Period']}' is not valid for the selected frequency.`);
                         }
                       });
-                      
+
                       if (errorList.length > 0) {
                         setBulkUploadErrors(errorList);
                         return;

@@ -28,8 +28,9 @@ import { toast } from 'sonner';
 type VerificationStatus = 'Pending' | 'Verified' | 'Rejected' | 'Draft';
 
 // Extended GHGDataCollection type to include 'Draft' status
-interface ExtendedGHGDataCollection extends Omit<GHGDataCollection, 'verificationStatus'> {
+interface ExtendedGHGDataCollection extends Omit<GHGDataCollection, 'verificationStatus' | 'verificationComments'> {
   verificationStatus: VerificationStatus;
+  verificationComments?: string;
 }
 
 interface DataEntry {
@@ -43,6 +44,7 @@ interface DataEntry {
   selectedUnit?: string;
   evidenceFiles?: { url?: string; name?: string; key?: string; type?: string }[];
   verificationStatus?: VerificationStatus;
+  verificationComments?: string;
 }
 
 export const verificationStatusStyles: Record<VerificationStatus, string> = {
@@ -73,7 +75,7 @@ const getCurrentFinancialYear = (): string => {
 export const Scope3DataCollectionForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Check if location.state exists and has required properties
   const { template, month, year } = location.state || {
     template: {} as GHGSourceTemplate,
@@ -123,8 +125,8 @@ export const Scope3DataCollectionForm = () => {
   const templateId = params.get('templateId') || safeTemplate._id;
 
   // Memoize period names to prevent unnecessary recalculations
-  const periodNames = useMemo(() => 
-    generatePeriodNames(selectedFrequency), 
+  const periodNames = useMemo(() =>
+    generatePeriodNames(selectedFrequency),
     [selectedFrequency]
   );
 
@@ -154,6 +156,7 @@ export const Scope3DataCollectionForm = () => {
       evidenceUrls: [],
       selectedUnit: safeTemplate.activityDataUnit,
       verificationStatus: 'Pending',
+      verificationComments: ''
     }));
     setDataEntries(entries);
     setIsInitialized(true);
@@ -175,12 +178,12 @@ export const Scope3DataCollectionForm = () => {
       try {
         setIsLoading(true);
         const data = await getTemplateData(templateId);
-        
+
         if (!isMounted) return;
-        
+
         if (data) {
           logger.debug("Fetched template data:", data);
-          
+
           // Set team members from template verifiers
           if (data.templateDetails?.verifiers && data.templateDetails.verifiers.length > 0) {
             const members = data.templateDetails.verifiers.map((verifier: any) => ({
@@ -191,18 +194,18 @@ export const Scope3DataCollectionForm = () => {
               setTeamMembers(members);
             }
           }
-          
+
           // Set frequency from template
           if (data.templateDetails?.measurementFrequency) {
             setSelectedFrequency(data.templateDetails.measurementFrequency);
           }
-          
+
           if (data.collectedData && data.collectedData.length > 0) {
             const entries: DataEntry[] = periodNames.map(p => {
               const collection = data.collectedData.find(
                 c => c.reportingMonth === p && c.reportingYear === selectedYear
               );
-          
+
               if (collection) {
                 return {
                   _id: collection._id,
@@ -218,10 +221,11 @@ export const Scope3DataCollectionForm = () => {
                     url: ef.key
                   })) || [],
                   verificationStatus: collection.verificationStatus || 'Pending',
+                  verificationComments: collection.verificationComments || '',
                   selectedUnit: safeTemplate.activityDataUnit
                 };
               }
-          
+
               // Empty row for missing month
               return {
                 id: uuidv4(),
@@ -230,15 +234,20 @@ export const Scope3DataCollectionForm = () => {
                 activityDataValue: 0,
                 notes: '',
                 verificationStatus: 'Pending',
+                verificationComments: '',
                 selectedUnit: safeTemplate.activityDataUnit
               };
             });
-            
+
             if (isMounted) {
               setDataEntries(entries);
               setIsInitialized(true);
             }
           } else {
+            if (!data.collectedData || data.collectedData.length === 0) {
+              initializeEntries();
+              return;
+            }
             // Only initialize empty entries when NO data exists
             if (isMounted && !isInitialized) {
               initializeEntries();
@@ -363,9 +372,9 @@ export const Scope3DataCollectionForm = () => {
           verificationStatus: verificationStatus,
           notes: entry.notes,
           scope: 'Scope3',
-          evidenceFiles: files.map(file => ({ 
-            name: file.name, 
-            type: file.type 
+          evidenceFiles: files.map(file => ({
+            name: file.name,
+            type: file.type
           })),
           emissionFactor: safeTemplate.emissionFactor || 0,
           emissionFactorUnit: safeTemplate.emissionFactorUnit,
@@ -380,7 +389,7 @@ export const Scope3DataCollectionForm = () => {
         'ghg-accounting/collect-ghg-data',
         collections
       );
-      
+
       if (dataSubmissionResponse.status === 201 || dataSubmissionResponse.status === 200) {
         // Upload evidence files if any
         if (Object.keys(evidenceByEntry).length > 0 && dataSubmissionResponse.data['getUploadUrls']) {
@@ -390,10 +399,10 @@ export const Scope3DataCollectionForm = () => {
             )
           );
         }
-        
+
         setIsBulkUploadOpen(false);
         toast.success(`Activity data has been ${type === 'draft' ? 'saved as draft' : 'submitted for review'}.`);
-        
+
         // Store active tab and navigate back
         sessionStorage.setItem('activeTab', 'scope3');
         navigate(-1);
@@ -421,7 +430,7 @@ export const Scope3DataCollectionForm = () => {
       }
       return de;
     });
-    
+
     setDataEntries(updatedEntries);
     setIsBulkUploadOpen(false);
     toast.success("Data imported successfully. Please review and submit.");
@@ -442,7 +451,7 @@ export const Scope3DataCollectionForm = () => {
     const ws = XLSX.utils.json_to_sheet(templateData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Data Collection');
-    
+
     // Auto-size columns
     const wscols = [
       { wch: 15 }, // Period column width
@@ -452,14 +461,20 @@ export const Scope3DataCollectionForm = () => {
       { wch: 30 }, // Notes column width
     ];
     ws['!cols'] = wscols;
-    
+
     XLSX.writeFile(wb, `${safeTemplate.sourceDescription}_DataCollection_Template.xlsx`);
   };
 
   const totalEmissions = calculateTotalEmissions();
   const totalActivityData = dataEntries.reduce((sum, e) => sum + e.activityDataValue, 0);
   const totalEmissionsTonnes = totalEmissions.total / 1000;
-
+  const totalEmissionsss = dataEntries.reduce((sum, entry) => {
+    const emissions = calculateEmissions(
+      entry.activityDataValue,
+      template.emissionFactor || 0
+    );
+    return sum + emissions.total;
+  }, 0);
   // Get current verifier name for display
   const currentVerifierName = useMemo(() => {
     if (!verifiedBy) return "";
@@ -504,7 +519,7 @@ export const Scope3DataCollectionForm = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <p className="text-sm text-muted-foreground">Source Name</p>
+                <p className="text-sm text-muted-foreground">Emission Source Description</p>
                 <p className="font-medium">{safeTemplate.sourceDescription}</p>
               </div>
               <div>
@@ -542,7 +557,7 @@ export const Scope3DataCollectionForm = () => {
                 value={selectedFrequency}
                 onChange={handleFrequencyChange}
                 defaultFrequency={safeTemplate.measurementFrequency}
-                disabled={false}
+                disabled={true}
               />
               <div className="space-y-2">
                 <Label>Reporting Year</Label>
@@ -652,20 +667,36 @@ export const Scope3DataCollectionForm = () => {
                       placeholder="Any notes for this entry..."
                       rows={2}
                     />
+                    {entry.verificationComments && (
+                      <div className='text-left'>
+                        <Badge variant="secondary" className="text-600 border-600">Verifier comment</Badge>
+                        &nbsp;
+                        <span
+                          className=" cursor-help text-sm"
+                          title={entry.verificationComments} // 👈 view full on hover
+                        >
+                          {entry.verificationComments}
+                        </span>
+
+                        {entry.verificationComments.length > 30 && (
+                          <span className="text-xs text-muted-foreground">View more</span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">
                     <EvidenceFileUpload
                       value={evidenceByEntry[`${templateId}-${entry.periodName}-${selectedYear}`] || []}
                       onChange={(files) =>
-                        setEvidenceByEntry(prev => ({ 
-                          ...prev, 
-                          [`${templateId}-${entry.periodName}-${selectedYear}`]: files 
+                        setEvidenceByEntry(prev => ({
+                          ...prev,
+                          [`${templateId}-${entry.periodName}-${selectedYear}`]: files
                         }))
                       }
                       label="Evidence (Optional)"
                       description="Upload supporting documents"
-                      maxFiles={3}
+                      maxFiles={5}
                       scope={`scope3-${templateId}-${entry.periodName}-${selectedYear}`}
                       uploadedFiles={entry.evidenceFiles}
                       templateId={templateId || undefined}
@@ -729,9 +760,9 @@ export const Scope3DataCollectionForm = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Verified By (Optional)</Label>
-                <Select 
-                  value={verifiedBy || "placeholder"} 
+                <Label>Verified By</Label>
+                <Select
+                  value={verifiedBy || "placeholder"}
                   onValueChange={(value) => {
                     if (value !== "placeholder") {
                       setVerifiedBy(value);
@@ -741,8 +772,8 @@ export const Scope3DataCollectionForm = () => {
                 >
                   <SelectTrigger>
                     <SelectValue>
-                      {teamMembers.length === 0 
-                        ? "No verifiers available" 
+                      {teamMembers.length === 0
+                        ? "No verifiers available"
                         : currentVerifierName || "Select verifier..."
                       }
                     </SelectValue>
@@ -752,7 +783,7 @@ export const Scope3DataCollectionForm = () => {
                       <SelectItem value="placeholder" disabled className="text-muted-foreground">
                         Select verifier...
                       </SelectItem>
-                      {teamMembers.map((member) => 
+                      {teamMembers.map((member) =>
                         <SelectItem key={member._id} value={member._id}>{member.name}</SelectItem>
                       )}
                     </SelectContent>
@@ -778,7 +809,7 @@ export const Scope3DataCollectionForm = () => {
             <div>
               <p className="text-sm text-muted-foreground">Total Emissions</p>
               <p className="text-3xl font-bold">
-                {totalEmissionsTonnes.toFixed(2)} T CO₂e
+                {totalEmissionsss.toFixed(2)} T CO₂e
               </p>
             </div>
 
@@ -850,7 +881,7 @@ export const Scope3DataCollectionForm = () => {
                     </div>
                   </div>
                 )}
-              
+
               <Button onClick={downloadBulkTemplate} variant="outline" className="w-full">
                 <Download className="mr-2 h-4 w-4" />
                 Download Excel Template
@@ -885,7 +916,7 @@ export const Scope3DataCollectionForm = () => {
                           errorList.push(`Row ${idx + 2}: 'Period' value '${row['Period']}' is not valid for the selected frequency.`);
                         }
                       });
-                      
+
                       if (errorList.length > 0) {
                         setBulkUploadErrors(errorList);
                         return;

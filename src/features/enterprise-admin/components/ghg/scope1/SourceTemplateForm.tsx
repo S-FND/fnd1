@@ -158,7 +158,7 @@ export const SourceTemplateForm = () => {
   }, [watchSourceType, setValue]);
 
   const handleEmissionFactorSelect = (factor: EmissionFactor) => {
-    console.log('object++++++++++++++',factor);
+    // console.log('object++++++++++++++',factor);
     setSelectedEmissionFactor(factor);
   };
 
@@ -298,13 +298,14 @@ export const SourceTemplateForm = () => {
     // navigate('/ghg-accounting', { state: { activeTab: 'scope1' } });
     try {
       let createUpdateSource = await httpClient.post('ghg-accounting/define-source', {templates});
-      console.log("createUpdateSource", createUpdateSource);
+      // console.log("createUpdateSource", createUpdateSource);
       toast({
         title: editTemplate ? "Source Updated" : "Source Defined",
         description: `Emission source "${templates[0].sourceDescription}" has been ${editTemplate ? 'updated' : 'saved'}. You can now collect data against this source.`,
       });
 
-      navigate('/ghg-accounting', { state: { activeTab: 'scope1' } });
+      // navigate('/ghg-accounting', { state: { activeTab: 'scope1' } });
+      navigate(-1);
     } catch (error) {
       console.error('Error saving source template:', error);
       toast({
@@ -424,7 +425,8 @@ export const SourceTemplateForm = () => {
         </Button>
         <div>
           <h1 className="text-2xl font-bold">
-            {editTemplate ? 'Edit' : 'Define'} Emission Source - Scope 1
+            {/* {editTemplate ? 'Edit' : 'Define'} Emission Source - Scope 1 */}
+            Define Emission Source - Scope 1
           </h1>
           <p className="text-muted-foreground">
             Step 1: Define the emission source and measurement parameters
@@ -734,7 +736,7 @@ export const SourceTemplateForm = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>Verifiers (Optional)</Label>
+              <Label>Verifiers *</Label>
               <div className="border rounded-lg p-4 space-y-2">
                 {teamMembers.map(member => (
                   <label key={member._id} className="flex items-center gap-2 cursor-pointer">

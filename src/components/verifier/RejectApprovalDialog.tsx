@@ -65,7 +65,7 @@ export const RejectApprovalDialog: React.FC<RejectApprovalDialogProps> = ({
     setLoading(true);
     setError('');
     try {
-      await onReject(item._id, item.dataCollectionId, comment);
+      await onReject(item._id, item.dataCollectionId, comment.trim());
       setComment('');
       onOpenChange(false);
     } finally {

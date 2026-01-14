@@ -231,7 +231,7 @@ export const GHGSummary = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-muted p-4 rounded-lg">
               <h3 className="text-sm font-medium mb-1">Total Emissions</h3>
               <p className="text-2xl font-bold">{ghgSummary?.totalEmission.toFixed(2)} tCO₂e</p>
@@ -247,7 +247,7 @@ export const GHGSummary = () => {
               <p className="text-2xl font-bold text-primary">{(ghgSummary?.totalEmission - ghgSummary?.avoidedEmission).toFixed(2)} tCO₂e</p>
               <p className="text-xs text-muted-foreground">After avoided emissions</p>
             </div>
-            <div className="bg-muted p-4 rounded-lg">
+            {/* <div className="bg-muted p-4 rounded-lg">
               <h3 className="text-sm font-medium mb-1">Emission Intensity</h3>
               <p className="text-2xl font-bold">
                 {companyInfo.businessUnits.reduce((sum, unit) => sum + unit.employees, 0) > 0
@@ -255,7 +255,7 @@ export const GHGSummary = () => {
                   : '0.00'}
               </p>
               <p className="text-xs text-muted-foreground">tCO₂e/employee</p>
-            </div>
+            </div> */}
           </div>
         </CardContent>
       </Card>
