@@ -269,14 +269,14 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          <TimePeriodFilter
+          {/* <TimePeriodFilter
             viewMode={viewMode}
             selectedMonth={selectedMonth}
             selectedYear={selectedYear}
             onViewModeChange={setViewMode}
             onMonthChange={setSelectedMonth}
             onYearChange={setSelectedYear}
-          />
+          /> */}
 
           {/* Category Summary */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -290,9 +290,9 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">{summary.count}</div>
-                    <p className="text-xs text-muted-foreground">
+                    {/* <p className="text-xs text-muted-foreground">
                       {summary.withData} with data for {viewMode === 'monthly' ? selectedMonth : selectedYear}
-                    </p>
+                    </p> */}
                   </CardContent>
                 </Card>
               );

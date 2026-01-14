@@ -403,14 +403,30 @@ const VerifierApprovalDetailPage: React.FC = () => {
                 return 'submitted';
         }
     };
-    const selectedCollectedData = React.useMemo(() => {
+    const selectedCollectedData:any = React.useMemo(() => {
         if (!itemDetails?.collectedData?.length || !collectionId) return null;
-      
+
         return itemDetails.collectedData.find(
-          d => d._id === collectionId
+            d => d._id === collectionId
         ) || null;
-      }, [itemDetails, collectionId]);
-      selectedCollectedData
+    }, [itemDetails, collectionId]);
+    selectedCollectedData
+
+    const previousValue =
+        selectedCollectedData?.verificationHistory &&
+            selectedCollectedData.verificationHistory.length > 0
+            ? selectedCollectedData.verificationHistory[
+                selectedCollectedData.verificationHistory.length - 1
+            ]?.activityDataValue ?? null
+            : null;
+
+    const isChanged =
+        selectedCollectedData?.verificationHistory?.length &&
+        selectedCollectedData.verificationHistory[
+            selectedCollectedData.verificationHistory.length - 1
+        ]?.activityDataValue !== selectedCollectedData.activityDataValue;
+
+
     return (
         <UnifiedSidebarLayout>
             <div className="container mx-auto py-6 space-y-6">
@@ -512,10 +528,10 @@ const VerifierApprovalDetailPage: React.FC = () => {
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead className="w-[200px]">Field</TableHead>
-                                        <TableHead>Current Value</TableHead>
-                                        <TableHead>Previous Value</TableHead>
-                                        <TableHead className="w-[100px]">Status</TableHead>
+                                        <TableHead className="w-[200px] text-center">Field Type</TableHead>
+                                        <TableHead className="text-center">Current Value</TableHead>
+                                        <TableHead className="text-center">Previous Value</TableHead>
+                                        <TableHead className="w-[100px] text-center">Status</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -554,15 +570,17 @@ const VerifierApprovalDetailPage: React.FC = () => {
                                             </span>
                                         </TableCell>
                                         <TableCell>
-                                            {/* {field.previousValue ? (
-                                                    <span className="text-muted-foreground line-through">{field.previousValue}</span>
-                                                ) : ( */}
-                                            <span className="text-muted-foreground">—</span>
-                                            {/* )} */}
+                                            {previousValue !== null ? (
+                                                <span className="text-muted-foreground">
+                                                    {previousValue} {itemDetails.templateDetails.activityDataUnit}
+                                                </span>
+                                            ) : (
+                                                <span className="text-muted-foreground">—</span>
+                                            )}
                                         </TableCell>
                                         <TableCell>
-                                            {false ? (
-                                                <Badge variant="outline" className="text-orange-600 border-orange-600">Changed</Badge>
+                                            {isChanged ? (
+                                                <Badge variant="outline" className="text-orange-600 border-orange-600">Revised</Badge>
                                             ) : (
                                                 <Badge variant="outline" className="text-muted-foreground">Unchanged</Badge>
                                             )}
@@ -583,7 +601,7 @@ const VerifierApprovalDetailPage: React.FC = () => {
                             <Button
                                 variant="outline"
                                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => handleApproveWithComment(itemDetails.templateDetails._id, selectedCollectedData['_id'], 'Rejected')}
+                                onClick={() => handleRejectWithComment(itemDetails.templateDetails._id, selectedCollectedData['_id'], 'Rejected')}
                             >
                                 <XCircle className="h-4 w-4 mr-2" />
                                 Reject

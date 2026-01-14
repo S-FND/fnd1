@@ -366,7 +366,8 @@ export const Scope3SourceTemplateForm = () => {
         description: `Emission source "${templates[0].sourceDescription}" has been ${editTemplate ? 'updated' : 'saved'}. You can now collect data against this source.`,
       });
 
-      navigate('/ghg-accounting', { state: { activeTab: 'scope3' } });
+      // navigate('/ghg-accounting', { state: { activeTab: 'scope3' } });
+      navigate(-1);
     } catch (error) {
       console.error('Error saving source template:', error);
       toast({
@@ -441,10 +442,11 @@ export const Scope3SourceTemplateForm = () => {
           </Button>
           <div>
             <h1 className="text-3xl font-bold">
-              {editTemplate ? 'Edit' : 'Define New'} Scope 3 Emission Source
+              {/* {editTemplate ? 'Edit' : 'Define'} Emission Source - Scope 3 */}
+              Define Emission Source - Scope 3
             </h1>
             <p className="text-muted-foreground">
-              Step 1: Define the emission source for data collection
+              Step 1: Define the emission source and measurement parameters
             </p>
           </div>
         </div>
@@ -693,7 +695,7 @@ export const Scope3SourceTemplateForm = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Verifiers (Optional)</Label>
+                <Label>Verifiers *</Label>
                 <div className="border rounded-lg p-4 space-y-2">
                   {teamMembers.map(member => (
                     <label key={member._id} className="flex items-center gap-2 cursor-pointer">

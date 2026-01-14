@@ -303,10 +303,11 @@ export const Scope4SourceTemplateForm = () => {
           </Button>
           <div>
             <h1 className="text-3xl font-bold">
-              {editTemplate ? 'Edit' : 'Define New'} Scope 4 Emission Source
+              {/* {editTemplate ? 'Edit' : 'Define'} Emission Source - Scope 4 */}
+              Define Emission Source - Scope 4
             </h1>
             <p className="text-muted-foreground">
-              Step 1: Define the avoided emission source for data collection
+              Step 1: Define the avoided emission source and measurement parameters
             </p>
           </div>
         </div>
