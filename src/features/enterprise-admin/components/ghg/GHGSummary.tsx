@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import EmissionsByScope from './summary/EmissionsByScope';
 import EmissionsOverTime from './summary/EmissionsOverTime';
-import MonthlyEmissionsTrend from './summary/MonthlyEmissionsTrend';
+import MonthlyEmissionsTrend, { MonthlyEmissionsData } from './summary/MonthlyEmissionsTrend';
 import DataCompleteness from './summary/DataCompleteness';
 import { emissionsTrend, monthlyEmissionsData, companyInfo, emissionsByLocation, emissionsByActivity } from './summary/mockData';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +37,22 @@ export interface EmissionSummary {
     'Scope 3': number;
     'Scope 4': number;
   };
+  monthlyTrend?: MonthlyEmissionsData[],
+  emissionByLocation?: {
+    location: string;
+    totalEmission: number;
+    scope1: number;
+    scope2: number;
+    scope3: number;
+    k:number;
+    employees?:number;
+    // intensity: number;
+  }[];
+  emissionByActivity?: {
+    activity: string;
+    value: number;
+    percentage: number;
+  }[];  
 }
 
 
@@ -117,6 +133,7 @@ export const GHGSummary = () => {
         const data = summaryResponse['data']?.emmissionData || summaryResponse['data'];
 
         if (data) {
+          setTotalEmissions(data.emmissonData.totalEmission || 0);
           setGhgSummary({
             totalEmission: data.emmissonData.totalEmission || 0,
             avoidedEmission: data.emmissonData.avoidedEmission || 0,
@@ -125,7 +142,10 @@ export const GHGSummary = () => {
               'Scope 2': data.emmissonData.emissionByScope?.['Scope 2'] || 0,
               'Scope 3': data.emmissonData.emissionByScope?.['Scope 3'] || 0,
               'Scope 4': data.emmissonData.emissionByScope?.['Scope 4'] || 0
-            }
+            },
+            monthlyTrend:data.emmissonData.monthlyTrend || [] ,
+            emissionByLocation: data.emmissonData.emissionByLocation || [],
+            emissionByActivity: data.emmissonData.emissionByActivity || []
           });
         }
       }
@@ -154,7 +174,8 @@ export const GHGSummary = () => {
           'Scope 2': scope2Total,
           'Scope 3': scope3Total,
           'Scope 4': scope4Total
-        }
+        },
+        monthlyTrend:[]
       });
     }
   };
@@ -320,7 +341,7 @@ export const GHGSummary = () => {
         </Card>
       </div>
 
-      <MonthlyEmissionsTrend monthlyData={monthlyEmissionsData} />
+      {ghgSummary.monthlyTrend && <MonthlyEmissionsTrend monthlyData={ghgSummary.monthlyTrend} />}
 
       {completenessData.length > 0 && (
         <DataCompleteness completenessData={completenessData} />
@@ -334,26 +355,26 @@ export const GHGSummary = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {emissionsByLocation.map((location, index) => (
+              {ghgSummary.emissionByLocation && ghgSummary.emissionByLocation.map((location, index) => (
                 <div key={index} className="flex items-center">
                   <div className="w-40 min-w-[160px] mr-4">
                     <p className="text-sm font-medium">{location.location}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {location.employees} employees
-                    </p>
+                    {/* <p className="text-xs text-muted-foreground">
+                      {location.employees ?? 10} employees
+                    </p> */}
                   </div>
                   <div className="flex-1">
                     <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden">
                       <div
                         className="h-2.5 bg-primary"
-                        style={{ width: `${(location.total / emissionsByLocation[0].total) * 100}%` }}
+                        style={{ width: `${(location.totalEmission / ghgSummary.emissionByLocation.reduce((acc, loc) => acc + loc.totalEmission, 0)) * 100}%` }}
                       />
                     </div>
                     <div className="flex justify-between text-xs mt-1">
-                      <span>{(location.total / 1000).toFixed(1)}k tCO₂e</span>
-                      <span className="text-muted-foreground">
+                      <span>{(location.totalEmission / 1000).toFixed(2)}k tCO₂e</span>
+                      {/* <span className="text-muted-foreground">
                         {location.intensity.toFixed(1)} tCO₂e/employee
-                      </span>
+                      </span> */}
                     </div>
                   </div>
                 </div>
@@ -362,7 +383,7 @@ export const GHGSummary = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Emissions by Business Activity</CardTitle>
             <CardDescription>Carbon footprint by business function</CardDescription>
@@ -393,7 +414,7 @@ export const GHGSummary = () => {
               ))}
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       {totalEmissions === 0 && (
