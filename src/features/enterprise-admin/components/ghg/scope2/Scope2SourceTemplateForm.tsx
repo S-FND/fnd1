@@ -635,7 +635,7 @@ export const Scope2SourceTemplateForm = () => {
               <CardDescription>Assign team members for data collection and verification</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
+              { teamMembers && teamMembers.length>0 &&<div className="space-y-2">
                 <Label>Data Collectors *</Label>
                 <div className="border rounded-lg p-4 space-y-2">
                   {teamMembers.map(member => (
@@ -656,9 +656,9 @@ export const Scope2SourceTemplateForm = () => {
                     </label>
                   ))}
                 </div>
-              </div>
+              </div>}
 
-              <div className="space-y-2">
+              { teamMembers && teamMembers.length>0 &&<div className="space-y-2">
                 <Label>Verifiers *</Label>
                 <div className="border rounded-lg p-4 space-y-2">
                   {teamMembers.map(member => (
@@ -679,7 +679,18 @@ export const Scope2SourceTemplateForm = () => {
                     </label>
                   ))}
                 </div>
-              </div>
+              </div>}
+
+              { !teamMembers || teamMembers.length===0 &&<div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+                <span className="text-lg leading-none">ℹ️</span>
+
+                <p className="m-0">
+                  Please add team members first in Team Management section so they can be selected as 
+                  <span className="font-semibold"> Collectors </span> and 
+                  <span className="font-semibold"> Verifiers </span>
+                  while creating a source.
+                </p>
+              </div>}
             </CardContent>
           </Card>
 
