@@ -27,7 +27,7 @@ const MonthlyEmissionsTrend: React.FC<MonthlyEmissionsTrendProps> = ({ monthlyDa
           <CardTitle>Monthly Emissions Trend</CardTitle>
           <CardDescription>Track emissions across all scopes month by month</CardDescription>
         </div>
-        <div className="w-[150px]">
+        {/* <div className="w-[150px]">
           <Select
             value={selectedYear.toString()}
             onValueChange={(value) => setSelectedYear(Number(value))}
@@ -41,7 +41,7 @@ const MonthlyEmissionsTrend: React.FC<MonthlyEmissionsTrendProps> = ({ monthlyDa
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
       </CardHeader>
       <CardContent>
         <div className="h-[350px]">
