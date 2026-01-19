@@ -94,7 +94,7 @@ export const Scope3DataCollectionForm = () => {
     activityDataUnit: 'unit',
     measurementFrequency: 'Monthly' as MeasurementFrequency,
     verifiers: [],
-    ghgCategory: 'Scope3',
+    ghgCategory : 'Scope3',
     ghgSubCategory: '',
     dataCollectionMethod: 'Direct Measurement',
     createdAt: '',
@@ -198,6 +198,13 @@ export const Scope3DataCollectionForm = () => {
           // Set frequency from template
           if (data.templateDetails?.measurementFrequency) {
             setSelectedFrequency(data.templateDetails.measurementFrequency);
+          }
+
+          if (data.collectedData[0]?.dataQuality && !isInitialized) {
+            setDataQuality(data.collectedData[0].dataQuality as DataQuality);
+          }
+          if (data.collectedData[0]?.collectionNotes && !isInitialized) {
+            setCollectionNotes(data.collectedData[0].collectionNotes);
           }
 
           if (data.collectedData && data.collectedData.length > 0) {
@@ -366,6 +373,7 @@ export const Scope3DataCollectionForm = () => {
           emissionN2O: emissions.n2o,
           totalEmission: emissions.total,
           dataQuality,
+          collectionNotes,
           collectedDate: entry.date,
           collectedBy: collectedBy,
           verifiedBy: verifiedBy || undefined,
@@ -715,7 +723,7 @@ export const Scope3DataCollectionForm = () => {
             <CardTitle>Summary</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="border rounded-lg p-4">
                 <p className="text-sm text-muted-foreground">Total Activity Data</p>
                 <p className="text-2xl font-bold">
@@ -729,6 +737,10 @@ export const Scope3DataCollectionForm = () => {
               <div className="border rounded-lg p-4">
                 <p className="text-sm text-muted-foreground">CH₄ Emissions</p>
                 <p className="text-2xl font-bold">{(totalEmissions.ch4 / 1000).toFixed(3)} t</p>
+              </div>
+              <div className="border rounded-lg p-4">
+                <p className="text-sm text-muted-foreground">N₂O Emissions</p>
+                <p className="text-2xl font-bold">{(totalEmissions.n2o / 1000).toFixed(3)} t</p>
               </div>
               <div className="border rounded-lg p-4">
                 <p className="text-sm text-muted-foreground">Total Emissions</p>
