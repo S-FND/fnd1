@@ -167,11 +167,28 @@ export const Scope4SourceTemplateForm = () => {
     }
   };
 
-  const onSubmit = async(data: FormData) => {
+  const onSubmit = async (data: FormData) => {
     if (!selectedEmissionFactor) {
       toast({
-        title: "Emission Factor Required",
-        description: "Please select an emission factor",
+        title: "Missing Emission Factor",
+        description: "Please select an emission factor from the database.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedCollectors.length === 0) {
+      toast({
+        title: "Missing Data Collectors",
+        description: "Please assign at least one data collector.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (selectedVerifiers.length === 0) {
+      toast({
+        title: "Missing Data Verifiers",
+        description: "Please assign at least one data verifier.",
         variant: "destructive",
       });
       return;
@@ -488,7 +505,7 @@ export const Scope4SourceTemplateForm = () => {
               <CardDescription>Assign team members for data collection and verification</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
+              { teamMembers && teamMembers.length>0 &&<div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
                 <Label>Data Collectors *</Label>
                 <div className="border rounded-lg p-4 space-y-2">
                   {teamMembers.map(member => (
@@ -509,9 +526,9 @@ export const Scope4SourceTemplateForm = () => {
                     </label>
                   ))}
                 </div>
-              </div>
+              </div>}
 
-              <div className="space-y-2">
+              { teamMembers && teamMembers.length>0 &&<div className="space-y-2">
                 <Label>Verifiers (Optional)</Label>
                 <div className="border rounded-lg p-4 space-y-2">
                   {teamMembers.map(member => (
@@ -532,7 +549,18 @@ export const Scope4SourceTemplateForm = () => {
                     </label>
                   ))}
                 </div>
-              </div>
+              </div>}
+
+              { !teamMembers || teamMembers.length===0 &&<div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+                <span className="text-lg leading-none">ℹ️</span>
+
+                <p className="m-0">
+                  Please add team members first in Team Management section so they can be selected as 
+                  <span className="font-semibold"> Collectors </span> and 
+                  <span className="font-semibold"> Verifiers </span>
+                  while creating a source.
+                </p>
+              </div>}
             </CardContent>
           </Card>
 

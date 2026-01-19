@@ -5,11 +5,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 import { yearsToShow } from '@/data/ghg/calculator';
 
-interface MonthlyEmissionsData {
+export interface MonthlyEmissionsData {
   name: string;
   scope1: number;
   scope2: number;
   scope3: number;
+  year:string;
 }
 
 interface MonthlyEmissionsTrendProps {
@@ -18,7 +19,7 @@ interface MonthlyEmissionsTrendProps {
 
 const MonthlyEmissionsTrend: React.FC<MonthlyEmissionsTrendProps> = ({ monthlyData }) => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  
+  console.log('monthlyData', monthlyData);
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
