@@ -93,7 +93,17 @@ const EditableCompanyProfile = () => {
 
       // Update localStorage if needed
       if (response) {
-        localStorage.setItem("fandoro-user", JSON.stringify(response));
+        // localStorage.setItem("fandoro-user", JSON.stringify(response));
+        const prevUser = JSON.parse(localStorage.getItem("fandoro-user") || "{}");
+
+        const mergedUser = {
+          ...prevUser,
+          ...response,
+          role: prevUser.role,
+        };
+
+        localStorage.setItem("fandoro-user", JSON.stringify(mergedUser));
+        
         const storedAccess = localStorage.getItem("fandoro-access");
         const isEmpty = !storedAccess || storedAccess === "null" || storedAccess === "undefined" || storedAccess === "[]" || storedAccess === "";
         if (isEmpty && response?.entityId) {
