@@ -25,7 +25,7 @@ export interface GHGSourceTemplate {
   createdDate: string;
   createdBy: string;
   notes: string;
-  
+  ghgSubCategory?: string;
   // Scope-specific fields
   sourceType?: string; // For Scope 1, 2, 3, 4
   fuelSubstanceType?: string; // Scope 1
@@ -56,6 +56,7 @@ export interface GHGDataCollection {
   dataQuality: DataQuality;
   collectedDate: string;
   collectedBy: string;
+  collectionNotes?: string;
   verifiedBy: string;
   verificationComments: string;
   verificationStatus: 'Pending' | 'Verified' | 'Rejected';

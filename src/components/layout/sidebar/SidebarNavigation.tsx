@@ -37,7 +37,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   // const visibleItems = getNavigationItems('all-access' );
   // || role
 
-  const [visibleItems, setVisibleItems] = useState([]);
+  const [visibleItems, setVisibleItems] = useState<any[]>([]);
   const [allowedUrlsList, setAllowedUrlsList] = useState<string[]>([]);
 
   const { isVerifier, loading: verifierLoading } = useVerifierStatus();
@@ -95,7 +95,8 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         })
         .filter(Boolean);
 
-      setVisibleItems(filtered);
+      // setVisibleItems(filtered);
+      setVisibleItems(Array.isArray(filtered) ? filtered : []);
     }
   }, [pageAccessList]);
 
@@ -117,12 +118,13 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   useEffect(() => {
     logger.debug("🔵 SidebarNavigation: Expanded menus state changed:", expandedMenus);
   }, [expandedMenus]);
+  const safeVisibleItems = Array.isArray(visibleItems) ? visibleItems : [];
 
   return (
     <SidebarGroup>
       <SidebarGroupContent>
         <SidebarMenu className="space-y-1">
-          {visibleItems.map((item) => {
+          {safeVisibleItems.map((item) => {
             const isActive = location.pathname === item.href ||
               (item.href !== '/' && location.pathname.startsWith(item.href));
             // Handle special menu items with submenus

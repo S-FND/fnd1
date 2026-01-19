@@ -10,14 +10,24 @@ import {
 import { Button } from "@/components/ui/button";
 import { months } from '@/data/ghg/calculator';
 
-export type ViewMode = 'monthly' | 'yearly';
+export type ViewMode = 'monthly' | 'quarterly' | 'yearly';
+
+const FY_QUARTERS = [
+  'Q1 (Apr-Jun)',
+  'Q2 (Jul-Sep)',
+  'Q3 (Oct-Dec)',
+  'Q4 (Jan-Mar)',
+] as const;
+export type Quarter = typeof FY_QUARTERS[number];
 
 interface TimePeriodFilterProps {
   viewMode: ViewMode;
   selectedMonth?: string;
+  selectedQuarter?: Quarter;
   selectedYear: string;
   onViewModeChange: (mode: ViewMode) => void;
   onMonthChange: (month: string) => void;
+  onQuarterChange: (quarter: Quarter) => void;
   onYearChange: (year: string) => void;
 }
 
@@ -46,15 +56,19 @@ const fyMonthsOrder = [
   'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar',
 ];
 
+
+
 /* ✅ Safe filtered months */
 const financialYearMonths = fyMonthsOrder;
 
 export const TimePeriodFilter: React.FC<TimePeriodFilterProps> = ({
   viewMode,
   selectedMonth,
+  selectedQuarter,
   selectedYear,
   onViewModeChange,
   onMonthChange,
+  onQuarterChange,
   onYearChange,
 }) => {
   const financialYears = generateFinancialYears(5);
@@ -72,6 +86,13 @@ export const TimePeriodFilter: React.FC<TimePeriodFilterProps> = ({
             onClick={() => onViewModeChange('monthly')}
           >
             Monthly
+          </Button>
+          <Button
+            variant={viewMode === 'quarterly' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onViewModeChange('quarterly')}
+          >
+            Quarterly
           </Button>
           <Button
             variant={viewMode === 'yearly' ? 'default' : 'outline'}
@@ -98,6 +119,28 @@ export const TimePeriodFilter: React.FC<TimePeriodFilterProps> = ({
               {financialYearMonths.map((month) => (
                 <SelectItem key={month} value={month}>
                   {month}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Quarter (Quarterly only) */}
+      {viewMode === 'quarterly' && (
+        <div className="space-y-2">
+          <Label>Quarter</Label>
+          <Select
+            value={selectedQuarter}
+            onValueChange={onQuarterChange}
+          >
+            <SelectTrigger className="w-[170px]">
+              <SelectValue placeholder="Select Quarter" />
+            </SelectTrigger>
+            <SelectContent>
+              {FY_QUARTERS.map((q) => (
+                <SelectItem key={q} value={q}>
+                  {q}
                 </SelectItem>
               ))}
             </SelectContent>

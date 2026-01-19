@@ -174,6 +174,13 @@ export const Scope2DataCollectionForm = () => {
             setSelectedFrequency(data.templateDetails.measurementFrequency);
           }
 
+          if (data.collectedData[0]?.dataQuality && !isInitialized) {
+            setDataQuality(data.collectedData[0].dataQuality as DataQuality);
+          }
+          if (data.collectedData[0]?.collectionNotes && !isInitialized) {
+            setCollectionNotes(data.collectedData[0].collectionNotes);
+          }
+          
           if (data.collectedData && data.collectedData.length > 0) {
             const entries: DataEntry[] = periodNames.map(p => {
               const collection = data.collectedData.find(
@@ -340,6 +347,7 @@ export const Scope2DataCollectionForm = () => {
           emissionN2O: emissions.n2o,
           totalEmission: emissions.total,
           dataQuality,
+          collectionNotes,
           collectedDate: entry.date,
           collectedBy: collectedBy,
           verifiedBy: verifiedBy || undefined,
@@ -440,8 +448,11 @@ export const Scope2DataCollectionForm = () => {
   };
 
   const totalEmissions = calculateTotalEmissions();
-  const totalActivityData = dataEntries.reduce((sum, e) => sum + e.activityDataValue, 0);
-  const totalEmissionsTonnes = totalEmissions.total / 1000;
+  const totalEmissionsKg = dataEntries.reduce((sum, entry) => {
+    const rowEmissionKg = entry.activityDataValue * (template.emissionFactor || 0);
+    return sum + rowEmissionKg;
+  }, 0);
+  const totalEmissionsTonnes = totalEmissionsKg / 1000;
 
   // Get current verifier name for display
   const currentVerifierName = useMemo(() => {
@@ -683,11 +694,11 @@ export const Scope2DataCollectionForm = () => {
             <CardTitle>Summary</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="border rounded-lg p-4">
                 <p className="text-sm text-muted-foreground">Total Activity Data</p>
                 <p className="text-2xl font-bold">
-                  {totalActivityData.toFixed(2)} {template.activityDataUnit}
+                  {dataEntries.reduce((sum, e) => sum + e.activityDataValue, 0).toFixed(2)} {template.activityDataUnit}
                 </p>
               </div>
               <div className="border rounded-lg p-4">
@@ -699,8 +710,12 @@ export const Scope2DataCollectionForm = () => {
                 <p className="text-2xl font-bold">{(totalEmissions.ch4 / 1000).toFixed(3)} t</p>
               </div>
               <div className="border rounded-lg p-4">
+                <p className="text-sm text-muted-foreground">N₂O Emissions</p>
+                <p className="text-2xl font-bold">{(totalEmissions.n2o / 1000).toFixed(3)} t</p>
+              </div>
+              <div className="border rounded-lg p-4">
                 <p className="text-sm text-muted-foreground">Total Emissions</p>
-                <p className="text-2xl font-bold">{totalEmissionsTonnes.toFixed(3)} tCO₂e</p>
+                <p className="text-2xl font-bold">{totalEmissions.total.toFixed(3)} tCO₂e</p>
               </div>
             </div>
           </CardContent>
@@ -716,7 +731,7 @@ export const Scope2DataCollectionForm = () => {
                 <Label>Data Quality</Label>
                 <Select value={dataQuality} onValueChange={(val) => setDataQuality(val as DataQuality)}>
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Select data quality" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="High">High - Primary data, verified</SelectItem>
