@@ -29,7 +29,7 @@ const TEXT_INPUT_KEYS = ['type_of_servers_used', 'cloud_servers_used', 'scope_da
   'partner_selection_criteria_checklist'];
 const TEXTAREA_KEYS = ['customer_data_security_privacy'];
 interface ComplianceItem {
-  id: number;
+  // id: number;
   name: string;
   key: string;
   isApplicable: string;
@@ -170,7 +170,6 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       
       setComplianceItems(
         filtered.map((item, index) => ({
-          id: index + 1,
           key: item.key,
           name: item.name,
           isApplicable: '',
@@ -387,22 +386,22 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   const handleSave = () => handleSubmit(true);
   const handleFinalSubmit = () => handleSubmit(false);
 
-  const handleStatusChange = (id: number, isApplicable: string) => {
+  const handleStatusChange = (key: string, isApplicable: string) => {
     setComplianceItems(items =>
-      items.map(item => item.id === id ? { ...item, isApplicable } : item)
+      items.map(item => item.key === key ? { ...item, isApplicable } : item)
     );
   };
 
-  const handleNotesChange = (id: number, notes: string) => {
+  const handleNotesChange = (key: string, notes: string) => {
     setComplianceItems(items =>
-      items.map(item => item.id === id ? { ...item, notes } : item)
+      items.map(item => item.key === key ? { ...item, notes } : item)
     );
   };
 
-  const handleFileUpload = (id: number, files: FileList | null) => {
+  const handleFileUpload = (key: string, files: FileList | null) => {
     if (!files || files.length === 0) return;
   
-    const currentItem = complianceItems.find(item => item.id === id);
+    const currentItem = complianceItems.find(item => item.key === key);
     const existingFiles = currentItem?.attachment.length || 0;
     const newFiles = Array.from(files);
     const totalFiles = existingFiles + newFiles.length;
@@ -411,7 +410,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       toast.error('You can upload a maximum of 10 files.');
       
       setTimeout(() => {
-        const input = document.getElementById(`file-upload-${id}`) as HTMLInputElement | null;
+        const input = document.getElementById(`file-upload-${key}`) as HTMLInputElement | null;
         if (input) {
           input.value = '';
         }
@@ -422,17 +421,17 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   
     setComplianceItems(items =>
       items.map(item =>
-        item.id === id
+        item.key === key
           ? { ...item, attachment: [...item.attachment, ...newFiles] }
           : item
       )
     );
   };
 
-  const handleRemoveFile = (id: number, fileIndex: number) => {
+  const handleRemoveFile = (key: string, fileIndex: number) => {
     setComplianceItems(items =>
       items.map(item =>
-        item.id === id
+        item.key === key
           ? { ...item, attachment: item.attachment.filter((_, index) => index !== fileIndex) }
           : item
       )
@@ -476,14 +475,14 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
           <Input
             type="file"
             accept=".pdf,.doc,.docx,.jpg,.png,.jpeg"
-            onChange={(e) => handleFileUpload(item.id, e.target.files)}
+            onChange={(e) => handleFileUpload(item.key, e.target.files)}
             className="hidden"
-            id={`file-upload-${item.id}`}
+            id={`file-upload-${item.key}`}
             disabled={!buttonEnabled}
             multiple
           />
           <label
-            htmlFor={`file-upload-${item.id}`}
+            htmlFor={`file-upload-${item.key}`}
             className={`flex items-center gap-2 px-3 py-2 text-sm border rounded-md cursor-pointer hover:bg-gray-50 ${
               error?.includes('upload') ? 'border-red-500' : 'border-gray-300'
             }${ !buttonEnabled ? 'bg-gray-100 cursor-not-allowed hover:bg-gray-100' : 'cursor-pointer hover:bg-gray-50'}`}
@@ -549,7 +548,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
                 </a>
                 <button
                   type="button"
-                  onClick={() => handleRemoveFile(item.id, fileIndex)}
+                  onClick={() => handleRemoveFile(item.key, fileIndex)}
                   className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
                 >
                   <X className="h-3 w-3" />
@@ -574,7 +573,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
       <div className="space-y-2">
       <Textarea
         value={item.notes}
-        onChange={(e) => handleNotesChange(item.id, e.target.value)}
+        onChange={(e) => handleNotesChange(item.key, e.target.value)}
         placeholder="Enter notes..."
         className={`min-h-[80px] ${error?.includes('reason') ? 'border-red-500' : ''}`}
       />
@@ -680,14 +679,14 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {complianceItems.map((item, idx) => (
-                    <tr key={item.id}>
+                    <tr key={item.key}>
                       <td className="whitespace-nowrap p-3 text-sm text-center text-gray-500">{idx + 1}</td>
                       <td className="p-3 text-sm font-medium text-gray-900">{item.name}</td>
                       <td className="p-3 text-sm text-gray-500">
                         {TEXT_INPUT_KEYS.includes(item.key) ? (
                           <Input
                             value={item.isApplicable}
-                            onChange={(e) => handleStatusChange(item.id, e.target.value)}
+                            onChange={(e) => handleStatusChange(item.key, e.target.value)}
                             placeholder="Enter details"
                             className="w-full min-w p-2 border rounded-md"
                             disabled={!buttonEnabled}
@@ -695,7 +694,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
                         ) : TEXTAREA_KEYS.includes(item.key) ? (
                           <Textarea
                             value={item.isApplicable}
-                            onChange={(e) => handleStatusChange(item.id, e.target.value)}
+                            onChange={(e) => handleStatusChange(item.key, e.target.value)}
                             placeholder="Enter description..."
                             className="min-h-[80px]"
                             disabled={!buttonEnabled}
@@ -703,7 +702,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
                         ) : (
                           <Select
                             value={item.isApplicable}
-                            onValueChange={(value) => handleStatusChange(item.id, value)}
+                            onValueChange={(value) => handleStatusChange(item.key, value)}
                             disabled={!buttonEnabled}
                           >
                             <SelectTrigger  disabled={!buttonEnabled}>
