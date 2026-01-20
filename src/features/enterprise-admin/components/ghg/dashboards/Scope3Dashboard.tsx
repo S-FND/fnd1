@@ -373,13 +373,13 @@ const Scope3Dashboard = () => {
         </CardContent>
       </Card>
 
-      <DataSourceInfo 
+      {/* <DataSourceInfo 
         viewMode={viewMode}
         selectedMonth={selectedMonth}
         selectedQuarter={selectedQuarter}
         selectedYear={selectedYear}
         rawSummaryData={rawSummaryData}
-      />
+      /> */}
 
       {/* Loading State */}
       {isLoading ? (
@@ -599,7 +599,8 @@ const Scope3Dashboard = () => {
                       />
                       <YAxis
                         label={{ value: 'tCO₂e', angle: -90, position: 'insideLeft' }}
-                        domain={[0, 'dataMax + 50']}   // 👈 fixes scale
+                        domain={[0, 'dataMax + 1']} 
+                        tickFormatter={(value: number) => value.toFixed(2)}
                       />
                       <Tooltip
                         formatter={(value: number) => [`${value.toFixed(2)} tCO₂e`, 'Emissions']}
