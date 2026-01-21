@@ -425,7 +425,7 @@ export const Scope3DataCollectionForm = () => {
     handleSubmitForReview('draft');
   };
 
-  const handleBulkUpload = (entries: DataEntry[]) => {
+  const handleBulkUpload = async (entries: DataEntry[]) => {
     const updatedEntries = dataEntries.map(de => {
       const duplicate = entries.find(e => e.periodName === de.periodName);
       if (duplicate) {
@@ -441,7 +441,76 @@ export const Scope3DataCollectionForm = () => {
 
     setDataEntries(updatedEntries);
     setIsBulkUploadOpen(false);
+    await saveBulkUpload(updatedEntries);
     toast.success("Data imported successfully. Please review and submit.");
+  };
+
+  const saveBulkUpload = async (entries: DataEntry[]) => {
+    try {
+      const validEntries = entries.filter(e => e.activityDataValue > 0);
+  
+      if (!validEntries.length) {
+        toast.warning("No valid data to save from bulk upload");
+        return;
+      }
+  
+      // Get user info
+      const userString = localStorage.getItem("user");
+      const user = userString ? JSON.parse(userString) : null;
+      const collectedBy = user?.name || "Bulk Upload";
+  
+      const payload: ExtendedGHGDataCollection[] = validEntries.map(entry => {
+        const emissions = calculateEmissions(
+          entry.activityDataValue,
+          safeTemplate.emissionFactor || 0
+        );
+  
+        const files =
+          evidenceByEntry[
+            `${templateId}-${entry.periodName}-${selectedYear}`
+          ] || [];
+  
+        return {
+          _id: entry._id || undefined,
+          sourceTemplateId: safeTemplate._id,
+          reportingPeriod: `${selectedFrequency} ${selectedYear}`,
+          reportingMonth: entry.periodName,
+          reportingYear: selectedYear,
+          activityDataValue: entry.activityDataValue,
+          activityDataUnit: safeTemplate.activityDataUnit,
+          emissionCO2: emissions.co2,
+          emissionCH4: emissions.ch4,
+          emissionN2O: emissions.n2o,
+          totalEmission: emissions.total,
+          dataQuality,
+          collectionNotes,
+          collectedDate: entry.date,
+          collectedBy,
+          verifiedBy: verifiedBy || undefined,
+          verificationStatus: "Pending", // 🔥 ALWAYS Pending
+          notes: entry.notes,
+          scope: "Scope3",
+          evidenceFiles: files.map(file => ({
+            name: file.name,
+            type: file.type
+          })),
+          emissionFactor: safeTemplate.emissionFactor || 0,
+          emissionFactorUnit: safeTemplate.emissionFactorUnit,
+          facilityName: safeTemplate.facilityName,
+          sourceDescription: safeTemplate.sourceDescription,
+          sourceType: safeTemplate.sourceType
+        };
+      });
+  
+      await httpClient.post("ghg-accounting/collect-ghg-data", payload);
+      navigate(-1);
+      toast.success("Bulk upload data saved successfully (Pending)");
+    } catch (error: any) {
+      console.error("Scope 3 bulk upload save failed:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to save bulk upload data"
+      );
+    }
   };
 
   const downloadBulkTemplate = () => {

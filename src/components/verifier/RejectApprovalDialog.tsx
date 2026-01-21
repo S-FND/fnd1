@@ -150,7 +150,7 @@ export const RejectApprovalDialog: React.FC<RejectApprovalDialogProps> = ({
               )}
               <div className="flex items-center gap-2 text-muted-foreground">
                 <User className="h-4 w-4" />
-                <span>{item['submittedByName'] || 'Unknown'}</span>
+                <span>{item['submittedBy'] || 'Unknown'}</span>
               </div>
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Calendar className="h-4 w-4" />

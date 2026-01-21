@@ -96,7 +96,7 @@ export const ReviewApprovalDialog: React.FC<ReviewApprovalDialogProps> = ({
   };
 
   if (!item) return null;
-console.log('item-------',item);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
