@@ -485,7 +485,7 @@ export const Scope2SourceTemplateForm = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="sourceType">Source Type *</Label>
+                  <Label htmlFor="sourceType">Source Category *</Label>
                   <Select onValueChange={(value) => setValue('sourceType', value)} value={sourceType}>
                     <SelectTrigger>
                       <SelectValue />
@@ -500,10 +500,10 @@ export const Scope2SourceTemplateForm = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="sourceCategory">Source Category *</Label>
+                  <Label htmlFor="sourceCategory">Source Type *</Label>
                   <Select onValueChange={(value) => setValue('sourceCategory', value)} value={editTemplate?.sourceCategory}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
+                      <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
                       {(SCOPE2_CATEGORIES[sourceType as keyof typeof SCOPE2_CATEGORIES] || []).map(cat => (

@@ -86,7 +86,7 @@ const managementItems = [
     name: "Records of fire and natural disasters training conducted in last six months",
   }, {
     key: "hr_policies_training",
-    name: "Training on HR to staff",
+    name: "Training on HR policies to employees",
   }, {
     key: "posh_training", // assi
     name: "Training on POSH to employees and contract workers",

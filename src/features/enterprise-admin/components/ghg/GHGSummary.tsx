@@ -127,25 +127,24 @@ export const GHGSummary = () => {
   const getSummaryDetails = async () => {
     try {
       let summaryResponse: any = await httpClient.get(`ghg-accounting/summary?year=${selectedYear}`);
-      logger.log(`summaryResponse`, summaryResponse);
 
       if (summaryResponse['status'] === 200) {
         const data = summaryResponse['data']?.emmissionData || summaryResponse['data'];
 
         if (data) {
-          setTotalEmissions(data.emmissonData.totalEmission || 0);
+          setTotalEmissions(data.emmissonData?.totalEmission || 0);
           setGhgSummary({
-            totalEmission: data.emmissonData.totalEmission || 0,
-            avoidedEmission: data.emmissonData.avoidedEmission || 0,
+            totalEmission: data.emmissonData?.totalEmission || 0,
+            avoidedEmission: data.emmissonData?.avoidedEmission || 0,
             emissionByScope: {
-              'Scope 1': data.emmissonData.emissionByScope?.['Scope 1'] || 0,
-              'Scope 2': data.emmissonData.emissionByScope?.['Scope 2'] || 0,
-              'Scope 3': data.emmissonData.emissionByScope?.['Scope 3'] || 0,
-              'Scope 4': data.emmissonData.emissionByScope?.['Scope 4'] || 0
+              'Scope 1': data.emmissonData?.emissionByScope?.['Scope 1'] || 0,
+              'Scope 2': data.emmissonData?.emissionByScope?.['Scope 2'] || 0,
+              'Scope 3': data.emmissonData?.emissionByScope?.['Scope 3'] || 0,
+              'Scope 4': data.emmissonData?.emissionByScope?.['Scope 4'] || 0
             },
-            monthlyTrend:data.emmissonData.monthlyTrend || [] ,
-            emissionByLocation: data.emmissonData.emissionByLocation || [],
-            emissionByActivity: data.emmissonData.emissionByActivity || []
+            monthlyTrend:data.emmissonData?.monthlyTrend || [] ,
+            emissionByLocation: data.emmissonData?.emissionByLocation || [],
+            emissionByActivity: data.emmissonData?.emissionByActivity || []
           });
         }
       }
@@ -211,7 +210,7 @@ export const GHGSummary = () => {
   //     }
   //   }))
   // },[ghgSummary])
-
+console.log('check on summary page.');
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, []);
