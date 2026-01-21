@@ -371,13 +371,13 @@ const Scope2Dashboard = () => {
         </CardContent>
       </Card>
 
-      <DataSourceInfo 
+      {/* <DataSourceInfo 
         viewMode={viewMode}
         selectedMonth={selectedMonth}
         selectedQuarter={selectedQuarter}
         selectedYear={selectedYear}
         rawSummaryData={rawSummaryData}
-      />
+      /> */}
       {/* Loading State */}
       {isLoading ? (
         <div className="flex justify-center items-center h-64">
@@ -595,7 +595,8 @@ const Scope2Dashboard = () => {
                       <XAxis dataKey="category" angle={-45} textAnchor="end" height={100} />
                       <YAxis
                         label={{ value: 'tCO₂e', angle: -90, position: 'insideLeft' }}
-                        domain={[0, 'dataMax + 50']}
+                        domain={[0, 'dataMax + 1']}
+                        tickFormatter={(value: number) => value.toFixed(2)}
                       />
                       <Tooltip formatter={(value: number) => `${Number(value).toFixed(2)} tCO₂e`} />
                       <Legend />

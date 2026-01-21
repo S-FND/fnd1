@@ -391,14 +391,15 @@
       handleSubmitForReview('draft');
     };
 
-    const handleBulkUpload = (entries: DataEntry[]) => {
+    const handleBulkUpload = async (entries: DataEntry[]) => {
       const updatedEntries = dataEntries.map(de => {
         const duplicate = entries.find(e => e.periodName === de.periodName);
         if (duplicate) {
           return {
             ...de,
             activityDataValue: duplicate.activityDataValue,
-            notes: duplicate.notes
+            notes: duplicate.notes,
+            date: duplicate.date || de.date
           };
         }
         return de;
@@ -406,17 +407,83 @@
       
       setDataEntries(updatedEntries);
       setIsBulkUploadOpen(false);
+      await saveBulkUpload(updatedEntries);
       toast.success("Data imported successfully. Please review and submit.");
     };
 
+    const saveBulkUpload = async (entries: DataEntry[]) => {
+      try {
+        const hasData = entries.some(e => e.activityDataValue > 0);
+        if (!hasData) {
+          toast.warning("No data to save");
+          return;
+        }
+        const userString = localStorage.getItem('user');
+        const user = userString ? JSON.parse(userString) : null;
+        const collectedBy = user?.name || 'Current User';
+        const payload: ExtendedGHGDataCollection[] = entries
+          .filter(e => e.activityDataValue > 0)
+          .map(entry => {
+            const emissions = calculateEmissions(
+              entry.activityDataValue,
+              template.emissionFactor
+            );
+    
+            const files =
+              evidenceByEntry[
+                `${templateId}-${entry.periodName}-${selectedYear}`
+              ] || [];
+    
+            return {
+              _id: entry._id || undefined,
+              sourceTemplateId: template._id,
+              reportingPeriod: `${selectedFrequency} ${selectedYear}`,
+              reportingMonth: entry.periodName,
+              reportingYear: selectedYear,
+              activityDataValue: entry.activityDataValue,
+              emissionCO2: emissions.co2,
+              emissionCH4: emissions.ch4,
+              emissionN2O: emissions.n2o,
+              totalEmission: emissions.total,
+              dataQuality,
+              collectionNotes,
+              collectedDate: entry.date,
+              collectedBy: collectedBy,
+              verifiedBy: verifiedBy || undefined,
+              verificationStatus: "Pending", // 🔥 ALWAYS Pending
+              notes: entry.notes,
+              scope: "Scope2",
+              evidenceFiles: files.map(f => ({
+                name: f.name,
+                type: f.type
+              }))
+            };
+          });
+    
+        await httpClient.post(
+          "ghg-accounting/collect-ghg-data",
+          payload
+        );
+        navigate(-1);
+        toast.success("Bulk upload saved successfully");
+      } catch (error: any) {
+        console.error("Bulk save error:", error);
+        toast.error(
+          error.response?.data?.message || "Failed to save bulk data"
+        );
+      }
+    };
     const downloadBulkTemplate = () => {
-      const templateData = periodNames.map(periodName => ({
-        'Period': periodName,
-        'Date': new Date().toISOString().split('T')[0],
-        'Activity Value': '',
-        'Unit': template.activityDataUnit,
-        'Notes': '',
-      }));
+      const templateData = periodNames.map(periodName => {
+        const existingEntry = dataEntries.find(e => e.periodName === periodName);
+        return {
+          'Period': periodName,
+          'Date': existingEntry?.date || new Date().toISOString().split('T')[0],
+          'Activity Value': existingEntry?.activityDataValue || '',
+          'Unit': template.activityDataUnit,
+          'Notes': existingEntry?.notes || '',
+        };
+      });
 
       const ws = XLSX.utils.json_to_sheet(templateData);
       const wb = XLSX.utils.book_new();
@@ -859,8 +926,10 @@
                       let errorList: string[] = [];
 
                       jsonData.forEach((row, idx) => {
-                        if (!row['Activity Value'] || isNaN(parseFloat(row['Activity Value']))) {
-                          errorList.push(`Row ${idx + 2}: Invalid or missing 'Activity Value'`);
+                        if (row['Activity Value'] === undefined || row['Activity Value'] === '') {
+                          errorList.push(`Row ${idx + 2}: Missing 'Activity Value'`);
+                        } else if (isNaN(parseFloat(row['Activity Value']))) {
+                          errorList.push(`Row ${idx + 2}: Invalid 'Activity Value' (must be a number)`);
                         }
                         if (!row['Period']) {
                           errorList.push(`Row ${idx + 2}: Missing 'Period' value`);
@@ -884,7 +953,6 @@
                         date: row['Date'] || new Date().toISOString().split('T')[0],
                         activityDataValue: parseFloat(row['Activity Value']) || 0,
                         notes: row['Notes'] || '',
-                        evidenceUrls: [],
                         selectedUnit: row['Unit'] || template.activityDataUnit,
                       }));
 
