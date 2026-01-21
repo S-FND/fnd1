@@ -318,8 +318,8 @@ export const Scope2NewWorkflow: React.FC<Scope2NewWorkflowProps> = ({
                   {/* <TableHead>Source Name</TableHead> */}
                   <TableHead>Facility</TableHead>
                   <TableHead>Business Unit</TableHead>
-                  <TableHead>Source Type</TableHead>
                   <TableHead>Source Category</TableHead>
+                  <TableHead>Source Type</TableHead>
                   <TableHead>Frequency</TableHead>
                   {/* <TableHead>Data Status</TableHead> */}
                   <TableHead>Actions</TableHead>
