@@ -153,41 +153,87 @@ const Scope3Dashboard = () => {
     return quarterMap[quarter] || [];
   };
 
-  // Updated processSummaryData function for Scope 3
+  // Helper function to normalize month/quarter data
+  const normalizeMonthData = (reportingMonth: string): {
+    type: 'month' | 'quarter';
+    value: string;
+    months?: string[];
+  } => {
+    // Check if it's a quarter format (starts with Q)
+    if (reportingMonth.startsWith('Q')) {
+      const quarterMap: Record<string, string[]> = {
+        'Q1 (Apr-Jun)': ['Apr', 'May', 'Jun'],
+        'Q2 (Jul-Sep)': ['Jul', 'Aug', 'Sep'],
+        'Q3 (Oct-Dec)': ['Oct', 'Nov', 'Dec'],
+        'Q4 (Jan-Mar)': ['Jan', 'Feb', 'Mar']
+      };
+
+      const months = quarterMap[reportingMonth as Quarter];
+      return {
+        type: 'quarter',
+        value: reportingMonth as Quarter,
+        months: months || []
+      };
+    } else {
+      // It's a month
+      return {
+        type: 'month',
+        value: reportingMonth
+      };
+    }
+  };
+
+  // Add this state to track detailed category info
+  const [categoryDetails, setCategoryDetails] = useState<Map<string, {
+    emissions: number;
+    sourceIds: Set<string>;
+    dataTypes: Set<string>;
+    monthlyData: Record<string, number>;
+    quarterlyData: Record<Quarter, number>;
+    dataTypeDetails: Map<string, { emissions: number; sourceIds: Set<string> }>;
+  }> | null>(null);
+
+  // Updated process function
   const processSummaryData = (
     summaryData: GHGSummaryResponse,
     selectedMonth?: string,
     selectedQuarter?: Quarter
   ) => {
     // Filter for Scope 3 only
-    const scope3Data = summaryData.allData.filter(
-      item => item.scope === 'Scope 3' || item.scope?.toLowerCase() === 'scope 3'
+    const scope3Data: any = summaryData.allData.filter(
+      item => item.scope === 'Scope 3'
     );
-  
+
+    console.log('Scope 3 data found:', scope3Data.length);
+
+    // For Scope 3, we need to group by category (sourceType)
     const categoryMap = new Map<
-      string,
+      string, // Category name (e.g., "Purchased Goods and Services")
       {
         emissions: number;
-        count: number;
+        sourceIds: Set<string>; // Track unique source IDs within this category
+        dataTypes: Set<string>; // Track different data types within this category
         monthlyData: Record<string, number>;
         quarterlyData: Record<Quarter, number>;
-        monthlyCollections: Record<string, any[]>;
+        dataTypeDetails: Map<string, { // Track emissions by data type
+          emissions: number;
+          sourceIds: Set<string>;
+        }>;
       }
     >();
-  
-    // Monthly trend (only for yearly view)
-    const monthlyData: Record<string, number> = {};
-    FY_MONTHS.forEach(m => (monthlyData[m] = 0));
-  
-    scope3Data.forEach(item => {
-      // For Scope 3, use sourceDescription or sourceType as category
-      const category = item.sourceDescription || item.sourceType || 'Other Scope 3';
-  
+
+    // Process all Scope 3 data
+    scope3Data.forEach((item: any) => {
+      const category = item.sourceType; // This is the Scope 3 category
+      const sourceId = item._id;
+      const dataType = item.sourceCategory || item.sourceDescription || item.facilityName || 'Unknown';
+
       let categoryInfo = categoryMap.get(category);
       if (!categoryInfo) {
         categoryInfo = {
           emissions: 0,
-          count: 0,
+          sourceIds: new Set<string>(),
+          dataTypes: new Set<string>(),
           monthlyData: {},
           quarterlyData: {
             'Q1 (Apr-Jun)': 0,
@@ -195,146 +241,189 @@ const Scope3Dashboard = () => {
             'Q3 (Oct-Dec)': 0,
             'Q4 (Jan-Mar)': 0
           },
-          monthlyCollections: {}
+          dataTypeDetails: new Map()
         };
         categoryMap.set(category, categoryInfo);
       }
-  
-      // Track all monthly collections
-      item.dataCollections?.forEach(collection => {
-        // Year filter
+
+      // Add source ID to this category
+      categoryInfo.sourceIds.add(sourceId);
+
+      // Add data type to this category
+      categoryInfo.dataTypes.add(dataType);
+
+      // Initialize data type details if not exists
+      if (!categoryInfo.dataTypeDetails.has(dataType)) {
+        categoryInfo.dataTypeDetails.set(dataType, {
+          emissions: 0,
+          sourceIds: new Set<string>()
+        });
+      }
+
+      const dataTypeInfo = categoryInfo.dataTypeDetails.get(dataType)!;
+      dataTypeInfo.sourceIds.add(sourceId);
+
+      // DECISION: Use graphData if available, otherwise use dataCollections
+      let allCollections = [];
+
+      if (item.graphData && item.graphData.length > 0) {
+        allCollections = item.graphData; // Already has monthly breakdown
+      } else {
+        allCollections = item.dataCollections || [];
+      }
+
+      allCollections.forEach((collection: any) => {
         if (collection.reportingYear !== selectedYear) return;
-  
-        const month = collection.reportingMonth;
+
         const emission = collection.totalEmission || 0;
-  
-        // Initialize monthly collections array
-        if (!categoryInfo.monthlyCollections[month]) {
-          categoryInfo.monthlyCollections[month] = [];
+
+        // Check if this has a month field (from graphData)
+        if (collection.month) {
+          // This is from graphData - already has monthly breakdown
+          const monthName = collection.month;
+
+          // Update monthly data for this category
+          if (!categoryInfo.monthlyData[monthName]) {
+            categoryInfo.monthlyData[monthName] = 0;
+          }
+          categoryInfo.monthlyData[monthName] += emission;
+
+          // Update data type emissions
+          dataTypeInfo.emissions += emission;
+
+          // Update quarterly data
+          if (monthName === 'Apr' || monthName === 'May' || monthName === 'Jun') {
+            categoryInfo.quarterlyData['Q1 (Apr-Jun)'] += emission;
+          } else if (monthName === 'Jul' || monthName === 'Aug' || monthName === 'Sep') {
+            categoryInfo.quarterlyData['Q2 (Jul-Sep)'] += emission;
+          } else if (monthName === 'Oct' || monthName === 'Nov' || monthName === 'Dec') {
+            categoryInfo.quarterlyData['Q3 (Oct-Dec)'] += emission;
+          } else if (monthName === 'Jan' || monthName === 'Feb' || monthName === 'Mar') {
+            categoryInfo.quarterlyData['Q4 (Jan-Mar)'] += emission;
+          }
+
+        } else {
+          // This is from dataCollections - could be monthly or quarterly
+          const normalized = normalizeMonthData(collection.reportingMonth);
+
+          if (normalized.type === 'quarter') {
+            // Quarterly data - DIVIDE FIRST, then add to months
+            const quarter = normalized.value as Quarter;
+            const months = normalized.months || getMonthsInQuarter(quarter);
+            const monthlyEmission = emission / months.length; // DIVIDE FIRST
+
+            // Update quarterly data (add full amount)
+            categoryInfo.quarterlyData[quarter] += emission;
+
+            // Update data type emissions (full quarterly amount)
+            dataTypeInfo.emissions += emission;
+
+            // DISTRIBUTE TO MONTHLY DATA
+            months.forEach(monthName => {
+              if (!categoryInfo.monthlyData[monthName]) {
+                categoryInfo.monthlyData[monthName] = 0;
+              }
+              categoryInfo.monthlyData[monthName] += monthlyEmission;
+            });
+
+          } else {
+            // Monthly data from dataCollections
+            const monthName = normalized.value;
+
+            if (!categoryInfo.monthlyData[monthName]) {
+              categoryInfo.monthlyData[monthName] = 0;
+            }
+            categoryInfo.monthlyData[monthName] += emission;
+
+            // Update data type emissions
+            dataTypeInfo.emissions += emission;
+
+            // Update quarterly data
+            if (monthName === 'Apr' || monthName === 'May' || monthName === 'Jun') {
+              categoryInfo.quarterlyData['Q1 (Apr-Jun)'] += emission;
+            } else if (monthName === 'Jul' || monthName === 'Aug' || monthName === 'Sep') {
+              categoryInfo.quarterlyData['Q2 (Jul-Sep)'] += emission;
+            } else if (monthName === 'Oct' || monthName === 'Nov' || monthName === 'Dec') {
+              categoryInfo.quarterlyData['Q3 (Oct-Dec)'] += emission;
+            } else if (monthName === 'Jan' || monthName === 'Feb' || monthName === 'Mar') {
+              categoryInfo.quarterlyData['Q4 (Jan-Mar)'] += emission;
+            }
+          }
         }
-        categoryInfo.monthlyCollections[month].push(collection);
-  
-        // Store monthly data
-        if (!categoryInfo.monthlyData[month]) {
-          categoryInfo.monthlyData[month] = 0;
-        }
-        categoryInfo.monthlyData[month] += emission;
-  
-        // Add to total emissions for this category
+
+        // Update total emissions for this category
         categoryInfo.emissions += emission;
-        categoryInfo.count += 1;
-  
-        // Add to monthly trend for yearly view
-        if (monthlyData[month] !== undefined) {
-          monthlyData[month] += emission;
-        }
-  
-        // Add to quarterly data
-        if (month === 'Apr' || month === 'May' || month === 'Jun') {
-          categoryInfo.quarterlyData['Q1 (Apr-Jun)'] += emission;
-        } else if (month === 'Jul' || month === 'Aug' || month === 'Sep') {
-          categoryInfo.quarterlyData['Q2 (Jul-Sep)'] += emission;
-        } else if (month === 'Oct' || month === 'Nov' || month === 'Dec') {
-          categoryInfo.quarterlyData['Q3 (Oct-Dec)'] += emission;
-        } else if (month === 'Jan' || month === 'Feb' || month === 'Mar') {
-          categoryInfo.quarterlyData['Q4 (Jan-Mar)'] += emission;
-        }
       });
     });
-  
+
+    // Store the categoryMap in state for use in JSX
+    setCategoryDetails(categoryMap);
+
     // Calculate totals based on view mode
-    let totalScopeEmissions = 0;
+    let totalScope3Emissions = 0;
     const categories: CategoryData[] = [];
-  
+
     if (viewMode === 'yearly') {
-      // Yearly view - include all data
+      // Yearly view
       Array.from(categoryMap.entries()).forEach(([category, stats]) => {
-        const emissions = stats.emissions;
-        totalScopeEmissions += emissions;
-        
+        const yearlyEmissions = Object.values(stats.monthlyData).reduce((sum, val) => sum + val, 0);
+        totalScope3Emissions += yearlyEmissions;
+
         categories.push({
           category,
-          totalEmissions: emissions,
-          entries: stats.count,
+          totalEmissions: yearlyEmissions,
+          entries: stats.dataTypes.size, // Count of unique data types in this category
           percentage: 0
         });
       });
-      
+
     } else if (viewMode === 'quarterly' && selectedQuarter) {
-      // Quarterly view - only include data from selected quarter
+      // Quarterly view
       Array.from(categoryMap.entries()).forEach(([category, stats]) => {
         const quarterEmissions = stats.quarterlyData[selectedQuarter];
-        totalScopeEmissions += quarterEmissions;
-        
+        totalScope3Emissions += quarterEmissions;
+
         categories.push({
           category,
           totalEmissions: quarterEmissions,
-          entries: Object.keys(stats.monthlyCollections)
-            .filter(month => getMonthsInQuarter(selectedQuarter).includes(month))
-            .reduce((sum, month) => sum + (stats.monthlyCollections[month]?.length || 0), 0),
+          entries: stats.dataTypes.size, // Count of unique data types
           percentage: 0
         });
       });
-      
+
     } else if (viewMode === 'monthly' && selectedMonth) {
-      // Monthly view - check if we have monthly data or need to use quarterly
+      // Monthly view
       Array.from(categoryMap.entries()).forEach(([category, stats]) => {
-        let monthlyEmissions = 0;
-        let monthlyEntries = 0;
-        
-        // Check if we have actual monthly data
-        if (stats.monthlyCollections[selectedMonth]?.length > 0) {
-          // Use actual monthly data
-          monthlyEmissions = stats.monthlyData[selectedMonth] || 0;
-          monthlyEntries = stats.monthlyCollections[selectedMonth].length;
-        } else {
-          // No monthly data found - check if we have quarterly data
-          let monthQuarter: Quarter | null = null;
-          if (['Apr', 'May', 'Jun'].includes(selectedMonth)) {
-            monthQuarter = 'Q1 (Apr-Jun)';
-          } else if (['Jul', 'Aug', 'Sep'].includes(selectedMonth)) {
-            monthQuarter = 'Q2 (Jul-Sep)';
-          } else if (['Oct', 'Nov', 'Dec'].includes(selectedMonth)) {
-            monthQuarter = 'Q3 (Oct-Dec)';
-          } else if (['Jan', 'Feb', 'Mar'].includes(selectedMonth)) {
-            monthQuarter = 'Q4 (Jan-Mar)';
-          }
-          
-          if (monthQuarter && stats.quarterlyData[monthQuarter] > 0) {
-            // Divide quarterly data equally among months
-            const quarterMonths = getMonthsInQuarter(monthQuarter);
-            monthlyEmissions = stats.quarterlyData[monthQuarter] / quarterMonths.length;
-            monthlyEntries = 1;
-          }
-        }
-        
-        totalScopeEmissions += monthlyEmissions;
-        
+        const monthlyEmissions = stats.monthlyData[selectedMonth] || 0;
+        totalScope3Emissions += monthlyEmissions;
+
         categories.push({
           category,
           totalEmissions: monthlyEmissions,
-          entries: monthlyEntries,
+          entries: stats.dataTypes.size, // Count of unique data types
           percentage: 0
         });
       });
     }
-  
+
     // Calculate percentages
     const finalCategories = categories.map(cat => ({
       ...cat,
-      percentage: totalScopeEmissions > 0
-        ? Math.round((cat.totalEmissions / totalScopeEmissions) * 100)
+      percentage: totalScope3Emissions > 0
+        ? Math.round((cat.totalEmissions / totalScope3Emissions) * 100)
         : 0
     })).sort((a, b) => b.totalEmissions - a.totalEmissions);
-  
-    setTotalEmissions(totalScopeEmissions);
+
+    setTotalEmissions(totalScope3Emissions);
     setCategoryData(finalCategories);
-  
-    // 📈 Yearly trend only
+
+    // Update monthly trend for yearly view
     if (viewMode === 'yearly') {
       const trend: MonthlyTrend[] = FY_MONTHS.map(month => ({
         month,
-        emissions: monthlyData[month] || 0,
+        emissions: Array.from(categoryMap.values()).reduce((sum, stats) =>
+          sum + (stats.monthlyData[month] || 0), 0
+        ),
       }));
       setMonthlyTrend(trend);
     }
@@ -349,7 +438,6 @@ const Scope3Dashboard = () => {
 
     processSummaryData(rawSummaryData, selectedMonth, selectedQuarter);
   }, [rawSummaryData, viewMode, selectedMonth, selectedQuarter]);
-
   return (
     <div className="space-y-6">
       <Card>
@@ -523,21 +611,63 @@ const Scope3Dashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {categoryData.map((cat, index) => (
-                        <div key={cat.category} className="flex items-center justify-between border-b pb-2">
-                          <div className="flex items-center gap-3">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
-                            <div>
-                              <p className="font-medium text-sm">{cat.category}</p>
-                              <p className="text-xs text-muted-foreground">{cat.entries} sources</p>
+                      {categoryData.map((cat, index) => {
+                        // Get detailed info from categoryDetails
+                        const categoryInfo = categoryDetails?.get(cat.category);
+
+                        return (
+                          <div key={cat.category} className="border rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                                <div>
+                                  <p className="font-medium text-sm">{cat.category}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {/* {cat.entries} data types •  */}
+                                    {cat.percentage}% of total
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-semibold">{cat.totalEmissions.toFixed(2)} tCO₂e</p>
+                              </div>
                             </div>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-semibold">{cat.totalEmissions.toFixed(2)} tCO₂e</p>
-                            <p className="text-sm text-muted-foreground">{cat.percentage}%</p>
-                          </div>
-                        </div>
+
+                            {/* Show data types if available */}
+                            {/* {categoryInfo && categoryInfo.dataTypes.size > 0 && (
+                  <div className="mt-3 pt-3 border-t">
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Data Types:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from(categoryInfo.dataTypes).map((dataType, idx) => (
+                        <span 
+                          key={idx} 
+                          className="inline-block px-2 py-1 text-xs bg-gray-100 dark:bg-gray-800 rounded"
+                        >
+                          {dataType}
+                        </span>
                       ))}
+                    </div>
+                  </div>
+                )} */}
+
+{categoryInfo && categoryInfo.dataTypes.size > 0 && (
+  <div className="mt-3 pt-3 border-t">
+    <p className="text-xs font-medium text-muted-foreground mb-1">Source Categories:</p>
+    <div className="flex flex-wrap gap-1">
+      {Array.from(categoryInfo.dataTypes).map((dataType, idx) => (
+        <span 
+          key={idx} 
+          className="inline-block px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 rounded"
+        >
+          {dataType}
+        </span>
+      ))}
+    </div>
+  </div>
+)}
+                          </div>
+                        );
+                      })}
                     </div>
                   </CardContent>
                 </Card>
@@ -557,7 +687,9 @@ const Scope3Dashboard = () => {
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="month" angle={-45} textAnchor="end" height={100} />
                         <YAxis label={{ value: 'tCO₂e', angle: -90, position: 'insideLeft' }} />
-                        <Tooltip />
+                        <Tooltip
+                        formatter={(value: number) => [`${value.toFixed(2)} tCO₂e`, 'Emissions']}
+                      />
                         <Legend />
                         <Line type="monotone" dataKey="emissions" stroke="#6366f1" strokeWidth={2} name="Emissions (tCO₂e)" />
                       </LineChart>
@@ -599,7 +731,7 @@ const Scope3Dashboard = () => {
                       />
                       <YAxis
                         label={{ value: 'tCO₂e', angle: -90, position: 'insideLeft' }}
-                        domain={[0, 'dataMax + 1']} 
+                        domain={[0, 'dataMax + 1']}
                         tickFormatter={(value: number) => value.toFixed(2)}
                       />
                       <Tooltip

@@ -334,8 +334,8 @@ export const Scope1NewWorkflow: React.FC<Scope1NewWorkflowProps> = ({
                     <TableRow>
                       <TableHead>Facility</TableHead>
                       <TableHead>Business Unit</TableHead>
-                      <TableHead>Source Type</TableHead>
                       <TableHead>Source Category</TableHead>
+                      <TableHead>Source Type</TableHead>
                       <TableHead>Frequency</TableHead>
                       {/* <TableHead>Access</TableHead> */}
                       {/* <TableHead>Status ({viewMode === 'monthly' ? selectedMonth : 'Year'} {selectedYear})</TableHead> */}

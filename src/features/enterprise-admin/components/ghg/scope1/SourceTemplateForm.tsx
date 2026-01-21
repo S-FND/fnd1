@@ -515,7 +515,7 @@ export const SourceTemplateForm = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="sourceType">Source Type *</Label>
+                  <Label htmlFor="sourceType">Source Category *</Label>
                   <Select
                     value={watch('sourceType')}
                     onValueChange={(value) => setValue('sourceType', value)}
@@ -536,13 +536,13 @@ export const SourceTemplateForm = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="sourceCategory"> Source Category *</Label>
+                  <Label htmlFor="sourceCategory"> Source Type *</Label>
                   <Select
                     value={watch('sourceCategory')}
                     onValueChange={(value) => setValue('sourceCategory', value)}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select category..." />
+                      <SelectValue placeholder="Select type..." />
                     </SelectTrigger>
                     <SelectContent>
                       {EMISSION_SOURCE_CATEGORIES[watchSourceType]?.map((cat) => (
