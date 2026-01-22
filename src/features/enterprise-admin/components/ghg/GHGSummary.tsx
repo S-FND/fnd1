@@ -110,18 +110,17 @@ export const GHGSummary = () => {
 
 
   useEffect(() => {
-    if (!ghgSummary.totalEmission) return;
-
-    setEmissionsByScope(prev =>
-      prev.map(scope => {
-        const value = ghgSummary.emissionByScope[scope.scope] || 0;
-        return {
-          ...scope,
-          value,
-          percentage: (value / ghgSummary.totalEmission) * 100
-        };
-      })
-    );
+    const total = ghgSummary.totalEmission || 0;
+  
+    setEmissionsByScope(scopes.map(scope => {
+      const value = ghgSummary.emissionByScope?.[scope.scope] ?? 0;
+  
+      return {
+        ...scope,
+        value,
+        percentage: total > 0 ? (value / total) * 100 : 0
+      };
+    }));
   }, [ghgSummary]);
 
   const getSummaryDetails = async () => {
@@ -146,11 +145,15 @@ export const GHGSummary = () => {
             emissionByLocation: data.emmissonData?.emissionByLocation || [],
             emissionByActivity: data.emmissonData?.emissionByActivity || []
           });
+          setScope4AvoidedEmissions(
+            data.emmissonData?.emissionByScope?.['Scope 4'] || 0
+          );
+          
         }
       }
     } catch (error) {
       logger.error('Failed to fetch GHG summary:', error);
-      toast.error('Failed to load GHG summary data');
+      // toast.error('Failed to load GHG summary data');
 
       // Fallback to localStorage data
       const scope1Data: Scope1Entry[] = JSON.parse(localStorage.getItem('scope1Entries') || '[]');
@@ -210,7 +213,7 @@ export const GHGSummary = () => {
   //     }
   //   }))
   // },[ghgSummary])
-console.log('check on summary page.');
+
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, []);
@@ -305,7 +308,7 @@ console.log('check on summary page.');
                       />
                     </div>
                     <div className="flex justify-between text-xs mt-1">
-                      <span>{ghgSummary?.emissionByScope[scope.scope].toFixed(2)} tCO₂e</span>
+                    <span>{(ghgSummary?.emissionByScope?.[scope.scope] ?? 0).toFixed(2)} tCO₂e</span>
                       <span className="text-muted-foreground">{((ghgSummary?.emissionByScope[scope.scope] / ghgSummary.totalEmission) * 100).toFixed(2)}%</span>
                     </div>
                   </div>

@@ -11,7 +11,8 @@ import { get } from 'http';
 import { httpClient } from '@/lib/httpClient';
 import { logger } from '@/hooks/logger';
 import { toast } from 'sonner';
-
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 // Mock data for different modules - in production this would come from the database
 const getApprovalItemDetails = (id: string, module: string) => {
     // GHG Activity Data
@@ -266,6 +267,7 @@ const VerifierApprovalDetailPage: React.FC = () => {
     const ModuleIcon = details.moduleIcon;
 
     let [itemDetails, setItemDetails] = React.useState<GHGCollectedDataResponse | null>(null);
+    const [verificationComment, setVerificationComment] = React.useState('');
 
     // Use title from URL if available
     const displayTitle = title || details.title;
@@ -403,7 +405,7 @@ const VerifierApprovalDetailPage: React.FC = () => {
                 return 'submitted';
         }
     };
-    const selectedCollectedData:any = React.useMemo(() => {
+    const selectedCollectedData: any = React.useMemo(() => {
         if (!itemDetails?.collectedData?.length || !collectionId) return null;
 
         return itemDetails.collectedData.find(
@@ -590,6 +592,20 @@ const VerifierApprovalDetailPage: React.FC = () => {
                             </Table>
                         </div>
 
+                        {/* Verification Comment */}
+                        <div className="space-y-2">
+                            <Label htmlFor="verificationComment">
+                                Comments <span className="text-muted-foreground">(Optional)</span>
+                            </Label>
+                            <Textarea
+                                id="verificationComment"
+                                placeholder="Add verification notes or the reason for rejection."
+                                value={verificationComment}
+                                onChange={(e) => setVerificationComment(e.target.value)}
+                                rows={4}
+                            />
+                        </div>
+
                         {/* Action Buttons */}
                         <div className="flex items-center justify-end gap-4 pt-4 border-t">
                             <Button
@@ -601,14 +617,31 @@ const VerifierApprovalDetailPage: React.FC = () => {
                             <Button
                                 variant="outline"
                                 className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => handleRejectWithComment(itemDetails.templateDetails._id, selectedCollectedData['_id'], 'Rejected')}
+                                onClick={() => {
+                                    if (!verificationComment.trim()) {
+                                        toast.error('Please provide a reason for rejection');
+                                        return;
+                                    }
+
+                                    handleRejectWithComment(
+                                        itemDetails.templateDetails._id,
+                                        selectedCollectedData['_id'],
+                                        verificationComment
+                                    );
+                                }}
                             >
                                 <XCircle className="h-4 w-4 mr-2" />
                                 Reject
                             </Button>
                             <Button
                                 className="bg-green-600 hover:bg-green-700 text-white"
-                                onClick={() => handleApproveWithComment(itemDetails.templateDetails._id, selectedCollectedData['_id'], 'Approved')}
+                                onClick={() =>
+                                    handleApproveWithComment(
+                                        itemDetails.templateDetails._id,
+                                        selectedCollectedData['_id'],
+                                        verificationComment
+                                    )
+                                }
                             >
                                 <CheckCircle className="h-4 w-4 mr-2" />
                                 Approve
