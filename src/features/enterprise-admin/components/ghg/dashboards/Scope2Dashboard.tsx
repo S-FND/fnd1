@@ -600,7 +600,7 @@ const Scope2Dashboard = () => {
                         <LineChart data={monthlyTrend}>
                           <CartesianGrid strokeDasharray="3 3" />
                           <XAxis dataKey="month" angle={-45} textAnchor="end" height={100} />
-                          <YAxis label={{ value: 'tCO₂e', angle: -90, position: 'insideLeft' }} />
+                          <YAxis />
                           <Tooltip
                             formatter={(value: number) => `${value.toFixed(2)} tCO₂e`}
                           />
@@ -631,20 +631,25 @@ const Scope2Dashboard = () => {
                   <CardDescription>Relative contribution by source type</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ResponsiveContainer width="100%" height={350}>
+                  <ResponsiveContainer width="100%" height={300}>
                     <BarChart
                       data={categoryData}
                       barCategoryGap={40}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 40 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="category" angle={-45} textAnchor="end" height={100} />
+                      <XAxis
+                        dataKey="category"
+                        tick={{ fontSize: 12 }}
+                        interval={0}
+                      />
                       <YAxis
-                        label={{ value: 'tCO₂e', angle: -90, position: 'insideLeft' }}
                         domain={[0, 'dataMax + 1']}
                         tickFormatter={(value: number) => value.toFixed(2)}
                       />
-                      <Tooltip formatter={(value: number) => `${Number(value).toFixed(2)} tCO₂e`} />
+                     <Tooltip
+                        formatter={(value: number) => [`${value.toFixed(2)} tCO₂e`, 'Emissions']}
+                      />
                       <Legend />
                       <Bar
                         dataKey="totalEmissions"

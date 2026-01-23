@@ -416,7 +416,7 @@ export const Scope2DataCollectionForm = () => {
     setDataEntries(updatedEntries);
     setIsBulkUploadOpen(false);
     await saveBulkUpload(updatedEntries);
-    toast.success("Data imported successfully. Please review and submit.");
+    toast.success("Data imported successfully. Please update the Quality & Verification of the data.");
   };
 
   const saveBulkUpload = async (entries: DataEntry[]) => {

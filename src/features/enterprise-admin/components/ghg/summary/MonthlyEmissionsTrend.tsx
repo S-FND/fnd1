@@ -22,10 +22,12 @@ const MonthlyEmissionsTrend: React.FC<MonthlyEmissionsTrendProps> = ({ monthlyDa
   console.log('monthlyData', monthlyData);
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
+      <CardHeader className="flex justify-center">
+        <div className="flex flex-col items-center text-center">
           <CardTitle>Monthly Emissions Trend</CardTitle>
-          <CardDescription>Track emissions across all scopes month by month</CardDescription>
+          <CardDescription>
+            Track emissions across all scopes month by month
+          </CardDescription>
         </div>
         {/* <div className="w-[150px]">
           <Select
@@ -50,7 +52,12 @@ const MonthlyEmissionsTrend: React.FC<MonthlyEmissionsTrendProps> = ({ monthlyDa
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
-              <Tooltip formatter={(value) => [`${value} tCO₂e`, '']} />
+              <Tooltip
+                formatter={(value: number, name: string) => [
+                  `${Number(value).toFixed(2)} tCO₂e`,
+                  name
+                ]}
+              />
               <Legend />
               <Line 
                 type="monotone" 

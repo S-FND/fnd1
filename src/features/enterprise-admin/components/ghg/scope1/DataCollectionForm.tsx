@@ -325,7 +325,10 @@
 
       // Determine verification status
       const verificationStatus: VerificationStatus = type === 'draft' ? 'Draft' : 'Pending';
-
+      // Get user information from localStorage or auth context
+      const userString = localStorage.getItem('user');
+      const user = userString ? JSON.parse(userString) : null;
+      const collectedBy = user?.name || 'Current User';
       const collections: ExtendedGHGDataCollection[] = dataEntries
         .filter(entry => entry.activityDataValue > 0) // Only include entries with data
         .map(entry => {
@@ -346,7 +349,7 @@
             dataQuality,
             collectionNotes,
             collectedDate: entry.date,
-            collectedBy: 'Current User',
+            collectedBy: collectedBy,
             verifiedBy: verifiedBy || undefined,
             verificationStatus: verificationStatus,
             notes: entry.notes,
@@ -408,7 +411,7 @@
       setDataEntries(updatedEntries);
       setIsBulkUploadOpen(false);
       await saveBulkUpload(updatedEntries);
-      toast.success("Data imported successfully. Please review and submit.");
+      toast.success("Data imported successfully. Please update the Quality & Verification of the data.");
     };
 
     const saveBulkUpload = async (entries: DataEntry[]) => {

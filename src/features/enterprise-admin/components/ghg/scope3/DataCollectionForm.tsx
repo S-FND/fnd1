@@ -352,7 +352,7 @@ export const Scope3DataCollectionForm = () => {
     // Get user information from localStorage or auth context
     const userString = localStorage.getItem('user');
     const user = userString ? JSON.parse(userString) : null;
-    const collectedBy = user?.name || 'Current User';
+    const collectedBy = user?.name;
 
     const collections: ExtendedGHGDataCollection[] = dataEntries
       .filter(entry => entry.activityDataValue > 0) // Only include entries with data
@@ -442,7 +442,7 @@ export const Scope3DataCollectionForm = () => {
     setDataEntries(updatedEntries);
     setIsBulkUploadOpen(false);
     await saveBulkUpload(updatedEntries);
-    toast.success("Data imported successfully. Please review and submit.");
+    toast.success("Data imported successfully. Please update the Quality & Verification of the data.");
   };
 
   const saveBulkUpload = async (entries: DataEntry[]) => {
