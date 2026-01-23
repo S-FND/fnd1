@@ -266,7 +266,8 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
           return {
             ...item,
             isApplicable: response[key] || '',
-            notes: ''
+            notes: '',
+            attachment: []
           };
         }
 
@@ -308,7 +309,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
             ...(filePaths[key]?.map(path => path.replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/', '')) || []),
             ...item.attachment.map(file => sanitizeFileName(file.name))
           ],
-          fileChange: item.attachment.length > 0
+          fileChange: (item.attachment?.length ?? 0) > 0
         };
       }
     });
