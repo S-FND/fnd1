@@ -474,6 +474,11 @@ export const Scope2SourceTemplateForm = () => {
                       ))}
                     </div>
                   )}
+                  {!loadingFacilities && facilities.length === 0 && (
+                    <p className="text-sm text-blue-600">
+                      No facilities found. Please add a facility from Location Tab.
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
