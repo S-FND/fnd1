@@ -170,7 +170,6 @@ const VerifierApprovalsPage: React.FC = () => {
 
   const [ghgApprovalItems, setGhgApprovalItems] = useState<GHGScopeItem[]>([]);
 
-  const { checkPageOverlayAccess } = useOverlay();
 
   // useEffect(() => {
   //   const init = async () => {
@@ -475,12 +474,7 @@ const VerifierApprovalsPage: React.FC = () => {
   }
 
   useEffect(() => {
-    let overlayStatus=checkPageOverlayAccess('/verifier-approvals');
-    console.log('Overlay Status for /verifier-approvals :',overlayStatus);
-    if(overlayStatus){
-      getItemsToBeVerified();
-    }
-    
+    getItemsToBeVerified();
   }, []);
 
   useEffect(() => {
@@ -673,7 +667,7 @@ const VerifierApprovalsPage: React.FC = () => {
                       ))}
                     </SelectContent>
                   </Select> */}
-                  <Button variant="outline" size="sm" onClick={getItemsToBeVerified}>
+                  <Button variant="outline" size="sm" onClick={getItemsToBeVerified} >
                     Refresh
                   </Button>
                 </div>
