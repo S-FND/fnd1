@@ -222,10 +222,10 @@ export const Scope4NewWorkflow: React.FC<Scope4NewWorkflowProps> = ({
               </CardDescription>
             </div>
             {isParent && <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setShowDashboard(true)}>
+              {/* <Button variant="outline" onClick={() => setShowDashboard(true)}>
                 <Database className="mr-2 h-4 w-4" />
                 View Dashboard
-              </Button>
+              </Button> */}
               <Button onClick={handleDefineNewSource}>
                 <Plus className="mr-2 h-4 w-4" />
                 Define New Source
