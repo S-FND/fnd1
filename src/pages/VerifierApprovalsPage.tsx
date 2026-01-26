@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +18,9 @@ import { VerificationSettingsCard } from '@/components/admin/VerificationSetting
 import { VerifierAssignmentSelect } from '@/components/admin/VerifierAssignmentSelect';
 import UnifiedSidebarLayout from '@/components/layout/UnifiedSidebarLayout';
 import { httpClient } from '@/lib/httpClient';
+import { PageAccessContext } from '@/context/PageAccessContext';
+import { PageOverlay } from '@/components/ui/page-overlay';
+import { useOverlay } from '@/context/OverlayContext';
 
 interface ApprovalItem {
   _id: string;
@@ -144,173 +147,7 @@ export interface GHGScopeItem {
   activityDataUnit?: string;
 }
 
-// Demo verifiers
-// const DEMO_VERIFIERS: Verifier[] = [
-//   { user_id: 'user-1', full_name: 'Rajesh Kumar', email: 'rajesh.kumar@company.com' },
-//   { user_id: 'user-2', full_name: 'Priya Sharma', email: 'priya.sharma@company.com' },
-//   { user_id: 'user-5', full_name: 'Vikram Singh', email: 'vikram.singh@company.com' },
-//   { user_id: 'user-7', full_name: 'Karthik Iyer', email: 'karthik.iyer@company.com' },
-// ];
 
-// Demo data for showcasing the approval workflow
-// const DEMO_APPROVAL_ITEMS: ApprovalItem[] = [
-//   {
-//     id: 'demo-ghg-1',
-//     type: 'ghg_activity',
-//     module: 'GHG',
-//     title: 'Diesel Generator - January 2024',
-//     description: '2,450 liters (6.54 tCO2e)',
-//     submittedBy: 'user-1',
-//     submittedByName: 'Rajesh Kumar',
-//     submittedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-//     status: 'submitted',
-//     priority: 'high',
-//     facility: 'Mumbai Plant',
-//     scope: 'Scope 1',
-//     category: 'Stationary Combustion',
-//     link: '/ghg-accounting',
-//     assignedVerifierId: 'user-2',
-//     assignedVerifierName: 'Priya Sharma',
-//   },
-//   {
-//     id: 'demo-ghg-2',
-//     type: 'ghg_activity',
-//     module: 'GHG',
-//     title: 'Company Fleet - Q1 2024',
-//     description: '12,800 km traveled (3.21 tCO2e)',
-//     submittedBy: 'user-2',
-//     submittedByName: 'Priya Sharma',
-//     submittedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-//     status: 'submitted',
-//     priority: 'medium',
-//     facility: 'Delhi Office',
-//     scope: 'Scope 1',
-//     category: 'Mobile Combustion',
-//     link: '/ghg-accounting',
-//   },
-//   {
-//     id: 'demo-ghg-3',
-//     type: 'ghg_activity',
-//     module: 'GHG',
-//     title: 'Electricity Consumption - February 2024',
-//     description: '45,000 kWh (36.00 tCO2e)',
-//     submittedBy: 'user-3',
-//     submittedByName: 'Amit Patel',
-//     submittedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-//     status: 'submitted',
-//     priority: 'critical',
-//     facility: 'Bangalore Tech Park',
-//     scope: 'Scope 2',
-//     category: 'Purchased Electricity',
-//     dueDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-//     link: '/ghg-accounting',
-//   },
-//   {
-//     id: 'demo-ghg-4',
-//     type: 'ghg_activity',
-//     module: 'GHG',
-//     title: 'Business Travel - March 2024',
-//     description: '8 flights, 24,500 km (4.89 tCO2e)',
-//     submittedBy: 'user-4',
-//     submittedByName: 'Sunita Reddy',
-//     submittedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-//     status: 'submitted',
-//     priority: 'low',
-//     facility: 'Corporate HQ',
-//     scope: 'Scope 3',
-//     category: 'Business Travel',
-//     link: '/ghg-accounting',
-//   },
-//   {
-//     id: 'demo-esg-1',
-//     type: 'esg_metric',
-//     module: 'ESG Metrics',
-//     title: 'Water Consumption Report',
-//     description: 'Q1 2024 water usage data for all facilities',
-//     submittedBy: 'user-5',
-//     submittedByName: 'Vikram Singh',
-//     submittedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-//     status: 'pending_review',
-//     priority: 'medium',
-//     category: 'Environmental',
-//     link: '/esg',
-//   },
-//   {
-//     id: 'demo-esg-2',
-//     type: 'esg_metric',
-//     module: 'ESG Metrics',
-//     title: 'Waste Management Metrics',
-//     description: 'Hazardous and non-hazardous waste tracking',
-//     submittedBy: 'user-6',
-//     submittedByName: 'Neha Gupta',
-//     submittedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
-//     status: 'pending_review',
-//     priority: 'high',
-//     category: 'Environmental',
-//     dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-//     link: '/esg',
-//   },
-//   {
-//     id: 'demo-esms-1',
-//     type: 'esms_document',
-//     module: 'ESMS',
-//     title: 'Environmental Policy Document',
-//     description: 'Updated environmental management policy v2.1',
-//     submittedBy: 'user-7',
-//     submittedByName: 'Karthik Iyer',
-//     submittedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-//     status: 'pending_review',
-//     priority: 'medium',
-//     category: 'Policy',
-//     link: '/esms',
-//   },
-//   {
-//     id: 'demo-dd-1',
-//     type: 'esg_dd',
-//     module: 'ESG DD',
-//     title: 'Supplier ESG Assessment - ABC Corp',
-//     description: 'Due diligence assessment for new supplier',
-//     submittedBy: 'user-8',
-//     submittedByName: 'Meera Nair',
-//     submittedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-//     status: 'pending_review',
-//     priority: 'critical',
-//     category: 'Due Diligence',
-//     dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
-//     link: '/esg-dd',
-//   },
-//   {
-//     id: 'demo-sdg-1',
-//     type: 'sdg',
-//     module: 'SDG Metrics',
-//     title: 'SDG 13 - Climate Action Progress',
-//     description: 'Annual climate action metrics and targets',
-//     submittedBy: 'user-9',
-//     submittedByName: 'Arjun Menon',
-//     submittedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
-//     status: 'pending_review',
-//     priority: 'medium',
-//     category: 'SDG Reporting',
-//     link: '/sdg',
-//   },
-//   {
-//     id: 'demo-ghg-5',
-//     type: 'ghg_activity',
-//     module: 'GHG',
-//     title: 'Refrigerant Leakage - Q1 2024',
-//     description: '15 kg R-410A leaked (31.20 tCO2e)',
-//     submittedBy: 'user-10',
-//     submittedByName: 'Deepak Verma',
-//     submittedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-//     status: 'submitted',
-//     priority: 'critical',
-//     facility: 'Chennai Factory',
-//     scope: 'Scope 1',
-//     category: 'Fugitive Emissions',
-//     dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-//     link: '/ghg-accounting',
-//   },
-// ];
 
 const VerifierApprovalsPage: React.FC = () => {
   const { user } = useAuth();
@@ -332,6 +169,8 @@ const VerifierApprovalsPage: React.FC = () => {
   const [useDemoData, setUseDemoData] = useState(false);
 
   const [ghgApprovalItems, setGhgApprovalItems] = useState<GHGScopeItem[]>([]);
+
+  const { checkPageOverlayAccess } = useOverlay();
 
   // useEffect(() => {
   //   const init = async () => {
@@ -410,155 +249,6 @@ const VerifierApprovalsPage: React.FC = () => {
     toast.success(`Verifier ${verifier?.full_name || verifier?.email} assigned successfully`);
   };
 
-  // const fetchApprovalItems = async () => {
-  //   setLoading(true);
-  //   try {
-  //     const items: ApprovalItem[] = [];
-
-  //     // Fetch GHG activity data with status 'submitted'
-  //     const { data: ghgData, error: ghgError } = await supabase
-  //       .from('ghg_activity_data')
-  //       .select(`
-  //         id,
-  //         source_id,
-  //         period_name,
-  //         activity_value,
-  //         activity_unit,
-  //         calculated_emissions,
-  //         status,
-  //         created_at,
-  //         created_by,
-  //         ghg_sources!inner (
-  //           source_name,
-  //           scope,
-  //           category,
-  //           facility_id,
-  //           assigned_verifiers,
-  //           facilities (
-  //             name
-  //           )
-  //         )
-  //       `)
-  //       .eq('status', 'submitted')
-  //       .order('created_at', { ascending: false });
-
-  //     if (ghgError) {
-  //       console.error('Error fetching GHG data:', ghgError);
-  //     }
-
-  //     if (ghgData) {
-  //       const ghgDataTyped = ghgData as unknown as GHGActivityData[];
-  //       const filteredGhgData = userProfileId
-  //         ? ghgDataTyped.filter(item => {
-  //           const verifiers = item.ghg_sources?.assigned_verifiers || [];
-  //           return verifiers.includes(userProfileId);
-  //         })
-  //         : ghgDataTyped;
-
-  //       filteredGhgData.forEach((item) => {
-  //         const scopeNumber = item.ghg_sources.scope.replace(/[^0-9]/g, '');
-  //         items.push({
-  //           id: item.id,
-  //           type: 'ghg_activity',
-  //           module: 'GHG',
-  //           title: `${item.ghg_sources.source_name} - ${item.period_name}`,
-  //           description: `${item.activity_value} ${item.activity_unit} (${item.calculated_emissions.toFixed(2)} tCO2e)`,
-  //           submittedBy: item.created_by,
-  //           submittedAt: item.created_at,
-  //           status: item.status,
-  //           priority: 'medium',
-  //           facility: item.ghg_sources.facilities?.name || 'Not specified',
-  //           scope: `Scope ${scopeNumber}`,
-  //           category: item.ghg_sources.category,
-  //           link: `/ghg-accounting/data-entry?source=${item.source_id}`,
-  //         });
-  //       });
-  //     }
-
-  //     // Fetch ESMS documents pending review
-  //     const { data: esmsData } = await supabase
-  //       .from('esms_documents')
-  //       .select('*')
-  //       .eq('is_uploaded', true)
-  //       .order('updated_at', { ascending: false })
-  //       .limit(50);
-
-  //     if (esmsData) {
-  //       esmsData.forEach((doc) => {
-  //         items.push({
-  //           id: doc.id,
-  //           type: 'esms_document',
-  //           module: 'ESMS',
-  //           title: doc.title,
-  //           description: doc.file_name || 'Document uploaded',
-  //           submittedBy: doc.user_id,
-  //           submittedAt: doc.updated_at,
-  //           status: 'pending_review',
-  //           priority: 'medium',
-  //           category: doc.section_id,
-  //           link: `/esms/${doc.section_id}`,
-  //         });
-  //       });
-  //     }
-
-  //     // Fetch approval requests assigned to this user
-  //     const { data: approvalData } = await supabase
-  //       .from('approval_requests')
-  //       .select('*')
-  //       .or(`assigned_checker_id.eq.${userProfileId},approver_id.eq.${userProfileId}`)
-  //       .in('status', ['pending_review', 'in_review'])
-  //       .order('submitted_at', { ascending: false });
-
-  //     if (approvalData) {
-  //       approvalData.forEach((req) => {
-  //         const module = formatModuleName(req.module);
-  //         let link = '/dashboard';
-  //         let scope: string | undefined;
-
-  //         // Determine link and scope based on module
-  //         if (req.module === 'esg_metrics') {
-  //           link = '/esg-metrics';
-  //         } else if (req.module === 'esg_dd') {
-  //           link = '/esg-dd';
-  //         } else if (req.module === 'ghg_accounting') {
-  //           link = '/ghg-accounting';
-  //           // Extract scope from current_data if available
-  //           const data = req.current_data as Record<string, any>;
-  //           if (data?.scope) {
-  //             scope = data.scope;
-  //           }
-  //         } else if (req.module === 'brsr_report') {
-  //           link = '/brsr-report';
-  //         } else if (req.module === 'esg_cap') {
-  //           link = '/esg-cap';
-  //         }
-
-  //         items.push({
-  //           id: req.id,
-  //           type: req.module === 'esg_dd' ? 'esg_dd' : 'esg_metric',
-  //           module: module,
-  //           title: req.record_type,
-  //           description: req.change_summary || 'Pending approval',
-  //           submittedBy: req.maker_id,
-  //           submittedAt: req.submitted_at || req.created_at,
-  //           status: req.status,
-  //           priority: req.priority as 'low' | 'medium' | 'high' | 'critical',
-  //           category: req.module,
-  //           dueDate: req.due_at,
-  //           link,
-  //           scope,
-  //         });
-  //       });
-  //     }
-
-  //     setApprovalItems(items);
-  //   } catch (error) {
-  //     console.error('Error fetching approval items:', error);
-  //     toast.error('Failed to load approval items');
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   const formatModuleName = (module: string): string => {
     const moduleMap: Record<string, string> = {
@@ -785,7 +475,12 @@ const VerifierApprovalsPage: React.FC = () => {
   }
 
   useEffect(() => {
-    getItemsToBeVerified();
+    let overlayStatus=checkPageOverlayAccess('/verifier-approvals');
+    console.log('Overlay Status for /verifier-approvals :',overlayStatus);
+    if(overlayStatus){
+      getItemsToBeVerified();
+    }
+    
   }, []);
 
   useEffect(() => {
@@ -815,17 +510,6 @@ const VerifierApprovalsPage: React.FC = () => {
   return (
     <UnifiedSidebarLayout>
       <div className="w-full px-4 py-6 space-y-6">
-        {/* Demo Mode Banner
-        {useDemoData && (
-          <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
-            <CardContent className="py-3">
-              <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
-                <AlertTriangle className="h-4 w-4" />
-                <span className="text-sm font-medium">Demo Mode: Showing sample approval data for demonstration purposes</span>
-              </div>
-            </CardContent>
-          </Card>
-        )} */}
 
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Approvals to be Done</h1>

@@ -8,6 +8,7 @@ import { User } from '@/types/auth';
 
 interface PageOverlayProps {
   children: React.ReactNode;
+  checkPageOverlayAccess?: (page: string) => boolean;
 }
 
 export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
@@ -37,12 +38,14 @@ export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
     }
   }
 
-  // useEffect(()=>{
-  //   if(!pageListAccess){
-  //     getPageAccess()
-  //   }
-
-  // },[pageListAccess])
+  const checkPageOverlayAccess = (page: string) => {
+    let filtered = pageListAccess.find((p: any) => p.url === page && p.adminEnabled);
+    if (filtered) {
+      return true;
+    } else {
+      return false;
+    }
+  };
 
   useEffect(() => {
     if (['StakeHolder', 'employee'].includes(user.role)) {
@@ -87,11 +90,6 @@ export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
     }
     else {
       for (let i = 0; i < pageAccessData?.length; i++) {
-        // console.log('pageAccessData',pageAccessData[i]['url'].split('/'))
-        // console.log('pageAccessData2',pageAccessData[i].url.replace(/^\//, '').split('/'))
-        // console.log(`location.pathname.split('/')`,location.pathname.split('/'))
-        // console.log(`location.pathname.split('/')2`,location.pathname.replace(/^\//, '').split('/'))
-
         const accessPart = pageAccessData[i].url.replace(/^\//, '').split('/')[0];
         const currentPart = location.pathname.replace(/^\//, '').split('/')[0];
         // if (location.pathname.split('/').includes(pageAccessData[i]['url'].split('/')[1])) {

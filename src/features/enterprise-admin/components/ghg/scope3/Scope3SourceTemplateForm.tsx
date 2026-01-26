@@ -513,7 +513,9 @@ export const Scope3SourceTemplateForm = () => {
                   )}
                   {selectedFacilities.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {selectedFacilities.map((facility) => (
+                      {selectedFacilities
+                      .filter((f) => f.trim() !== "")
+                      .map((facility) => (
                         <span
                           key={facility}
                           className="inline-flex items-center gap-1 px-2 py-1 bg-accent text-accent-foreground rounded-md text-sm"
