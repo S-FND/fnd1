@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, CheckCircle, XCircle, Clock, FileText, BarChart3, Flame, Building2, Filter, Target, Shield, AlertTriangle, ExternalLink, Settings, UserCheck } from 'lucide-react';
+import { Loader2, CheckCircle, XCircle, Clock, FileText, BarChart3, Flame, Building2, Filter, Target, Shield, AlertTriangle, ExternalLink, Settings, UserCheck, User } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -318,21 +318,21 @@ const VerifierApprovalsPage: React.FC = () => {
         if (approveDataResult.status !== 200) {
           throw new Error('Failed to approve GHG activity data');
         }
-        else{
+        else {
           getItemsToBeVerified();
           toast.success('Approved successfully');
         }
 
       }
 
-      
+
     } catch (error: any) {
       toast.error(error.message || 'Failed to approve');
       throw error;
     }
   };
 
-  const handleRejectClick = (item: ApprovalItem | GHGScopeItem ) => {
+  const handleRejectClick = (item: ApprovalItem | GHGScopeItem) => {
     setSelectedRejectItem(item);
     setRejectDialogOpen(true);
   };
@@ -351,7 +351,7 @@ const VerifierApprovalsPage: React.FC = () => {
         if (approveDataResult.status !== 200) {
           throw new Error('Failed to approve GHG activity data');
         }
-        else{
+        else {
           getItemsToBeVerified();
           toast.success('Rejected successfully');
         }
@@ -365,37 +365,37 @@ const VerifierApprovalsPage: React.FC = () => {
 
   const filteredItems = React.useMemo(() => {
     return ghgApprovalItems.filter(item => {
-  
+
       if (selectedPriority !== 'all' && item.priority !== selectedPriority) {
         return false;
       }
-  
+
       if (selectedScope !== 'all') {
         const itemScope = item.scope?.toLowerCase().replace(' ', '_');
         if (itemScope !== selectedScope) return false;
       }
-  
+
       return true;
     });
   }, [ghgApprovalItems, selectedPriority, selectedScope]);
 
   const displayItems = filteredItems;
   const displayCount = filteredItems.length;
-  
-  const getGetDataValueLabel=(item:GHGScopeItem)=>{
+
+  const getGetDataValueLabel = (item: GHGScopeItem) => {
     let value;
     switch (item.scope) {
       case 'Scope 1':
-        value=item.fuelType
+        value = item.fuelType
         break;
       case 'Scope 2':
-        value=item.sourceType
+        value = item.sourceType
         break;
 
       case 'Scope 3':
-        value=item.sourceType
+        value = item.sourceType
         break;
-        
+
       default:
         break;
     }
@@ -404,9 +404,9 @@ const VerifierApprovalsPage: React.FC = () => {
 
   // Count stats
   const criticalCount = ghgApprovalItems.filter(i => i.priority === 'critical').length;
-  const highCount     = ghgApprovalItems.filter(i => i.priority === 'high').length;
-  const mediumCount   = ghgApprovalItems.filter(i => i.priority === 'medium').length;
-  const lowCount      = ghgApprovalItems.filter(i => i.priority === 'low').length;
+  const highCount = ghgApprovalItems.filter(i => i.priority === 'high').length;
+  const mediumCount = ghgApprovalItems.filter(i => i.priority === 'medium').length;
+  const lowCount = ghgApprovalItems.filter(i => i.priority === 'low').length;
 
 
   const overdueCount = ghgApprovalItems.filter(item => {
@@ -426,19 +426,19 @@ const VerifierApprovalsPage: React.FC = () => {
       if (result.status !== 200) {
         throw new Error('Failed to load items to be verified');
       }
-      
+
       const transformedItems = result['data']['sourceDetails'].map((item: GHGScopeItem) => {
         const dataQuality = item.dataCollections?.dataQuality?.toLowerCase() || 'medium';
         let priority: 'low' | 'medium' | 'high' | 'critical';
-        
+
         // Map dataQuality to priority
-        switch(dataQuality) {
+        switch (dataQuality) {
           case 'low': priority = 'low'; break;
           case 'medium': priority = 'medium'; break;
           case 'high': priority = 'high'; break;
           default: priority = 'medium';
         }
-        
+
         return {
           _id: item._id,
           type: 'ghg_activity' as const,
@@ -463,7 +463,7 @@ const VerifierApprovalsPage: React.FC = () => {
           dataQuality: dataQuality // Keep original dataQuality for filtering
         };
       });
-      
+
       setGhgApprovalItems(transformedItems);
       return result.data;
     } catch (error) {
@@ -475,12 +475,20 @@ const VerifierApprovalsPage: React.FC = () => {
   }
 
   useEffect(() => {
-    let overlayStatus=checkPageOverlayAccess('/verifier-approvals');
-    console.log('Overlay Status for /verifier-approvals :',overlayStatus);
-    if(overlayStatus){
+    let userDetails = localStorage.getItem('fandoro-user');
+    let user = userDetails ? JSON.parse(userDetails) : null;
+    if (user && user.role === 'admin') {
+      let overlayStatus = checkPageOverlayAccess('/verifier-approvals');
+      // console.log('Overlay Status for /verifier-approvals :', overlayStatus);
+      // console.log("User Profile ID:", user);
+      if (overlayStatus) {
+        getItemsToBeVerified();
+      }
+    }
+    else {
       getItemsToBeVerified();
     }
-    
+
   }, []);
 
   useEffect(() => {
@@ -493,6 +501,8 @@ const VerifierApprovalsPage: React.FC = () => {
 
   if (loading) {
     return (
+
+      // check for it (LoadingOverlay) in identity-link-portal for overlay issue in approval to be done page
       <div className="fixed inset-0 z-50">
         {/* Gray transparent overlay (blocks clicks) */}
         <div className="absolute inset-0 bg-black/20" />
@@ -542,7 +552,7 @@ const VerifierApprovalsPage: React.FC = () => {
               </div>
             </CardContent>
           </Card> */}
-           <Card>
+          <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -730,7 +740,7 @@ const VerifierApprovalsPage: React.FC = () => {
                             <TableCell>{getModuleBadge('GHG')}</TableCell>
 
                             <TableCell>
-                            {getPriorityBadge(item.priority|| 'medium')}
+                              {getPriorityBadge(item.priority || 'medium')}
                             </TableCell>
 
                             <TableCell>
