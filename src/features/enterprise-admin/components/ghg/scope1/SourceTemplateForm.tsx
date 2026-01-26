@@ -203,8 +203,6 @@ export const SourceTemplateForm = () => {
   };
 
   const handleValidateAndSubmit = () => {
-    // ✅ THIS WILL ALWAYS RUN
-    console.log("BUTTON CLICKED");
 
     if (!selectedCollectors.length) {
       alert("Please select a Collector");
@@ -387,6 +385,19 @@ export const SourceTemplateForm = () => {
     }
   }
 
+  const removeFacilities = (facility) => () => {
+    // let filteredData = selectedFacilities.filter((f) => f !== facility && f);
+    // console.log("filteredData", filteredData);
+    setSelectedFacilities((prev) => {
+      const updated = prev.filter((f) => f !== facility);
+      console.log("updated", updated);
+      setValue("facilityNames", updated, { shouldValidate: true });
+      return updated;
+    });
+    // setSelectedFacilities(filteredData);
+    // setValue("facilityNames", filteredData, { shouldValidate: true });
+  }
+
   useEffect(() => {
     getTeamList();
     getFacilities();
@@ -397,6 +408,10 @@ export const SourceTemplateForm = () => {
       getDataSource(sourceId);
     }
   }, [sourceId]);
+
+  useEffect(() => {
+    console.log("selectedFacilities", selectedFacilities);
+  }, [selectedFacilities]);
 
   return (
     <UnifiedSidebarLayout>
@@ -477,7 +492,7 @@ export const SourceTemplateForm = () => {
                   {errors.facilityNames && (
                     <p className="text-sm text-destructive">{errors.facilityNames.message}</p>
                   )}
-                  {selectedFacilities.length > 0 && (
+                  {/* {selectedFacilities.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-2">
                       {selectedFacilities.map((facility) => (
                         <span
@@ -499,290 +514,319 @@ export const SourceTemplateForm = () => {
                         </span>
                       ))}
                     </div>
-                  )}
-                  {!loadingFacilities && facilities.length === 0 && (
-                    <p className="text-sm text-blue-600">
-                      No facilities found. Please add a facility from Location Tab.
-                    </p>
-                  )}
-                </div>
+                  )} */}
+                  {selectedFacilities.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {selectedFacilities
+                      .filter((f) => f.trim() !== "")
+                      .map((facility) => (
+                        <span
+                          key={facility}
+                          className="inline-flex items-center gap-1 px-2 py-1 bg-accent text-accent-foreground rounded-md text-sm"
+                        >
+                          {facility}
 
-                <div className="space-y-2">
-                  <Label htmlFor="businessUnit">Business Unit *</Label>
-                  <Input
-                    id="businessUnit"
-                    placeholder="e.g., Operations – West India"
-                    {...register('businessUnit')}
-                  />
-                  {errors.businessUnit && (
-                    <p className="text-sm text-destructive">{errors.businessUnit.message}</p>
+                          <button
+                            type="button"
+                            aria-label={`Remove ${facility}`}
+                            onClick={() => setSelectedFacilities((prev) => {
+                              const updated = prev.filter((f) => f !== facility);
+                              console.log("updated", updated);
+                              setValue("facilityNames", updated, { shouldValidate: true });
+                              return updated;
+                            })}
+                          className="ml-1 hover:text-destructive font-bold"
+                          >
+                          ×
+                        </button>
+                        </span>
+                  ))}
+                </div>
                   )}
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="sourceType">Source Category *</Label>
-                  <Select
-                    value={watch('sourceType')}
-                    onValueChange={(value) => setValue('sourceType', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Stationary">Stationary Combustion</SelectItem>
-                      <SelectItem value="Mobile">Mobile Combustion</SelectItem>
-                      <SelectItem value="Fugitive">Fugitive Emissions</SelectItem>
-                      <SelectItem value="Process">Process Emissions</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.sourceType && (
-                    <p className="text-sm text-destructive">{errors.sourceType.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="sourceCategory"> Source Type *</Label>
-                  <Select
-                    value={watch('sourceCategory')}
-                    onValueChange={(value) => setValue('sourceCategory', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EMISSION_SOURCE_CATEGORIES[watchSourceType]?.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.sourceCategory && (
-                    <p className="text-sm text-destructive">{errors.sourceCategory.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="fuelType">Fuel/Substance Type</Label>
-                  <Select
-                    value={watch('fuelType')}
-                    onValueChange={(value) => setValue('fuelType', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select fuel type..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {FUEL_SUBSTANCE_TYPES[watchSourceType]?.map((fuel) => (
-                        <SelectItem key={fuel} value={fuel}>
-                          {fuel}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                {!loadingFacilities && facilities.length === 0 && (
+                  <p className="text-sm text-blue-600">
+                    No facilities found. Please add a facility from Location Tab.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="sourceDescription">Emission Source Description *</Label>
-                <Textarea
-                  id="sourceDescription"
-                  placeholder="Detailed description of the emission source..."
-                  rows={3}
-                  {...register('sourceDescription')}
+                <Label htmlFor="businessUnit">Business Unit *</Label>
+                <Input
+                  id="businessUnit"
+                  placeholder="e.g., Operations – West India"
+                  {...register('businessUnit')}
                 />
-                {errors.sourceDescription && (
-                  <p className="text-sm text-destructive">{errors.sourceDescription.message}</p>
+                {errors.businessUnit && (
+                  <p className="text-sm text-destructive">{errors.businessUnit.message}</p>
                 )}
               </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Emission Factor</CardTitle>
-              <CardDescription>Select emission factor from open databases (IPCC, DEFRA, EPA, etc.)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <EmissionFactorSelector
-                scope={1}
-                category={watchSourceType}
-                value={selectedEmissionFactor?.id}
-                onSelect={handleEmissionFactorSelect}
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Measurement Parameters</CardTitle>
-              <CardDescription>Define how data will be collected</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="activityDataUnit">Activity Data Unit *</Label>
-                  <Select
-                    value={watch('activityDataUnit')}
-                    onValueChange={(value) => setValue('activityDataUnit', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select unit..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ACTIVITY_UNITS[watchSourceType]?.map((unit) => (
-                        <SelectItem key={unit} value={unit}>
-                          {unit}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {errors.activityDataUnit && (
-                    <p className="text-sm text-destructive">{errors.activityDataUnit.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="measurementFrequency">Measurement Frequency *</Label>
-                  <Select
-                    value={watch('measurementFrequency')}
-                    onValueChange={(value) => {
-                      setValue('measurementFrequency', value);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Daily">Daily</SelectItem>
-                      <SelectItem value="Weekly">Weekly</SelectItem>
-                      <SelectItem value="Monthly">Monthly</SelectItem>
-                      <SelectItem value="Quarterly">Quarterly</SelectItem>
-                      <SelectItem value="Annually">Annually</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.measurementFrequency && (
-                    <p className="text-sm text-destructive">{errors.measurementFrequency.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="calculationMethodology">Calculation Methodology *</Label>
-                  <Input
-                    id="calculationMethodology"
-                    placeholder="e.g., GHG Protocol"
-                    {...register('calculationMethodology')}
-                  />
-                  {errors.calculationMethodology && (
-                    <p className="text-sm text-destructive">{errors.calculationMethodology.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="dataSource">Data Source *</Label>
-                  <Input
-                    id="dataSource"
-                    placeholder="e.g., Fuel purchase invoices"
-                    {...register('dataSource')}
-                  />
-                  {errors.dataSource && (
-                    <p className="text-sm text-destructive">{errors.dataSource.message}</p>
-                  )}
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="sourceType">Source Category *</Label>
+                <Select
+                  value={watch('sourceType')}
+                  onValueChange={(value) => setValue('sourceType', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Stationary">Stationary Combustion</SelectItem>
+                    <SelectItem value="Mobile">Mobile Combustion</SelectItem>
+                    <SelectItem value="Fugitive">Fugitive Emissions</SelectItem>
+                    <SelectItem value="Process">Process Emissions</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.sourceType && (
+                  <p className="text-sm text-destructive">{errors.sourceType.message}</p>
+                )}
               </div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Assignment</CardTitle>
-              <CardDescription>Assign team members for data collection and verification</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {teamMembers && teamMembers.length>0 && <div className="space-y-2">
-                <Label>Data Collectors *</Label>
-                <div className="border rounded-lg p-4 space-y-2">
-                  {teamMembers.map(member => (
-                    <label key={member._id} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedCollectors.includes(member._id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedCollectors([...selectedCollectors, member._id]);
-                          } else {
-                            setSelectedCollectors(selectedCollectors.filter(id => id !== member._id));
-                          }
-                        }}
-                        disabled={selectedVerifiers.includes(member._id)}
-                        className="rounded"
-                      />
-                      <span>{member.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>}
+              <div className="space-y-2">
+                <Label htmlFor="sourceCategory"> Source Type *</Label>
+                <Select
+                  value={watch('sourceCategory')}
+                  onValueChange={(value) => setValue('sourceCategory', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EMISSION_SOURCE_CATEGORIES[watchSourceType]?.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.sourceCategory && (
+                  <p className="text-sm text-destructive">{errors.sourceCategory.message}</p>
+                )}
+              </div>
 
-               {teamMembers && teamMembers.length>0 &&<div className="space-y-2">
-                <Label>Verifiers *</Label>
-                <div className="border rounded-lg p-4 space-y-2">
-                  {teamMembers.map(member => (
-                    <label key={member._id} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedVerifiers.includes(member._id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedVerifiers([...selectedVerifiers, member._id]);
-                          } else {
-                            setSelectedVerifiers(selectedVerifiers.filter(id => id !== member._id));
-                          }
-                        }}
-                        className="rounded"
-                        disabled={selectedCollectors.includes(member._id)}
-                      />
-                      <span>{member.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>}
-              { !teamMembers || teamMembers.length===0 &&<div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
-                <span className="text-lg leading-none">ℹ️</span>
+              <div className="space-y-2">
+                <Label htmlFor="fuelType">Fuel/Substance Type</Label>
+                <Select
+                  value={watch('fuelType')}
+                  onValueChange={(value) => setValue('fuelType', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select fuel type..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FUEL_SUBSTANCE_TYPES[watchSourceType]?.map((fuel) => (
+                      <SelectItem key={fuel} value={fuel}>
+                        {fuel}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
-                <p className="m-0">
-                  Please add team members first in Team Management section so they can be selected as 
-                  <span className="font-semibold"> Collectors </span> and 
-                  <span className="font-semibold"> Verifiers </span>
-                  while creating a source.
-                </p>
-              </div>}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Additional Notes</CardTitle>
-            </CardHeader>
-            <CardContent>
+            <div className="space-y-2">
+              <Label htmlFor="sourceDescription">Emission Source Description *</Label>
               <Textarea
-                placeholder="Any additional notes or comments..."
-                rows={4}
-                {...register('notes')}
+                id="sourceDescription"
+                placeholder="Detailed description of the emission source..."
+                rows={3}
+                {...register('sourceDescription')}
               />
-            </CardContent>
-          </Card>
+              {errors.sourceDescription && (
+                <p className="text-sm text-destructive">{errors.sourceDescription.message}</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-          <div className="flex justify-end gap-4">
-            <Button type="button" variant="outline" onClick={() => navigate(-1)}>
-              Cancel
-            </Button>
-            <Button type="button" onClick={handleValidateAndSubmit}>
-              <Save className="mr-2 h-4 w-4" />
-              {editTemplate ? 'Update Source' : 'Save Source Definition'}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </UnifiedSidebarLayout>
+        <Card>
+          <CardHeader>
+            <CardTitle>Emission Factor</CardTitle>
+            <CardDescription>Select emission factor from open databases (IPCC, DEFRA, EPA, etc.)</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <EmissionFactorSelector
+              scope={1}
+              category={watchSourceType}
+              value={selectedEmissionFactor?.id}
+              onSelect={handleEmissionFactorSelect}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Measurement Parameters</CardTitle>
+            <CardDescription>Define how data will be collected</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="activityDataUnit">Activity Data Unit *</Label>
+                <Select
+                  value={watch('activityDataUnit')}
+                  onValueChange={(value) => setValue('activityDataUnit', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select unit..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ACTIVITY_UNITS[watchSourceType]?.map((unit) => (
+                      <SelectItem key={unit} value={unit}>
+                        {unit}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.activityDataUnit && (
+                  <p className="text-sm text-destructive">{errors.activityDataUnit.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="measurementFrequency">Measurement Frequency *</Label>
+                <Select
+                  value={watch('measurementFrequency')}
+                  onValueChange={(value) => {
+                    setValue('measurementFrequency', value);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Daily">Daily</SelectItem>
+                    <SelectItem value="Weekly">Weekly</SelectItem>
+                    <SelectItem value="Monthly">Monthly</SelectItem>
+                    <SelectItem value="Quarterly">Quarterly</SelectItem>
+                    <SelectItem value="Annually">Annually</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.measurementFrequency && (
+                  <p className="text-sm text-destructive">{errors.measurementFrequency.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="calculationMethodology">Calculation Methodology *</Label>
+                <Input
+                  id="calculationMethodology"
+                  placeholder="e.g., GHG Protocol"
+                  {...register('calculationMethodology')}
+                />
+                {errors.calculationMethodology && (
+                  <p className="text-sm text-destructive">{errors.calculationMethodology.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="dataSource">Data Source *</Label>
+                <Input
+                  id="dataSource"
+                  placeholder="e.g., Fuel purchase invoices"
+                  {...register('dataSource')}
+                />
+                {errors.dataSource && (
+                  <p className="text-sm text-destructive">{errors.dataSource.message}</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Assignment</CardTitle>
+            <CardDescription>Assign team members for data collection and verification</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {teamMembers && teamMembers.length > 0 && <div className="space-y-2">
+              <Label>Data Collectors *</Label>
+              <div className="border rounded-lg p-4 space-y-2">
+                {teamMembers.map(member => (
+                  <label key={member._id} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedCollectors.includes(member._id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedCollectors([...selectedCollectors, member._id]);
+                        } else {
+                          setSelectedCollectors(selectedCollectors.filter(id => id !== member._id));
+                        }
+                      }}
+                      disabled={selectedVerifiers.includes(member._id)}
+                      className="rounded"
+                    />
+                    <span>{member.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>}
+
+            {teamMembers && teamMembers.length > 0 && <div className="space-y-2">
+              <Label>Verifiers *</Label>
+              <div className="border rounded-lg p-4 space-y-2">
+                {teamMembers.map(member => (
+                  <label key={member._id} className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedVerifiers.includes(member._id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedVerifiers([...selectedVerifiers, member._id]);
+                        } else {
+                          setSelectedVerifiers(selectedVerifiers.filter(id => id !== member._id));
+                        }
+                      }}
+                      className="rounded"
+                      disabled={selectedCollectors.includes(member._id)}
+                    />
+                    <span>{member.name}</span>
+                  </label>
+                ))}
+              </div>
+            </div>}
+            {!teamMembers || teamMembers.length === 0 && <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+              <span className="text-lg leading-none">ℹ️</span>
+
+              <p className="m-0">
+                Please add team members first in Team Management section so they can be selected as
+                <span className="font-semibold"> Collectors </span> and
+                <span className="font-semibold"> Verifiers </span>
+                while creating a source.
+              </p>
+            </div>}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Additional Notes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              placeholder="Any additional notes or comments..."
+              rows={4}
+              {...register('notes')}
+            />
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end gap-4">
+          <Button type="button" variant="outline" onClick={() => navigate(-1)}>
+            Cancel
+          </Button>
+          <Button type="button" onClick={handleValidateAndSubmit}>
+            <Save className="mr-2 h-4 w-4" />
+            {editTemplate ? 'Update Source' : 'Save Source Definition'}
+          </Button>
+        </div>
+      </form>
+    </div>
+    </UnifiedSidebarLayout >
   );
 };
 

@@ -11,7 +11,8 @@ interface OverlayContextType {
   setPageList:(pageList)=>void
   clearOverlay: () => void;
   isUrlOverlayActive: (url: string) => boolean;
-  getPageAccessList:()=>[]
+  getPageAccessList:()=>[];
+  checkPageOverlayAccess: (page: string) => boolean;
 }
 
 const OverlayContext = createContext<OverlayContextType | undefined>(undefined);
@@ -59,6 +60,17 @@ export const OverlayProvider: React.FC<OverlayProviderProps> = ({ children }) =>
     return isOverlayActive && activeOverlayUrl === url;
   };
 
+  const checkPageOverlayAccess = (page: string) => {
+    let filtered = (localStorage.getItem('fandoro-access')? JSON.parse(localStorage.getItem('fandoro-access') || '')['companyFeaturePageAccess']: [])
+    .find((p: any) => p.url === page && p.adminEnabled);
+    console.log('filtered',filtered)
+    if (filtered) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   const getPageAccess = async () => {
     try {
       logger.log("Calling from Overlay cintext")
@@ -92,7 +104,8 @@ export const OverlayProvider: React.FC<OverlayProviderProps> = ({ children }) =>
       clearOverlay,
       isUrlOverlayActive,
       setPageList,
-      getPageAccessList
+      getPageAccessList,
+      checkPageOverlayAccess
     }}>
       {children}
     </OverlayContext.Provider>
