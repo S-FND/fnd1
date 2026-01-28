@@ -29,6 +29,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { httpClient } from "@/lib/httpClient";
+import { getS3FilePath } from "@/utils/fileUrl";
 
 export interface Attendee {
   name: string;
@@ -183,7 +184,7 @@ const EHSTrainingDetails: React.FC = () => {
       formData.append("entityId", entityId);
 
       // ✅ Find existing material of the same type
-      const existingMaterial = materials.find(m => m.type === addMaterialModal.type);
+      const existingMaterial:any = materials.find(m => m.type === addMaterialModal.type);
 
       if (existingMaterial) {
         // ✅ DELETE the old one first
@@ -340,8 +341,9 @@ const EHSTrainingDetails: React.FC = () => {
                     href={getMaterialFileUrl(material.fileUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
+                    title="View File"
                   >
-                    <Eye className="h-4 w-4 cursor-pointer" title="View File" />
+                    <Eye className="h-4 w-4 cursor-pointer" />
                   </a>
                 )}
 
@@ -351,8 +353,9 @@ const EHSTrainingDetails: React.FC = () => {
                     href={material.externalUrl.startsWith('http') ? material.externalUrl : `https://${material.externalUrl}`}
                     target="_blank"
                     rel="noopener noreferrer"
+                    title="Visit Link"
                   >
-                    <ExternalLink className="h-4 w-4 cursor-pointer" title="Visit Link" />
+                    <ExternalLink className="h-4 w-4 cursor-pointer" />
                   </a>
                 )}
               </div>
@@ -378,9 +381,7 @@ const EHSTrainingDetails: React.FC = () => {
 
   const getMaterialFileUrl = (fileUrl?: string): string | undefined => {
     if (!fileUrl) return undefined;
-
-    const S3_BASE_URL = "https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/"; // <-- replace with your bucket
-    return fileUrl.startsWith("http") ? fileUrl : `${S3_BASE_URL}${fileUrl}`;
+    return getS3FilePath(fileUrl);
   };
 
   const sanitizeFileName = (fileName: string): string => {

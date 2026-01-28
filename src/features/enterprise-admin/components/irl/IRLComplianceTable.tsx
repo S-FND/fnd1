@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { getS3FilePath,extractS3Key } from "@/utils/fileUrl";
 
 // ============ INTERFACES ============
 interface ComplianceItem {
@@ -290,8 +291,9 @@ const useDocumentVerification = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    const viewUrl = currentDocToVerify.fullFilePath ||
-                      `https://fandoro-sustainability-saas-stage.s3.ap-south-1.amazonaws.com/${currentDocToVerify.file_path}`;
+                    const viewUrl = getS3FilePath(
+                      currentDocToVerify.fullFilePath || currentDocToVerify.file_path
+                    );
                     window.open(viewUrl, '_blank');
                   }}
                 >
@@ -440,17 +442,6 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
     handleVerifyClick,
     refreshTrigger
   } = useDocumentVerification();
-
-  // ============ UTILITY FUNCTIONS ============
-  const getS3FilePath = (file_path: string) => {
-    if (file_path.startsWith('https://')) {
-      return file_path;
-    }
-    if (file_path.includes('fandoro-sustainability-saas-stage')) {
-      return file_path;
-    }
-    return `https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/${file_path}`;
-  };
 
   const getUserEntityId = () => {
     try {
@@ -743,7 +734,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   const handleDeleteExistingFile = async (key: string, fileIndex: number, fileUrl: string) => {
     try {
       setIsLoading(true);
-      const filePath = fileUrl.replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/', '');
+      const filePath = extractS3Key(fileUrl);
 
       let apiType: string = 'bo';
       switch (title.toLowerCase()) {
@@ -833,7 +824,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
           answer: item.isApplicable,
           reason: item.notes || '',
           file_path: [
-            ...(filePaths[key]?.map(path => path.replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/', '')) || []),
+            ...(filePaths[key]?.map(path => extractS3Key(path)) || []),
             ...item.attachment.map(file => sanitizeFileName(file.name))
           ],
           fileChange: item.attachment?.length > 0
