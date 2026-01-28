@@ -5,11 +5,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend } from 'recharts';
 import { yearsToShow } from '@/data/ghg/calculator';
 
-interface MonthlyEmissionsData {
+export interface MonthlyEmissionsData {
   name: string;
   scope1: number;
   scope2: number;
   scope3: number;
+  year:string;
 }
 
 interface MonthlyEmissionsTrendProps {
@@ -18,15 +19,17 @@ interface MonthlyEmissionsTrendProps {
 
 const MonthlyEmissionsTrend: React.FC<MonthlyEmissionsTrendProps> = ({ monthlyData }) => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  
+  console.log('monthlyData', monthlyData);
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
+      <CardHeader className="flex justify-center">
+        <div className="flex flex-col items-center text-center">
           <CardTitle>Monthly Emissions Trend</CardTitle>
-          <CardDescription>Track emissions across all scopes month by month</CardDescription>
+          <CardDescription>
+            Track emissions across all scopes month by month
+          </CardDescription>
         </div>
-        <div className="w-[150px]">
+        {/* <div className="w-[150px]">
           <Select
             value={selectedYear.toString()}
             onValueChange={(value) => setSelectedYear(Number(value))}
@@ -40,7 +43,7 @@ const MonthlyEmissionsTrend: React.FC<MonthlyEmissionsTrendProps> = ({ monthlyDa
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
       </CardHeader>
       <CardContent>
         <div className="h-[350px]">
@@ -49,7 +52,12 @@ const MonthlyEmissionsTrend: React.FC<MonthlyEmissionsTrendProps> = ({ monthlyDa
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
-              <Tooltip formatter={(value) => [`${value} tCO₂e`, '']} />
+              <Tooltip
+                formatter={(value: number, name: string) => [
+                  `${Number(value).toFixed(2)} tCO₂e`,
+                  name
+                ]}
+              />
               <Legend />
               <Line 
                 type="monotone" 

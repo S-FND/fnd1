@@ -1,36 +1,145 @@
 
-import React, { useState } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/context/AuthContext';
-import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
+
 import { useRouteProtection } from '@/hooks/useRouteProtection';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { GHGScope1Form } from '../components/ghg/GHGScope1Form';
 import { GHGScope2Form } from '../components/ghg/GHGScope2Form';
 import { GHGScope3Form } from '../components/ghg/GHGScope3Form';
-import { GHGScope4Form } from '../components/ghg/GHGScope4Form';
+import GHGScope4Form from '../components/ghg/GHGScope4Form';
 import { GHGSummary } from '../components/ghg/GHGSummary';
 import { GHGDataAssignment } from '../components/ghg/GHGDataAssignment';
 import { companyInfo } from '../components/ghg/summary/mockData';
-import { logger } from '@/hooks/logger';
+import UnifiedSidebarLayout from '@/components/layout/UnifiedSidebarLayout';
+import { httpClient } from '@/lib/httpClient';
+import { AxiosResponse } from 'axios';
+export type GHGScope =
+  | 'scope1Sources'
+  | 'scope2Sources'
+  | 'scope3Sources'
+  | 'scope4Sources';
+
+export interface GHGSource {
+  id: string;
+  access: 'data-collector' | 'data-verifier';
+}
+
+type ScopeSource = {
+  id: string;
+  access: 'data-collector' | 'data-verifier';
+};
+
+type ScopeAccessData = {
+  scope1Sources?: ScopeSource[];
+  scope2Sources?: ScopeSource[];
+  scope3Sources?: ScopeSource[];
+  scope4Sources?: ScopeSource[];
+};
+
+type ScopeAccessState = {
+  scope1: boolean;
+  scope2: boolean;
+  scope3: boolean;
+  scope4: boolean;
+};
+
+export type AssignedGHGSources = Record<GHGScope, GHGSource[]>;
 
 const GHGAccountingPage = () => {
-  logger.debug('Rendering GHGAccountingPage component');
-  const { isLoading } = useRouteProtection(['admin', 'unit_admin','employee']);
-  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
-  const [activeTab, setActiveTab] = useState("summary");
+  const { isLoading } = useRouteProtection(['admin', 'unit_admin', 'employee']);
+  const { user, isAuthenticated } = useAuth();
+
+  const [isParent, setIsParent] = useState(false);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') ?? "summary");
+
+  const [companyDetails, setCompanyDetails] = useState<any>(null);
+  const [locations, setLocations] = useState<any>(null);
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [companyRes, locationsRes] = await Promise.all([
+          httpClient.get<any>('company/entity'),
+          httpClient.get<any>('company/locations'),
+        ]);
+  
+        setCompanyDetails(companyRes.data?.data ?? companyRes.data);
+        setLocations(locationsRes.data?.data ?? locationsRes.data);
+      } catch (error) {
+        console.error('Error loading GHG page data:', error);
+      }
+    };
+  
+    fetchData();
+  }, []);
+
+  const [assignedSources, setAssignedSources] = useState<AssignedGHGSources>({
+    scope1Sources: [],
+    scope2Sources: [],
+    scope3Sources: [],
+    scope4Sources: [],
+  });
+
+  const [scopeAccess, setScopeAccess] = useState<ScopeAccessState>({
+    scope1: false,
+    scope2: false,
+    scope3: false,
+    scope4: false
+  });
+
+  const hasCollectorAccess = (sources?: ScopeSource[]) =>
+    Array.isArray(sources)
+      ? sources.some(src => src.access === 'data-collector')
+      : false;
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('fandoro-user');
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setIsParent(parsedUser.isParent || false);
+      if (parsedUser.assignedSource) {
+        setAssignedSources(parsedUser.assignedSource);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    setScopeAccess({
+      scope1: hasCollectorAccess(assignedSources.scope1Sources),
+      scope2: hasCollectorAccess(assignedSources.scope2Sources),
+      scope3: hasCollectorAccess(assignedSources.scope3Sources),
+      scope4: hasCollectorAccess(assignedSources.scope4Sources),
+    });
+  }, [assignedSources]);
+
+  const handleTabChange = (tab: string) => {
+    setSearchParams({ tab });
+    setActiveTab(tab)
+  };
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!isAuthenticatedStatus()) {
-    return <Navigate to="/" />;
+  if (!isAuthenticated || !user) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  const isUnitAdmin = user?.role === 'unit_admin';
-  const unitName = isUnitAdmin && user?.units?.find(unit => unit.id === user?.unitId)?.name;
+  if (user.role !== 'admin' && user.role !== 'unit_admin' && user.role !== 'employee') {
+    return <Navigate to="/" replace />;
+  }
+
+  const isUnitAdmin = user.role === 'admin';
+  const unitName = isUnitAdmin
+    ? user.units?.find(unit => unit.id === user.unitId)?.name
+    : null;
+
 
   return (
     <UnifiedSidebarLayout>
@@ -38,85 +147,104 @@ const GHGAccountingPage = () => {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">GHG Accounting</h1>
           <p className="text-muted-foreground">
-            {isUnitAdmin 
-              ? `Manage carbon emissions data for ${unitName || 'your unit'}.` 
-              : `Manage enterprise-wide carbon emissions for ${companyInfo.name}.`}
+            {isUnitAdmin
+              ? `Manage carbon emissions data for ${unitName || 'your company'}.`
+              : `Manage enterprise-wide carbon emissions for ${companyDetails?.name}.`}
           </p>
         </div>
 
         <Card className="mb-6">
           <CardHeader className="pb-3">
             <CardTitle>Company Overview</CardTitle>
-            <CardDescription>Key information about IMR Resources</CardDescription>
+            <CardDescription>Key information about {companyDetails?.company_name}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <h3 className="text-sm font-medium">Headquarters</h3>
-                <p className="text-sm text-muted-foreground">{companyInfo.headquarters}</p>
+                <h3 className="text-sm font-medium">Legal Name</h3>
+                <p className="text-sm text-muted-foreground">{companyDetails?.legal_name}</p>
               </div>
               <div>
                 <h3 className="text-sm font-medium">Established</h3>
-                <p className="text-sm text-muted-foreground">{companyInfo.established}</p>
+                <p className="text-sm text-muted-foreground">{companyDetails?.founded}</p>
               </div>
               <div>
                 <h3 className="text-sm font-medium">Operations</h3>
-                <p className="text-sm text-muted-foreground">{companyInfo.operations.join(", ")}</p>
+                <p className="text-sm text-muted-foreground">{companyDetails?.industry}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium">Annual Trading Volume</h3>
-                <p className="text-sm text-muted-foreground">{companyInfo.annualTradingVolume}</p>
+                <h3 className="text-sm font-medium">Registered Address</h3>
+                <p className="text-sm text-muted-foreground">{companyDetails?.registered_office}</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium">Business Units</h3>
-                <p className="text-sm text-muted-foreground">{companyInfo.businessUnits.length} units across {companyInfo.operations.length} countries</p>
+                <h3 className="text-sm font-medium">Number of Locations</h3>
+                {/* <p className="text-sm text-muted-foreground">{companyDetails?.businessUnits.length} units across {companyDetails?.operations.length} countries</p> */}
+                <p className="text-sm text-muted-foreground">{Array.isArray(locations) && locations.length > 0 ? locations.length : "-"} Units</p>
               </div>
               <div>
-                <h3 className="text-sm font-medium">Total Employees</h3>
+                <h3 className="text-sm font-medium">Employees Strength</h3>
                 <p className="text-sm text-muted-foreground">
-                  {companyInfo.businessUnits.reduce((sum, unit) => sum + unit.employees, 0)} employees
+                  {/* {companyDetails?.businessUnits.reduce((sum, unit) => sum + unit.employees, 0)} employees */}
+                  <p className="text-sm text-muted-foreground">{companyDetails?.employee_strength} employees</p>
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
           <TabsList className="mb-4 w-full sm:w-auto">
             <TabsTrigger value="summary">Summary</TabsTrigger>
-            <TabsTrigger value="scope1">Scope 1</TabsTrigger>
-            <TabsTrigger value="scope2">Scope 2</TabsTrigger>
-            <TabsTrigger value="scope3">Scope 3</TabsTrigger>
-            <TabsTrigger value="scope4">Scope 4</TabsTrigger>
-            <TabsTrigger value="assignments">Assignments</TabsTrigger>
+            {/* //{isParent ? " (Parent)" : ""} */}
+            {/* {!isParent && assignedSources && assignedSources.scope1Sources && assignedSources.scope1Sources.length>0 && <TabsTrigger value="scope1">Scope 1</TabsTrigger>}
+            {!isParent && assignedSources && assignedSources.scope2Sources && assignedSources.scope2Sources.length>0 && <TabsTrigger value="scope2">Scope 2</TabsTrigger>}
+            {!isParent && assignedSources && assignedSources.scope3Sources && assignedSources.scope3Sources.length>0 && <TabsTrigger value="scope3">Scope 3</TabsTrigger>}
+            {!isParent && assignedSources && assignedSources.scope4Sources && assignedSources.scope4Sources.length>0 && <TabsTrigger value="scope4">Scope 4</TabsTrigger>} */}
+            {(isParent || scopeAccess?.scope1) && (
+              <TabsTrigger value="scope1">Scope 1</TabsTrigger>
+            )}
+
+            {(isParent || scopeAccess?.scope2) && (
+              <TabsTrigger value="scope2">Scope 2</TabsTrigger>
+            )}
+
+            {(isParent || scopeAccess?.scope3) && (
+              <TabsTrigger value="scope3">Scope 3</TabsTrigger>
+            )}
+
+            {(isParent || scopeAccess?.scope4) && (
+              <TabsTrigger value="scope4">Scope 4</TabsTrigger>
+            )}
+            {/* <TabsTrigger value="assignments">Assignments</TabsTrigger> */}
           </TabsList>
-          
+
           <TabsContent value="summary" className="mt-6">
             <GHGSummary />
           </TabsContent>
-          
+
           <TabsContent value="scope1" className="mt-6">
-            <GHGScope1Form />
+            <GHGScope1Form currentAccess={assignedSources.scope1Sources} isParent={isParent} />
           </TabsContent>
-          
+
           <TabsContent value="scope2" className="mt-6">
-            <GHGScope2Form />
+            <GHGScope2Form currentAccess={assignedSources.scope2Sources} isParent={isParent} />
           </TabsContent>
-          
+
           <TabsContent value="scope3" className="mt-6">
-            <GHGScope3Form />
+            <GHGScope3Form currentAccess={assignedSources.scope3Sources} isParent={isParent} />
           </TabsContent>
-          
+
           <TabsContent value="scope4" className="mt-6">
-            <GHGScope4Form />
+            <GHGScope4Form currentAccess={assignedSources.scope4Sources} isParent={isParent} />
           </TabsContent>
-          
+
           <TabsContent value="assignments" className="mt-6">
             <GHGDataAssignment />
           </TabsContent>
         </Tabs>
       </div>
     </UnifiedSidebarLayout>
+
   );
 };
 

@@ -354,7 +354,7 @@ const LocationManagement = ({ locations, refreshData }) => {
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">{location.address}</p>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">{location.employeeCount || 0} Employees</span>
+                      {/* <span className="text-sm font-medium">{location.employeeCount || 0} Employees</span> */}
                       <span className="text-sm font-medium">Unit ID: {location.unitId}</span>
                     </div>
                     <div className="flex flex-wrap gap-1">

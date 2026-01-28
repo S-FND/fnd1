@@ -17,6 +17,7 @@ import { SidebarSubmenu } from './SidebarSubmenu';
 import { FileSearch } from 'lucide-react';
 import { useAuthProvider } from '@/hooks/useAuthProvider';
 import { log } from 'console';
+import { useVerifierStatus } from '@/hooks/useVerifierStatus';
 
 interface SidebarNavigationProps {
   role: string;
@@ -36,8 +37,21 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   // const visibleItems = getNavigationItems('all-access' );
   // || role
 
-  const [visibleItems, setVisibleItems] = useState([]);
+  const [visibleItems, setVisibleItems] = useState<any[]>([]);
   const [allowedUrlsList, setAllowedUrlsList] = useState<string[]>([]);
+
+  const { isVerifier, loading: verifierLoading } = useVerifierStatus();
+
+  // Filter items based on verifier status
+//  const visibleItems = getNavigationItems(role).filter(item => {
+//     // Show "Approvals to be Done" for admins, managers, unit_admins, or verified verifiers
+//     if (item.name === 'Approvals to be Done') {
+//       // Show for admin roles always (don't wait for verifier check), or if user is specifically a verifier
+//       const isAdminRole = ['admin', 'manager', 'unit_admin', 'portfolio_company_admin', 'super_admin'].includes(role);
+//       return isAdminRole || isVerifier;
+//     }
+//     return true;
+//   });
 
 
   useEffect(() => {
@@ -81,7 +95,8 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         })
         .filter(Boolean);
 
-      setVisibleItems(filtered);
+      // setVisibleItems(filtered);
+      setVisibleItems(Array.isArray(filtered) ? filtered : []);
     }
   }, [pageAccessList]);
 
@@ -103,12 +118,13 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   useEffect(() => {
     logger.debug("🔵 SidebarNavigation: Expanded menus state changed:", expandedMenus);
   }, [expandedMenus]);
+  const safeVisibleItems = Array.isArray(visibleItems) ? visibleItems : [];
 
   return (
     <SidebarGroup>
       <SidebarGroupContent>
         <SidebarMenu className="space-y-1">
-          {visibleItems.map((item) => {
+          {safeVisibleItems.map((item) => {
             const isActive = location.pathname === item.href ||
               (item.href !== '/' && location.pathname.startsWith(item.href));
             // Handle special menu items with submenus

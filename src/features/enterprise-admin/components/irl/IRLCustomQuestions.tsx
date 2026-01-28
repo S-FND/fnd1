@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,17 +7,39 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Save, Loader2, Upload, X, Download, FileText, Link, Trash2 } from 'lucide-react';
+import { 
+  Save, Loader2, Upload, X, Download, FileText, Link, Trash2, 
+  Eye, AlertCircle, CheckCircle, Clock, XCircle 
+} from 'lucide-react';
 import { httpClient } from '@/lib/httpClient';
 import { toast } from 'sonner';
 import { logger } from '@/hooks/logger';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
+// ============ INTERFACES ============
 interface FileAnswer {
+  _id?: string;
   fileName: string;
   filePath: string;
   fileSize: number;
   mimeType: string;
   uploadedAt: string;
+  issueDate?: string;
+  expiryDate?: string;
+  isUserVerified?: boolean;
+  isAdminVerified?: boolean;
+  verificationStatus?: 'pending' | 'verified' | 'rejected';
+  verifiedBy?: string;
+  verifiedAt?: string;
+  adminComment?: string;
+  adminVerifiedAt?: string;
 }
 
 interface CustomQuestion {
@@ -46,26 +68,296 @@ interface IRLCustomQuestionsProps {
   tabName?: string;
 }
 
-const getS3FilePath = (file_path: string) =>
-  `https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/${file_path}`;
+// ============ HELPER FUNCTIONS ============
+const getS3FilePath = (file_path: string) => {
+  if (file_path.startsWith('https://')) {
+    return file_path;
+  }
+  return `https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/${file_path}`;
+};
 
+// ============ DOCUMENT VERIFICATION HOOK ============
+const useDocumentVerification = () => {
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [currentDocToVerify, setCurrentDocToVerify] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const getUserEntityId = () => {
+    try {
+      const user = localStorage.getItem("fandoro-user");
+      if (user) {
+        const parsedUser = JSON.parse(user);
+        return parsedUser?.entityId || null;
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const getVerificationEndpoint = () => {
+    return 'custom-questions/verify';
+  };
+
+  const handleCloseModal = useCallback(() => {
+    setShowVerifyModal(false);
+    setCurrentDocToVerify(null);
+  }, []);
+
+  const handleVerifyClick = useCallback((fileDetails: any, questionId: string, questionText: string) => {
+    console.log('🎯 [Document Verification] Starting for custom question:', questionText);
+
+    const originalFilePath = fileDetails.filePath || fileDetails.file_path || '';
+
+    if (!originalFilePath) {
+      toast.error("No valid file found for verification");
+      return;
+    }
+
+    const fullFilePath = originalFilePath.startsWith('https://') 
+      ? originalFilePath 
+      : getS3FilePath(originalFilePath);
+
+    let issueDateInput = "";
+    let expiryDateInput = "";
+
+    // Handle date parsing safely
+    if (fileDetails.issueDate && fileDetails.issueDate !== 'Not found') {
+      const dateParts = fileDetails.issueDate.split('/');
+      if (dateParts.length === 3) {
+        const [day, month, year] = dateParts;
+        issueDateInput = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+    }
+
+    if (fileDetails.expiryDate && fileDetails.expiryDate !== 'Not found') {
+      const dateParts = fileDetails.expiryDate.split('/');
+      if (dateParts.length === 3) {
+        const [day, month, year] = dateParts;
+        expiryDateInput = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+    }
+
+    const verificationEndpoint = getVerificationEndpoint();
+
+    setCurrentDocToVerify({
+      ...fileDetails,
+      file_path: fullFilePath,
+      questionId,
+      questionText,
+      issueDateInput,
+      expiryDateInput,
+      isUserVerified: fileDetails.isUserVerified || false,
+      originalFilePath: originalFilePath,
+      verificationEndpoint
+    });
+
+    setShowVerifyModal(true);
+  }, []);
+
+  const handleVerifyAndClose = useCallback(async () => {
+    if (!currentDocToVerify) return;
+
+    setLoading(true);
+    try {
+      const entityId = getUserEntityId();
+      if (!entityId) {
+        toast.error("User not authenticated");
+        return;
+      }
+
+      // Format dates for API (DD/MM/YYYY)
+      const formatDateForAPI = (dateString: string) => {
+        if (!dateString) return "";
+        const [year, month, day] = dateString.split('-');
+        return `${day}/${month}/${year}`;
+      };
+
+      const verificationData = {
+        entityId,
+        _id: currentDocToVerify._id,
+        filePath: currentDocToVerify.originalFilePath || currentDocToVerify.filePath,
+        questionId: currentDocToVerify.questionId,
+        questionText: currentDocToVerify.questionText,
+        issueDate: currentDocToVerify.issueDateInput
+          ? formatDateForAPI(currentDocToVerify.issueDateInput)
+          : currentDocToVerify.issueDate || "",
+        expiryDate: currentDocToVerify.expiryDateInput
+          ? formatDateForAPI(currentDocToVerify.expiryDateInput)
+          : currentDocToVerify.expiryDate || "",
+        isUserVerified: true,
+        verifiedAt: new Date().toISOString(),
+        category: 'custom_questions'
+      };
+
+      console.log('📤 Sending verification data:', verificationData);
+
+      const response: any = await httpClient.post(currentDocToVerify.verificationEndpoint, verificationData);
+
+      if (response.data.status === true) {
+        toast.success("Document verified successfully!");
+        setRefreshTrigger(prev => prev + 1);
+        return response.data.data;
+      } else {
+        throw new Error(response.data.message || "Verification failed");
+      }
+    } catch (error: any) {
+      console.error('❌ Verification error:', error);
+      toast.error(error.message || "Verification failed");
+      throw error;
+    } finally {
+      setLoading(false);
+      handleCloseModal();
+    }
+  }, [currentDocToVerify, handleCloseModal]);
+
+  const handleCheckboxChange = useCallback((checked: boolean) => {
+    setCurrentDocToVerify((prev: any) => ({
+      ...prev,
+      isUserVerified: checked,
+    }));
+  }, []);
+
+  const handleIssueDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const dateValue = e.target.value;
+    setCurrentDocToVerify((prev: any) => ({
+      ...prev,
+      issueDateInput: dateValue,
+    }));
+  }, []);
+
+  const handleExpiryDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const dateValue = e.target.value;
+    setCurrentDocToVerify((prev: any) => ({
+      ...prev,
+      expiryDateInput: dateValue,
+    }));
+  }, []);
+
+  const VerificationModal = (
+    <Dialog open={showVerifyModal} onOpenChange={handleCloseModal}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Verify Document</DialogTitle>
+          <DialogDescription>
+            Verify the document details before submission
+          </DialogDescription>
+        </DialogHeader>
+
+        {currentDocToVerify && (
+          <div className="space-y-4">
+            <div>
+              <h4 className="font-medium mb-2">{currentDocToVerify.questionText || "Document"}</h4>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const viewUrl = currentDocToVerify.file_path;
+                    window.open(viewUrl, '_blank');
+                  }}
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  View Document
+                </Button>
+                <span className="text-xs text-gray-500">
+                  Category: Custom Questions
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="issueDate">Issue Date</Label>
+                <Input
+                  id="issueDate"
+                  type="date"
+                  value={currentDocToVerify.issueDateInput || ""}
+                  onChange={handleIssueDateChange}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="expiryDate">Expiry Date *</Label>
+                <Input
+                  id="expiryDate"
+                  type="date"
+                  value={currentDocToVerify.expiryDateInput || ""}
+                  onChange={handleExpiryDateChange}
+                  required
+                  className={!currentDocToVerify.expiryDateInput ? "border-red-500" : ""}
+                />
+                {!currentDocToVerify.expiryDateInput && (
+                  <p className="text-xs text-red-500">Expiry date is required</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="confirm"
+                checked={currentDocToVerify.isUserVerified || false}
+                onCheckedChange={handleCheckboxChange}
+              />
+              <Label htmlFor="confirm" className="text-sm">
+                I confirm the information is correct
+              </Label>
+            </div>
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button variant="outline" onClick={handleCloseModal} disabled={loading}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleVerifyAndClose}
+            disabled={
+              loading ||
+              !currentDocToVerify?.isUserVerified ||
+              !currentDocToVerify?.expiryDateInput
+            }
+          >
+            {loading ? "Verifying..." : "Verify Document"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+
+  return {
+    showVerifyModal,
+    currentDocToVerify,
+    handleVerifyClick,
+    VerificationModal,
+    refreshTrigger
+  };
+};
+
+// ============ MAIN COMPONENT ============
 const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({ 
   buttonEnabled,
   tabName = 'custom'
 }) => {
+  // ============ STATE ============
   const [questions, setQuestions] = useState<CustomQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, CustomQuestionAnswer>>({});
   const [uploadedFiles, setUploadedFiles] = useState<Record<string, File[]>>({});
-  const [filePaths, setFilePaths] = useState<Record<string, string[]>>({});
+  const [fileDetails, setFileDetails] = useState<Record<string, FileAnswer[]>>({});
   const [statuses, setStatuses] = useState<Record<string, string>>({});
   const [comments, setComments] = useState<Record<string, string>>({});
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({}); // Track touched fields
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [entityId, setEntityId] = useState<string>('');
 
+  // Use the verification hook
+  const { VerificationModal, handleVerifyClick, refreshTrigger } = useDocumentVerification();
+
+  // ============ UTILITY FUNCTIONS ============
   const getUserEntityId = () => {
     try {
       const user = localStorage.getItem('fandoro-user');
@@ -80,6 +372,28 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     }
   };
 
+  const isExpired = (dateString: string | undefined): boolean => {
+    if (!dateString || dateString === 'Not found') return false;
+    try {
+      const [day, month, year] = dateString.split('/').map(Number);
+      const expiryDate = new Date(year, month - 1, day);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      expiryDate.setHours(0, 0, 0, 0);
+      return expiryDate < today;
+    } catch (error) {
+      console.error('Error parsing expiry date:', error);
+      return false;
+    }
+  };
+
+  const shortenFileName = (name: string | undefined) => {
+    if (!name) return 'Document';
+    if (name.length <= 20) return name;
+    return `${name.substring(0, 15)}...${name.substring(name.length - 5)}`;
+  };
+
+  // ============ USE EFFECTS ============
   useEffect(() => {
     const entityIdFromStorage = getUserEntityId();
     if (entityIdFromStorage) {
@@ -100,7 +414,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
         
         const initialAnswers: Record<string, CustomQuestionAnswer> = {};
         const initialFiles: Record<string, File[]> = {};
-        const initialFilePaths: Record<string, string[]> = {};
+        const initialFileDetails: Record<string, FileAnswer[]> = {};
         const initialStatuses: Record<string, string> = {};
         const initialComments: Record<string, string> = {};
         
@@ -115,46 +429,96 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                 existingAnswer = [];
               }
             } else if (question.question_type === 'file') {
-              // Handle file answers - can be single object or array
-              if (Array.isArray(question.answer)) {
-                // Multiple files as array
-                const fileAnswers = question.answer as FileAnswer[];
-                const fileNames = fileAnswers.map(f => f.fileName).join(', ');
-                existingAnswer = fileNames;
+              // ====== FIXED FILE ANSWER PARSING ======
+              if (typeof question.answer === 'object' && question.answer !== null) {
+                // Always initialize with empty array
+                initialFileDetails[question._id] = [];
                 
-                // Store all S3 URLs in filePaths state
-                const urls = fileAnswers
-                  .filter(f => f.filePath)
-                  .map(f => getS3FilePath(f.filePath));
-                initialFilePaths[question._id] = urls;
-                
-                // Check if it's structured answer with status/comments
-                if (fileAnswers.length > 0 && typeof fileAnswers[0] === 'object') {
-                  const firstFile = fileAnswers[0] as any;
-                  if (firstFile.status) initialStatuses[question._id] = firstFile.status;
-                  if (firstFile.comments) initialComments[question._id] = firstFile.comments;
+                // Set status and comments from structured answer
+                if (question.answer.status) {
+                  initialStatuses[question._id] = question.answer.status;
                 }
-              } else if (typeof question.answer === 'object' && question.answer !== null) {
-                // SINGLE FILE OBJECT (what your backend returns)
-                const fileAnswer = question.answer as FileAnswer;
-                existingAnswer = fileAnswer.fileName || '';
-                
-                // Store the single S3 URL in filePaths state as array with one item
-                if (fileAnswer.filePath) {
-                  initialFilePaths[question._id] = [getS3FilePath(fileAnswer.filePath)];
+                if (question.answer.comments) {
+                  initialComments[question._id] = question.answer.comments;
                 }
                 
-                // Check if it's structured answer with status/comments
-                if ('status' in fileAnswer) {
-                  const structured = fileAnswer as any;
-                  if (structured.status) initialStatuses[question._id] = structured.status;
-                  if (structured.comments) initialComments[question._id] = structured.comments;
-                } else {
-                  // Regular file object - default status to Yes
-                  initialStatuses[question._id] = 'Yes';
+                // Check if it's a structured answer with files array
+                if (question.answer.files && Array.isArray(question.answer.files)) {
+                  // New format: { status: "Yes", comments: "", files: [...] }
+                  const fileAnswers = question.answer.files as FileAnswer[];
+                  const fileNames = fileAnswers.map(f => f.fileName).join(', ');
+                  existingAnswer = fileNames;
+                  
+                  // Process file details with verification info
+                  const filesWithDetails = fileAnswers.map(f => ({
+                    ...f,
+                    filePath: f.filePath || '',
+                    fileName: f.fileName || '',
+                    issueDate: f.issueDate || '',
+                    expiryDate: f.expiryDate || '',
+                    isUserVerified: f.isUserVerified || false,
+                    isAdminVerified: f.isAdminVerified || false,
+                    verificationStatus: f.verificationStatus || 'pending',
+                    adminComment: f.adminComment || '',
+                    _id: f._id || Math.random().toString(36).substr(2, 9)
+                  }));
+                  
+                  initialFileDetails[question._id] = filesWithDetails;
+                  
+                } else if (Array.isArray(question.answer)) {
+                  // Old format: array of files directly
+                  const fileAnswers = question.answer as FileAnswer[];
+                  const fileNames = fileAnswers.map(f => f.fileName).join(', ');
+                  existingAnswer = fileNames;
+                  
+                  // Process file details
+                  const filesWithDetails = fileAnswers.map(f => ({
+                    ...f,
+                    filePath: f.filePath || '',
+                    fileName: f.fileName || '',
+                    issueDate: f.issueDate || '',
+                    expiryDate: f.expiryDate || '',
+                    isUserVerified: f.isUserVerified || false,
+                    isAdminVerified: f.isAdminVerified || false,
+                    verificationStatus: f.verificationStatus || 'pending',
+                    adminComment: f.adminComment || '',
+                    _id: f._id || Math.random().toString(36).substr(2, 9)
+                  }));
+                  
+                  initialFileDetails[question._id] = filesWithDetails;
+                  if (!initialStatuses[question._id]) {
+                    initialStatuses[question._id] = 'Yes'; // Default for old format
+                  }
+                  
+                } else if (question.answer.filePath) {
+                  // Single file object (old format)
+                  const fileAnswer = question.answer as FileAnswer;
+                  existingAnswer = fileAnswer.fileName || '';
+                  
+                  const fileDetails = {
+                    ...fileAnswer,
+                    filePath: fileAnswer.filePath || '',
+                    fileName: fileAnswer.fileName || '',
+                    issueDate: fileAnswer.issueDate || '',
+                    expiryDate: fileAnswer.expiryDate || '',
+                    isUserVerified: fileAnswer.isUserVerified || false,
+                    isAdminVerified: fileAnswer.isAdminVerified || false,
+                    verificationStatus: fileAnswer.verificationStatus || 'pending',
+                    adminComment: fileAnswer.adminComment || '',
+                    _id: fileAnswer._id || Math.random().toString(36).substr(2, 9)
+                  };
+                  
+                  initialFileDetails[question._id] = [fileDetails];
+                  if (!initialStatuses[question._id]) {
+                    initialStatuses[question._id] = 'Yes';
+                  }
                 }
               } else if (typeof question.answer === 'string') {
+                // String format - might be JSON or plain string
                 existingAnswer = question.answer;
+                // Initialize empty files array
+                initialFileDetails[question._id] = [];
+                
                 try {
                   const parsed = JSON.parse(question.answer);
                   if (parsed.status) {
@@ -163,8 +527,24 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                   if (parsed.comments) {
                     initialComments[question._id] = parsed.comments;
                   }
+                  // Check for files in parsed JSON
+                  if (parsed.files && Array.isArray(parsed.files)) {
+                    const fileAnswers = parsed.files as FileAnswer[];
+                    const filesWithDetails = fileAnswers.map(f => ({
+                      ...f,
+                      filePath: f.filePath || '',
+                      fileName: f.fileName || '',
+                      issueDate: f.issueDate || '',
+                      expiryDate: f.expiryDate || '',
+                      isUserVerified: f.isUserVerified || false,
+                      isAdminVerified: f.isAdminVerified || false,
+                      verificationStatus: f.verificationStatus || 'pending',
+                      adminComment: f.adminComment || '',
+                      _id: f._id || Math.random().toString(36).substr(2, 9)
+                    }));
+                    initialFileDetails[question._id] = filesWithDetails;
+                  }
                 } catch (e) {
-                  // Not JSON, default to Yes
                   initialStatuses[question._id] = 'Yes';
                 }
               }
@@ -173,13 +553,11 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                 initialStatuses[question._id] = 'Yes';
               }
             } else {
-              // Handle other question types
+              // For non-file questions
               existingAnswer = question.answer as string;
             }
           } else {
-            // No existing answer
             existingAnswer = question.question_type === 'checkbox' ? [] : '';
-            // Default status for file questions
             if (question.question_type === 'file') {
               initialStatuses[question._id] = 'Yes';
             }
@@ -188,17 +566,16 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
           initialAnswers[question._id] = {
             question_id: question._id,
             answer: existingAnswer,
-            files: [] // Initialize empty array for new uploads
+            files: []
           };
         });
         
         setAnswers(initialAnswers);
         setUploadedFiles(initialFiles);
-        setFilePaths(initialFilePaths);
+        setFileDetails(initialFileDetails);
         setStatuses(initialStatuses);
         setComments(initialComments);
         
-        // Clear any validation errors on fresh load
         setValidationErrors({});
         setTouchedFields({});
       } else {
@@ -218,111 +595,54 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     if (entityId) {
       loadData();
     }
-  }, [entityId]);
+  }, [entityId, refreshTrigger]);
 
   const filteredQuestions = useMemo(() => {
     const filtered = questions.filter(q => {
-      // Handle tab_name as string or array
       let questionTab: string;
       
       if (Array.isArray(q.tab_name)) {
-        // If it's an array, get the first element or default to 'custom'
         questionTab = q.tab_name.length > 0 ? q.tab_name[0] : 'custom';
       } else if (q.tab_name) {
-        // If it's a string, use it
         questionTab = q.tab_name;
       } else {
-        // If undefined/null, default to 'custom'
         questionTab = 'custom';
       }
       
       return questionTab === tabName;
     });
     
-    // Debug logging
     console.log('Filtering questions:', {
       totalQuestions: questions.length,
       tabName,
-      filteredCount: filtered.length,
-      questionsWithTabs: questions.map(q => {
-        let tabValue: string;
-        if (Array.isArray(q.tab_name)) {
-          tabValue = q.tab_name.length > 0 ? q.tab_name[0] : 'custom (default)';
-        } else {
-          tabValue = q.tab_name || 'custom (default)';
-        }
-        return {
-          id: q._id,
-          text: q.question_text,
-          tab_name: tabValue
-        };
-      })
+      filteredCount: filtered.length
     });
     
     return filtered;
   }, [questions, tabName]);
 
-  // Real-time validation functions
+  // ============ SIMPLIFIED VALIDATION FUNCTIONS ============
   const validateFileQuestion = (question: CustomQuestion) => {
     const status = statuses[question._id] || '';
     const files = uploadedFiles[question._id] || [];
-    const existingFileUrls = filePaths[question._id] || [];
+    const existingFiles = fileDetails[question._id] || [];
     const comment = comments[question._id] || '';
     
-    if (status === 'Yes') {
-      if (files.length === 0 && existingFileUrls.length === 0) {
-        return {
-          isValid: false,
-          message: `At least one file is required when status is "Yes"`
-        };
-      }
-    }
+    console.log(`📋 Validating file question ${question._id}:`, {
+      status,
+      filesCount: files.length,
+      existingFilesCount: existingFiles.length,
+      comment,
+      hasExistingFiles: existingFiles.length > 0
+    });
     
-    if (status === 'No' || status === 'Not Applicable') {
-      if (!comment.trim()) {
-        return {
-          isValid: false,
-          message: `Reason is required when status is "${status}"`
-        };
-      }
-    }
-    
+    // For drafts: No validation, allow empty
+    // For final submit: Only validate if status is "Yes" and no files
     return { isValid: true };
   };
 
   const validateOtherQuestion = (question: CustomQuestion) => {
-    const answer = answers[question._id]?.answer;
-    
-    if (['text', 'textarea', 'number'].includes(question.question_type)) {
-      const stringAnswer = answer as string || '';
-      if (!stringAnswer.trim()) {
-        return {
-          isValid: false,
-          message: `This field is required`
-        };
-      }
-    }
-    
-    if (question.question_type === 'dropdown') {
-      const stringAnswer = answer as string || '';
-      if (!stringAnswer.trim()) {
-        return {
-          isValid: false,
-          message: `Please select an option`
-        };
-      }
-    }
-    
-    if (question.question_type === 'checkbox') {
-      const arrayAnswer = answer as string[] || [];
-      if (arrayAnswer.length === 0) {
-        return {
-          isValid: false,
-          message: `Please select at least one option`
-        };
-      }
-    }
-    
+    // No validation for drafts - always valid
     return { isValid: true };
   };
 
@@ -334,30 +654,15 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     }
   };
 
-  // Validate a single question (for real-time validation)
   const validateSingleQuestion = (questionId: string) => {
-    const question = questions.find(q => q._id === questionId);
-    if (!question) return;
-    
-    const validation: any = validateQuestion(question);
-    
-    if (!validation.isValid && touchedFields[questionId]) {
-      // Only show error if field has been touched
-      setValidationErrors(prev => ({
-        ...prev,
-        [questionId]: validation.message
-      }));
-    } else {
-      // Clear error if valid or field not touched
-      setValidationErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[questionId];
-        return newErrors;
-      });
-    }
+    // Clear validation errors for real-time validation
+    setValidationErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[questionId];
+      return newErrors;
+    });
   };
 
-  // Mark field as touched
   const markFieldAsTouched = (questionId: string) => {
     if (!touchedFields[questionId]) {
       setTouchedFields(prev => ({
@@ -367,36 +672,44 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     }
   };
 
-  // Validate all questions (for save/submit)
-  const validateAllQuestions = () => {
+  // FIXED: Simple validation that always returns true for drafts
+  const validateAllQuestions = (isDraft = false) => {
+    console.log('Validating all questions for:', isDraft ? 'DRAFT' : 'FINAL SUBMIT');
+    
+    if (isDraft) {
+      // No validation for drafts
+      setValidationErrors({});
+      return true;
+    }
+    
+    // For final submit, only validate file questions with status "Yes"
     const newErrors: Record<string, string> = {};
     
-    // questions.forEach(question => {
-    //   const validation: any = validateQuestion(question);
-    //   if (!validation.isValid) {
-    //     newErrors[question._id] = validation.message;
-    //     // Mark field as touched when validation fails on save/submit
-    //     setTouchedFields(prev => ({
-    //       ...prev,
-    //       [question._id]: true
-    //     }));
-    //   }
-    // });
     filteredQuestions.forEach(question => {
-      const validation: any = validateQuestion(question);
-      if (!validation.isValid) {
-        newErrors[question._id] = validation.message;
-        // Mark field as touched when validation fails on save/submit
-        setTouchedFields(prev => ({
-          ...prev,
-          [question._id]: true
-        }));
+      if (question.question_type === 'file') {
+        const status = statuses[question._id] || '';
+        const files = uploadedFiles[question._id] || [];
+        const existingFiles = fileDetails[question._id] || [];
+        const comment = comments[question._id] || '';
+        
+        if (status === 'Yes') {
+          if (files.length === 0 && existingFiles.length === 0) {
+            newErrors[question._id] = 'At least one file is required when status is "Yes"';
+          }
+        } else if (status === 'No' || status === 'Not Applicable') {
+          if (!comment.trim()) {
+            newErrors[question._id] = `Reason is required when status is "${status}"`;
+          }
+        }
       }
     });
+    
+    console.log('Validation errors:', newErrors);
     setValidationErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  // ============ EVENT HANDLERS ============
   const handleAnswerChange = (questionId: string, value: string | string[] | number | File[]) => {
     setAnswers(prev => ({
       ...prev,
@@ -406,10 +719,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
       }
     }));
     
-    // Mark field as touched
     markFieldAsTouched(questionId);
-    
-    // Run validation for this specific question
     validateSingleQuestion(questionId);
   };
 
@@ -431,7 +741,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
       const newFiles = Array.from(files);
       setUploadedFiles(prev => ({
         ...prev,
-        [questionId]: [...(prev[questionId] || []), ...newFiles] // APPEND new files
+        [questionId]: [...(prev[questionId] || []), ...newFiles]
       }));
       
       const currentFiles = uploadedFiles[questionId] || [];
@@ -447,10 +757,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
         }
       }));
       
-      // Mark field as touched
       markFieldAsTouched(questionId);
-      
-      // Run validation for this specific question
       validateSingleQuestion(questionId);
     }
   };
@@ -477,10 +784,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
       };
     });
     
-    // Mark field as touched
     markFieldAsTouched(questionId);
-    
-    // Run validation for this specific question
     validateSingleQuestion(questionId);
   };
 
@@ -500,10 +804,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
       }
     }));
     
-    // Mark field as touched
     markFieldAsTouched(questionId);
-    
-    // Run validation for this specific question
     validateSingleQuestion(questionId);
   };
 
@@ -513,10 +814,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
       [questionId]: value
     }));
     
-    // Mark field as touched
     markFieldAsTouched(questionId);
-    
-    // Run validation for this specific question
     validateSingleQuestion(questionId);
   };
 
@@ -526,10 +824,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
       [questionId]: value
     }));
     
-    // Mark field as touched
     markFieldAsTouched(questionId);
-    
-    // Run validation for this specific question
     validateSingleQuestion(questionId);
   };
 
@@ -542,24 +837,29 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     }
   
     try {
-      const currentFileUrls = filePaths[questionId] || [];
+      const currentFiles = fileDetails[questionId] || [];
       
-      if (fileIndex < 0 || fileIndex >= currentFileUrls.length) {
+      if (fileIndex < 0 || fileIndex >= currentFiles.length) {
         toast.error('Invalid file index');
         return;
       }
       
-      const fileUrlToDelete = currentFileUrls[fileIndex];
+      const fileToDelete = currentFiles[fileIndex];
       
-      if (!fileUrlToDelete) {
-        toast.error('File URL not found');
+      if (!fileToDelete.filePath) {
+        toast.error('File path not found');
         return;
       }
   
-      // Encode the filePath for URL safety
-      const encodedFilePath = encodeURIComponent(fileUrlToDelete);
+      // Extract just the path after the S3 domain
+      let filePath = fileToDelete.filePath;
+      if (filePath.startsWith('https://')) {
+        const url = new URL(filePath);
+        filePath = url.pathname.substring(1);
+      }
       
-      // Send as query parameters
+      const encodedFilePath = encodeURIComponent(filePath);
+      
       const response: any = await httpClient.delete(
         `custom-questions/file?questionId=${questionId}&filePath=${encodedFilePath}`
       );
@@ -567,8 +867,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
       console.log('Delete API response:', response);
   
       if (response.status === 200 && response.data.status) {
-        // Update local state to remove the file
-        setFilePaths(prev => ({
+        setFileDetails(prev => ({
           ...prev,
           [questionId]: prev[questionId].filter((_, index) => index !== fileIndex)
         }));
@@ -585,6 +884,96 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     }
   };
 
+  // ============ FILE VERIFICATION RENDER ============
+  const renderFileWithVerification = (fileDetails: FileAnswer, questionId: string, fileIndex: number, questionText: string) => {
+    const fileUrl = fileDetails.filePath || '';
+    const fileName = fileDetails.fileName || fileUrl.split('/').pop() || 'Document';
+    
+    const detailsExist = !!fileDetails._id && !fileDetails._id?.startsWith('temp-');
+    const isFileExpired = fileDetails.expiryDate && fileDetails.expiryDate !== 'Not found' ? isExpired(fileDetails.expiryDate) : false;
+    const isVerified = fileDetails.isUserVerified === true && fileDetails.isAdminVerified === true;
+    const isUserVerified = fileDetails.isUserVerified === true;
+    const isRejected = fileDetails.verificationStatus === 'rejected';
+
+    return (
+      <div key={`${questionId}-${fileIndex}`} className="flex items-center justify-between bg-gray-50 p-2 rounded text-xs mb-1">
+        <div className="flex items-center gap-2 flex-1">
+          <a
+            href={fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="truncate text-blue-600 hover:text-blue-800 underline"
+            title={fileName}
+            onClick={(e) => {
+              e.preventDefault();
+              window.open(fileUrl, '_blank');
+            }}
+          >
+            {shortenFileName(fileName)}
+          </a>
+
+          <div className="flex items-center gap-1 flex-wrap">
+            {isFileExpired && (
+              <Badge variant="destructive" className="text-xs py-0 px-1.5">
+                Expired
+              </Badge>
+            )}
+
+            {fileDetails.expiryDate && !isFileExpired && fileDetails.expiryDate !== 'Not found' && (
+              <span className="text-xs text-gray-500 whitespace-nowrap">
+                Exp: {fileDetails.expiryDate}
+              </span>
+            )}
+
+            {isVerified && (
+              <Badge variant="default" className="text-xs bg-green-100 text-green-800 py-0 px-1.5">
+                <CheckCircle className="h-3 w-3 mr-1 inline" />
+                Verified
+              </Badge>
+            )}
+
+            {isRejected && (
+              <Badge variant="destructive" className="text-xs py-0 px-1.5">
+                <XCircle className="h-3 w-3 mr-1 inline" />
+                Rejected
+              </Badge>
+            )}
+
+            {isUserVerified && !isVerified && (
+              <Badge variant="outline" className="text-xs text-yellow-600 border-yellow-200 py-0 px-1.5">
+                <Clock className="h-3 w-3 mr-1 inline" />
+                Pending Admin
+              </Badge>
+            )}
+
+            {detailsExist && !isVerified && !isRejected && !isUserVerified && !isFileExpired && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleVerifyClick(fileDetails, questionId, questionText)}
+                className="h-6 text-xs py-0 px-2"
+                disabled={!buttonEnabled}
+              >
+                <AlertCircle className="h-3 w-3 mr-1" />
+                Verify
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => handleDeleteExistingFile(questionId, fileIndex)}
+          className="h-5 w-5 p-0 text-red-500 hover:text-red-700 ml-2"
+          disabled={!buttonEnabled}
+        >
+          <X className="h-3 w-3" />
+        </button>
+      </div>
+    );
+  };
+
+  // ============ FIXED FORM SUBMISSION FUNCTIONS ============
   const handleSave = async () => {
     if (!buttonEnabled) {
       toast.error('You do not have permission to save answers');
@@ -598,12 +987,6 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
 
     if (filteredQuestions.length === 0) {
       toast.error('No custom questions found to save.');
-      return;
-    }
-
-    // Validate all questions before saving
-    if (!validateAllQuestions()) {
-      toast.error('Please fix validation errors before saving');
       return;
     }
 
@@ -626,14 +1009,15 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
             const status = statuses[q._id] || 'Yes';
             const comment = comments[q._id] || '';
             const files = uploadedFiles[q._id] || [];
-            const hasExistingFiles = filePaths[q._id]?.length > 0;
+            const hasExistingFiles = fileDetails[q._id]?.length > 0;
             
+            // Always send file data even if empty
             const answerData = {
               status: status,
               comments: comment,
               hasFile: files.length > 0,
               fileCount: files.length,
-              hasExistingFiles: hasExistingFiles  // Add this
+              hasExistingFiles: hasExistingFiles
             };
             
             return {
@@ -641,32 +1025,34 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
               answer: JSON.stringify(answerData)
             };
           } else {
+            // FIX: Always send answer for non-file questions
+            const answerValue = Array.isArray(answer?.answer) 
+              ? answer.answer.join(', ') 
+              : (answer?.answer || '');
+            
             return {
               question_id: q._id,
-              answer: Array.isArray(answer?.answer) ? answer.answer.join(', ') : answer?.answer || ''
+              answer: answerValue
             };
           }
         });
 
+        console.log('Saving answers array:', answersArray);
         formData.append('answers', JSON.stringify(answersArray));
 
-        // Add files with proper naming convention
         filteredQuestions
-        .filter(q => q.question_type === 'file' && uploadedFiles[q._id]?.length > 0)
-        .forEach(q => {
-          const files = uploadedFiles[q._id] || [];
-          
-          // Append each file with index
-          files.forEach((file, index) => {
-            formData.append(`${q._id}_files_${index}`, file);
+          .filter(q => q.question_type === 'file' && uploadedFiles[q._id]?.length > 0)
+          .forEach(q => {
+            const files = uploadedFiles[q._id] || [];
+            
+            files.forEach((file, index) => {
+              formData.append(`${q._id}_files_${index}`, file);
+            });
+            
+            formData.append(`${q._id}_append`, 'true');
           });
-          
-          // Also send a flag indicating we want to APPEND, not replace
-          formData.append(`${q._id}_append`, 'true');
-        });
 
-        logger.log('Saving with form data');
-
+        console.log('Sending draft with form data');
         const response: any = await httpClient.post('custom-questions/answers', formData, {
           headers: {
             'Content-Type': 'multipart/form-data',
@@ -677,7 +1063,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
           toast.success(response.data?.message || 'Custom question answers saved as draft successfully!');
           await loadData();
         } else {
-          throw new Error('Failed to save draft');
+          throw new Error(response.data?.message || 'Failed to save draft');
         }
       } else {
         const answersArray = filteredQuestions.map(q => {
@@ -686,11 +1072,12 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
           if (q.question_type === 'file') {
             const status = statuses[q._id] || 'Yes';
             const comment = comments[q._id] || '';
-            const hasExistingFiles = filePaths[q._id]?.length > 0;
+            const hasExistingFiles = fileDetails[q._id]?.length > 0;
             
             const answerData = {
               status: status,
               comments: comment,
+              files: fileDetails[q._id] || [],
               hasExistingFiles: hasExistingFiles
             };
             
@@ -699,9 +1086,14 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
               answer: JSON.stringify(answerData)
             };
           } else {
+            // FIX: Always send answer for non-file questions
+            const answerValue = Array.isArray(answer?.answer) 
+              ? answer.answer.join(', ') 
+              : (answer?.answer || '');
+            
             return {
               question_id: q._id,
-              answer: Array.isArray(answer?.answer) ? answer.answer.join(', ') : answer?.answer || ''
+              answer: answerValue
             };
           }
         });
@@ -712,16 +1104,18 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
           isDraft: true
         };
 
+        console.log('Saving draft payload:', payload);
         const response: any = await httpClient.post('custom-questions/answers', payload);
 
         if (response.status === 200 || response.status === 201) {
           toast.success(response.data?.message || 'Custom question answers saved as draft successfully!');
           await loadData();
         } else {
-          throw new Error('Failed to save draft');
+          throw new Error(response.data?.message || 'Failed to save draft');
         }
       }
     } catch (err: any) {
+      console.error('Error saving draft:', err);
       logger.error('Error saving draft:', err);
       const errorMessage = err.response?.data?.message || err.message || 'Failed to save draft';
       setError(errorMessage);
@@ -732,8 +1126,8 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
   };
 
   const handleSubmit = async () => {
-    // Validate all questions before submitting
-    if (!validateAllQuestions()) {
+    // FIX: Use validation for final submit
+    if (!validateAllQuestions(false)) {
       toast.error('Please fix validation errors before submitting');
       return;
     }
@@ -772,7 +1166,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
             const status = statuses[q._id] || 'Yes';
             const comment = comments[q._id] || '';
             const files = uploadedFiles[q._id] || [];
-            const hasExistingFiles = filePaths[q._id]?.length > 0;
+            const hasExistingFiles = fileDetails[q._id]?.length > 0;
             
             const answerData = {
               status: status,
@@ -787,13 +1181,19 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
               answer: JSON.stringify(answerData)
             };
           } else {
+            // Send answer for non-file questions
+            const answerValue = Array.isArray(answer?.answer) 
+              ? answer.answer.join(', ') 
+              : (answer?.answer || '');
+            
             return {
               question_id: q._id,
-              answer: Array.isArray(answer?.answer) ? answer.answer.join(', ') : answer?.answer || ''
+              answer: answerValue
             };
           }
         });
 
+        console.log('Submitting answers array:', answersArray);
         formData.append('answers', JSON.stringify(answersArray));
 
         filteredQuestions
@@ -816,7 +1216,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
           toast.success(response.data?.message || 'Custom question answers submitted successfully!');
           await loadData();
         } else {
-          throw new Error('Failed to submit answers');
+          throw new Error(response.data?.message || 'Failed to submit answers');
         }
       } else {
         const answersArray = filteredQuestions.map(q => {
@@ -825,11 +1225,12 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
           if (q.question_type === 'file') {
             const status = statuses[q._id] || 'Yes';
             const comment = comments[q._id] || '';
-            const hasExistingFiles = filePaths[q._id]?.length > 0;
+            const hasExistingFiles = fileDetails[q._id]?.length > 0;
             
             const answerData = {
               status: status,
               comments: comment,
+              files: fileDetails[q._id] || [],
               hasExistingFiles: hasExistingFiles
             };
             
@@ -838,9 +1239,13 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
               answer: JSON.stringify(answerData)
             };
           } else {
+            const answerValue = Array.isArray(answer?.answer) 
+              ? answer.answer.join(', ') 
+              : (answer?.answer || '');
+            
             return {
               question_id: q._id,
-              answer: Array.isArray(answer?.answer) ? answer.answer.join(', ') : answer?.answer || ''
+              answer: answerValue
             };
           }
         });
@@ -851,16 +1256,18 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
           isDraft: false
         };
 
+        console.log('Submitting final payload:', payload);
         const response: any = await httpClient.post('custom-questions/answers', payload);
 
         if (response.status === 200 || response.status === 201) {
           toast.success(response.data?.message || 'Custom question answers submitted successfully!');
           await loadData();
         } else {
-          throw new Error('Failed to submit answers');
+          throw new Error(response.data?.message || 'Failed to submit answers');
         }
       }
     } catch (err: any) {
+      console.error('Error submitting form:', err);
       logger.error('Error submitting form:', err);
       const errorMessage = err.response?.data?.message || err.message || 'Failed to submit form';
       setError(errorMessage);
@@ -870,10 +1277,11 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     }
   };
 
+  // ============ RENDER FUNCTIONS ============
   const renderQuestionInput = (question: CustomQuestion, index: number) => {
     const answer = answers[question._id]?.answer || '';
     const files = uploadedFiles[question._id] || [];
-    const existingFileUrls = filePaths[question._id] || [];
+    const existingFiles = fileDetails[question._id] || [];
     const status = statuses[question._id] || 'Yes';
     const comment = comments[question._id] || '';
     const errorMessage = validationErrors[question._id];
@@ -942,6 +1350,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                 <SelectValue placeholder="Select an option" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">Select an option</SelectItem>
                 {question.options?.map((option, optionIndex) => (
                   <SelectItem key={optionIndex} value={option}>
                     {option}
@@ -959,7 +1368,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
         return (
           <div className="space-y-2">
             <div className={errorMessage && isTouched ? 'border border-red-300 p-3 rounded-md bg-red-50' : ''}>
-              {question.options?.map((option:any, optionIndex) => {
+              {question.options?.map((option: any, optionIndex) => {
                 const isChecked = Array.isArray(answer) ? answer.includes(option) : false;
                 return (
                   <div key={optionIndex} className="flex items-center space-x-2">
@@ -1034,8 +1443,8 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                           errorMessage && errorMessage.includes('file') && isTouched ? 'border-red-500' : 'border-gray-300'
                         }`}>
                           <span className="text-gray-500 text-sm truncate">
-                            {files.length > 0 || existingFileUrls.length > 0 
-                              ? `${files.length + existingFileUrls.length} file(s)` 
+                            {files.length > 0 || existingFiles.length > 0 
+                              ? `${files.length + existingFiles.length} file(s)` 
                               : "Upload files"}
                           </span>
                           <Button
@@ -1111,7 +1520,6 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
               </div>
             </div>
             
-            {/* Show validation error below the form section */}
             {errorMessage && isTouched && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-md">
                 <p className="text-sm text-red-600">
@@ -1120,50 +1528,18 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
               </div>
             )}
             
-            {/* Show existing files */}
-            {existingFileUrls.length > 0 && (
+            {/* Show existing files with verification */}
+            {existingFiles.length > 0 && (
               <div className="mt-4 p-3 bg-gray-50 rounded border">
                 <div className="text-sm font-medium text-gray-700 mb-2">
-                  Existing files ({existingFileUrls.length}):
+                  Existing files ({existingFiles.length}):
                 </div>
                 <div className="space-y-2">
-                  {existingFileUrls.map((fileUrl, index) => {
-                    const fileName = fileUrl.split('/').pop() || 'Download File';
-                    return (
-                      <div key={`existing-${index}`} className="flex items-center justify-between gap-2 text-sm">
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <FileText className="h-4 w-4 text-gray-600 flex-shrink-0" />
-                          <span className="text-gray-700 truncate min-w-0" title={fileName}>
-                            {fileName}
-                          </span>
-                        </div>
-                        <div className="flex gap-2 flex-shrink-0">
-                          <button
-                            type="button"
-                            className="text-blue-600 hover:text-blue-800 underline text-xs whitespace-nowrap"
-                            onClick={() => window.open(fileUrl, '_blank')}
-                          >
-                            View
-                          </button>
-                          <button
-                            type="button"
-                            className="text-red-600 hover:text-red-800 underline text-xs whitespace-nowrap"
-                            onClick={() => {
-                              console.log('Delete clicked:', {
-                                questionId: question._id,
-                                question,
-                                fileIndex: index,
-                                hasQuestionId: !!question._id
-                              });
-                              handleDeleteExistingFile(question._id, index);
-                            }}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {existingFiles.map((file, index) => (
+                    <div key={`existing-${index}`}>
+                      {renderFileWithVerification(file, question._id, index, question.question_text)}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -1188,8 +1564,6 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     }
   };
 
-  const hasExistingAnswers = filteredQuestions.some(question => question.answer);
-
   const getSectionTitle = () => {
     const titleMap: Record<string, string> = {
       'company': 'Advanced Company Information',
@@ -1206,6 +1580,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     return titleMap[tabName] || 'Custom Questions';
   };
 
+  // ============ RENDER COMPONENT ============
   return (
     <>
       {/* Only show title if there are questions for this tab */}
@@ -1239,7 +1614,6 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
           )}
         </div>
       ) : filteredQuestions.length === 0 ? (
-        // Don't show empty state - just render nothing
         null
       ) : (
         <div className="overflow-x-auto rounded-lg border mt-4">
@@ -1263,7 +1637,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                 .map((question, index) => {
                   const answer = answers[question._id]?.answer || '';
                   const files = uploadedFiles[question._id] || [];
-                  const existingFileUrls = filePaths[question._id] || [];
+                  const existingFiles = fileDetails[question._id] || [];
                   const status = statuses[question._id] || 'Yes';
                   const comment = comments[question._id] || '';
                   const errorMessage = validationErrors[question._id];
@@ -1329,19 +1703,29 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                           />
                         ) : question.question_type === 'dropdown' ? (
                           <Select
-                            value={answer as string}
-                            onValueChange={(value) => handleAnswerChange(question._id, value)}
+                            value={answer || undefined}
+                            onValueChange={(value) =>
+                              handleAnswerChange(question._id, value)
+                            }
                             disabled={!buttonEnabled}
                           >
-                            <SelectTrigger className={errorMessage && isTouched ? 'border-red-500' : ''}>
+                            <SelectTrigger
+                              className={errorMessage && isTouched ? 'border-red-500' : ''}
+                            >
                               <SelectValue placeholder="Select an option" />
                             </SelectTrigger>
+                        
                             <SelectContent>
-                              {question.options?.map((option, optionIndex) => (
-                                <SelectItem key={optionIndex} value={option}>
-                                  {option}
-                                </SelectItem>
-                              ))}
+                              {question.options
+                                ?.filter(opt => opt && opt.trim() !== '')
+                                .map((option, optionIndex) => (
+                                  <SelectItem
+                                    key={optionIndex}
+                                    value={option}   // ✅ always non-empty
+                                  >
+                                    {option}
+                                  </SelectItem>
+                                ))}
                             </SelectContent>
                           </Select>
                         ) : question.question_type === 'checkbox' ? (
@@ -1415,39 +1799,70 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                                   </label>
                                 </div>
 
-                                {existingFileUrls.map((fileUrl, fileIndex) => {
-                                  const fileName = fileUrl.split('/').pop() || 'Download File';
-                                  return (
-                                    <div key={`existing-${fileIndex}`} className="flex items-center justify-between bg-gray-50 p-1 py-0.5 rounded text-xs">
-                                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                                        <a
-                                          href={fileUrl}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="truncate flex-1 text-blue-600 hover:text-blue-800 underline"
-                                          title={fileName}
-                                        >
-                                          {fileName.length > 30 ? `${fileName.substring(0, 25)}...` : fileName}
-                                        </a>
-                                        <button
-                                          type="button"
-                                          onClick={() => handleDeleteExistingFile(question._id, fileIndex)}
-                                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                {/* Show existing files with verification */}
+                                {existingFiles.map((file, fileIndex) => (
+                                  <div key={`existing-${fileIndex}`} className="flex items-center justify-between bg-gray-50 p-1 py-0.5 rounded text-xs">
+                                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                                      <a
+                                        href={file.filePath}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="truncate flex-1 text-blue-600 hover:text-blue-800 underline"
+                                        title={file.fileName}
+                                      >
+                                        {file.fileName.length > 30 ? `${file.fileName.substring(0, 25)}...` : file.fileName}
+                                      </a>
+                                      
+                                      {/* Verification badges */}
+                                      {file.isUserVerified && file.isAdminVerified && (
+                                        <Badge variant="default" className="text-xs bg-green-100 text-green-800 py-0 px-1.5">
+                                          <CheckCircle className="h-3 w-3 mr-1 inline" />
+                                          Verified
+                                        </Badge>
+                                      )}
+                                      
+                                      {file.isUserVerified && !file.isAdminVerified && (
+                                        <Badge variant="outline" className="text-xs text-yellow-600 border-yellow-200 py-0 px-1.5">
+                                          <Clock className="h-3 w-3 mr-1 inline" />
+                                          Pending Admin
+                                        </Badge>
+                                      )}
+                                      
+                                      {file._id && !file._id.startsWith('temp-') && !file.isUserVerified && (
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => handleVerifyClick(file, question._id, question.question_text)}
+                                          className="h-6 text-xs py-0 px-2"
                                           disabled={!buttonEnabled}
                                         >
-                                          <X className="h-3 w-3" />
-                                        </button>
-                                      </div>
+                                          <AlertCircle className="h-3 w-3 mr-1" />
+                                          Verify
+                                        </Button>
+                                      )}
+                                      
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeleteExistingFile(question._id, fileIndex)}
+                                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                                        disabled={!buttonEnabled}
+                                      >
+                                        <X className="h-3 w-3" />
+                                      </button>
                                     </div>
-                                  );
-                                })}
+                                  </div>
+                                ))}
 
+                                {/* Show new files to upload */}
                                 {files.map((file, fileIndex) => (
                                   <div key={`new-${fileIndex}`} className="flex items-center justify-between bg-blue-50 p-1 py-0.5 rounded text-xs">
                                     <div className="flex items-center gap-2 min-w-0 flex-1">
                                       <span className="truncate flex-1 text-blue-700" title={file.name}>
                                         {file.name.length > 30 ? `${file.name.substring(0, 25)}...` : file.name}
                                       </span>
+                                      <Badge variant="secondary" className="text-xs py-0 px-1.5">
+                                        New
+                                      </Badge>
                                       <button
                                         type="button"
                                         onClick={() => handleRemoveFile(question._id, fileIndex)}
@@ -1548,6 +1963,9 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
           </Button>
         </div>
       )}
+
+      {/* Verification Modal */}
+      {VerificationModal}
     </>
   );
 };
