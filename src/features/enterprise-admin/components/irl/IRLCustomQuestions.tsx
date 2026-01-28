@@ -1800,58 +1800,69 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                                 </div>
 
                                 {/* Show existing files with verification */}
-                                {existingFiles.map((file, fileIndex) => (
-                                  <div key={`existing-${fileIndex}`} className="flex items-center justify-between bg-gray-50 p-1 py-0.5 rounded text-xs">
-                                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                                      <a
-                                        href={file.filePath}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="truncate flex-1 text-blue-600 hover:text-blue-800 underline"
-                                        title={file.fileName}
-                                      >
-                                        {file.fileName.length > 30 ? `${file.fileName.substring(0, 25)}...` : file.fileName}
-                                      </a>
-                                      
-                                      {/* Verification badges */}
-                                      {file.isUserVerified && file.isAdminVerified && (
-                                        <Badge variant="default" className="text-xs bg-green-100 text-green-800 py-0 px-1.5">
-                                          <CheckCircle className="h-3 w-3 mr-1 inline" />
-                                          Verified
-                                        </Badge>
-                                      )}
-                                      
-                                      {file.isUserVerified && !file.isAdminVerified && (
-                                        <Badge variant="outline" className="text-xs text-yellow-600 border-yellow-200 py-0 px-1.5">
-                                          <Clock className="h-3 w-3 mr-1 inline" />
-                                          Pending Admin
-                                        </Badge>
-                                      )}
-                                      
-                                      {file._id && !file._id.startsWith('temp-') && !file.isUserVerified && (
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => handleVerifyClick(file, question._id, question.question_text)}
-                                          className="h-6 text-xs py-0 px-2"
+                                {existingFiles.map((file, fileIndex) => {
+                                  // Create the full S3 URL for the file
+                                  const s3FileUrl = file.filePath?.startsWith('http') 
+                                    ? file.filePath 
+                                    : `https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/${file.filePath}`;
+                                  
+                                  const displayFileName = file.fileName?.length > 30 
+                                    ? `${file.fileName.substring(0, 25)}...` 
+                                    : file.fileName;
+                                  
+                                  return (
+                                    <div key={`existing-${fileIndex}`} className="flex items-center justify-between bg-gray-50 p-1 py-0.5 rounded text-xs">
+                                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                                        <a
+                                          href={s3FileUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="truncate flex-1 text-blue-600 hover:text-blue-800 underline"
+                                          title={file.fileName}
+                                        >
+                                          {displayFileName}
+                                        </a>
+                                        
+                                        {/* Verification badges */}
+                                        {file.isUserVerified && file.isAdminVerified && (
+                                          <Badge variant="default" className="text-xs bg-green-100 text-green-800 py-0 px-1.5">
+                                            <CheckCircle className="h-3 w-3 mr-1 inline" />
+                                            Verified
+                                          </Badge>
+                                        )}
+                                        
+                                        {file.isUserVerified && !file.isAdminVerified && (
+                                          <Badge variant="outline" className="text-xs text-yellow-600 border-yellow-200 py-0 px-1.5">
+                                            <Clock className="h-3 w-3 mr-1 inline" />
+                                            Pending Admin
+                                          </Badge>
+                                        )}
+                                        
+                                        {file._id && !file._id.startsWith('temp-') && !file.isUserVerified && (
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handleVerifyClick(file, question._id, question.question_text)}
+                                            className="h-6 text-xs py-0 px-2"
+                                            disabled={!buttonEnabled}
+                                          >
+                                            <AlertCircle className="h-3 w-3 mr-1" />
+                                            Verify
+                                          </Button>
+                                        )}
+                                        
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDeleteExistingFile(question._id, fileIndex)}
+                                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
                                           disabled={!buttonEnabled}
                                         >
-                                          <AlertCircle className="h-3 w-3 mr-1" />
-                                          Verify
-                                        </Button>
-                                      )}
-                                      
-                                      <button
-                                        type="button"
-                                        onClick={() => handleDeleteExistingFile(question._id, fileIndex)}
-                                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                                        disabled={!buttonEnabled}
-                                      >
-                                        <X className="h-3 w-3" />
-                                      </button>
+                                          <X className="h-3 w-3" />
+                                        </button>
+                                      </div>
                                     </div>
-                                  </div>
-                                ))}
+                                  );
+                                })}
 
                                 {/* Show new files to upload */}
                                 {files.map((file, fileIndex) => (
