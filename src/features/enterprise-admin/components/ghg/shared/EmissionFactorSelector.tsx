@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,forwardRef,useImperativeHandle } from 'react';
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,11 @@ interface EmissionFactorSelectorProps {
   value?: string; // emission factor ID
   onSelect: (factor: EmissionFactor) => void;
 }
+
+export interface EmissionFactorSelectorRef {
+  validate: () => boolean;
+}
+
 
 const mapScope3CategoryToShort = (fullCategory: string): string | null => {
   if (!fullCategory) return null;
@@ -30,9 +35,20 @@ export const EmissionFactorSelector: React.FC<EmissionFactorSelectorProps> = ({
   onSelect,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [touched, setTouched] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [filteredFactors, setFilteredFactors] = useState<EmissionFactor[]>([]);
   const [selectedFactor, setSelectedFactor] = useState<EmissionFactor | null>(null);
-console.log('value',value);
+
+  useEffect(() => {
+    if (!touched) return;
+    if (!selectedFactor) {
+      setError('Emission factor is required');
+    } else {
+      setError(null);
+    }
+  }, [selectedFactor, touched]);
+  
   useEffect(() => {
     let factors: EmissionFactor[];
     
@@ -88,9 +104,9 @@ console.log('value',value);
       </div>
 
       <div className="space-y-2">
-        <Label>Select Emission Factor {filteredFactors.length > 0 && <span className="text-muted-foreground text-xs">({filteredFactors.length} available)</span>}</Label>
+        <Label>Select Emission Factor &nbsp;*{filteredFactors.length > 0 && <span className="text-muted-foreground text-xs">({filteredFactors.length} available)</span>}</Label>
         <Select value={selectedFactor?.id} onValueChange={handleSelect}>
-          <SelectTrigger>
+          <SelectTrigger className={error ? 'border-destructive focus:ring-destructive' : ''}>
             <SelectValue placeholder="Select emission factor..." />
           </SelectTrigger>
           <SelectContent className="max-h-[300px]">
@@ -126,6 +142,9 @@ console.log('value',value);
             )}
           </SelectContent>
         </Select>
+        {error && (
+          <p className="text-sm text-destructive">{error}</p>
+        )}
       </div>
 
       {selectedFactor && (
