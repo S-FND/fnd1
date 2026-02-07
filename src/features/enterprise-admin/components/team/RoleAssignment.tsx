@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,8 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { UserCheck, Clock, CheckCircle, ChevronDown, ChevronRight } from 'lucide-react';
+import { UserCheck, Clock, CheckCircle, ChevronDown, ChevronRight, X, Users } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 
 // Module and metrics configuration
 const moduleConfig = {
@@ -48,6 +50,7 @@ const teamMembers = [
 const RoleAssignment = () => {
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+  const [employeeDropdownOpen, setEmployeeDropdownOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<string>('');
   const [selectedLocation, setSelectedLocation] = useState<string>('');
   const [selectedDepartment, setSelectedDepartment] = useState<string>('');
@@ -263,34 +266,102 @@ const RoleAssignment = () => {
                 {/* Team Member Selection */}
                 <div className="space-y-3">
                   <Label className="text-base font-semibold">Select Team Members</Label>
-                  <div className="border rounded-lg p-3 space-y-2 max-h-[180px] overflow-y-auto">
-                    <div className="flex items-center space-x-2 pb-2 border-b">
-                      <Checkbox 
-                        id="select-all-employees"
-                        checked={selectedEmployees.length === teamMembers.length}
-                        onCheckedChange={handleSelectAllEmployees}
-                      />
-                      <Label htmlFor="select-all-employees" className="font-medium cursor-pointer">
-                        Select All ({teamMembers.length})
-                      </Label>
-                    </div>
-                    {teamMembers.map((member) => (
-                      <div key={member.id} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`employee-${member.id}`}
-                          checked={selectedEmployees.includes(member.id)}
-                          onCheckedChange={() => handleEmployeeToggle(member.id)}
-                        />
-                        <Label htmlFor={`employee-${member.id}`} className="cursor-pointer flex-1">
-                          {member.name} <span className="text-muted-foreground text-sm">({member.department})</span>
-                        </Label>
-                      </div>
-                    ))}
-                  </div>
+                  
+                  {/* Multi-select Dropdown */}
+                  <Popover open={employeeDropdownOpen} onOpenChange={setEmployeeDropdownOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={employeeDropdownOpen}
+                        className="w-full justify-between h-auto min-h-10 py-2"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-muted-foreground">
+                            {selectedEmployees.length === 0 
+                              ? "Select team members..." 
+                              : `${selectedEmployees.length} member(s) selected`}
+                          </span>
+                        </div>
+                        <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[400px] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search team members..." />
+                        <CommandList>
+                          <CommandEmpty>No team member found.</CommandEmpty>
+                          <CommandGroup>
+                            {/* Select All Option */}
+                            <CommandItem
+                              onSelect={() => handleSelectAllEmployees(selectedEmployees.length !== teamMembers.length)}
+                              className="cursor-pointer"
+                            >
+                              <Checkbox 
+                                checked={selectedEmployees.length === teamMembers.length}
+                                className="mr-2"
+                              />
+                              <span className="font-medium">Select All ({teamMembers.length})</span>
+                            </CommandItem>
+                            <div className="h-px bg-border my-1" />
+                            {teamMembers.map((member) => (
+                              <CommandItem
+                                key={member.id}
+                                onSelect={() => handleEmployeeToggle(member.id)}
+                                className="cursor-pointer"
+                              >
+                                <Checkbox 
+                                  checked={selectedEmployees.includes(member.id)}
+                                  className="mr-2"
+                                />
+                                <span>{member.name}</span>
+                                <span className="ml-auto text-xs text-muted-foreground">
+                                  {member.department}
+                                </span>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+
+                  {/* Selected Members Chips */}
                   {selectedEmployees.length > 0 && (
-                    <p className="text-sm text-muted-foreground">
-                      {selectedEmployees.length} member(s) selected
-                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedEmployees.map((empId) => {
+                        const member = teamMembers.find(m => m.id === empId);
+                        if (!member) return null;
+                        return (
+                          <Badge 
+                            key={empId} 
+                            variant="secondary" 
+                            className="pl-2 pr-1 py-1 flex items-center gap-1"
+                          >
+                            {member.name}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-4 w-4 p-0 hover:bg-destructive/20 rounded-full"
+                              onClick={() => handleEmployeeToggle(empId)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </Badge>
+                        );
+                      })}
+                      {selectedEmployees.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 text-xs text-muted-foreground hover:text-destructive"
+                          onClick={() => setSelectedEmployees([])}
+                        >
+                          Clear all
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
 
