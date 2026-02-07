@@ -7,10 +7,57 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { UserCheck, Clock, CheckCircle } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { UserCheck, Clock, CheckCircle, ChevronDown, ChevronRight } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+
+// Module and metrics configuration
+const moduleConfig = {
+  esms: {
+    name: 'ESMS',
+    subItems: [
+      { id: 'esms_policy', name: 'Policy Documents' },
+      { id: 'esms_procedures', name: 'Procedures' },
+      { id: 'esms_risk_assessment', name: 'Risk Assessment' },
+      { id: 'esms_training', name: 'Training Records' },
+      { id: 'esms_monitoring', name: 'Monitoring & Evaluation' },
+    ]
+  },
+  esg_metrics: {
+    name: 'ESG Metrics',
+    subItems: [
+      { id: 'esg_environmental', name: 'Environmental Metrics' },
+      { id: 'esg_social', name: 'Social Metrics' },
+      { id: 'esg_governance', name: 'Governance Metrics' },
+      { id: 'esg_emissions', name: 'Emissions Data' },
+      { id: 'esg_energy', name: 'Energy Consumption' },
+      { id: 'esg_water', name: 'Water Usage' },
+      { id: 'esg_waste', name: 'Waste Management' },
+    ]
+  }
+};
+
+const teamMembers = [
+  { id: 'john', name: 'John Doe', department: 'Finance' },
+  { id: 'jane', name: 'Jane Smith', department: 'HR' },
+  { id: 'mike', name: 'Mike Johnson', department: 'Operations' },
+  { id: 'sarah', name: 'Sarah Williams', department: 'Compliance' },
+  { id: 'david', name: 'David Brown', department: 'IT' },
+];
 
 const RoleAssignment = () => {
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+  const [selectedRole, setSelectedRole] = useState<string>('');
+  const [selectedLocation, setSelectedLocation] = useState<string>('');
+  const [selectedDepartment, setSelectedDepartment] = useState<string>('');
+  const [allModulesSelected, setAllModulesSelected] = useState(false);
+  const [selectedModules, setSelectedModules] = useState<string[]>([]);
+  const [selectedSubItems, setSelectedSubItems] = useState<Record<string, string[]>>({
+    esms: [],
+    esg_metrics: []
+  });
+  const [expandedModules, setExpandedModules] = useState<string[]>([]);
 
   // Mock assignment data
   const assignments = [
@@ -23,7 +70,8 @@ const RoleAssignment = () => {
       location: 'Mumbai Office',
       assignedBy: 'Admin User',
       status: 'Pending',
-      assignedDate: '2024-01-15'
+      assignedDate: '2024-01-15',
+      modules: ['ESMS', 'ESG Metrics']
     },
     {
       id: 2,
@@ -34,7 +82,8 @@ const RoleAssignment = () => {
       location: 'Delhi Warehouse',
       assignedBy: 'Admin User',
       status: 'Completed',
-      assignedDate: '2024-01-14'
+      assignedDate: '2024-01-14',
+      modules: ['ESG Metrics']
     },
     {
       id: 3,
@@ -45,9 +94,128 @@ const RoleAssignment = () => {
       location: 'Bangalore Manufacturing',
       assignedBy: 'Unit Head',
       status: 'In Progress',
-      assignedDate: '2024-01-16'
+      assignedDate: '2024-01-16',
+      modules: ['ESMS']
     }
   ];
+
+  const handleEmployeeToggle = (employeeId: string) => {
+    setSelectedEmployees(prev => 
+      prev.includes(employeeId) 
+        ? prev.filter(id => id !== employeeId)
+        : [...prev, employeeId]
+    );
+  };
+
+  const handleSelectAllEmployees = (checked: boolean) => {
+    setSelectedEmployees(checked ? teamMembers.map(m => m.id) : []);
+  };
+
+  const handleAllModulesToggle = (checked: boolean) => {
+    setAllModulesSelected(checked);
+    if (checked) {
+      setSelectedModules(['esms', 'esg_metrics']);
+      // Select all sub-items for each module
+      setSelectedSubItems({
+        esms: moduleConfig.esms.subItems.map(item => item.id),
+        esg_metrics: moduleConfig.esg_metrics.subItems.map(item => item.id)
+      });
+    } else {
+      setSelectedModules([]);
+      setSelectedSubItems({ esms: [], esg_metrics: [] });
+    }
+  };
+
+  const handleModuleToggle = (moduleId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedModules(prev => [...prev, moduleId]);
+      // Select all sub-items for this module
+      setSelectedSubItems(prev => ({
+        ...prev,
+        [moduleId]: moduleConfig[moduleId as keyof typeof moduleConfig].subItems.map(item => item.id)
+      }));
+    } else {
+      setSelectedModules(prev => prev.filter(id => id !== moduleId));
+      setSelectedSubItems(prev => ({
+        ...prev,
+        [moduleId]: []
+      }));
+      setAllModulesSelected(false);
+    }
+  };
+
+  const handleSubItemToggle = (moduleId: string, subItemId: string, checked: boolean) => {
+    const moduleSubItems = moduleConfig[moduleId as keyof typeof moduleConfig].subItems;
+    
+    setSelectedSubItems(prev => {
+      const currentItems = prev[moduleId] || [];
+      const newItems = checked 
+        ? [...currentItems, subItemId]
+        : currentItems.filter(id => id !== subItemId);
+      
+      // Check if all sub-items are selected
+      const allSubItemsSelected = newItems.length === moduleSubItems.length;
+      
+      // Update module selection based on sub-items
+      if (newItems.length > 0 && !selectedModules.includes(moduleId)) {
+        setSelectedModules(prev => [...prev, moduleId]);
+      } else if (newItems.length === 0) {
+        setSelectedModules(prev => prev.filter(id => id !== moduleId));
+      }
+      
+      return { ...prev, [moduleId]: newItems };
+    });
+    
+    // Update all modules selected state
+    setTimeout(() => {
+      const esmsAllSelected = selectedSubItems.esms.length === moduleConfig.esms.subItems.length;
+      const esgAllSelected = selectedSubItems.esg_metrics.length === moduleConfig.esg_metrics.subItems.length;
+      setAllModulesSelected(esmsAllSelected && esgAllSelected);
+    }, 0);
+  };
+
+  const handleSelectAllSubItems = (moduleId: string, checked: boolean) => {
+    const moduleSubItems = moduleConfig[moduleId as keyof typeof moduleConfig].subItems;
+    
+    if (checked) {
+      setSelectedSubItems(prev => ({
+        ...prev,
+        [moduleId]: moduleSubItems.map(item => item.id)
+      }));
+      if (!selectedModules.includes(moduleId)) {
+        setSelectedModules(prev => [...prev, moduleId]);
+      }
+    } else {
+      setSelectedSubItems(prev => ({
+        ...prev,
+        [moduleId]: []
+      }));
+    }
+  };
+
+  const toggleModuleExpand = (moduleId: string) => {
+    setExpandedModules(prev => 
+      prev.includes(moduleId) 
+        ? prev.filter(id => id !== moduleId)
+        : [...prev, moduleId]
+    );
+  };
+
+  const resetForm = () => {
+    setSelectedEmployees([]);
+    setSelectedRole('');
+    setSelectedLocation('');
+    setSelectedDepartment('');
+    setAllModulesSelected(false);
+    setSelectedModules([]);
+    setSelectedSubItems({ esms: [], esg_metrics: [] });
+    setExpandedModules([]);
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    setIsAssignDialogOpen(open);
+    if (!open) resetForm();
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -80,59 +248,84 @@ const RoleAssignment = () => {
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle>Role Assignment</CardTitle>
-          <Dialog open={isAssignDialogOpen} onOpenChange={setIsAssignDialogOpen}>
+          <Dialog open={isAssignDialogOpen} onOpenChange={handleDialogClose}>
             <DialogTrigger asChild>
               <Button>
                 <UserCheck className="h-4 w-4 mr-2" />
                 Assign Role
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Assign Role to Employee</DialogTitle>
+                <DialogTitle>Assign Role to Team Members</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="employee">Select Employee</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose employee" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="john">John Doe</SelectItem>
-                      <SelectItem value="jane">Jane Smith</SelectItem>
-                      <SelectItem value="mike">Mike Johnson</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <div className="space-y-6">
+                {/* Team Member Selection */}
+                <div className="space-y-3">
+                  <Label className="text-base font-semibold">Select Team Members</Label>
+                  <div className="border rounded-lg p-3 space-y-2 max-h-[180px] overflow-y-auto">
+                    <div className="flex items-center space-x-2 pb-2 border-b">
+                      <Checkbox 
+                        id="select-all-employees"
+                        checked={selectedEmployees.length === teamMembers.length}
+                        onCheckedChange={handleSelectAllEmployees}
+                      />
+                      <Label htmlFor="select-all-employees" className="font-medium cursor-pointer">
+                        Select All ({teamMembers.length})
+                      </Label>
+                    </div>
+                    {teamMembers.map((member) => (
+                      <div key={member.id} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`employee-${member.id}`}
+                          checked={selectedEmployees.includes(member.id)}
+                          onCheckedChange={() => handleEmployeeToggle(member.id)}
+                        />
+                        <Label htmlFor={`employee-${member.id}`} className="cursor-pointer flex-1">
+                          {member.name} <span className="text-muted-foreground text-sm">({member.department})</span>
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                  {selectedEmployees.length > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      {selectedEmployees.length} member(s) selected
+                    </p>
+                  )}
                 </div>
-                <div>
-                  <Label htmlFor="newRole">Assign Role</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="maker">Maker</SelectItem>
-                      <SelectItem value="checker">Checker</SelectItem>
-                    </SelectContent>
-                  </Select>
+
+                {/* Role Selection */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="newRole">Assign Role</Label>
+                    <Select value={selectedRole} onValueChange={setSelectedRole}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="maker">Maker</SelectItem>
+                        <SelectItem value="checker">Checker</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="assignLocation">Location</Label>
+                    <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="mumbai">Mumbai Office</SelectItem>
+                        <SelectItem value="delhi">Delhi Warehouse</SelectItem>
+                        <SelectItem value="bangalore">Bangalore Manufacturing</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="assignLocation">Location</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select location" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mumbai">Mumbai Office</SelectItem>
-                      <SelectItem value="delhi">Delhi Warehouse</SelectItem>
-                      <SelectItem value="bangalore">Bangalore Manufacturing</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+
                 <div>
                   <Label htmlFor="assignDepartment">Department</Label>
-                  <Select>
+                  <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select department" />
                     </SelectTrigger>
@@ -144,12 +337,101 @@ const RoleAssignment = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex gap-2">
-                  <Button onClick={() => setIsAssignDialogOpen(false)} variant="outline" className="flex-1">
+
+                {/* Module Selection */}
+                <div className="space-y-3">
+                  <Label className="text-base font-semibold">Assign Modules</Label>
+                  <div className="border rounded-lg p-3 space-y-3">
+                    {/* All Modules Option */}
+                    <div className="flex items-center space-x-2 pb-2 border-b">
+                      <Checkbox 
+                        id="all-modules"
+                        checked={allModulesSelected}
+                        onCheckedChange={handleAllModulesToggle}
+                      />
+                      <Label htmlFor="all-modules" className="font-medium cursor-pointer">
+                        All Modules (ESMS & ESG Metrics)
+                      </Label>
+                    </div>
+
+                    {/* Individual Module Selection */}
+                    {Object.entries(moduleConfig).map(([moduleId, module]) => (
+                      <Collapsible 
+                        key={moduleId} 
+                        open={expandedModules.includes(moduleId)}
+                        onOpenChange={() => toggleModuleExpand(moduleId)}
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`module-${moduleId}`}
+                              checked={selectedModules.includes(moduleId)}
+                              onCheckedChange={(checked) => handleModuleToggle(moduleId, checked as boolean)}
+                            />
+                            <CollapsibleTrigger asChild>
+                              <Button variant="ghost" size="sm" className="p-0 h-auto hover:bg-transparent">
+                                {expandedModules.includes(moduleId) ? (
+                                  <ChevronDown className="h-4 w-4 mr-1" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4 mr-1" />
+                                )}
+                              </Button>
+                            </CollapsibleTrigger>
+                            <Label htmlFor={`module-${moduleId}`} className="font-medium cursor-pointer">
+                              {module.name}
+                            </Label>
+                            {selectedSubItems[moduleId]?.length > 0 && (
+                              <Badge variant="secondary" className="text-xs">
+                                {selectedSubItems[moduleId].length}/{module.subItems.length}
+                              </Badge>
+                            )}
+                          </div>
+
+                          <CollapsibleContent>
+                            <div className="ml-8 pl-4 border-l space-y-2 py-2">
+                              {/* Select All Sub-items */}
+                              <div className="flex items-center space-x-2 pb-1">
+                                <Checkbox 
+                                  id={`all-${moduleId}`}
+                                  checked={selectedSubItems[moduleId]?.length === module.subItems.length}
+                                  onCheckedChange={(checked) => handleSelectAllSubItems(moduleId, checked as boolean)}
+                                />
+                                <Label htmlFor={`all-${moduleId}`} className="text-sm cursor-pointer text-muted-foreground">
+                                  Select All {module.name}
+                                </Label>
+                              </div>
+                              
+                              {/* Individual Sub-items */}
+                              {module.subItems.map((subItem) => (
+                                <div key={subItem.id} className="flex items-center space-x-2">
+                                  <Checkbox 
+                                    id={`subitem-${subItem.id}`}
+                                    checked={selectedSubItems[moduleId]?.includes(subItem.id)}
+                                    onCheckedChange={(checked) => handleSubItemToggle(moduleId, subItem.id, checked as boolean)}
+                                  />
+                                  <Label htmlFor={`subitem-${subItem.id}`} className="text-sm cursor-pointer">
+                                    {subItem.name}
+                                  </Label>
+                                </div>
+                              ))}
+                            </div>
+                          </CollapsibleContent>
+                        </div>
+                      </Collapsible>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button onClick={() => handleDialogClose(false)} variant="outline" className="flex-1">
                     Cancel
                   </Button>
-                  <Button onClick={() => setIsAssignDialogOpen(false)} className="flex-1">
-                    Assign Role
+                  <Button 
+                    onClick={() => handleDialogClose(false)} 
+                    className="flex-1"
+                    disabled={selectedEmployees.length === 0 || !selectedRole || selectedModules.length === 0}
+                  >
+                    Assign Role ({selectedEmployees.length})
                   </Button>
                 </div>
               </div>
@@ -164,6 +446,7 @@ const RoleAssignment = () => {
               <TableHead>Employee</TableHead>
               <TableHead>Current Role</TableHead>
               <TableHead>Assigned Role</TableHead>
+              <TableHead>Modules</TableHead>
               <TableHead>Department</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Assigned By</TableHead>
@@ -184,6 +467,15 @@ const RoleAssignment = () => {
                 </TableCell>
                 <TableCell>
                   <Badge variant="default">{assignment.assignedRole}</Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {assignment.modules.map((mod) => (
+                      <Badge key={mod} variant="secondary" className="text-xs">
+                        {mod}
+                      </Badge>
+                    ))}
+                  </div>
                 </TableCell>
                 <TableCell>{assignment.department}</TableCell>
                 <TableCell>{assignment.location}</TableCell>
