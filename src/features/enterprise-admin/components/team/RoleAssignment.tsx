@@ -113,6 +113,12 @@ const RoleAssignment = () => {
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
   const [enabledModules, setEnabledModules] = useState<string[]>([]);
   
+  // Item dropdown states for each module
+  const [itemDropdownOpen, setItemDropdownOpen] = useState<{ esms: boolean; esg_metrics: boolean }>({
+    esms: false,
+    esg_metrics: false
+  });
+  
   // Confirmation dialog states
   const [scopeChangeConfirm, setScopeChangeConfirm] = useState<{
     open: boolean;
@@ -634,46 +640,105 @@ const RoleAssignment = () => {
                                 {/* Item Selection (only for LIMITED scope) */}
                                 {access.scope === 'LIMITED' && (
                                   <div className="space-y-3 pt-2">
-                                    <div className="flex items-center justify-between">
-                                      <Label className="text-sm font-medium">
-                                        Select Items ({access.selectedItems.length}/{module.subItems.length})
-                                      </Label>
-                                      <div className="flex gap-2">
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-7 text-xs"
-                                          onClick={() => handleSelectAllItems(moduleId, true)}
-                                        >
-                                          Select All
-                                        </Button>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-7 text-xs"
-                                          onClick={() => handleSelectAllItems(moduleId, false)}
-                                        >
-                                          Clear
-                                        </Button>
-                                      </div>
-                                    </div>
+                                    <Label className="text-sm font-medium">
+                                      Select Items ({access.selectedItems.length}/{module.subItems.length})
+                                    </Label>
                                     
-                                    <div className="bg-muted/30 rounded-lg p-3 space-y-2 max-h-48 overflow-y-auto">
-                                      {module.subItems.map((item) => (
-                                        <div key={item.id} className="flex items-center space-x-2">
-                                          <Checkbox
-                                            id={`item-${item.id}`}
-                                            checked={access.selectedItems.includes(item.id)}
-                                            onCheckedChange={(checked) => 
-                                              handleItemToggle(moduleId, item.id, checked as boolean)
-                                            }
-                                          />
-                                          <Label htmlFor={`item-${item.id}`} className="text-sm cursor-pointer">
-                                            {item.name}
-                                          </Label>
-                                        </div>
-                                      ))}
-                                    </div>
+                                    {/* Searchable Multi-select Dropdown for Items */}
+                                    <Popover 
+                                      open={itemDropdownOpen[moduleId as keyof typeof itemDropdownOpen]} 
+                                      onOpenChange={(open) => setItemDropdownOpen(prev => ({ ...prev, [moduleId]: open }))}
+                                    >
+                                      <PopoverTrigger asChild>
+                                        <Button
+                                          variant="outline"
+                                          role="combobox"
+                                          aria-expanded={itemDropdownOpen[moduleId as keyof typeof itemDropdownOpen]}
+                                          className="w-full justify-between h-auto min-h-10 py-2"
+                                        >
+                                          <div className="flex items-center gap-2">
+                                            <List className="h-4 w-4 text-muted-foreground" />
+                                            <span className="text-muted-foreground">
+                                              {access.selectedItems.length === 0 
+                                                ? `Select ${module.name} items...` 
+                                                : `${access.selectedItems.length} item(s) selected`}
+                                            </span>
+                                          </div>
+                                          <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                                        </Button>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="w-[350px] p-0" align="start">
+                                        <Command>
+                                          <CommandInput placeholder={`Search ${module.name} items...`} />
+                                          <CommandList>
+                                            <CommandEmpty>No items found.</CommandEmpty>
+                                            <CommandGroup>
+                                              <CommandItem
+                                                onSelect={() => handleSelectAllItems(moduleId, access.selectedItems.length !== module.subItems.length)}
+                                                className="cursor-pointer"
+                                              >
+                                                <Checkbox 
+                                                  checked={access.selectedItems.length === module.subItems.length}
+                                                  className="mr-2"
+                                                />
+                                                <span className="font-medium">Select All ({module.subItems.length})</span>
+                                              </CommandItem>
+                                              <div className="h-px bg-border my-1" />
+                                              {module.subItems.map((item) => (
+                                                <CommandItem
+                                                  key={item.id}
+                                                  onSelect={() => handleItemToggle(moduleId, item.id, !access.selectedItems.includes(item.id))}
+                                                  className="cursor-pointer"
+                                                >
+                                                  <Checkbox 
+                                                    checked={access.selectedItems.includes(item.id)}
+                                                    className="mr-2"
+                                                  />
+                                                  <span>{item.name}</span>
+                                                </CommandItem>
+                                              ))}
+                                            </CommandGroup>
+                                          </CommandList>
+                                        </Command>
+                                      </PopoverContent>
+                                    </Popover>
+
+                                    {/* Selected Items Chips */}
+                                    {access.selectedItems.length > 0 && (
+                                      <div className="flex flex-wrap gap-2">
+                                        {access.selectedItems.map((itemId) => {
+                                          const item = module.subItems.find(i => i.id === itemId);
+                                          if (!item) return null;
+                                          return (
+                                            <Badge 
+                                              key={itemId} 
+                                              variant="secondary" 
+                                              className="pl-2 pr-1 py-1 flex items-center gap-1"
+                                            >
+                                              {item.name}
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-4 w-4 p-0 hover:bg-destructive/20 rounded-full"
+                                                onClick={() => handleItemToggle(moduleId, itemId, false)}
+                                              >
+                                                <X className="h-3 w-3" />
+                                              </Button>
+                                            </Badge>
+                                          );
+                                        })}
+                                        {access.selectedItems.length > 1 && (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 text-xs text-muted-foreground hover:text-destructive"
+                                            onClick={() => handleSelectAllItems(moduleId, false)}
+                                          >
+                                            Clear all
+                                          </Button>
+                                        )}
+                                      </div>
+                                    )}
 
                                     {/* Warning if no items selected */}
                                     {access.selectedItems.length === 0 && (
