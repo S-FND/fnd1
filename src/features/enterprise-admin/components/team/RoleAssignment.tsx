@@ -7,20 +7,92 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Employee } from './EmployeeManagement';
-import { baseESMSDocumentList } from '../../pages/ESMSPage';
-import { logger } from '@/hooks/logger';
-import { httpClient } from '@/lib/httpClient';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import {
-  UserCheck, Clock, CheckCircle, ChevronDown, ChevronRight, X, Users,
-  Infinity, List, AlertTriangle, Info, Shield, ShieldCheck
+import { 
+  UserCheck, Clock, CheckCircle, ChevronDown, ChevronRight, X, Users, 
+  Infinity, List, AlertTriangle, Info, Shield, ShieldCheck 
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { baseESMSDocumentList } from '../../pages/ESMSPage';
+import { Employee } from './EmployeeManagement';
+import { httpClient } from '@/lib/httpClient';
+import { logger } from '@/hooks/logger';
+
+// Type definitions for scope-based access
+// type AccessScope = 'ALL' | 'LIMITED';
+
+interface ModuleAccess {
+  scope: AccessScope;
+  selectedItems: string[];
+}
+
+interface ModuleAccessState {
+  esms: ModuleAccess;
+  esg_metrics: ModuleAccess;
+}
+
+// Module and metrics configuration
+// const moduleConfig = {
+//   esms: {
+//     name: 'ESMS',
+//     description: 'Environmental & Social Management System',
+//     subItems: [
+//       { id: 'esms_policy', name: 'Policy Documents' },
+//       { id: 'esms_procedures', name: 'Procedures' },
+//       { id: 'esms_risk_assessment', name: 'Risk Assessment' },
+//       { id: 'esms_training', name: 'Training Records' },
+//       { id: 'esms_monitoring', name: 'Monitoring & Evaluation' },
+//     ]
+//   },
+//   esg_metrics: {
+//     name: 'ESG Metrics',
+//     description: 'Environmental, Social & Governance Metrics',
+//     subItems: [
+//       { id: 'esg_environmental', name: 'Environmental Metrics' },
+//       { id: 'esg_social', name: 'Social Metrics' },
+//       { id: 'esg_governance', name: 'Governance Metrics' },
+//       { id: 'esg_emissions', name: 'Emissions Data' },
+//       { id: 'esg_energy', name: 'Energy Consumption' },
+//       { id: 'esg_water', name: 'Water Usage' },
+//       { id: 'esg_waste', name: 'Waste Management' },
+//     ]
+//   }
+// };
+
+
+// Scope explanation component
+// const ScopeExplanation = ({ scope, moduleName }: { scope: AccessScope; moduleName: string }) => {
+//   if (scope === 'ALL') {
+//     return (
+//       <div className="flex items-start gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+//         <Infinity className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+//         <div className="text-sm">
+//           <p className="font-medium text-primary">Full Access - Future-Inclusive</p>
+//           <p className="text-muted-foreground mt-0.5">
+//             Access to all current {moduleName} items AND any new items added in the future. 
+//             No manual updates needed when new items are created.
+//           </p>
+//         </div>
+//       </div>
+//     );
+//   }
+//   return (
+//     <div className="flex items-start gap-2 p-3 bg-muted/50 border rounded-lg">
+//       <List className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+//       <div className="text-sm">
+//         <p className="font-medium">Specific Access - Selected Items Only</p>
+//         <p className="text-muted-foreground mt-0.5">
+//           Access limited to the items you select below. New items added later will NOT be 
+//           automatically accessible.
+//         </p>
+//       </div>
+//     </div>
+//   );
+// };
 
 // Type definitions for scope-based access
 type AccessScope = 'ALL' | 'LIMITED';
@@ -175,6 +247,9 @@ const RoleAssignment = (
     fromScope: AccessScope;
     toScope: AccessScope;
   } | null>(null);
+
+  
+  
 
   // Check if a module has an error (LIMITED scope with no items selected)
   const hasModuleError = (moduleId: string): boolean => {
@@ -388,7 +463,7 @@ const RoleAssignment = (
         selectedItems: toScope === 'ALL' ? [] : prev[moduleId as keyof ModuleAccessState].selectedItems
       }
     }));
-
+    
     setScopeChangeConfirm(null);
   };
 
@@ -449,14 +524,23 @@ const RoleAssignment = (
     if (!open) resetForm();
   };
 
+  // Check if any module has validation errors
+  const hasAnyModuleError = (): boolean => {
+    return enabledModules.some(moduleId => hasModuleError(moduleId));
+  };
+
+  // Get count of modules with errors
+  const getModuleErrorCount = (): number => {
+    return enabledModules.filter(moduleId => hasModuleError(moduleId)).length;
+  };
+
   // Handle submit with validation
   const handleSubmit = () => {
     setHasAttemptedSubmit(true);
-
+    
     // Check for errors
     const firstError = getFirstModuleWithError();
     if (firstError) {
-      console.log('firstError',firstError)
       // Auto-open first module with error
       setActiveModule(firstError);
       return; // Don't close dialog
@@ -495,7 +579,6 @@ const RoleAssignment = (
 
   const isFormValid = () => {
     if (selectedEmployees.length === 0 || !selectedRole) return false;
-
     // At least one module must be enabled with valid access
     return enabledModules.some(moduleId => {
       const access = moduleAccess[moduleId as keyof ModuleAccessState];
@@ -530,20 +613,22 @@ const RoleAssignment = (
                   Assign Role
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
+              <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+                <DialogHeader className="shrink-0">
                   <DialogTitle>Assign Maker–Checker Role</DialogTitle>
                   <DialogDescription>
-                    Configure role access permissions for team members. Choose between full access
+                    Configure role access permissions for team members. Choose between full access 
                     (includes future items) or specific access (selected items only).
                   </DialogDescription>
                 </DialogHeader>
-
-                <div className="space-y-6 py-2">
+                
+                {/* Scrollable form content */}
+                <div className="flex-1 overflow-y-auto pr-2 -mr-2">
+                  <div className="space-y-6 py-2">
                   {/* Team Member Selection */}
                   <div className="space-y-3">
                     <Label className="text-base font-semibold">Select Team Members</Label>
-
+                    
                     {/* Multi-select Dropdown */}
                     <Popover open={employeeDropdownOpen} onOpenChange={setEmployeeDropdownOpen}>
                       <PopoverTrigger asChild>
@@ -556,8 +641,8 @@ const RoleAssignment = (
                           <div className="flex items-center gap-2">
                             <Users className="h-4 w-4 text-muted-foreground" />
                             <span className="text-muted-foreground">
-                              {selectedEmployees.length === 0
-                                ? "Select team members..."
+                              {selectedEmployees.length === 0 
+                                ? "Select team members..." 
                                 : `${selectedEmployees.length} member(s) selected`}
                             </span>
                           </div>
@@ -574,7 +659,7 @@ const RoleAssignment = (
                                 onSelect={() => handleSelectAllEmployees(selectedEmployees.length !== teamMembers.length)}
                                 className="cursor-pointer"
                               >
-                                <Checkbox
+                                <Checkbox 
                                   checked={selectedEmployees.length === teamMembers.length}
                                   className="mr-2"
                                 />
@@ -587,7 +672,7 @@ const RoleAssignment = (
                                   onSelect={() => handleEmployeeToggle(member._id)}
                                   className="cursor-pointer"
                                 >
-                                  <Checkbox
+                                  <Checkbox 
                                     checked={selectedEmployees.includes(member._id)}
                                     className="mr-2"
                                   />
@@ -610,9 +695,9 @@ const RoleAssignment = (
                           const member = teamMembers.find(m => m._id === empId);
                           if (!member) return null;
                           return (
-                            <Badge
-                              key={empId}
-                              variant="secondary"
+                            <Badge 
+                              key={empId} 
+                              variant="secondary" 
                               className="pl-2 pr-1 py-1 flex items-center gap-1"
                             >
                               {member.name}
@@ -709,16 +794,18 @@ const RoleAssignment = (
                         const access = moduleAccess[moduleId as keyof ModuleAccessState];
                         const isExpanded = activeModule === moduleId;
                         const hasError = hasAttemptedSubmit && hasModuleError(moduleId);
-
+                        
                         return (
-                          <div
-                            key={moduleId}
-                            className={`border rounded-lg overflow-hidden transition-colors ${hasError ? 'border-destructive' : ''
-                              }`}
+                          <div 
+                            key={moduleId} 
+                            className={`border rounded-lg overflow-hidden transition-colors ${
+                              hasError ? 'border-destructive' : ''
+                            }`}
                           >
                             {/* Module Header */}
-                            <div className={`flex items-center justify-between p-3 ${hasError ? 'bg-destructive/5' : 'bg-muted/30'
-                              }`}>
+                            <div className={`flex items-center justify-between p-3 ${
+                              hasError ? 'bg-destructive/5' : 'bg-muted/30'
+                            }`}>
                               <div className="flex items-center gap-3">
                                 <Checkbox
                                   id={`enable-${moduleId}`}
@@ -732,7 +819,7 @@ const RoleAssignment = (
                                     </Label>
                                     <p className="text-xs text-muted-foreground">{module.description}</p>
                                   </div>
-
+                                  
                                   {/* Error indicator with tooltip */}
                                   {isEnabled && hasModuleError(moduleId) && (
                                     <Tooltip>
@@ -748,7 +835,7 @@ const RoleAssignment = (
                                   )}
                                 </div>
                               </div>
-
+                              
                               {isEnabled && (
                                 <div className="flex items-center gap-2">
                                   {access.scope === 'ALL' ? (
@@ -762,7 +849,7 @@ const RoleAssignment = (
                                       {access.selectedItems.length} Selected
                                     </Badge>
                                   ) : null}
-
+                                  
                                   <Button
                                     variant="ghost"
                                     size="sm"
@@ -791,10 +878,11 @@ const RoleAssignment = (
                                     className="space-y-3"
                                   >
                                     {/* Full Access Option */}
-                                    <div className={`flex items-start space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${access.scope === 'ALL'
-                                      ? 'border-primary bg-primary/5'
-                                      : 'border-transparent bg-muted/30 hover:bg-muted/50'
-                                      }`}>
+                                    <div className={`flex items-start space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
+                                      access.scope === 'ALL' 
+                                        ? 'border-primary bg-primary/5' 
+                                        : 'border-transparent bg-muted/30 hover:bg-muted/50'
+                                    }`}>
                                       <RadioGroupItem value="ALL" id={`${moduleId}-all`} className="mt-1" />
                                       <div className="flex-1">
                                         <div className="flex items-center gap-2">
@@ -807,17 +895,18 @@ const RoleAssignment = (
                                           </Badge>
                                         </div>
                                         <p className="text-sm text-muted-foreground mt-1">
-                                          Grant access to <strong>all {module.subItems.length} current items</strong> and
+                                          Grant access to <strong>all {module.subItems.length} current items</strong> and 
                                           any new {module.name} items added in the future. No manual updates required.
                                         </p>
                                       </div>
                                     </div>
 
                                     {/* Specific Access Option */}
-                                    <div className={`flex items-start space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${access.scope === 'LIMITED'
-                                      ? 'border-primary bg-primary/5'
-                                      : 'border-transparent bg-muted/30 hover:bg-muted/50'
-                                      }`}>
+                                    <div className={`flex items-start space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
+                                      access.scope === 'LIMITED' 
+                                        ? 'border-primary bg-primary/5' 
+                                        : 'border-transparent bg-muted/30 hover:bg-muted/50'
+                                    }`}>
                                       <RadioGroupItem value="LIMITED" id={`${moduleId}-limited`} className="mt-1" />
                                       <div className="flex-1">
                                         <div className="flex items-center gap-2">
@@ -830,7 +919,7 @@ const RoleAssignment = (
                                           </Badge>
                                         </div>
                                         <p className="text-sm text-muted-foreground mt-1">
-                                          Grant access only to items you select below.
+                                          Grant access only to items you select below. 
                                           New items will <strong>not</strong> be automatically accessible.
                                         </p>
                                       </div>
@@ -844,10 +933,10 @@ const RoleAssignment = (
                                     <Label className="text-sm font-medium">
                                       Select Items ({access.selectedItems.length}/{module.subItems.length})
                                     </Label>
-
+                                    
                                     {/* Searchable Multi-select Dropdown for Items */}
-                                    <Popover
-                                      open={itemDropdownOpen[moduleId as keyof typeof itemDropdownOpen]}
+                                    <Popover 
+                                      open={itemDropdownOpen[moduleId as keyof typeof itemDropdownOpen]} 
                                       onOpenChange={(open) => setItemDropdownOpen(prev => ({ ...prev, [moduleId]: open }))}
                                     >
                                       <PopoverTrigger asChild>
@@ -860,8 +949,8 @@ const RoleAssignment = (
                                           <div className="flex items-center gap-2">
                                             <List className="h-4 w-4 text-muted-foreground" />
                                             <span className="text-muted-foreground">
-                                              {access.selectedItems.length === 0
-                                                ? `Select ${module.name} items...`
+                                              {access.selectedItems.length === 0 
+                                                ? `Select ${module.name} items...` 
                                                 : `${access.selectedItems.length} item(s) selected`}
                                             </span>
                                           </div>
@@ -878,7 +967,7 @@ const RoleAssignment = (
                                                 onSelect={() => handleSelectAllItems(moduleId, access.selectedItems.length !== module.subItems.length)}
                                                 className="cursor-pointer"
                                               >
-                                                <Checkbox
+                                                <Checkbox 
                                                   checked={access.selectedItems.length === module.subItems.length}
                                                   className="mr-2"
                                                 />
@@ -891,7 +980,7 @@ const RoleAssignment = (
                                                   onSelect={() => handleItemToggle(moduleId, item.id, !access.selectedItems.includes(item.id))}
                                                   className="cursor-pointer"
                                                 >
-                                                  <Checkbox
+                                                  <Checkbox 
                                                     checked={access.selectedItems.includes(item.id)}
                                                     className="mr-2"
                                                   />
@@ -911,9 +1000,9 @@ const RoleAssignment = (
                                           const item = module.subItems.find(i => i.id === itemId);
                                           if (!item) return null;
                                           return (
-                                            <Badge
-                                              key={itemId}
-                                              variant="secondary"
+                                            <Badge 
+                                              key={itemId} 
+                                              variant="secondary" 
                                               className="pl-2 pr-1 py-1 flex items-center gap-1"
                                             >
                                               {item.name}
@@ -954,8 +1043,8 @@ const RoleAssignment = (
                                       <div className="flex items-start gap-2 p-2 bg-accent/50 border border-accent rounded text-sm">
                                         <Info className="h-4 w-4 text-accent-foreground mt-0.5 shrink-0" />
                                         <p className="text-muted-foreground">
-                                          You've selected all current items, but new items added later
-                                          won't be included. Consider <strong>Full Access</strong> if you
+                                          You've selected all current items, but new items added later 
+                                          won't be included. Consider <strong>Full Access</strong> if you 
                                           want future items to be automatically accessible.
                                         </p>
                                       </div>
@@ -968,7 +1057,7 @@ const RoleAssignment = (
                                   <div className="flex items-start gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg text-sm">
                                     <ShieldCheck className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                                     <p className="text-muted-foreground">
-                                      This user will have access to all <strong>{module.subItems.length}</strong> current items
+                                      This user will have access to all <strong>{module.subItems.length}</strong> current items 
                                       and will automatically gain access when new {module.name} items are added.
                                     </p>
                                   </div>
@@ -981,29 +1070,65 @@ const RoleAssignment = (
                     </div>
                   </div>
 
-                  {/* Summary Section */}
-                  {enabledModules.length > 0 && (
-                    <div className="p-3 bg-muted/50 rounded-lg">
-                      <div className="flex items-center gap-2 text-sm font-medium mb-1">
-                        <Shield className="h-4 w-4" />
-                        Access Summary
-                      </div>
-                      <p className="text-sm text-muted-foreground">{getScopeSummary()}</p>
-                    </div>
-                  )}
+                  </div>
                 </div>
 
-                <DialogFooter className="gap-2 sm:gap-0">
-                  <Button onClick={() => handleDialogClose(false)} variant="outline">
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={!isFormValid()}
-                  >
-                    Assign Role ({selectedEmployees.length})
-                  </Button>
-                </DialogFooter>
+                {/* Fixed Footer Section */}
+                <div className="shrink-0 border-t pt-4 mt-4 space-y-3">
+                  {/* Summary Section */}
+                  {enabledModules.length > 0 && (
+                    <div className={`p-3 rounded-lg ${hasAttemptedSubmit && hasAnyModuleError() ? 'bg-destructive/10 border border-destructive/30' : 'bg-muted/50'}`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                          <Shield className="h-4 w-4" />
+                          Access Summary
+                        </div>
+                        {hasAttemptedSubmit && hasAnyModuleError() && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center gap-1.5 text-destructive">
+                                <AlertTriangle className="h-4 w-4" />
+                                <span className="text-xs font-medium">
+                                  {getModuleErrorCount()} module{getModuleErrorCount() > 1 ? 's' : ''} need attention
+                                </span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Select at least one item for modules with Specific Access, or switch to Full Access</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">{getScopeSummary() || 'No modules configured yet'}</p>
+                    </div>
+                  )}
+
+                  {/* Show error indicator even when no modules enabled */}
+                  {enabledModules.length === 0 && hasAttemptedSubmit && (
+                    <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
+                      <div className="flex items-center gap-2 text-destructive text-sm">
+                        <AlertTriangle className="h-4 w-4" />
+                        <span>Enable at least one module to assign permissions</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <DialogFooter className="gap-2 sm:gap-0">
+                    <Button onClick={() => handleDialogClose(false)} variant="outline">
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={handleSubmit} 
+                      disabled={!isFormValid()}
+                      className="relative"
+                    >
+                      {hasAttemptedSubmit && hasAnyModuleError() && (
+                        <AlertTriangle className="h-4 w-4 mr-2 text-destructive-foreground" />
+                      )}
+                      Assign Role ({selectedEmployees.length})
+                    </Button>
+                  </DialogFooter>
+                </div>
               </DialogContent>
             </Dialog>
           </div>
