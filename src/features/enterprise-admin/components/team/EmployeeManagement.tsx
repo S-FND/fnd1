@@ -26,7 +26,7 @@ import { Navigate } from 'react-router-dom';
 
 // import { UserPlus, Search, Filter, Edit, Users, Eye } from 'lucide-react';
 
-interface Employee {
+export interface Employee {
   _id: string;
   name: string;
   email: string;
