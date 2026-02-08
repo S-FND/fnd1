@@ -373,6 +373,16 @@ const RoleAssignment = () => {
     });
   };
 
+  // Check if any module has validation errors
+  const hasAnyModuleError = (): boolean => {
+    return enabledModules.some(moduleId => hasModuleError(moduleId));
+  };
+
+  // Get count of modules with errors
+  const getModuleErrorCount = (): number => {
+    return enabledModules.filter(moduleId => hasModuleError(moduleId)).length;
+  };
+
   const getScopeSummary = () => {
     const summaries: string[] = [];
     enabledModules.forEach(moduleId => {
@@ -400,8 +410,8 @@ const RoleAssignment = () => {
                   Assign Role
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
+              <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+                <DialogHeader className="shrink-0">
                   <DialogTitle>Assign Maker–Checker Role</DialogTitle>
                   <DialogDescription>
                     Configure role access permissions for team members. Choose between full access 
@@ -409,7 +419,9 @@ const RoleAssignment = () => {
                   </DialogDescription>
                 </DialogHeader>
                 
-                <div className="space-y-6 py-2">
+                {/* Scrollable form content */}
+                <div className="flex-1 overflow-y-auto pr-2 -mr-2">
+                  <div className="space-y-6 py-2">
                   {/* Team Member Selection */}
                   <div className="space-y-3">
                     <Label className="text-base font-semibold">Select Team Members</Label>
@@ -855,29 +867,65 @@ const RoleAssignment = () => {
                     </div>
                   </div>
 
-                  {/* Summary Section */}
-                  {enabledModules.length > 0 && (
-                    <div className="p-3 bg-muted/50 rounded-lg">
-                      <div className="flex items-center gap-2 text-sm font-medium mb-1">
-                        <Shield className="h-4 w-4" />
-                        Access Summary
-                      </div>
-                      <p className="text-sm text-muted-foreground">{getScopeSummary()}</p>
-                    </div>
-                  )}
+                  </div>
                 </div>
 
-                <DialogFooter className="gap-2 sm:gap-0">
-                  <Button onClick={() => handleDialogClose(false)} variant="outline">
-                    Cancel
-                  </Button>
-                  <Button 
-                    onClick={handleSubmit} 
-                    disabled={!isFormValid()}
-                  >
-                    Assign Role ({selectedEmployees.length})
-                  </Button>
-                </DialogFooter>
+                {/* Fixed Footer Section */}
+                <div className="shrink-0 border-t pt-4 mt-4 space-y-3">
+                  {/* Summary Section */}
+                  {enabledModules.length > 0 && (
+                    <div className={`p-3 rounded-lg ${hasAttemptedSubmit && hasAnyModuleError() ? 'bg-destructive/10 border border-destructive/30' : 'bg-muted/50'}`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                          <Shield className="h-4 w-4" />
+                          Access Summary
+                        </div>
+                        {hasAttemptedSubmit && hasAnyModuleError() && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center gap-1.5 text-destructive">
+                                <AlertTriangle className="h-4 w-4" />
+                                <span className="text-xs font-medium">
+                                  {getModuleErrorCount()} module{getModuleErrorCount() > 1 ? 's' : ''} need attention
+                                </span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Select at least one item for modules with Specific Access, or switch to Full Access</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">{getScopeSummary() || 'No modules configured yet'}</p>
+                    </div>
+                  )}
+
+                  {/* Show error indicator even when no modules enabled */}
+                  {enabledModules.length === 0 && hasAttemptedSubmit && (
+                    <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
+                      <div className="flex items-center gap-2 text-destructive text-sm">
+                        <AlertTriangle className="h-4 w-4" />
+                        <span>Enable at least one module to assign permissions</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <DialogFooter className="gap-2 sm:gap-0">
+                    <Button onClick={() => handleDialogClose(false)} variant="outline">
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={handleSubmit} 
+                      disabled={!isFormValid()}
+                      className="relative"
+                    >
+                      {hasAttemptedSubmit && hasAnyModuleError() && (
+                        <AlertTriangle className="h-4 w-4 mr-2 text-destructive-foreground" />
+                      )}
+                      Assign Role ({selectedEmployees.length})
+                    </Button>
+                  </DialogFooter>
+                </div>
               </DialogContent>
             </Dialog>
           </div>
