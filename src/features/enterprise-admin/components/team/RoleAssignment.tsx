@@ -110,8 +110,14 @@ const RoleAssignment = () => {
     esms: { scope: 'LIMITED', selectedItems: [] },
     esg_metrics: { scope: 'LIMITED', selectedItems: [] }
   });
-  const [expandedModules, setExpandedModules] = useState<string[]>([]);
+  
+  // Single active module for accordion behavior (only one open at a time)
+  const [activeModule, setActiveModule] = useState<string | null>(null);
   const [enabledModules, setEnabledModules] = useState<string[]>([]);
+  
+  // Error states for validation
+  const [moduleErrors, setModuleErrors] = useState<Record<string, boolean>>({});
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   
   // Item dropdown states for each module
   const [itemDropdownOpen, setItemDropdownOpen] = useState<{ esms: boolean; esg_metrics: boolean }>({
@@ -126,6 +132,23 @@ const RoleAssignment = () => {
     fromScope: AccessScope;
     toScope: AccessScope;
   } | null>(null);
+
+  // Check if a module has an error (LIMITED scope with no items selected)
+  const hasModuleError = (moduleId: string): boolean => {
+    if (!enabledModules.includes(moduleId)) return false;
+    const access = moduleAccess[moduleId as keyof ModuleAccessState];
+    return access.scope === 'LIMITED' && access.selectedItems.length === 0;
+  };
+
+  // Get first module with error
+  const getFirstModuleWithError = (): string | null => {
+    for (const moduleId of enabledModules) {
+      if (hasModuleError(moduleId)) {
+        return moduleId;
+      }
+    }
+    return null;
+  };
 
   // Mock assignment data with scope information
   const assignments = [
@@ -194,12 +217,19 @@ const RoleAssignment = () => {
         ...prev,
         [moduleId]: { scope: 'LIMITED', selectedItems: [] }
       }));
+      // Auto-expand the newly enabled module (closes others due to single-panel mode)
+      setActiveModule(moduleId);
     } else {
       setEnabledModules(prev => prev.filter(id => id !== moduleId));
+      // Clear selections when unchecking
       setModuleAccess(prev => ({
         ...prev,
         [moduleId]: { scope: 'LIMITED', selectedItems: [] }
       }));
+      // Collapse the panel when unchecking
+      if (activeModule === moduleId) {
+        setActiveModule(null);
+      }
     }
   };
 
@@ -260,12 +290,15 @@ const RoleAssignment = () => {
     }));
   };
 
+  // Toggle module panel - single accordion mode (only one open at a time)
   const toggleModuleExpand = (moduleId: string) => {
-    setExpandedModules(prev => 
-      prev.includes(moduleId) 
-        ? prev.filter(id => id !== moduleId)
-        : [...prev, moduleId]
-    );
+    if (activeModule === moduleId) {
+      // Clicking the same module closes it
+      setActiveModule(null);
+    } else {
+      // Open the clicked module (automatically closes the previous one)
+      setActiveModule(moduleId);
+    }
   };
 
   const resetForm = () => {
@@ -277,13 +310,31 @@ const RoleAssignment = () => {
       esms: { scope: 'LIMITED', selectedItems: [] },
       esg_metrics: { scope: 'LIMITED', selectedItems: [] }
     });
-    setExpandedModules([]);
+    setActiveModule(null);
     setEnabledModules([]);
+    setModuleErrors({});
+    setHasAttemptedSubmit(false);
   };
 
   const handleDialogClose = (open: boolean) => {
     setIsAssignDialogOpen(open);
     if (!open) resetForm();
+  };
+
+  // Handle submit with validation
+  const handleSubmit = () => {
+    setHasAttemptedSubmit(true);
+    
+    // Check for errors
+    const firstError = getFirstModuleWithError();
+    if (firstError) {
+      // Auto-open first module with error
+      setActiveModule(firstError);
+      return; // Don't close dialog
+    }
+    
+    // All valid - proceed
+    handleDialogClose(false);
   };
 
   const getStatusIcon = (status: string) => {
@@ -526,23 +577,47 @@ const RoleAssignment = () => {
                       {Object.entries(moduleConfig).map(([moduleId, module]) => {
                         const isEnabled = enabledModules.includes(moduleId);
                         const access = moduleAccess[moduleId as keyof ModuleAccessState];
-                        const isExpanded = expandedModules.includes(moduleId);
+                        const isExpanded = activeModule === moduleId;
+                        const hasError = hasAttemptedSubmit && hasModuleError(moduleId);
                         
                         return (
-                          <div key={moduleId} className="border rounded-lg overflow-hidden">
+                          <div 
+                            key={moduleId} 
+                            className={`border rounded-lg overflow-hidden transition-colors ${
+                              hasError ? 'border-destructive' : ''
+                            }`}
+                          >
                             {/* Module Header */}
-                            <div className="flex items-center justify-between p-3 bg-muted/30">
+                            <div className={`flex items-center justify-between p-3 ${
+                              hasError ? 'bg-destructive/5' : 'bg-muted/30'
+                            }`}>
                               <div className="flex items-center gap-3">
                                 <Checkbox
                                   id={`enable-${moduleId}`}
                                   checked={isEnabled}
                                   onCheckedChange={(checked) => handleModuleEnable(moduleId, checked as boolean)}
                                 />
-                                <div>
-                                  <Label htmlFor={`enable-${moduleId}`} className="font-medium cursor-pointer">
-                                    {module.name}
-                                  </Label>
-                                  <p className="text-xs text-muted-foreground">{module.description}</p>
+                                <div className="flex items-center gap-2">
+                                  <div>
+                                    <Label htmlFor={`enable-${moduleId}`} className="font-medium cursor-pointer">
+                                      {module.name}
+                                    </Label>
+                                    <p className="text-xs text-muted-foreground">{module.description}</p>
+                                  </div>
+                                  
+                                  {/* Error indicator with tooltip */}
+                                  {isEnabled && hasModuleError(moduleId) && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="flex items-center">
+                                          <AlertTriangle className="h-4 w-4 text-destructive" />
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="right">
+                                        <p>Select at least one item or switch to Full Access</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  )}
                                 </div>
                               </div>
                               
@@ -797,7 +872,7 @@ const RoleAssignment = () => {
                     Cancel
                   </Button>
                   <Button 
-                    onClick={() => handleDialogClose(false)} 
+                    onClick={handleSubmit} 
                     disabled={!isFormValid()}
                   >
                     Assign Role ({selectedEmployees.length})
