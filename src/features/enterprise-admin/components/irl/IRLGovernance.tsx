@@ -142,7 +142,7 @@ const governanceItems = [
   },
   {
     key: "board_meetings_count",
-    name: "How many board meeting were conducted in FY2024-25?"
+    name: "How many board meeting were conducted in the last financial year?"
   },
   {
     key: "financial_statements_shared",

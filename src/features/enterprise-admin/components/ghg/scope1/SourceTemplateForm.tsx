@@ -41,16 +41,16 @@ const MOCK_TEAM_MEMBERS = [
 const formSchema = z.object({
   facilityNames: z.array(z.string()).min(1, 'At least one facility must be selected'),
   businessUnit: z.string().min(1, 'Business unit is required'),
-  sourceCategory: z.string().min(1, 'Source category is required'),
-  sourceType: z.string().min(1, 'Source type is required'),
+  sourceCategory: z.string().min(1, 'Source type is required'),
+  sourceType: z.string().min(1, 'Source category is required'),
   sourceDescription: z.string().min(1, 'Description is required'),
-  fuelType: z.string().optional(),
-  equipmentId: z.string().optional(),
+  fuelType: z.string().min(1, 'Fuel/Substance Type is required'),
+  equipmentId: z.string().min(1, 'Emission factor is required'),
   activityDataUnit: z.string().min(1, 'Activity unit is required'),
   measurementFrequency: z.string().min(1, 'Measurement frequency is required'),
   calculationMethodology: z.string().min(1, 'Methodology is required'),
   dataSource: z.string().min(1, 'Data source is required'),
-  notes: z.string().optional(),
+  notes: z.string().min(1, 'Please enter at least 5 characters'),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -202,28 +202,28 @@ export const SourceTemplateForm = () => {
     }
   };
 
-  const handleValidateAndSubmit = () => {
+  // const handleValidateAndSubmit = () => {
 
-    if (!selectedCollectors.length) {
-      alert("Please select a Collector");
-      toast({ description: "Please select a Collector" });
-      return;
-    }
+  //   if (!selectedCollectors.length) {
+  //     alert("Please select a Collector");
+  //     toast({ description: "Please select a Collector" });
+  //     return;
+  //   }
 
-    if (!selectedVerifiers.length) {
-      alert("Please select a Verifier");
-      toast({ description: "Please select a Verifier" });
-      return;
-    }
+  //   if (!selectedVerifiers.length) {
+  //     alert("Please select a Verifier");
+  //     toast({ description: "Please select a Verifier" });
+  //     return;
+  //   }
 
-    if (selectedCollectors.some(id => selectedVerifiers.includes(id))) {
-      toast({ description: "Collector and Verifier cannot be the same user" });
-      return;
-    }
+  //   if (selectedCollectors.some(id => selectedVerifiers.includes(id))) {
+  //     toast({ description: "Collector and Verifier cannot be the same user" });
+  //     return;
+  //   }
 
-    // Optional: manually trigger RHF submit
-    handleSubmit(onSubmit)();
-  };
+  //   // Optional: manually trigger RHF submit
+  //   handleSubmit(onSubmit)();
+  // };
 
   const onSubmit = async (data: FormData) => {
     if (!selectedEmissionFactor) {
@@ -607,7 +607,7 @@ export const SourceTemplateForm = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="fuelType">Fuel/Substance Type</Label>
+                <Label htmlFor="fuelType">Fuel/Substance Type *</Label>
                 <Select
                   value={watch('fuelType')}
                   onValueChange={(value) => setValue('fuelType', value)}
@@ -623,6 +623,11 @@ export const SourceTemplateForm = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {errors.fuelType && (
+                  <p className="text-sm text-destructive">
+                    {errors.fuelType.message}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -804,7 +809,7 @@ export const SourceTemplateForm = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Additional Notes</CardTitle>
+            <CardTitle>Additional Notes *</CardTitle>
           </CardHeader>
           <CardContent>
             <Textarea
@@ -812,14 +817,24 @@ export const SourceTemplateForm = () => {
               rows={4}
               {...register('notes')}
             />
-          </CardContent>
-        </Card>
+
+          {errors.notes && (
+            <p className="text-sm text-destructive">
+              {errors.notes.message}
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
         <div className="flex justify-end gap-4">
           <Button type="button" variant="outline" onClick={() => navigate(-1)}>
             Cancel
           </Button>
-          <Button type="button" onClick={handleValidateAndSubmit}>
+          {/* <Button type="button" onClick={handleValidateAndSubmit}>
+            <Save className="mr-2 h-4 w-4" />
+            {editTemplate ? 'Update Source' : 'Save Source Definition'}
+          </Button> */}
+          <Button type="submit">
             <Save className="mr-2 h-4 w-4" />
             {editTemplate ? 'Update Source' : 'Save Source Definition'}
           </Button>

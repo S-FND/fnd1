@@ -22,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
+import { getS3FilePath,extractS3Key } from "@/utils/fileUrl";
 // ============ INTERFACES ============
 interface FileAnswer {
   _id?: string;
@@ -68,13 +68,6 @@ interface IRLCustomQuestionsProps {
   tabName?: string;
 }
 
-// ============ HELPER FUNCTIONS ============
-const getS3FilePath = (file_path: string) => {
-  if (file_path.startsWith('https://')) {
-    return file_path;
-  }
-  return `https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/${file_path}`;
-};
 
 // ============ DOCUMENT VERIFICATION HOOK ============
 const useDocumentVerification = () => {
@@ -852,16 +845,17 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
       }
   
       // Extract just the path after the S3 domain
-      let filePath = fileToDelete.filePath;
-      if (filePath.startsWith('https://')) {
-        const url = new URL(filePath);
-        filePath = url.pathname.substring(1);
-      }
+      // let filePath = fileToDelete.filePath;
+      // if (filePath.startsWith('https://')) {
+      //   const url = new URL(filePath);
+      //   filePath = url.pathname.substring(1);
+      // }
       
-      const encodedFilePath = encodeURIComponent(filePath);
-      
+      // const encodedFilePath = encodeURIComponent(filePath);
+      const filePath = extractS3Key(fileToDelete.filePath);
+
       const response: any = await httpClient.delete(
-        `custom-questions/file?questionId=${questionId}&filePath=${encodedFilePath}`
+        `custom-questions/file?questionId=${questionId}&filePath=${filePath}`
       );
   
       console.log('Delete API response:', response);
@@ -1802,9 +1796,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                                 {/* Show existing files with verification */}
                                 {existingFiles.map((file, fileIndex) => {
                                   // Create the full S3 URL for the file
-                                  const s3FileUrl = file.filePath?.startsWith('http') 
-                                    ? file.filePath 
-                                    : `https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/${file.filePath}`;
+                                  const s3FileUrl = getS3FilePath(file.filePath || '');
                                   
                                   const displayFileName = file.fileName?.length > 30 
                                     ? `${file.fileName.substring(0, 25)}...` 
