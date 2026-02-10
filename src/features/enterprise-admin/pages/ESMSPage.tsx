@@ -23,7 +23,7 @@ import { ENV } from "@/config/env";
 import { logger } from '@/hooks/logger';
 import { PageAccessContext } from '@/context/PageAccessContext';
 const API_URL = ENV.API_URL;
-
+import { getS3FilePath } from "@/utils/fileUrl";
 interface ESMSDocument {
   id: string;
   title: string;
@@ -251,10 +251,7 @@ const ESMSPage: React.FC = () => {
                 const savedDoc = savedData[fieldName];
 
                 if (Array.isArray(savedDoc.file_path) && savedDoc.file_path.length > 0) {
-                  const fileUrls = savedDoc.file_path.map(fp => {
-                    const cleanPath = fp.trim();
-                    return `https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/${cleanPath}`;
-                  });
+                  const fileUrls = savedDoc.file_path.map(fp => getS3FilePath(fp));
                   return {
                     id: doc.id,
                     title: doc.title,

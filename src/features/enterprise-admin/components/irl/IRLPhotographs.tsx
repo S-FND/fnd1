@@ -19,7 +19,7 @@ import {
 import TableRowQuestion from './utils/TableRowQuestion';
 import { logger } from '@/hooks/logger';
 import { httpClient } from '@/lib/httpClient';
-
+import { getS3FilePath,extractS3Key } from "@/utils/fileUrl";
 // Add verification imports
 import {
   Dialog,
@@ -102,9 +102,6 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
   const [currentFile, setCurrentFile] = useState<any>(null);
   const [verificationLoading, setVerificationLoading] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  const getS3FilePath = (file_path: string) =>
-    `https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/${file_path}`;
 
   const getUserEntityId = (): string | null => {
     try {
@@ -409,11 +406,15 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
         : productPhotographs.find(p => p.key === photoKey);
   
     if (!photo) return null;
-  
+    const isBackendFile = (file?: FileDetails | null) =>
+      !!file?._id && !file._id.startsWith('temp-');
+    
     // ✅ DIRECT INDEX ACCESS — NO FIND
     const fileDetails = photo.file_details?.[fileIndex] ?? null;
   
-    const allowVerification = !!fileDetails;
+    // const allowVerification = !!fileDetails;
+    const allowVerification = isBackendFile(fileDetails);
+
   
     const isFileExpired = fileDetails?.expiryDate
       ? isExpired(fileDetails.expiryDate)
@@ -503,11 +504,10 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
   
 
   const handleDeleteOfficeFile = async (photoId: number, fileIndex: number, fileUrl: string) => {
-    console.log('handleDeleteOfficeFile called:', { photoId, fileIndex, fileUrl });
 
     try {
       setIsSubmitting(true);
-      const filePath = fileUrl.replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/', '');
+      const filePath = extractS3Key(fileUrl);
 
       console.log('File path to delete:', filePath);
 
@@ -547,7 +547,7 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
 
     try {
       setIsSubmitting(true);
-      const filePath = fileUrl.replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/', '');
+      const filePath = extractS3Key(fileUrl);
 
       console.log('File path to delete:', filePath);
 
@@ -662,9 +662,7 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
         hoPayload[photo.key] = {
           answer: photo.status,
           reason: photo.status === 'no' ? photo.notes : '',
-          file_path: photo.file_path.map(path =>
-            path.replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/', '')
-          ),
+          file_path: photo.file_path.map(path => extractS3Key(path)),
           fileChange: photo.attachment?.length > 0
         };
       });
@@ -690,9 +688,7 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
         prodPayload[photo.key] = {
           answer: photo.status,
           reason: photo.status === 'no' ? photo.notes : '',
-          file_path: photo.file_path.map(path =>
-            path.replace('https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/', '')
-          ),
+          file_path: photo.file_path.map(path => extractS3Key(path)),
           fileChange: photo.attachment?.length > 0
         };
       });
@@ -1118,7 +1114,7 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => window.open(currentFile.file_path, '_blank')}
+                    onClick={() => window.open(getS3FilePath(currentFile.file_path), '_blank')}
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     View Document

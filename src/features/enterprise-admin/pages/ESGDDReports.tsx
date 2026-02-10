@@ -12,9 +12,7 @@ import { fetchEsgDDReport } from '../services/esgdd';
 import { Loader2 } from 'lucide-react';
 import { logger } from '@/hooks/logger';
 
-const getS3FilePath = (file_path) =>
-  `https://fandoro-sustainability-saas.s3.ap-south-1.amazonaws.com/${file_path}`;
-
+import { getS3FilePath } from "@/utils/fileUrl";
 const ESGDDReportsPage = () => {
   logger.debug('Rendering ESGDDReportsPage component');
   const { isLoading: authLoading } = useRouteProtection(['admin', 'manager','employee']);

@@ -74,7 +74,7 @@ const complianceItems = [
     name: "Record on investigation of complaints related to sexual harassment (if any)",
   }, {
     key: "posh_annual_returns",
-    name: "POSH Annual Returns for calendar year 2024",
+    name: "POSH Annual Returns for previous filed calendar year",
   }, {
     key: "records_maternity_benefits",
     name: "Records of maternity benefits provided",

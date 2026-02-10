@@ -148,7 +148,7 @@ const formSchema = z.object({
   scope3Category: z.string().min(1, 'Scope 3 category is required'),
   sourceType: z.string().min(1, 'Source type is required'),
   sourceDescription: z.string().min(1, 'Description is required'),
-  supplierName: z.string().optional(),
+  supplierName: z.string().min(1, 'Supplier / Partner name is required'),
   countryRegion: z.string().min(1, 'Country/Region is required'),
   activityDataUnit: z.string().min(1, 'Activity unit is required'),
   measurementFrequency: z.string().min(1, 'Measurement frequency is required'),
@@ -588,8 +588,9 @@ export const Scope3SourceTemplateForm = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="supplierName">Supplier/Partner Name</Label>
+                  <Label htmlFor="supplierName">Supplier/Partner Name *</Label>
                   <Input {...register('supplierName')} placeholder="e.g., AluMines Ltd." />
+                  {errors.supplierName && (<p className="text-sm text-destructive"> {errors.supplierName.message} </p>)}
                 </div>
 
                 <div className="space-y-2">
