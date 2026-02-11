@@ -1646,11 +1646,11 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                       <td className="p-3 text-sm font-medium text-gray-900">
                         <div className="flex items-center gap-2">
                           {question.question_text}
-                          {question.question_type === 'file' && (
+                          {/* {question.question_type === 'file' && (
                             <Badge variant="outline" className="text-xs">
                               File Upload
                             </Badge>
-                          )}
+                          )} */}
                         </div>
                       </td>
                       <td className="p-3 text-sm text-gray-500">
