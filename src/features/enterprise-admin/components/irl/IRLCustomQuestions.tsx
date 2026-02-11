@@ -197,7 +197,7 @@ const useDocumentVerification = () => {
       }
     } catch (error: any) {
       console.error('❌ Verification error:', error);
-      toast.error(error.message || "Verification failed");
+      // toast.error(error.message || "Verification failed");
       throw error;
     } finally {
       setLoading(false);
@@ -578,7 +578,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
       logger.error('Error fetching custom questions:', err);
       const errorMessage = err.response?.data?.message || err.message || 'Failed to load custom questions';
       setError(errorMessage);
-      toast.error(errorMessage);
+      // toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -1646,11 +1646,11 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                       <td className="p-3 text-sm font-medium text-gray-900">
                         <div className="flex items-center gap-2">
                           {question.question_text}
-                          {question.question_type === 'file' && (
+                          {/* {question.question_type === 'file' && (
                             <Badge variant="outline" className="text-xs">
                               File Upload
                             </Badge>
-                          )}
+                          )} */}
                         </div>
                       </td>
                       <td className="p-3 text-sm text-gray-500">
@@ -1767,31 +1767,39 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                               </div>
                             ) : (
                               <div className="space-y-2">
-                                <div className="flex items-center gap-2">
-                                  <Input
-                                    type="file"
-                                    onChange={(e) => {
-                                      handleFileChange(question._id, e.target.files);
-                                      e.target.value = '';
-                                    }}
-                                    disabled={!buttonEnabled}
-                                    className="hidden"
-                                    accept=".pdf,.doc,.docx,.jpg,.png,.jpeg"
-                                    id={`file-${question._id}`}
-                                    multiple
-                                  />
-                                  <label
-                                    htmlFor={`file-${question._id}`}
-                                    className={`flex items-center gap-2 px-3 py-2 text-sm border rounded-md ${
-                                      errorMessage && errorMessage.includes('file') && isTouched 
-                                        ? 'border-red-500' 
-                                        : 'border-gray-300'
-                                    } ${!buttonEnabled ? 'bg-gray-100 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50'}`}
+                              <div className="flex items-center gap-2">
+                                <Input
+                                  type="file"
+                                  onChange={(e) => {
+                                    handleFileChange(question._id, e.target.files);
+                                    e.target.value = '';
+                                  }}
+                                  disabled={!buttonEnabled}
+                                  className="hidden"
+                                  id={`file-${question._id}`}
+                                  multiple
+                                />
+                            
+                                <label
+                                  htmlFor={`file-${question._id}`}
+                                  className={`cursor-pointer`}
+                                >
+                                  <div
+                                    className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-xs
+                                      ${
+                                        !buttonEnabled
+                                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                          : errorMessage && errorMessage.includes('file') && isTouched
+                                          ? 'bg-red-50 text-red-600 border border-red-400'
+                                          : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                                      }
+                                    `}
                                   >
-                                    <Upload className="h-4 w-4" />
-                                    Upload Files
-                                  </label>
-                                </div>
+                                    <Upload className="h-3 w-3" />
+                                    Upload
+                                  </div>
+                                </label>
+                              </div>
 
                                 {/* Show existing files with verification */}
                                 {existingFiles.map((file, fileIndex) => {

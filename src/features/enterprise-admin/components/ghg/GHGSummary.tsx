@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { httpClient } from '@/lib/httpClient';
 import { logger } from '@/hooks/logger';
 import { yearsToShow } from '@/data/ghg/calculator';
-
+import DynamicYearFilter, { getCurrentFinancialYear } from "@/hooks/DynamicYearFilter"; 
 interface EmissionsByScope {
   scope: string;
   value: number;
@@ -71,18 +71,6 @@ export const GHGSummary = () => {
       'Scope 4': 0
     }
   });
-  const getCurrentFinancialYear = (): string => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth(); // 0 = Jan
-
-    // Financial year starts in April (month >= 3)
-    const startYear = month >= 3 ? year : year - 1;
-    const endYear = startYear + 1;
-
-    return `${startYear}-${endYear}`;
-  };
-
   const [selectedYear, setSelectedYear] = useState<string>(getCurrentFinancialYear());
 
   const scopes: EmissionsByScope[] = [
@@ -230,26 +218,13 @@ export const GHGSummary = () => {
               </CardDescription>
             </div>
             <div className="space-y-2">
-                <label>Year</label>
-                <Select
-                  value={selectedYear}
-                  onValueChange={setSelectedYear}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Financial Year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 5 }, (_, i) => {
-                      const start = new Date().getFullYear() - i;
-                      const fy = `${start}-${start + 1}`;
-                      return (
-                        <SelectItem key={fy} value={fy}>
-                          FY {start}-{(start + 1).toString().slice(-2)}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
+                <label>Financial Year</label>
+                <DynamicYearFilter
+                  selectedYear={selectedYear}
+                  onYearChange={setSelectedYear}
+                  className="w-[180px]"
+                  showCurrentYearIndicator
+                />
               </div>
           </div>
         </CardHeader>

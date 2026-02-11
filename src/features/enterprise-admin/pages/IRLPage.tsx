@@ -33,13 +33,6 @@ const IRLPage = () => {
   const [previousIrlDate, setPreviousIrlDate] = useState<string | null>(null);
   const [alertType, setAlertType] = useState<"success" | "warning" | "danger" | null>(null);
 
-  if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  }
-
-  if (!isAuthenticatedStatus()) {
-    return <Navigate to="/" />;
-  }
 
   useEffect(() => {
     // const hasAccess = checkPageButtonAccess('/esg-dd/irl');
@@ -62,6 +55,7 @@ const IRLPage = () => {
       if (res.status === 200) {
         setIrlDate(data?.irl_date ? data.irl_date.split("T")[0] : "");
         setPreviousIrlDate(data?.previous_irl_date || null);
+        console.log('data?.irl_date',data?.irl_date);
         checkIrlDate(data?.irl_date);
       }
     };
@@ -69,8 +63,16 @@ const IRLPage = () => {
     fetchIrlDate();
   }, []);
   
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!isAuthenticatedStatus()) {
+    return <Navigate to="/" />;
+  }
 
   const checkIrlDate = (dateStr: string) => {
+    if (!dateStr) return; 
     const today = new Date();
     const irl = new Date(dateStr);
   

@@ -232,7 +232,7 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
                       type="file"
                       className="hidden"
                       onChange={handleFileUpload}
-                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      // accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
                     />
                   </label>
                 </div>
