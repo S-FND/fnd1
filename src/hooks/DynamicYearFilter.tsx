@@ -84,11 +84,6 @@ const DynamicYearFilter: React.FC<DynamicYearFilterProps> = ({
           })}
         </SelectContent>
       </Select>
-      {selectedYear === CURRENT_FINANCIAL_YEAR && showCurrentYearIndicator && (
-        <p className="text-xs text-green-600">
-          ✓ Current financial year selected
-        </p>
-      )}
     </div>
   );
 };
