@@ -17,7 +17,7 @@ import GroupedBarChart from './graphTemp1';
 import NestedStackedBarChart from './graphTemp1';
 import { logger } from '@/hooks/logger';
 // import { SmartChart } from '@/components/charts/SmartChart';
-
+import DynamicYearFilter, { getCurrentFinancialYear } from "@/hooks/DynamicYearFilter"; 
 interface MetricDataEntry {
   id: string;
   metricId: string;
@@ -37,15 +37,6 @@ interface ESGDashboardProps {
   finalMetricsList: ESGMetricWithTracking[],
 }
 
-const financialYearList = [
-  { value: "2020-2021", label: "2020-2021" },
-  { value: "2021-2022", label: "2021-2022" },
-  { value: "2022-2023", label: "2022-2023" },
-  { value: "2023-2024", label: "2023-2024" },
-  { value: "2024-2025", label: "2024-2025" },
-  { value: "2025-2026", label: "2025-2026" },
-];
-
 const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics, finalMetricsList }) => {
   const [configuredMetrics, setConfiguredMetrics] = useState<ESGMetricWithTracking[]>([]);
   const [dataEntries, setDataEntries] = useState<MetricDataEntry[]>([]);
@@ -56,7 +47,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics, finalMetric
   const [selectedTrendYear, setSelectedTrendYear] = useState<string>(new Date().getFullYear().toString());
   const [selectedTrendMonth, setSelectedTrendMonth] = useState<string>('all');
 
-  const [selectedYear, setSelectedYear] = useState<string>([...financialYearList].reverse()[0].value); // Default to current year
+  const [selectedYear, setSelectedYear] = useState<string>(getCurrentFinancialYear());
   const [graphData, setGraphData] = useState<any>({});
   logger.info('activeTab', viewMode, "viewMode");
 
@@ -146,7 +137,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics, finalMetric
 
   useEffect(() => {
     logger.log('selectedYear changed', selectedYear);
-    logger.log('financialYearList', financialYearList);
+    logger.log('getCurrentFinancialYear', getCurrentFinancialYear());
   }, [selectedYear]);
 
   const generatePeriods = (frequency: string, financialYear: string) => {
@@ -485,25 +476,13 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics, finalMetric
             </SelectContent>
           </Select>
 
-          <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {
-                financialYearList.map((year) => {
-                  return (
-                    <SelectItem key={year.value} value={year.label}>
-                      {year.label}
-                    </SelectItem>
-                  );
-                })}
-              {/* <SelectItem value="3months">3 Months</SelectItem>
-              <SelectItem value="6months">6 Months</SelectItem>
-              <SelectItem value="12months">12 Months</SelectItem>
-              <SelectItem value="24months">24 Months</SelectItem> */}
-            </SelectContent>
-          </Select>
+          <DynamicYearFilter
+            selectedYear={selectedYear}
+            onYearChange={setSelectedYear}
+            className="w-[180px]"
+            showCurrentYearIndicator
+          />
+
           {viewMode !== 'trends' && (
             <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
               <SelectTrigger className="w-32">

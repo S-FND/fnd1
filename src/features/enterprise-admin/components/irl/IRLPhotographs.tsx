@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Loader2, CheckCircle, Clock, Eye, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle, Clock, Eye, AlertCircle, Upload } from 'lucide-react';
 import {
   fetchHoPhotographs,
   updateHoPhotographs,
@@ -370,7 +370,7 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
       setProductPhotographs(updatedProductPhotos);
     } catch (err) {
       console.error('Error loading data:', err);
-      toast.error('Failed to load data');
+      // toast.error('Failed to load data');
     } finally {
       setIsLoading(false);
     }
@@ -826,27 +826,15 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
                             {/* ATTACHMENT - Existing files + Upload */}
                             <td className="p-3 text-sm text-gray-500">
                               <div className="space-y-2">
-                                {/* Existing files */}
-                                {photo.file_path.map((fileUrl, fileIndex) => (
-                                  <div key={fileIndex}>
-                                    {renderFileWithVerification(
-                                      fileUrl,
-                                      photo.key,
-                                      fileIndex,
-                                      photo.key,
-                                      'office',
-                                      () => handleDeleteOfficeFile(photo.id, fileIndex, fileUrl)
-                                    )}
-                                  </div>
-                                ))}
-
                                 {/* New file upload - only show when status=yes and enabled */}
                                 {photo.status === 'yes' && buttonEnabled && (
-                                  <div className="mt-2">
+                                  <div className="flex flex-col items-start gap-2">
                                     <input
+                                      id={`office-upload-${photo.id}`}
                                       type="file"
                                       multiple
-                                      accept="image/*,.pdf,.doc,.docx"
+                                      className="hidden"
+                                      disabled={!buttonEnabled}
                                       onChange={(e) => {
                                         const files = Array.from(e.target.files || []);
                                         handleOfficePhotographChange(
@@ -854,11 +842,41 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
                                           'attachment',
                                           [...(photo.attachment || []), ...files]
                                         );
-                                        e.target.value = ''; // Reset input
+                                        e.target.value = '';
                                       }}
-                                      className="w-full text-sm border p-1 rounded"
                                     />
 
+                                    <label htmlFor={`office-upload-${photo.id}`} className="cursor-pointer">
+                                      <div
+                                        className={`inline-flex gap-1 px-3 py-1.5 rounded-md text-xs
+                                          ${
+                                            !buttonEnabled
+                                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                              : errors[`${photo.key}-files`]
+                                              ? 'bg-red-50 text-red-600 border border-red-400'
+                                              : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                                          }
+                                        `}
+                                      >
+                                        <Upload className="h-3 w-3" />
+                                        Upload
+                                      </div>
+                                    </label>
+                                    {/* Existing files */}
+                                    <div className="flex flex-col gap-1 pl-1">
+                                    {photo.file_path.map((fileUrl, fileIndex) => (
+                                      <div key={fileIndex}>
+                                        {renderFileWithVerification(
+                                          fileUrl,
+                                          photo.key,
+                                          fileIndex,
+                                          photo.key,
+                                          'office',
+                                          () => handleDeleteOfficeFile(photo.id, fileIndex, fileUrl)
+                                        )}
+                                      </div>
+                                    ))}
+                                    </div>
                                     {/* Show selected new files */}
                                     {photo.attachment?.length > 0 && (
                                       <div className="mt-2 space-y-1">
@@ -956,28 +974,15 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
                             {/* ATTACHMENT - Existing files + Upload */}
                             <td className="p-3 text-sm text-gray-500">
                               <div className="space-y-2">
-                                {/* Existing files */}
-                                {photo.file_path.map((fileUrl, fileIndex) => (
-                                  <div key={fileIndex}>
-                                    {renderFileWithVerification(
-                                      fileUrl,
-                                      photo.key,
-                                      fileIndex,
-                                      photo.key,
-                                      'product',
-                                      () => handleDeleteProductFile(photo.id, fileIndex, fileUrl)
-                                    )}
-                                  </div>
-                                ))}
-
                                 {/* New file upload - only show when status=yes and enabled */}
                                 {photo.status === 'yes' && buttonEnabled && (
-                                  <div className="mt-2">
-                                    <input
-                                      id={`product-file-${photo.id}`}
+                                  <div className="flex flex-col items-start gap-2">
+                                   <input
+                                      id={`product-upload-${photo.id}`}
                                       type="file"
                                       multiple
-                                      accept="image/*,.pdf,.doc,.docx"
+                                      className="hidden"
+                                      disabled={!buttonEnabled}
                                       onChange={(e) => {
                                         const files = Array.from(e.target.files || []);
                                         handleProductPhotographChange(
@@ -985,12 +990,40 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
                                           'attachment',
                                           [...(photo.attachment || []), ...files]
                                         );
-                                        // FIX: Clear the input after selecting files
                                         e.target.value = '';
                                       }}
-                                      className="w-full text-sm border p-1 rounded"
                                     />
-
+                                    <label htmlFor={`product-upload-${photo.id}`} className="cursor-pointer">
+                                      <div
+                                        className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs
+                                          ${
+                                            !buttonEnabled
+                                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                              : errors[`${photo.key}-files`]
+                                              ? 'bg-red-50 text-red-600 border border-red-400'
+                                              : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                                          }
+                                        `}
+                                      >
+                                        <Upload className="h-3 w-3" />
+                                        Upload
+                                      </div>
+                                    </label>
+                                    <div className="flex flex-col gap-1 pl-1">
+                                    {/* Existing files */}
+                                    {photo.file_path.map((fileUrl, fileIndex) => (
+                                      <div key={fileIndex}>
+                                        {renderFileWithVerification(
+                                          fileUrl,
+                                          photo.key,
+                                          fileIndex,
+                                          photo.key,
+                                          'product',
+                                          () => handleDeleteProductFile(photo.id, fileIndex, fileUrl)
+                                        )}
+                                      </div>
+                                    ))}
+                                    </div>
                                     {/* Show selected new files */}
                                     {photo.attachment?.length > 0 && (
                                       <div className="mt-2 space-y-1">

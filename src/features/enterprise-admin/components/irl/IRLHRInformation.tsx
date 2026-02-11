@@ -592,7 +592,7 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
             {isQuestionEnabled('employees_table') && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3>{getQuestionNumber('employees_table')}. Human Resource Management - Employees</h3>
+                  <Label htmlFor="employeestable">{getQuestionNumber('employees_table')}. Human Resource Management - Employees</Label>
                   <Button onClick={addEmployeeRow} size="sm" disabled={isLoading || !buttonEnabled}>Add Row</Button>
                 </div>
 
@@ -689,7 +689,7 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
             {isQuestionEnabled('workers_table') && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3>{getQuestionNumber('workers_table')}. Human Resource Management - Workers</h3>
+                  <Label htmlFor="workerstable">{getQuestionNumber('workers_table')}. Human Resource Management - Workers</Label>
                   <Button onClick={addWorkerRow} size="sm" disabled={isLoading || !buttonEnabled}>Add Row</Button>
                 </div>
 
@@ -786,7 +786,7 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
             {isQuestionEnabled('differently_abled') && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3>{getQuestionNumber('differently_abled')}. Human Resource Management (Differently Abled Personnel)</h3>
+                  <Label htmlFor="differentlyabled">{getQuestionNumber('differently_abled')}. Human Resource Management (Differently Abled Personnel)</Label>
                   <Button onClick={addDifferentlyAbledRow} size="sm" disabled={isLoading || !buttonEnabled}>Add Row</Button>
                 </div>
 
@@ -882,8 +882,7 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
             {/* 10. Key Managerial Positions / Board of Directors - Only show if enabled */}
             {isQuestionEnabled('board_managerial') && (
               <div className="space-y-4">
-                <h3>{getQuestionNumber('board_managerial')}. Key Managerial Positions / Board of Directors</h3>
-
+                <Label htmlFor="boardmanagerial">{getQuestionNumber('board_managerial')}. Key Managerial Positions / Board of Directors</Label>
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse border border-gray-300">
                     <thead>

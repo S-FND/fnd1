@@ -604,7 +604,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
 
     } catch (err) {
       console.error('Error loading data:', err);
-      toast.error('Failed to load data');
+      // toast.error('Failed to load data');
     } finally {
       setIsLoading(false);
     }
