@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -245,6 +245,34 @@ const IRLCompanyInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) =>
     { locationType: 'International', warehouses: '', offices: '', distributionCenters: '', total: '' }
   ]);
 
+  const tableRef = useRef<HTMLDivElement>(null);
+  const [isButtonFixed, setIsButtonFixed] = useState(true);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!tableRef.current) return;
+
+      const tableRect = tableRef.current.getBoundingClientRect();
+      const tableBottom = tableRect.bottom + window.scrollY; // document-based bottom
+      const scrollBottom = window.scrollY + window.innerHeight; // viewport bottom in document coords
+      const buffer = 20; // distance from table bottom
+
+      if (scrollBottom + buffer >= tableBottom) {
+        setIsButtonFixed(false); // reached table bottom → stop fixing
+      } else {
+        setIsButtonFixed(true); // scroll is above table bottom → keep fixed
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleScroll);
+    handleScroll(); // initial check
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, []);
+
   return (
     <Card>
       <CardHeader>
@@ -253,7 +281,7 @@ const IRLCompanyInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) =>
           Please provide comprehensive information about your company
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent ref={tableRef} className="space-y-6">
       {isLoading ? (
           <div className="flex justify-center items-center py-4">
             <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
@@ -387,7 +415,11 @@ const IRLCompanyInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) =>
           </div>
         </div>
 
-        <div className="flex gap-4 pt-6">
+        <div className={`${
+                    isButtonFixed
+                      ? "flex gap-3 z-50 fixed bottom-6 right-6"
+                      : "flex gap-4 pt-6"
+                  }`}>
           <Button onClick={handleSave} variant="outline" className="flex-1" disabled={isLoading || !buttonEnabled}>
             Save as Draft
           </Button>

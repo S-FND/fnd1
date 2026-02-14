@@ -1,4 +1,3 @@
-
 import React, { useContext, useEffect, useState } from 'react';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
@@ -21,24 +20,23 @@ import { httpClient } from '@/lib/httpClient';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 import { toast } from 'sonner';
-import IRLCustomQuestions from '../components/irl/IRLCustomQuestions'; 
+import IRLCustomQuestions from '../components/irl/IRLCustomQuestions';
 
 const IRLPage = () => {
   logger.debug('Rendering IRLPage component');
-  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
-  const {checkPageButtonAccess}=useContext(PageAccessContext);
+  const { isLoading } = useRouteProtection(['admin', 'manager', 'employee']);
+  const { checkPageButtonAccess } = useContext(PageAccessContext);
   const [buttonEnabled, setButtonEnabled] = useState(false);
-  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
+  const { isAuthenticatedStatus } = useAuth();
   const [irlDate, setIrlDate] = useState<string | null>(null);
   const [previousIrlDate, setPreviousIrlDate] = useState<string | null>(null);
   const [alertType, setAlertType] = useState<"success" | "warning" | "danger" | null>(null);
-
+  const [activeMainTab, setActiveMainTab] = useState("company");
+  const [activeSubTab, setActiveSubTab] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // const hasAccess = checkPageButtonAccess('/esg-dd/irl');
-    // setButtonEnabled(hasAccess);
     const userData = localStorage.getItem('fandoro-user');
-    const user = JSON.parse(userData);
+    const user = JSON.parse(userData || '{}');
     if (user.isParent === false) {
       const hasAccess = checkPageButtonAccess('/esg-dd/irl');
       setButtonEnabled(hasAccess);
@@ -51,18 +49,17 @@ const IRLPage = () => {
     const fetchIrlDate = async () => {
       const res: any = await httpClient.get("company/entity");
       const data = res?.data?.data;
-  
+
       if (res.status === 200) {
         setIrlDate(data?.irl_date ? data.irl_date.split("T")[0] : "");
         setPreviousIrlDate(data?.previous_irl_date || null);
-        console.log('data?.irl_date',data?.irl_date);
         checkIrlDate(data?.irl_date);
       }
     };
-  
+
     fetchIrlDate();
   }, []);
-  
+
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
@@ -72,13 +69,11 @@ const IRLPage = () => {
   }
 
   const checkIrlDate = (dateStr: string) => {
-    if (!dateStr) return; 
+    if (!dateStr) return;
     const today = new Date();
     const irl = new Date(dateStr);
-  
-    // Example: Show alert if IRL date is within 3 days or has passed
     const diffInDays = Math.ceil((irl.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  
+
     if (diffInDays <= 0) {
       setAlertType("danger");
       toast.error(`IRL deadline has passed (${irl.toLocaleDateString()}).`);
@@ -89,7 +84,7 @@ const IRLPage = () => {
       setAlertType("success");
     }
   };
-  
+
   const alertStyles: Record<string, string> = {
     success: "bg-green-50 border-green-400 text-green-900",
     warning: "bg-yellow-50 border-yellow-400 text-yellow-900",
@@ -98,10 +93,15 @@ const IRLPage = () => {
 
   const activeIrlDate = irlDate || previousIrlDate;
 
-  const isExtended =
-  irlDate &&
-  previousIrlDate &&
-  new Date(irlDate) > new Date(previousIrlDate);
+  const isExtended = irlDate && previousIrlDate && new Date(irlDate) > new Date(previousIrlDate);
+
+  const handleMainTabChange = (value: string) => {
+    setActiveMainTab(value);
+    // Initialize sub-tab if not set
+    if (!activeSubTab[value]) {
+      setActiveSubTab(prev => ({ ...prev, [value]: "standard" }));
+    }
+  };
 
   return (
     <UnifiedSidebarLayout>
@@ -120,8 +120,8 @@ const IRLPage = () => {
               {alertType === "danger"
                 ? "Deadline Missed"
                 : alertType === "warning"
-                ? "Deadline Approaching"
-                : "On Track"}
+                  ? "Deadline Approaching"
+                  : "On Track"}
             </AlertTitle>
 
             <AlertDescription>
@@ -156,8 +156,8 @@ const IRLPage = () => {
             </AlertDescription>
           </Alert>
         )}
-        
-        <Tabs defaultValue="company" className="space-y-4">
+
+        <Tabs value={activeMainTab} onValueChange={handleMainTabChange} className="space-y-4">
           <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10">
             <TabsTrigger value="company">Company</TabsTrigger>
             <TabsTrigger value="hr">HR</TabsTrigger>
@@ -166,64 +166,148 @@ const IRLPage = () => {
             <TabsTrigger value="compliance">Compliance</TabsTrigger>
             <TabsTrigger value="management">Management</TabsTrigger>
             <TabsTrigger value="itsecurity">IT Security</TabsTrigger>
-            {/* <TabsTrigger value="warehouse">Warehouse</TabsTrigger> */}
             <TabsTrigger value="facility">Facility</TabsTrigger>
             <TabsTrigger value="governance">Governance</TabsTrigger>
             <TabsTrigger value="custom">Others</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="company">
-            <IRLCompanyInformation buttonEnabled={buttonEnabled} />
-            <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="company" />
+            <Tabs value={activeSubTab.company || "standard"} onValueChange={(v) => setActiveSubTab(prev => ({ ...prev, company: v }))}>
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="standard">Standard</TabsTrigger>
+                <TabsTrigger value="custom">Custom Questions</TabsTrigger>
+              </TabsList>
+              <TabsContent value="standard">
+                <IRLCompanyInformation buttonEnabled={buttonEnabled} />
+              </TabsContent>
+              <TabsContent value="custom">
+                <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="company" />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
-          
+
           <TabsContent value="hr">
-            <IRLHRInformation buttonEnabled={buttonEnabled} />
-            <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="hr" />
+            <Tabs value={activeSubTab.hr || "standard"} onValueChange={(v) => setActiveSubTab(prev => ({ ...prev, hr: v }))}>
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="standard">Standard</TabsTrigger>
+                <TabsTrigger value="custom">Custom Questions</TabsTrigger>
+              </TabsList>
+              <TabsContent value="standard">
+                <IRLHRInformation buttonEnabled={buttonEnabled} />
+              </TabsContent>
+              <TabsContent value="custom">
+                <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="hr" />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="business">
-            <IRLBusinessOperations buttonEnabled={buttonEnabled} />
-            <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="business" />
+            <Tabs value={activeSubTab.business || "standard"} onValueChange={(v) => setActiveSubTab(prev => ({ ...prev, business: v }))}>
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="standard">Standard</TabsTrigger>
+                <TabsTrigger value="custom">Custom Questions</TabsTrigger>
+              </TabsList>
+              <TabsContent value="standard">
+                <IRLBusinessOperations buttonEnabled={buttonEnabled} />
+              </TabsContent>
+              <TabsContent value="custom">
+                <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="business" />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="photographs">
-            <IRLPhotographs buttonEnabled={buttonEnabled} />
-            <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="photographs" />
+            <Tabs value={activeSubTab.photographs || "standard"} onValueChange={(v) => setActiveSubTab(prev => ({ ...prev, photographs: v }))}>
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="standard">Standard</TabsTrigger>
+                <TabsTrigger value="custom">Custom Questions</TabsTrigger>
+              </TabsList>
+              <TabsContent value="standard">
+                <IRLPhotographs buttonEnabled={buttonEnabled} />
+              </TabsContent>
+              <TabsContent value="custom">
+                <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="photographs" />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="compliance">
-            <IRLCompliance buttonEnabled={buttonEnabled} />
-            <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="compliance" />
+            <Tabs value={activeSubTab.compliance || "standard"} onValueChange={(v) => setActiveSubTab(prev => ({ ...prev, compliance: v }))}>
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="standard">Standard</TabsTrigger>
+                <TabsTrigger value="custom">Custom Questions</TabsTrigger>
+              </TabsList>
+              <TabsContent value="standard">
+                <IRLCompliance buttonEnabled={buttonEnabled} />
+              </TabsContent>
+              <TabsContent value="custom">
+                <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="compliance" />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="management">
-            <IRLManagement buttonEnabled={buttonEnabled}/>
-            <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="management" />
+            <Tabs value={activeSubTab.management || "standard"} onValueChange={(v) => setActiveSubTab(prev => ({ ...prev, management: v }))}>
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="standard">Standard</TabsTrigger>
+                <TabsTrigger value="custom">Custom Questions</TabsTrigger>
+              </TabsList>
+              <TabsContent value="standard">
+                <IRLManagement buttonEnabled={buttonEnabled} />
+              </TabsContent>
+              <TabsContent value="custom">
+                <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="management" />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="itsecurity">
-            <IRLITSecurity buttonEnabled={buttonEnabled} />
-            <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="itsecurity" />
+            <Tabs value={activeSubTab.itsecurity || "standard"} onValueChange={(v) => setActiveSubTab(prev => ({ ...prev, itsecurity: v }))}>
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="standard">Standard</TabsTrigger>
+                <TabsTrigger value="custom">Custom Questions</TabsTrigger>
+              </TabsList>
+              <TabsContent value="standard">
+                <IRLITSecurity buttonEnabled={buttonEnabled} />
+              </TabsContent>
+              <TabsContent value="custom">
+                <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="itsecurity" />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
-          {/* <TabsContent value="warehouse">
-            <IRLWarehouse />
-          </TabsContent> */}
-
           <TabsContent value="facility">
-            <IRLAdditionalFacility buttonEnabled={buttonEnabled} />
-            <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="facility" />
+            <Tabs value={activeSubTab.facility || "standard"} onValueChange={(v) => setActiveSubTab(prev => ({ ...prev, facility: v }))}>
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="standard">Standard</TabsTrigger>
+                <TabsTrigger value="custom">Custom Questions</TabsTrigger>
+              </TabsList>
+              <TabsContent value="standard">
+                <IRLAdditionalFacility buttonEnabled={buttonEnabled} />
+              </TabsContent>
+              <TabsContent value="custom">
+                <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="facility" />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="governance">
-            <IRLGovernance buttonEnabled={buttonEnabled} />
-            <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="governance" />
+            <Tabs value={activeSubTab.governance || "standard"} onValueChange={(v) => setActiveSubTab(prev => ({ ...prev, governance: v }))}>
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="standard">Standard</TabsTrigger>
+                <TabsTrigger value="custom">Custom Questions</TabsTrigger>
+              </TabsList>
+              <TabsContent value="standard">
+                <IRLGovernance buttonEnabled={buttonEnabled} />
+              </TabsContent>
+              <TabsContent value="custom">
+                <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="governance" />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           <TabsContent value="custom">
-            <IRLCustomQuestions buttonEnabled={buttonEnabled} 
-            />
+            <IRLCustomQuestions buttonEnabled={buttonEnabled} />
           </TabsContent>
         </Tabs>
       </div>
@@ -231,4 +315,4 @@ const IRLPage = () => {
   );
 };
 
-export default IRLPage;
+export default IRLPage; 

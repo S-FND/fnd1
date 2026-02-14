@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Card,
   CardHeader,
@@ -33,7 +33,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from '@/components/ui/input';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 interface OfficePhotograph {
   id: number;
   description: string;
@@ -594,7 +594,7 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
           isValid = false;
         }
       }
-      else if (photo.status === 'no' && !photo.notes?.trim()) {
+      else if ((photo.status === 'no' || photo.status === 'Not Applicable') && !photo.notes?.trim()) {
         newErrors[`${photo.key}-notes`] = 'Please provide the reason.';
         isValid = false;
       }
@@ -733,13 +733,14 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
     field: keyof OfficePhotograph,
     value: any
   ) => {
+    const newValue = value === "none" ? "" : value;
     setOfficePhotographs(prev =>
       prev.map(photo =>
         photo.id === id
           ? {
             ...photo,
             [field]: value,
-            ...(field === 'status' && value === 'no' ? { attachment: [] } : {})
+            ...(field === 'status' && (newValue === 'no' || newValue === '') ? { attachment: [] } : {})
           }
           : photo
       )
@@ -751,18 +752,48 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
     field: keyof ProductPhotograph,
     value: any
   ) => {
+    const newValue = value === "none" ? "" : value;
     setProductPhotographs(prev =>
       prev.map(photo =>
         photo.id === id
           ? {
             ...photo,
             [field]: value,
-            ...(field === 'status' && value === 'no' ? { attachment: [] } : {})
+            ...(field === 'status' && (newValue === 'no' || newValue === '') ? { attachment: [] } : {})
           }
           : photo
       )
     );
   };
+
+
+  const tableRef = useRef<HTMLDivElement>(null);
+  const [isButtonFixed, setIsButtonFixed] = useState(true);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!tableRef.current) return;
+
+      const tableRect = tableRef.current.getBoundingClientRect();
+      const tableBottom = tableRect.bottom + window.scrollY; // document-based bottom
+      const scrollBottom = window.scrollY + window.innerHeight; // viewport bottom in document coords
+      const buffer = 20; // distance from table bottom
+
+      if (scrollBottom + buffer >= tableBottom) {
+        setIsButtonFixed(false); // reached table bottom → stop fixing
+      } else {
+        setIsButtonFixed(true); // scroll is above table bottom → keep fixed
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleScroll);
+    handleScroll(); // initial check
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, []);
 
   if (isLoading || configLoading) {
     return (
@@ -772,7 +803,6 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
       </div>
     );
   }
-
   return (
     <>
       <Card className="max-w-6xl mx-auto">
@@ -811,16 +841,21 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
 
                             {/* STATUS - Editable Dropdown */}
                             <td className="p-3 text-sm text-gray-500">
-                              <select
+                            <Select
                                 value={photo.status}
-                                onChange={(e) => handleOfficePhotographChange(photo.id, 'status', e.target.value)}
-                                className="w-full p-2 border rounded"
+                                onValueChange={(val) => handleOfficePhotographChange(photo.id, 'status', val)}
                                 disabled={!buttonEnabled}
                               >
-                                <option value="">Select</option>
-                                <option value="yes">Yes</option>
-                                <option value="no">No</option>
-                              </select>
+                                <SelectTrigger disabled={!buttonEnabled}>
+                                  <SelectValue placeholder="Select" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {/* <SelectItem value="none">Select</SelectItem> */}
+                                  <SelectItem value="yes">Yes</SelectItem>
+                                  <SelectItem value="no">No</SelectItem>
+                                  <SelectItem value="Not Applicable">Not Applicable</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </td>
 
                             {/* ATTACHMENT - Existing files + Upload */}
@@ -940,7 +975,7 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
               {productPhotographs.length > 0 && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Product Photographs</h3>
-                  <div className="overflow-x-auto rounded-lg border">
+                  <div ref={tableRef} className="overflow-x-auto rounded-lg border">
                     <table className="w-full">
                       <thead className="bg-gray-50">
                         <tr>
@@ -959,16 +994,21 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
 
                             {/* STATUS - Editable Dropdown */}
                             <td className="p-3 text-sm text-gray-500">
-                              <select
+                            <Select
                                 value={photo.status}
-                                onChange={(e) => handleProductPhotographChange(photo.id, 'status', e.target.value)}
-                                className="w-full p-2 border rounded"
+                                onValueChange={(val) => handleProductPhotographChange(photo.id, 'status', val)}
                                 disabled={!buttonEnabled}
                               >
-                                <option value="">Select</option>
-                                <option value="yes">Yes</option>
-                                <option value="no">No</option>
-                              </select>
+                                <SelectTrigger disabled={!buttonEnabled}>
+                                  <SelectValue placeholder="Select" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {/* <SelectItem value="none">Select</SelectItem> */}
+                                  <SelectItem value="yes">Yes</SelectItem>
+                                  <SelectItem value="no">No</SelectItem>
+                                  <SelectItem value="Not Applicable">Not Applicable</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </td>
 
                             {/* ATTACHMENT - Existing files + Upload */}
@@ -1092,7 +1132,11 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
               )}
 
               {(officePhotographs.length > 0 || productPhotographs.length > 0) && (
-                <div className="flex gap-4 pt-6">
+                <div className={`${
+                    isButtonFixed
+                      ? "flex gap-3 z-50 fixed bottom-6 right-6"
+                      : "flex gap-4 pt-6"
+                  }`}>
                   <Button
                     onClick={() => handleSubmit(true)}
                     variant="outline"

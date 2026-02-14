@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,7 +75,6 @@ const useDocumentVerification = () => {
   const [currentDocToVerify, setCurrentDocToVerify] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-
   const getUserEntityId = () => {
     try {
       const user = localStorage.getItem("fandoro-user");
@@ -479,10 +478,6 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                   }));
                   
                   initialFileDetails[question._id] = filesWithDetails;
-                  if (!initialStatuses[question._id]) {
-                    initialStatuses[question._id] = 'Yes'; // Default for old format
-                  }
-                  
                 } else if (question.answer.filePath) {
                   // Single file object (old format)
                   const fileAnswer = question.answer as FileAnswer;
@@ -502,9 +497,6 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                   };
                   
                   initialFileDetails[question._id] = [fileDetails];
-                  if (!initialStatuses[question._id]) {
-                    initialStatuses[question._id] = 'Yes';
-                  }
                 }
               } else if (typeof question.answer === 'string') {
                 // String format - might be JSON or plain string
@@ -538,12 +530,8 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                     initialFileDetails[question._id] = filesWithDetails;
                   }
                 } catch (e) {
-                  initialStatuses[question._id] = 'Yes';
+                  console.log('Failed to parse JSON answer for question:', question._id);
                 }
-              }
-              
-              if (!initialStatuses[question._id]) {
-                initialStatuses[question._id] = 'Yes';
               }
             } else {
               // For non-file questions
@@ -551,8 +539,8 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
             }
           } else {
             existingAnswer = question.question_type === 'checkbox' ? [] : '';
-            if (question.question_type === 'file') {
-              initialStatuses[question._id] = 'Yes';
+            if (question.question_type === 'file') { 
+              console.log('Failed to parse JSON answer for question:', question.question_type);
             }
           }
           
@@ -714,6 +702,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     
     markFieldAsTouched(questionId);
     validateSingleQuestion(questionId);
+    checkUnsavedChanges();
   };
 
   const handleCheckboxChange = (questionId: string, option: string, checked: boolean) => {
@@ -727,6 +716,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     }
 
     handleAnswerChange(questionId, newAnswers);
+    checkUnsavedChanges();
   };
 
   const handleFileChange = (questionId: string, files: FileList | null) => {
@@ -752,6 +742,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
       
       markFieldAsTouched(questionId);
       validateSingleQuestion(questionId);
+      checkUnsavedChanges();
     }
   };
 
@@ -779,6 +770,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     
     markFieldAsTouched(questionId);
     validateSingleQuestion(questionId);
+    checkUnsavedChanges();
   };
 
   const handleRemoveAllFiles = (questionId: string) => {
@@ -799,6 +791,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     
     markFieldAsTouched(questionId);
     validateSingleQuestion(questionId);
+    checkUnsavedChanges();
   };
 
   const handleStatusChange = (questionId: string, value: string) => {
@@ -809,6 +802,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     
     markFieldAsTouched(questionId);
     validateSingleQuestion(questionId);
+    checkUnsavedChanges();
   };
 
   const handleCommentsChange = (questionId: string, value: string) => {
@@ -819,6 +813,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     
     markFieldAsTouched(questionId);
     validateSingleQuestion(questionId);
+    checkUnsavedChanges();
   };
 
   const handleDeleteExistingFile = async (questionId: string, fileIndex: number) => {
@@ -1000,7 +995,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
           const answer = answers[q._id];
           
           if (q.question_type === 'file') {
-            const status = statuses[q._id] || 'Yes';
+            const status = statuses[q._id] || '';
             const comment = comments[q._id] || '';
             const files = uploadedFiles[q._id] || [];
             const hasExistingFiles = fileDetails[q._id]?.length > 0;
@@ -1056,15 +1051,17 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
         if (response.status === 200 || response.status === 201) {
           toast.success(response.data?.message || 'Custom question answers saved as draft successfully!');
           await loadData();
+          setHasUnsavedChanges(false); 
         } else {
           throw new Error(response.data?.message || 'Failed to save draft');
         }
+        setHasUnsavedChanges(false);
       } else {
         const answersArray = filteredQuestions.map(q => {
           const answer = answers[q._id];
           
           if (q.question_type === 'file') {
-            const status = statuses[q._id] || 'Yes';
+            const status = statuses[q._id] || '';
             const comment = comments[q._id] || '';
             const hasExistingFiles = fileDetails[q._id]?.length > 0;
             
@@ -1157,7 +1154,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
           const answer = answers[q._id];
           
           if (q.question_type === 'file') {
-            const status = statuses[q._id] || 'Yes';
+            const status = statuses[q._id] || '';
             const comment = comments[q._id] || '';
             const files = uploadedFiles[q._id] || [];
             const hasExistingFiles = fileDetails[q._id]?.length > 0;
@@ -1217,7 +1214,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
           const answer = answers[q._id];
           
           if (q.question_type === 'file') {
-            const status = statuses[q._id] || 'Yes';
+            const status = statuses[q._id] || '';
             const comment = comments[q._id] || '';
             const hasExistingFiles = fileDetails[q._id]?.length > 0;
             
@@ -1276,7 +1273,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     const answer = answers[question._id]?.answer || '';
     const files = uploadedFiles[question._id] || [];
     const existingFiles = fileDetails[question._id] || [];
-    const status = statuses[question._id] || 'Yes';
+    const status = statuses[question._id] || '';
     const comment = comments[question._id] || '';
     const errorMessage = validationErrors[question._id];
     const isTouched = touchedFields[question._id];
@@ -1395,12 +1392,12 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
               <div className="space-y-2">
                 <Label className="text-sm font-medium block">Status</Label>
                 <Select
-                  value={status}
+                  value={status || undefined}
                   onValueChange={(value) => handleStatusChange(question._id, value)}
                   disabled={!buttonEnabled}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Yes">Yes</SelectItem>
@@ -1574,6 +1571,80 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     return titleMap[tabName] || 'Custom Questions';
   };
 
+  const tableRef = useRef<HTMLDivElement>(null);
+  const [isButtonFixed, setIsButtonFixed] = useState(true);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!tableRef.current) return;
+
+      const tableRect = tableRef.current.getBoundingClientRect();
+      const tableBottom = tableRect.bottom + window.scrollY; // document-based bottom
+      const scrollBottom = window.scrollY + window.innerHeight; // viewport bottom in document coords
+      const buffer = 20; // distance from table bottom
+
+      if (scrollBottom + buffer >= tableBottom) {
+        setIsButtonFixed(false); // reached table bottom → stop fixing
+      } else {
+        setIsButtonFixed(true); // scroll is above table bottom → keep fixed
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleScroll);
+    handleScroll(); // initial check
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, []);
+
+// ============ UNSAVED CHANGES TRACKING ============
+const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+const checkUnsavedChanges = useCallback(() => {
+  let unsaved = false;
+  
+  filteredQuestions.forEach(question => {
+    if (question.question_type === 'file') {
+      // Check if status changed from saved value
+      const savedStatus = question.answer?.status || '';
+      const currentStatus = statuses[question._id] || '';
+      if (currentStatus !== savedStatus) {
+        unsaved = true;
+      }
+      
+      // Check if comments changed
+      const savedComment = question.answer?.comments || '';
+      const currentComment = comments[question._id] || '';
+      if (currentComment !== savedComment) {
+        unsaved = true;
+      }
+      
+      // Check if new files added
+      if (uploadedFiles[question._id]?.length > 0) {
+        unsaved = true;
+      }
+      
+    } else {
+      // Check non-file questions
+      const savedAnswer = question.answer || '';
+      const currentAnswer = answers[question._id]?.answer || '';
+      if (currentAnswer !== savedAnswer) {
+        unsaved = true;
+      }
+    }
+  });
+  
+  setHasUnsavedChanges(unsaved);
+}, [filteredQuestions, statuses, comments, uploadedFiles, answers]);
+
+// Check for unsaved changes when data is loaded
+useEffect(() => {
+  if (!isLoading) {
+    checkUnsavedChanges();
+  }
+}, [isLoading, checkUnsavedChanges]);
   // ============ RENDER COMPONENT ============
   return (
     <>
@@ -1610,7 +1681,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
       ) : filteredQuestions.length === 0 ? (
         null
       ) : (
-        <div className="overflow-x-auto rounded-lg border mt-4">
+        <div ref={tableRef} className="overflow-x-auto rounded-lg border mt-4">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
@@ -1632,7 +1703,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                   const answer = answers[question._id]?.answer || '';
                   const files = uploadedFiles[question._id] || [];
                   const existingFiles = fileDetails[question._id] || [];
-                  const status = statuses[question._id] || 'Yes';
+                  const status = statuses[question._id] || '';
                   const comment = comments[question._id] || '';
                   const errorMessage = validationErrors[question._id];
                   const isTouched = touchedFields[question._id];
@@ -1661,7 +1732,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
                             disabled={!buttonEnabled}
                           >
                             <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Select status" />
+                              <SelectValue placeholder="Select" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="Yes">Yes</SelectItem>
@@ -1938,7 +2009,7 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
       )}
 
       {/* Action buttons - only show if there are questions */}
-      {buttonEnabled && filteredQuestions.length > 0 && (
+      {/* {buttonEnabled && filteredQuestions.length > 0 && (
         <div className="flex gap-4 pt-6 border-t mt-6">
           <Button 
             onClick={handleSave} 
@@ -1973,7 +2044,52 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
             )}
           </Button>
         </div>
-      )}
+      )} */}
+      {buttonEnabled && filteredQuestions.length > 0 && (
+      <div className="flex gap-4 pt-6 border-t mt-6">
+        <Button 
+          onClick={handleSave} 
+          variant="outline" 
+          className="flex-1 relative" 
+          disabled={saving || filteredQuestions.length === 0}
+        >
+          {saving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Save as Draft
+              {/* {hasUnsavedChanges && (
+                <span className="absolute -top-2 -right-2 flex h-5 w-5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-5 w-5 bg-red-500 text-white text-xs items-center justify-center">
+                    !
+                  </span>
+                </span>
+              )} */}
+            </>
+          )}
+        </Button>
+        
+        <Button 
+          onClick={handleSubmit} 
+          className="flex-1" 
+          disabled={saving || filteredQuestions.length === 0}
+        >
+          {saving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Submitting...
+            </>
+          ) : (
+            'Submit'
+          )}
+        </Button>
+      </div>
+    )}
 
       {/* Verification Modal */}
       {VerificationModal}

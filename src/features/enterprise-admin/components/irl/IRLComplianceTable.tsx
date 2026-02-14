@@ -1,5 +1,5 @@
 // components/IRLComplianceTable.tsx - COMPLETE FILE
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Card,
   CardContent,
@@ -800,10 +800,10 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
           newErrors[key] = 'Please upload the document.';
           isValid = false;
         }
-      } else if (item.isApplicable === 'no' && !item.notes.trim()) {
-        newErrors[key] = 'Please provide the reason.';
-        isValid = false;
-      }
+        }else if ((item.isApplicable === 'no' || item.isApplicable === 'Not Applicable') && !item.notes?.trim()) {
+          newErrors[key] = 'Please provide the reason.';
+          isValid = false;
+        }
     });
     setErrors(newErrors);
     return isValid;
@@ -1109,6 +1109,33 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
   const hasFileDetails = (key: string) =>
     Array.isArray(fileDetails[key]) && fileDetails[key].length > 0;
 
+  const tableRef = useRef<HTMLDivElement>(null);
+  const [isButtonFixed, setIsButtonFixed] = useState(true);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!tableRef.current) return;
+
+      const tableRect = tableRef.current.getBoundingClientRect();
+      const tableBottom = tableRect.bottom + window.scrollY; // document-based bottom
+      const scrollBottom = window.scrollY + window.innerHeight; // viewport bottom in document coords
+      const buffer = 20; // distance from table bottom
+
+      if (scrollBottom + buffer >= tableBottom) {
+        setIsButtonFixed(false); // reached table bottom → stop fixing
+      } else {
+        setIsButtonFixed(true); // scroll is above table bottom → keep fixed
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleScroll);
+    handleScroll(); // initial check
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, []);
 
   // ============ RENDER COMPONENT ============
   return (
@@ -1131,7 +1158,7 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
               </p>
             ) : (
               <>
-                <div className="overflow-x-auto rounded-lg border">
+                <div ref={tableRef} className="overflow-x-auto rounded-lg border">
                   <table className="w-full">
                     <thead className="bg-gray-50">
                       <tr>
@@ -1183,8 +1210,10 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
                                   <SelectValue placeholder="Select" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                  {/* <SelectItem value="none">Select</SelectItem> */}
                                   <SelectItem value="yes">Yes</SelectItem>
                                   <SelectItem value="no">No</SelectItem>
+                                  <SelectItem value="Not Applicable">Not Applicable</SelectItem>
                                 </SelectContent>
                               </Select>
                             )}
@@ -1214,7 +1243,11 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
                   </table>
                 </div>
 
-                <div className="flex gap-4 pt-6">
+                <div  className={`${
+                    isButtonFixed
+                      ? "flex gap-3 z-50 fixed bottom-6 right-6"
+                      : "flex gap-4 pt-6"
+                  }`}> 
                   <Button onClick={handleSave} variant="outline" disabled={isLoading || !buttonEnabled} className="flex-1">
                     {isLoading ? (
                       <>
