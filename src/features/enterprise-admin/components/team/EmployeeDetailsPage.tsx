@@ -457,7 +457,7 @@ const EmployeeDetailsPage = () => {
         }
       } catch (error) {
         console.error('❌ Error initializing data:', error);
-        toast.error('Failed to load data.');
+        // toast.error('Failed to load data.');
       }
     };
     

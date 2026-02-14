@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Card,
   CardHeader,
@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Loader2, CheckCircle, Clock, Eye, AlertCircle } from 'lucide-react';
+import { Loader2, CheckCircle, Clock, Eye, AlertCircle, Upload } from 'lucide-react';
 import {
   fetchHoPhotographs,
   updateHoPhotographs,
@@ -33,7 +33,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from '@/components/ui/input';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 interface OfficePhotograph {
   id: number;
   description: string;
@@ -370,7 +370,7 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
       setProductPhotographs(updatedProductPhotos);
     } catch (err) {
       console.error('Error loading data:', err);
-      toast.error('Failed to load data');
+      // toast.error('Failed to load data');
     } finally {
       setIsLoading(false);
     }
@@ -594,7 +594,7 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
           isValid = false;
         }
       }
-      else if (photo.status === 'no' && !photo.notes?.trim()) {
+      else if ((photo.status === 'no' || photo.status === 'Not Applicable') && !photo.notes?.trim()) {
         newErrors[`${photo.key}-notes`] = 'Please provide the reason.';
         isValid = false;
       }
@@ -733,13 +733,14 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
     field: keyof OfficePhotograph,
     value: any
   ) => {
+    const newValue = value === "none" ? "" : value;
     setOfficePhotographs(prev =>
       prev.map(photo =>
         photo.id === id
           ? {
             ...photo,
             [field]: value,
-            ...(field === 'status' && value === 'no' ? { attachment: [] } : {})
+            ...(field === 'status' && (newValue === 'no' || newValue === '') ? { attachment: [] } : {})
           }
           : photo
       )
@@ -751,18 +752,48 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
     field: keyof ProductPhotograph,
     value: any
   ) => {
+    const newValue = value === "none" ? "" : value;
     setProductPhotographs(prev =>
       prev.map(photo =>
         photo.id === id
           ? {
             ...photo,
             [field]: value,
-            ...(field === 'status' && value === 'no' ? { attachment: [] } : {})
+            ...(field === 'status' && (newValue === 'no' || newValue === '') ? { attachment: [] } : {})
           }
           : photo
       )
     );
   };
+
+
+  const tableRef = useRef<HTMLDivElement>(null);
+  const [isButtonFixed, setIsButtonFixed] = useState(true);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!tableRef.current) return;
+
+      const tableRect = tableRef.current.getBoundingClientRect();
+      const tableBottom = tableRect.bottom + window.scrollY; // document-based bottom
+      const scrollBottom = window.scrollY + window.innerHeight; // viewport bottom in document coords
+      const buffer = 20; // distance from table bottom
+
+      if (scrollBottom + buffer >= tableBottom) {
+        setIsButtonFixed(false); // reached table bottom → stop fixing
+      } else {
+        setIsButtonFixed(true); // scroll is above table bottom → keep fixed
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleScroll);
+    handleScroll(); // initial check
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, []);
 
   if (isLoading || configLoading) {
     return (
@@ -772,7 +803,6 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
       </div>
     );
   }
-
   return (
     <>
       <Card className="max-w-6xl mx-auto">
@@ -811,42 +841,35 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
 
                             {/* STATUS - Editable Dropdown */}
                             <td className="p-3 text-sm text-gray-500">
-                              <select
+                            <Select
                                 value={photo.status}
-                                onChange={(e) => handleOfficePhotographChange(photo.id, 'status', e.target.value)}
-                                className="w-full p-2 border rounded"
+                                onValueChange={(val) => handleOfficePhotographChange(photo.id, 'status', val)}
                                 disabled={!buttonEnabled}
                               >
-                                <option value="">Select</option>
-                                <option value="yes">Yes</option>
-                                <option value="no">No</option>
-                              </select>
+                                <SelectTrigger disabled={!buttonEnabled}>
+                                  <SelectValue placeholder="Select" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {/* <SelectItem value="none">Select</SelectItem> */}
+                                  <SelectItem value="yes">Yes</SelectItem>
+                                  <SelectItem value="no">No</SelectItem>
+                                  <SelectItem value="Not Applicable">Not Applicable</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </td>
 
                             {/* ATTACHMENT - Existing files + Upload */}
                             <td className="p-3 text-sm text-gray-500">
                               <div className="space-y-2">
-                                {/* Existing files */}
-                                {photo.file_path.map((fileUrl, fileIndex) => (
-                                  <div key={fileIndex}>
-                                    {renderFileWithVerification(
-                                      fileUrl,
-                                      photo.key,
-                                      fileIndex,
-                                      photo.key,
-                                      'office',
-                                      () => handleDeleteOfficeFile(photo.id, fileIndex, fileUrl)
-                                    )}
-                                  </div>
-                                ))}
-
                                 {/* New file upload - only show when status=yes and enabled */}
                                 {photo.status === 'yes' && buttonEnabled && (
-                                  <div className="mt-2">
+                                  <div className="flex flex-col items-start gap-2">
                                     <input
+                                      id={`office-upload-${photo.id}`}
                                       type="file"
                                       multiple
-                                      accept="image/*,.pdf,.doc,.docx"
+                                      className="hidden"
+                                      disabled={!buttonEnabled}
                                       onChange={(e) => {
                                         const files = Array.from(e.target.files || []);
                                         handleOfficePhotographChange(
@@ -854,11 +877,41 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
                                           'attachment',
                                           [...(photo.attachment || []), ...files]
                                         );
-                                        e.target.value = ''; // Reset input
+                                        e.target.value = '';
                                       }}
-                                      className="w-full text-sm border p-1 rounded"
                                     />
 
+                                    <label htmlFor={`office-upload-${photo.id}`} className="cursor-pointer">
+                                      <div
+                                        className={`inline-flex gap-1 px-3 py-1.5 rounded-md text-xs
+                                          ${
+                                            !buttonEnabled
+                                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                              : errors[`${photo.key}-files`]
+                                              ? 'bg-red-50 text-red-600 border border-red-400'
+                                              : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                                          }
+                                        `}
+                                      >
+                                        <Upload className="h-3 w-3" />
+                                        Upload
+                                      </div>
+                                    </label>
+                                    {/* Existing files */}
+                                    <div className="flex flex-col gap-1 pl-1">
+                                    {photo.file_path.map((fileUrl, fileIndex) => (
+                                      <div key={fileIndex}>
+                                        {renderFileWithVerification(
+                                          fileUrl,
+                                          photo.key,
+                                          fileIndex,
+                                          photo.key,
+                                          'office',
+                                          () => handleDeleteOfficeFile(photo.id, fileIndex, fileUrl)
+                                        )}
+                                      </div>
+                                    ))}
+                                    </div>
                                     {/* Show selected new files */}
                                     {photo.attachment?.length > 0 && (
                                       <div className="mt-2 space-y-1">
@@ -922,7 +975,7 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
               {productPhotographs.length > 0 && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Product Photographs</h3>
-                  <div className="overflow-x-auto rounded-lg border">
+                  <div ref={tableRef} className="overflow-x-auto rounded-lg border">
                     <table className="w-full">
                       <thead className="bg-gray-50">
                         <tr>
@@ -941,43 +994,35 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
 
                             {/* STATUS - Editable Dropdown */}
                             <td className="p-3 text-sm text-gray-500">
-                              <select
+                            <Select
                                 value={photo.status}
-                                onChange={(e) => handleProductPhotographChange(photo.id, 'status', e.target.value)}
-                                className="w-full p-2 border rounded"
+                                onValueChange={(val) => handleProductPhotographChange(photo.id, 'status', val)}
                                 disabled={!buttonEnabled}
                               >
-                                <option value="">Select</option>
-                                <option value="yes">Yes</option>
-                                <option value="no">No</option>
-                              </select>
+                                <SelectTrigger disabled={!buttonEnabled}>
+                                  <SelectValue placeholder="Select" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {/* <SelectItem value="none">Select</SelectItem> */}
+                                  <SelectItem value="yes">Yes</SelectItem>
+                                  <SelectItem value="no">No</SelectItem>
+                                  <SelectItem value="Not Applicable">Not Applicable</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </td>
 
                             {/* ATTACHMENT - Existing files + Upload */}
                             <td className="p-3 text-sm text-gray-500">
                               <div className="space-y-2">
-                                {/* Existing files */}
-                                {photo.file_path.map((fileUrl, fileIndex) => (
-                                  <div key={fileIndex}>
-                                    {renderFileWithVerification(
-                                      fileUrl,
-                                      photo.key,
-                                      fileIndex,
-                                      photo.key,
-                                      'product',
-                                      () => handleDeleteProductFile(photo.id, fileIndex, fileUrl)
-                                    )}
-                                  </div>
-                                ))}
-
                                 {/* New file upload - only show when status=yes and enabled */}
                                 {photo.status === 'yes' && buttonEnabled && (
-                                  <div className="mt-2">
-                                    <input
-                                      id={`product-file-${photo.id}`}
+                                  <div className="flex flex-col items-start gap-2">
+                                   <input
+                                      id={`product-upload-${photo.id}`}
                                       type="file"
                                       multiple
-                                      accept="image/*,.pdf,.doc,.docx"
+                                      className="hidden"
+                                      disabled={!buttonEnabled}
                                       onChange={(e) => {
                                         const files = Array.from(e.target.files || []);
                                         handleProductPhotographChange(
@@ -985,12 +1030,40 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
                                           'attachment',
                                           [...(photo.attachment || []), ...files]
                                         );
-                                        // FIX: Clear the input after selecting files
                                         e.target.value = '';
                                       }}
-                                      className="w-full text-sm border p-1 rounded"
                                     />
-
+                                    <label htmlFor={`product-upload-${photo.id}`} className="cursor-pointer">
+                                      <div
+                                        className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-xs
+                                          ${
+                                            !buttonEnabled
+                                              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                              : errors[`${photo.key}-files`]
+                                              ? 'bg-red-50 text-red-600 border border-red-400'
+                                              : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                                          }
+                                        `}
+                                      >
+                                        <Upload className="h-3 w-3" />
+                                        Upload
+                                      </div>
+                                    </label>
+                                    <div className="flex flex-col gap-1 pl-1">
+                                    {/* Existing files */}
+                                    {photo.file_path.map((fileUrl, fileIndex) => (
+                                      <div key={fileIndex}>
+                                        {renderFileWithVerification(
+                                          fileUrl,
+                                          photo.key,
+                                          fileIndex,
+                                          photo.key,
+                                          'product',
+                                          () => handleDeleteProductFile(photo.id, fileIndex, fileUrl)
+                                        )}
+                                      </div>
+                                    ))}
+                                    </div>
                                     {/* Show selected new files */}
                                     {photo.attachment?.length > 0 && (
                                       <div className="mt-2 space-y-1">
@@ -1059,7 +1132,11 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
               )}
 
               {(officePhotographs.length > 0 || productPhotographs.length > 0) && (
-                <div className="flex gap-4 pt-6">
+                <div className={`${
+                    isButtonFixed
+                      ? "flex gap-3 z-50 fixed bottom-6 right-6"
+                      : "flex gap-4 pt-6"
+                  }`}>
                   <Button
                     onClick={() => handleSubmit(true)}
                     variant="outline"

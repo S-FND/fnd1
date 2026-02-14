@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -473,12 +473,39 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
   const workerTotals = calculateWorkerTotal();
   const differentlyAbledTotals = calculateDifferentlyAbledTotal();
 
+  const tableRef = useRef<HTMLDivElement>(null);
+  const [isButtonFixed, setIsButtonFixed] = useState(true);
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!tableRef.current) return;
+
+      const tableRect = tableRef.current.getBoundingClientRect();
+      const tableBottom = tableRect.bottom + window.scrollY; // document-based bottom
+      const scrollBottom = window.scrollY + window.innerHeight; // viewport bottom in document coords
+      const buffer = 20; // distance from table bottom
+
+      if (scrollBottom + buffer >= tableBottom) {
+        setIsButtonFixed(false); // reached table bottom → stop fixing
+      } else {
+        setIsButtonFixed(true); // scroll is above table bottom → keep fixed
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("resize", handleScroll);
+    handleScroll(); // initial check
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, []);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>HR Information</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-8">
+      <CardContent ref={tableRef} className="space-y-8">
         {isLoading || configLoading ? (
           <div className="flex justify-center items-center py-4">
             <Loader2 className="h-6 w-6 animate-spin text-gray-500" />
@@ -592,7 +619,7 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
             {isQuestionEnabled('employees_table') && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3>{getQuestionNumber('employees_table')}. Human Resource Management - Employees</h3>
+                  <Label htmlFor="employeestable">{getQuestionNumber('employees_table')}. Human Resource Management - Employees</Label>
                   <Button onClick={addEmployeeRow} size="sm" disabled={isLoading || !buttonEnabled}>Add Row</Button>
                 </div>
 
@@ -689,7 +716,7 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
             {isQuestionEnabled('workers_table') && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3>{getQuestionNumber('workers_table')}. Human Resource Management - Workers</h3>
+                  <Label htmlFor="workerstable">{getQuestionNumber('workers_table')}. Human Resource Management - Workers</Label>
                   <Button onClick={addWorkerRow} size="sm" disabled={isLoading || !buttonEnabled}>Add Row</Button>
                 </div>
 
@@ -786,7 +813,7 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
             {isQuestionEnabled('differently_abled') && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3>{getQuestionNumber('differently_abled')}. Human Resource Management (Differently Abled Personnel)</h3>
+                  <Label htmlFor="differentlyabled">{getQuestionNumber('differently_abled')}. Human Resource Management (Differently Abled Personnel)</Label>
                   <Button onClick={addDifferentlyAbledRow} size="sm" disabled={isLoading || !buttonEnabled}>Add Row</Button>
                 </div>
 
@@ -882,8 +909,7 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
             {/* 10. Key Managerial Positions / Board of Directors - Only show if enabled */}
             {isQuestionEnabled('board_managerial') && (
               <div className="space-y-4">
-                <h3>{getQuestionNumber('board_managerial')}. Key Managerial Positions / Board of Directors</h3>
-
+                <Label htmlFor="boardmanagerial">{getQuestionNumber('board_managerial')}. Key Managerial Positions / Board of Directors</Label>
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse border border-gray-300">
                     <thead>
@@ -951,7 +977,11 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
               </div>
             )}
 
-            <div className="flex gap-4 pt-6">
+            <div className={`${
+                    isButtonFixed
+                      ? "flex gap-3 z-50 fixed bottom-6 right-6"
+                      : "flex gap-4 pt-6"
+                  }`}>
               <Button onClick={handleSave} variant="outline" className="flex-1" disabled={isLoading || !buttonEnabled}>
                 Save as Draft
               </Button>
