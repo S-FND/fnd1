@@ -1,5 +1,5 @@
 
-import { LayoutDashboard, BarChart3, FileSearch, LineChart, ClipboardCheck, GraduationCap, Calendar, Users, Building2, Settings, FileText, TreePine, Target, Activity, Shield } from 'lucide-react';
+import { LayoutDashboard, BarChart3, FileSearch, LineChart, ClipboardCheck, GraduationCap, Calendar, Users, Building2, Settings, FileText, TreePine, Target, Activity, Shield, Bot } from 'lucide-react';
 import { FeatureId } from '@/types/features';
 
 export interface NavigationItem {
@@ -63,6 +63,11 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
           { name: "IRL Assessment", href: "/esg-dd/irl", icon: FileText },
           { name: "Reports", href: "/esg-dd/reports", icon: FileText }
         ]
+      },
+      {
+        name: "Machine DD",
+        href: "/machine-dd",
+        icon: Bot,
       },
       {
         name: "GHG Accounting",

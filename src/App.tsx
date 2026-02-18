@@ -89,6 +89,7 @@ import PendingApprovalsPage from './pages/PendingApprovalsPage';
 import VerifierApprovalsPage from './pages/VerifierApprovalsPage';
 import VerifierAdminPage from './pages/VerifierAdminPage';
 import VerifierApprovalDetailPage from './pages/VerifierApprovalDetailPage';
+import MachineDDPage from './features/machine-dd/pages/MachineDDPage';
 
 function App() {
   return (
@@ -117,6 +118,7 @@ function App() {
               <Route path="/esg-dd/cap" element={<ESGCapPage />} />
               <Route path="/esg-dd/irl" element={<ProtectedIRLPage />} />
               <Route path="/esg-dd/advanced" element={<AdvancedIRLPage />} />
+              <Route path="/machine-dd" element={<MachineDDPage />} />
               <Route path="/ghg-accounting" element={<GHGAccountingPage />} />
             <Route path="/ghg-accounting/scope1/entry" element={<Scope1EntryPage />} />
             <Route path="/ghg-accounting/scope1/define-source" element={<SourceTemplateForm />} />

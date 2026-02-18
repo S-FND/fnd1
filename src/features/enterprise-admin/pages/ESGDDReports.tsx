@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { mockESGDDReports } from '../data/esgDD';
+import { machineDDReports } from '@/features/machine-dd/data/mockMachineDD';
 import { ESGDDReportsList } from '../components/esg-dd/ESGDDReportsList';
 import { ArrowLeft, FileSearch, Plus, Search, Eye } from 'lucide-react';
 
@@ -21,10 +22,10 @@ const ESGDDReportsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // Filter reports by type
-  const allReports = mockESGDDReports;
-  const manualReports = mockESGDDReports.filter(report => report.type === 'manual');
-  const automatedReports = mockESGDDReports.filter(report => report.type === 'automated');
+  // Filter reports by type - include machine DD reports
+  const allReports = [...mockESGDDReports, ...machineDDReports];
+  const manualReports = allReports.filter(report => report.type === 'manual');
+  const automatedReports = allReports.filter(report => report.type === 'automated');
 
   // Filter reports based on search and status
   const filteredReports = useMemo(() => {

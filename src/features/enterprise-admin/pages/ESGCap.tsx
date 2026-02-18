@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { mockESGCapItems, mockESGDDReports } from '../data/esgDD';
+import { machineDDCapItems } from '@/features/machine-dd/data/mockMachineDD';
 import { ESGCapItem } from '../types/esgDD';
 import { ESGCapFilters } from '../components/esg-cap/ESGCapFilters';
 import { ESGCapTable } from '../components/esg-cap/ESGCapTable';
@@ -21,7 +22,7 @@ const ESGCapPage = () => {
   const [sortConfig, setSortConfig] = useState<{ key: keyof ESGCapItem; direction: 'asc' | 'desc' } | null>(
     { key: 'deadline', direction: 'asc' }
   );
-  const [items, setItems] = useState<ESGCapItem[]>(mockESGCapItems);
+  const [items, setItems] = useState<ESGCapItem[]>([...mockESGCapItems, ...machineDDCapItems]);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
