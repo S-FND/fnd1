@@ -1132,11 +1132,12 @@ const IRLPhotographs = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
               )}
 
               {(officePhotographs.length > 0 || productPhotographs.length > 0) && (
-                <div className={`${
-                    isButtonFixed
-                      ? "flex gap-3 z-50 fixed bottom-6 right-6"
-                      : "flex gap-4 pt-6"
-                  }`}>
+                // <div className={`${
+                //     isButtonFixed
+                //       ? "flex gap-3 z-50 fixed bottom-6 right-6"
+                //       : "flex gap-4 pt-6"
+                //   }`}>
+                <div className="flex gap-4 pt-6">   
                   <Button
                     onClick={() => handleSubmit(true)}
                     variant="outline"
