@@ -28,7 +28,12 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
         { name: "ESMS", href: "/esg/esms", icon: FileText },
         { name: "ESG Metrics", href: "/esg/metrics", icon: LineChart }
       ]
-    }
+    },
+    {
+      name: "Machine DD",
+      href: "/machine-dd",
+      icon: Bot,
+    },
   ];
 
   const isAdminRole = ['admin', 'manager', 'unit_admin', 'portfolio_company_admin', 'super_admin'].includes(role);
@@ -63,11 +68,6 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
           { name: "IRL Assessment", href: "/esg-dd/irl", icon: FileText },
           { name: "Reports", href: "/esg-dd/reports", icon: FileText }
         ]
-      },
-      {
-        name: "Machine DD",
-        href: "/machine-dd",
-        icon: Bot,
       },
       {
         name: "GHG Accounting",
