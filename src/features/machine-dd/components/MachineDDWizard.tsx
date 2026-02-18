@@ -16,6 +16,7 @@ import { industries, revenueSizes, vcPartners } from '../data/industries';
 import { sampleMachineDDResult, IRLItem, MachineDDInput } from '../data/mockMachineDD';
 import { ArrowLeft, ArrowRight, Bot, Building2, Check, CheckCircle2, Download, FileSearch, FileText, AlertTriangle, Loader2, Plus, Sparkles, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import jsPDF from 'jspdf';
 
 type Step = 'input' | 'generating' | 'irl' | 'dataroom' | 'report' | 'cap';
 
@@ -67,7 +68,78 @@ export const MachineDDWizard: React.FC = () => {
   };
 
   const handleDownloadReport = () => {
-    toast.success('ESG DD Report downloaded successfully');
+    const companyName = input.companyName || result.input.companyName;
+    const doc = new jsPDF();
+    let y = 20;
+
+    const addLine = (text: string, fontSize = 10, bold = false) => {
+      if (y > 270) { doc.addPage(); y = 20; }
+      doc.setFontSize(fontSize);
+      doc.setFont('helvetica', bold ? 'bold' : 'normal');
+      const lines = doc.splitTextToSize(text, 170);
+      doc.text(lines, 20, y);
+      y += lines.length * (fontSize * 0.5) + 2;
+    };
+
+    const addSpacer = (h = 6) => { y += h; };
+
+    // Title
+    addLine('ESGDD Report (Machine)', 18, true);
+    addLine(companyName, 14, true);
+    addLine(`Generated: ${new Date().toLocaleDateString()}`, 9);
+    addSpacer(4);
+    doc.setDrawColor(200); doc.line(20, y, 190, y); addSpacer(6);
+
+    // Executive Summary
+    addLine('Executive Summary', 13, true);
+    addLine(result.report.summary);
+    addSpacer();
+
+    // Scorecard
+    addLine('Scorecard', 13, true);
+    addLine(`Total IRL Items: ${irlStats.total}`);
+    addLine(`Matched: ${irlStats.matched}  |  Partial: ${irlStats.partial}  |  Missing: ${irlStats.missing}`);
+    addLine(`Average Match Score: ${overallScore}%`);
+    addLine(`CAP Items Generated: ${result.capItems.length}`);
+    addSpacer();
+
+    // Category Breakdown
+    (['environmental', 'social', 'governance'] as const).forEach(cat => {
+      const items = result.irlItems.filter(i => i.category === cat);
+      const matched = items.filter(i => i.status === 'matched').length;
+      const partial = items.filter(i => i.status === 'partial').length;
+      const missing = items.filter(i => i.status === 'missing').length;
+      addLine(`${cat.charAt(0).toUpperCase() + cat.slice(1)} (${items.length} items)`, 11, true);
+      addLine(`  Matched: ${matched}  |  Partial: ${partial}  |  Missing: ${missing}`);
+    });
+    addSpacer();
+
+    // IRL Details
+    doc.addPage(); y = 20;
+    addLine('Information Request List (IRL)', 14, true);
+    addSpacer(4);
+    result.irlItems.forEach((item, idx) => {
+      addLine(`${idx + 1}. ${item.requirement} [${item.source}] — ${item.category}`, 10, true);
+      addLine(`   ${item.description}`);
+      addLine(`   Expected: ${item.documentExpected}`);
+      addLine(`   Status: ${item.status}${item.matchedDocument ? ` | Doc: ${item.matchedDocument}` : ''}${item.matchScore !== undefined ? ` | Score: ${item.matchScore}%` : ''}`);
+      addSpacer(3);
+    });
+
+    // CAP Items
+    doc.addPage(); y = 20;
+    addLine('ESG Corrective Action Plan', 14, true);
+    addSpacer(4);
+    result.capItems.forEach((item, idx) => {
+      addLine(`${idx + 1}. ${item.issue} [${item.priority.toUpperCase()}]`, 10, true);
+      addLine(`   ${item.description}`);
+      addLine(`   Recommendation: ${item.recommendation}`);
+      addLine(`   Assigned: ${item.assignedTo}  |  Deadline: ${item.deadline}  |  Condition: ${item.dealCondition}`);
+      addSpacer(3);
+    });
+
+    doc.save(`ESGDD_Report_Machine_${companyName.replace(/\s+/g, '_')}.pdf`);
+    toast.success('ESG DD Report downloaded as PDF');
   };
 
   const handleAddToTracker = () => {
