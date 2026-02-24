@@ -790,7 +790,6 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
     }));
     
     markFieldAsTouched(questionId);
-    validateSingleQuestion(questionId);
     checkUnsavedChanges();
   };
 
@@ -860,6 +859,16 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
           ...prev,
           [questionId]: prev[questionId].filter((_, index) => index !== fileIndex)
         }));
+
+        // Mark as touched - THIS WAS MISSING
+        markFieldAsTouched(questionId);
+        
+        // Clear validation error for this question
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[questionId];
+          return newErrors;
+        });
         
         toast.success('File deleted successfully');
         
@@ -964,6 +973,46 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
 
   // ============ FIXED FORM SUBMISSION FUNCTIONS ============
   const handleSave = async () => {
+    const newErrors: Record<string, string> = {};
+  
+    filteredQuestions.forEach(question => {
+      if (question.question_type === 'file') {
+        const status = statuses[question._id] || '';
+        const files = uploadedFiles[question._id] || [];
+        const existingFiles = fileDetails[question._id] || [];
+        const comment = comments[question._id] || '';
+        
+        if (status === 'Yes') {
+          if (files.length === 0 && existingFiles.length === 0) {
+            newErrors[question._id] = 'At least one file is required when status is "Yes"';
+          }
+        } else if (status === 'No' || status === 'Not Applicable') {
+          if (!comment.trim()) {
+            newErrors[question._id] = `Reason is required when status is "${status}"`;
+          }
+        }
+      }
+    });
+    
+    // Update validation errors state
+    setValidationErrors(newErrors);
+    
+    // Check if there are errors
+    const hasErrors = Object.keys(newErrors).length > 0;
+    
+    if (hasErrors) {
+      // Mark all questions with errors as touched using newErrors directly
+      setTouchedFields(prev => {
+        const newTouched = { ...prev };
+        Object.keys(newErrors).forEach(questionId => {
+          newTouched[questionId] = true;
+        });
+        return newTouched;
+      });
+      
+      toast.error('Please fix validation errors before submitting');
+      return;
+    }
     if (!buttonEnabled) {
       toast.error('You do not have permission to save answers');
       return;
@@ -1117,11 +1166,51 @@ const IRLCustomQuestions: React.FC<IRLCustomQuestionsProps> = ({
   };
 
   const handleSubmit = async () => {
-    // FIX: Use validation for final submit
-    if (!validateAllQuestions(false)) {
+    const newErrors: Record<string, string> = {};
+  
+    filteredQuestions.forEach(question => {
+      if (question.question_type === 'file') {
+        const status = statuses[question._id] || '';
+        const files = uploadedFiles[question._id] || [];
+        const existingFiles = fileDetails[question._id] || [];
+        const comment = comments[question._id] || '';
+        
+        if (status === 'Yes') {
+          if (files.length === 0 && existingFiles.length === 0) {
+            newErrors[question._id] = 'At least one file is required when status is "Yes"';
+          }
+        } else if (status === 'No' || status === 'Not Applicable') {
+          if (!comment.trim()) {
+            newErrors[question._id] = `Reason is required when status is "${status}"`;
+          }
+        }
+      }
+    });
+    
+    // Update validation errors state
+    setValidationErrors(newErrors);
+    
+    // Check if there are errors
+    const hasErrors = Object.keys(newErrors).length > 0;
+    
+    if (hasErrors) {
+      // Mark all questions with errors as touched using newErrors directly
+      setTouchedFields(prev => {
+        const newTouched = { ...prev };
+        Object.keys(newErrors).forEach(questionId => {
+          newTouched[questionId] = true;
+        });
+        return newTouched;
+      });
+      
       toast.error('Please fix validation errors before submitting');
       return;
     }
+    // FIX: Use validation for final submit
+    // if (!validateAllQuestions(false)) {
+    //   toast.error('Please fix validation errors before submitting');
+    //   return;
+    // }
 
     if (!buttonEnabled) {
       toast.error('You do not have permission to submit answers');
@@ -1710,28 +1799,25 @@ useEffect(() => {
                   const isFileQuestion = question.question_type === 'file';
 
                   return (
-                    <tr key={question._id}>
-                      <td className="whitespace-nowrap p-3 text-sm text-center text-gray-500">
+                    <tr key={question._id} className="hover:bg-gray-50">
+                      <td className="whitespace-nowrap p-3 text-sm text-center text-gray-500 align-top">
                         {index + 1}
                       </td>
-                      <td className="p-3 text-sm font-medium text-gray-900">
+
+                      <td className="p-3 text-sm font-medium text-gray-900 align-top">
                         <div className="flex items-center gap-2">
                           {question.question_text}
-                          {/* {question.question_type === 'file' && (
-                            <Badge variant="outline" className="text-xs">
-                              File Upload
-                            </Badge>
-                          )} */}
                         </div>
                       </td>
-                      <td className="p-3 text-sm text-gray-500">
+
+                      <td className="p-3 text-sm text-gray-500 align-top">
                         {isFileQuestion ? (
                           <Select
                             value={status}
                             onValueChange={(value) => handleStatusChange(question._id, value)}
                             disabled={!buttonEnabled}
                           >
-                            <SelectTrigger className="w-full">
+                            <SelectTrigger className="w-[90px] bg-white border-gray-300">
                               <SelectValue placeholder="Select" />
                             </SelectTrigger>
                             <SelectContent>
@@ -1786,7 +1872,7 @@ useEffect(() => {
                                 .map((option, optionIndex) => (
                                   <SelectItem
                                     key={optionIndex}
-                                    value={option}   // ✅ always non-empty
+                                    value={option}
                                   >
                                     {option}
                                   </SelectItem>
@@ -1803,7 +1889,7 @@ useEffect(() => {
                                     <Checkbox
                                       id={`${question._id}-${optionIndex}`}
                                       checked={isChecked}
-                                      onCheckedChange={(checked) => 
+                                      onCheckedChange={(checked) =>
                                         handleCheckboxChange(question._id, option, checked as boolean)
                                       }
                                       disabled={!buttonEnabled}
@@ -1829,132 +1915,119 @@ useEffect(() => {
                           <p className="text-xs text-red-500 mt-1">{errorMessage}</p>
                         )}
                       </td>
+
                       {isFileQuestion && (
                         <>
-                          <td className="whitespace-nowrap p-3 text-sm text-gray-500">
+                          <td className="p-3 text-sm text-gray-500 align-top">
                             {status === 'No' || status === 'Not Applicable' ? (
-                              <div className="text-sm text-gray-500 italic py-2">
-                                No file
-                              </div>
+                              <div className="text-sm text-gray-400 italic">No files required</div>
                             ) : (
                               <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <Input
-                                  type="file"
-                                  onChange={(e) => {
-                                    handleFileChange(question._id, e.target.files);
-                                    e.target.value = '';
-                                  }}
-                                  disabled={!buttonEnabled}
-                                  className="hidden"
-                                  id={`file-${question._id}`}
-                                  multiple
-                                />
-                            
-                                <label
-                                  htmlFor={`file-${question._id}`}
-                                  className={`cursor-pointer`}
-                                >
-                                  <div
-                                    className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-xs
-                                      ${
-                                        !buttonEnabled
-                                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                          : errorMessage && errorMessage.includes('file') && isTouched
-                                          ? 'bg-red-50 text-red-600 border border-red-400'
-                                          : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
-                                      }
-                                    `}
-                                  >
-                                    <Upload className="h-3 w-3" />
-                                    Upload
-                                  </div>
-                                </label>
-                              </div>
+                                {/* Upload Button */}
+                                <div className="flex items-center">
+                                  <label htmlFor={`file-${question._id}`} className="cursor-pointer">
+                                    <div className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 text-xs font-medium">
+                                      <Upload className="h-3 w-3" />
+                                      Upload
+                                    </div>
+                                  </label>
+                                  <input
+                                    id={`file-${question._id}`}
+                                    type="file"
+                                    multiple
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      handleFileChange(question._id, e.target.files);
+                                      e.target.value = '';
+                                    }}
+                                    disabled={!buttonEnabled}
+                                  />
+                                  {(files.length > 0 || existingFiles.length > 0) && (
+                                    <span className="ml-2 text-xs text-gray-500">
+                                      {files.length + existingFiles.length} file(s)
+                                    </span>
+                                  )}
+                                </div>
 
-                                {/* Show existing files with verification */}
-                                {existingFiles.map((file, fileIndex) => {
-                                  // Create the full S3 URL for the file
+                                {/* Existing Files */}
+                                {existingFiles.length > 0 && (
+                                  <div className="space-y-1 mt-2">
+                                    {existingFiles.map((file, fileIndex) => {
                                   const s3FileUrl = getS3FilePath(file.filePath || '');
-                                  
-                                  const displayFileName = file.fileName?.length > 30 
-                                    ? `${file.fileName.substring(0, 25)}...` 
-                                    : file.fileName;
-                                  
-                                  return (
-                                    <div key={`existing-${fileIndex}`} className="flex items-center justify-between bg-gray-50 p-1 py-0.5 rounded text-xs">
-                                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                                        <a
-                                          href={s3FileUrl}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="truncate flex-1 text-blue-600 hover:text-blue-800 underline"
-                                          title={file.fileName}
-                                        >
-                                          {displayFileName}
-                                        </a>
-                                        
-                                        {/* Verification badges */}
-                                        {file.isUserVerified && file.isAdminVerified && (
-                                          <Badge variant="default" className="text-xs bg-green-100 text-green-800 py-0 px-1.5">
-                                            <CheckCircle className="h-3 w-3 mr-1 inline" />
-                                            Verified
-                                          </Badge>
-                                        )}
-                                        
-                                        {file.isUserVerified && !file.isAdminVerified && (
-                                          <Badge variant="outline" className="text-xs text-yellow-600 border-yellow-200 py-0 px-1.5">
-                                            <Clock className="h-3 w-3 mr-1 inline" />
-                                            Pending Admin
-                                          </Badge>
-                                        )}
-                                        
-                                        {file._id && !file._id.startsWith('temp-') && !file.isUserVerified && (
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => handleVerifyClick(file, question._id, question.question_text)}
-                                            className="h-6 text-xs py-0 px-2"
+                                      const displayFileName = file.fileName?.length > 30
+                                        ? `${file.fileName.substring(0, 25)}...`
+                                        : file.fileName;
+
+                                      return (
+                                        <div key={`existing-${fileIndex}`} className="flex items-center justify-between bg-gray-50 p-2 rounded text-xs group hover:bg-gray-100">
+                                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                                            <a
+                                              href={s3FileUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="truncate text-blue-600 hover:text-blue-800 underline max-w-[120px]"
+                                              title={file.fileName}
+                                            >
+                                              {displayFileName}
+                                            </a>
+
+                                            {/* Verification badges */}
+                                            <div className="flex items-center gap-1">
+                                              {file.isUserVerified && file.isAdminVerified && (
+                                                <CheckCircle className="h-3.5 w-3.5 text-green-500" title="Verified" />
+                                              )}
+
+                                              {file.isUserVerified && !file.isAdminVerified && (
+                                                <Clock className="h-3.5 w-3.5 text-yellow-500" title="Pending Admin" />
+                                              )}
+
+                                              {file._id && !file._id.startsWith('temp-') && !file.isUserVerified && (
+                                                <AlertCircle
+                                                  className="h-3.5 w-3.5 text-blue-500 cursor-pointer hover:text-blue-600"
+                                                  onClick={() => handleVerifyClick(file, question._id, question.question_text)}
+                                                />
+                                              )}
+                                            </div>
+                                          </div>
+
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteExistingFile(question._id, fileIndex)}
+                                            className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 ml-2 transition-opacity"
                                             disabled={!buttonEnabled}
                                           >
-                                            <AlertCircle className="h-3 w-3 mr-1" />
-                                            Verify
-                                          </Button>
-                                        )}
-                                        
+                                            <X className="h-3.5 w-3.5" />
+                                          </button>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+
+                                {/* New Files */}
+                                {files.length > 0 && (
+                                  <div className="space-y-1 mt-2">
+                                    {files.map((file, fileIndex) => (
+                                      <div key={`new-${fileIndex}`} className="flex items-center justify-between bg-blue-50 p-2 rounded text-xs group hover:bg-blue-100">
+                                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                                          <span className="truncate text-blue-700 max-w-[120px]" title={file.name}>
+                                            {file.name.length > 30 ? `${file.name.substring(0, 25)}...` : file.name}
+                                          </span>
+                                          <Badge variant="secondary" className="text-[10px] px-1 py-0 h-4 bg-blue-100 text-blue-700 border-0">
+                                            New
+                                          </Badge>
+                                        </div>
                                         <button
                                           type="button"
-                                          onClick={() => handleDeleteExistingFile(question._id, fileIndex)}
-                                          className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                                          disabled={!buttonEnabled}
+                                          onClick={() => handleRemoveFile(question._id, fileIndex)}
+                                          className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 ml-2 transition-opacity"
                                         >
-                                          <X className="h-3 w-3" />
+                                          <X className="h-3.5 w-3.5" />
                                         </button>
                                       </div>
-                                    </div>
-                                  );
-                                })}
-
-                                {/* Show new files to upload */}
-                                {files.map((file, fileIndex) => (
-                                  <div key={`new-${fileIndex}`} className="flex items-center justify-between bg-blue-50 p-1 py-0.5 rounded text-xs">
-                                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                                      <span className="truncate flex-1 text-blue-700" title={file.name}>
-                                        {file.name.length > 30 ? `${file.name.substring(0, 25)}...` : file.name}
-                                      </span>
-                                      <Badge variant="secondary" className="text-xs py-0 px-1.5">
-                                        New
-                                      </Badge>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleRemoveFile(question._id, fileIndex)}
-                                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
-                                      >
-                                        <X className="h-3 w-3" />
-                                      </button>
-                                    </div>
+                                    ))}
                                   </div>
-                                ))}
+                                )}
 
                                 {errorMessage && errorMessage.includes('file') && isTouched && (
                                   <p className="text-xs text-red-500">{errorMessage}</p>
@@ -1962,16 +2035,16 @@ useEffect(() => {
                               </div>
                             )}
                           </td>
-                          <td className="p-3 text-sm text-gray-500">
+
+                          <td className="p-3 text-sm text-gray-500 align-top">
                             <Textarea
                               value={comment}
                               onChange={(e) => handleCommentsChange(question._id, e.target.value)}
                               placeholder="Enter notes..."
                               rows={2}
                               disabled={!buttonEnabled}
-                              className={`resize-none min-h-[80px] w-full ${
-                                errorMessage && errorMessage.includes('Reason') && isTouched ? 'border-red-500' : ''
-                              }`}
+                              className={`resize-none min-h-[80px] w-full ${errorMessage && errorMessage.includes('Reason') && isTouched ? 'border-red-500' : ''
+                                }`}
                             />
                             {errorMessage && errorMessage.includes('Reason') && isTouched && (
                               <p className="text-xs text-red-500 mt-1">{errorMessage}</p>
@@ -1988,7 +2061,7 @@ useEffect(() => {
       )}
 
       {/* Show validation error for file questions below table */}
-      {filteredQuestions.some(q => {
+      {/* {filteredQuestions.some(q => {
         const errorMsg = validationErrors[q._id];
         const isTouched = touchedFields[q._id];
         return q.question_type === 'file' && errorMsg && isTouched;
@@ -2006,10 +2079,10 @@ useEffect(() => {
               </p>
             ))}
         </div>
-      )}
+      )} */}
 
       {/* Action buttons - only show if there are questions */}
-      {/* {buttonEnabled && filteredQuestions.length > 0 && (
+      {buttonEnabled && filteredQuestions.length > 0 && (
         <div className="flex gap-4 pt-6 border-t mt-6">
           <Button 
             onClick={handleSave} 
@@ -2044,8 +2117,8 @@ useEffect(() => {
             )}
           </Button>
         </div>
-      )} */}
-      {buttonEnabled && filteredQuestions.length > 0 && (
+      )}
+      {/* {buttonEnabled && filteredQuestions.length > 0 && (
       <div className="flex gap-4 pt-6 border-t mt-6">
         <Button 
           onClick={handleSave} 
@@ -2062,14 +2135,14 @@ useEffect(() => {
             <>
               <Save className="mr-2 h-4 w-4" />
               Save as Draft
-              {/* {hasUnsavedChanges && (
+              {hasUnsavedChanges && (
                 <span className="absolute -top-2 -right-2 flex h-5 w-5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-5 w-5 bg-red-500 text-white text-xs items-center justify-center">
                     !
                   </span>
                 </span>
-              )} */}
+              )}
             </>
           )}
         </Button>
@@ -2089,7 +2162,7 @@ useEffect(() => {
           )}
         </Button>
       </div>
-    )}
+    )} */}
 
       {/* Verification Modal */}
       {VerificationModal}

@@ -977,11 +977,12 @@ const IRLHRInformation = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
               </div>
             )}
 
-            <div className={`${
+            {/* <div className={`${
                     isButtonFixed
                       ? "flex gap-3 z-50 fixed bottom-6 right-6"
                       : "flex gap-4 pt-6"
-                  }`}>
+                  }`}> */}
+            <div className="flex gap-4 pt-6">
               <Button onClick={handleSave} variant="outline" className="flex-1" disabled={isLoading || !buttonEnabled}>
                 Save as Draft
               </Button>
