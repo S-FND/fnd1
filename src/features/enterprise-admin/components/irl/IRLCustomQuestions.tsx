@@ -1982,10 +1982,13 @@ useEffect(() => {
                                               )}
 
                                               {file._id && !file._id.startsWith('temp-') && !file.isUserVerified && (
-                                                <AlertCircle
-                                                  className="h-3.5 w-3.5 text-blue-500 cursor-pointer hover:text-blue-600"
-                                                  onClick={() => handleVerifyClick(file, question._id, question.question_text)}
-                                                />
+                                                <div
+                                                className="flex items-center gap-1 text-blue-500 cursor-pointer hover:text-blue-600"
+                                                onClick={() => handleVerifyClick(file, question._id, question.question_text)}
+                                              >
+                                                <AlertCircle className="h-3.5 w-3.5" />
+                                                <span>Verify</span>
+                                              </div>
                                               )}
                                             </div>
                                           </div>
