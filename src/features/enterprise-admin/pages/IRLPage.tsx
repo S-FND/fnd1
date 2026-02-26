@@ -67,11 +67,15 @@ const IRLPage = () => {
   const checkIrlDate = (dateStr: string) => {
     const today = new Date();
     const irl = new Date(dateStr);
-  
-    // Example: Show alert if IRL date is within 3 days or has passed
-    const diffInDays = Math.ceil((irl.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  
-    if (diffInDays <= 0) {
+    
+    // Reset both dates to midnight for proper day comparison
+    const todayAtMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const irlAtMidnight = new Date(irl.getFullYear(), irl.getMonth(), irl.getDate());
+    
+    // Calculate difference in days using UTC to avoid timezone issues
+    const diffInDays = Math.ceil((irlAtMidnight.getTime() - todayAtMidnight.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays < 0) {
       setAlertType("danger");
       toast.error(`IRL deadline has passed (${irl.toLocaleDateString()}).`);
     } else if (diffInDays <= 3) {
