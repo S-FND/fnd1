@@ -21,7 +21,7 @@ const IRLBOSecurity = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
         title="Business Operations"
         description="Upload and verify your business operation documents"
         items={businessItems}
-        buttonEnabled={buttonEnabled}
+        buttonEnabled={true}
       />
     </div>
   );
