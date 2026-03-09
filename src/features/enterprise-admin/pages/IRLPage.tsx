@@ -80,10 +80,10 @@ const photographsItems = [
 
 const IRLPage = () => {
   logger.debug('Rendering IRLPage component');
-  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
-  const {checkPageButtonAccess}=useContext(PageAccessContext);
+  const { isLoading } = useRouteProtection(['admin', 'manager', 'employee']);
+  const { checkPageButtonAccess } = useContext(PageAccessContext);
   const [buttonEnabled, setButtonEnabled] = useState(false);
-  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
+  const { user, isAuthenticated, isAuthenticatedStatus } = useAuth();
   const [irlDate, setIrlDate] = useState<string | null>(null);
   const [previousIrlDate, setPreviousIrlDate] = useState<string | null>(null);
   const [alertType, setAlertType] = useState<"success" | "warning" | "danger" | null>(null);
@@ -91,6 +91,7 @@ const IRLPage = () => {
   const [customQuestions, setCustomQuestions] = useState<Record<string, any[]>>({});
   const [downloading, setDownloading] = useState(false);
   const [entityId, setEntityId] = useState<string>('');
+  const [enabledItemsMap, setEnabledItemsMap] = useState<Record<string, string[]>>({});
 
   const getUserEntityId = () => {
     try {
@@ -113,57 +114,129 @@ const IRLPage = () => {
     }
   }, []);
 
- // Fetch custom questions for each tab
-useEffect(() => {
-  const fetchCustomQuestions = async () => {
-    if (!entityId) return; // Make sure entityId exists
-    
-    try {
-      const res: any = await httpClient.get(`custom-questions?entity_id=${entityId}`);
-      console.log('Custom questions API response:', res.data);
-      
-      if (res.status === 200) {
-        const questions = res.data.data || res.data || [];
-        
-        // Organize questions by tab
-        const questionsByTab: Record<string, any[]> = {};
-        
-        questions.forEach((q: any) => {
-          // Determine which tab this question belongs to
-          let tab = 'custom'; // Default tab
-          
-          if (q.tab_name) {
-            // If tab_name exists and is an array
-            if (Array.isArray(q.tab_name) && q.tab_name.length > 0) {
-              tab = q.tab_name[0];
-            } 
-            // If tab_name is a string
-            else if (typeof q.tab_name === 'string' && q.tab_name) {
-              tab = q.tab_name;
+  // Fetch custom questions for each tab
+  useEffect(() => {
+    const fetchCustomQuestions = async () => {
+      if (!entityId) return; // Make sure entityId exists
+
+      try {
+        const res: any = await httpClient.get(`custom-questions?entity_id=${entityId}`);
+        console.log('Custom questions API response:', res.data);
+
+        if (res.status === 200) {
+          const questions = res.data.data || res.data || [];
+
+          // Organize questions by tab
+          const questionsByTab: Record<string, any[]> = {};
+
+          questions.forEach((q: any) => {
+            // Determine which tab this question belongs to
+            let tab = 'custom'; // Default tab
+
+            if (q.tab_name) {
+              // If tab_name exists and is an array
+              if (Array.isArray(q.tab_name) && q.tab_name.length > 0) {
+                tab = q.tab_name[0];
+              }
+              // If tab_name is a string
+              else if (typeof q.tab_name === 'string' && q.tab_name) {
+                tab = q.tab_name;
+              }
             }
-          }
-          
-          // Initialize array for this tab if it doesn't exist
-          if (!questionsByTab[tab]) {
-            questionsByTab[tab] = [];
-          }
-          
-          // Add question to its tab
-          questionsByTab[tab].push(q);
-        });
-        
-        console.log('Questions organized by tab:', questionsByTab);
-        setCustomQuestions(questionsByTab);
+
+            // Initialize array for this tab if it doesn't exist
+            if (!questionsByTab[tab]) {
+              questionsByTab[tab] = [];
+            }
+
+            // Add question to its tab
+            questionsByTab[tab].push(q);
+          });
+
+          console.log('Questions organized by tab:', questionsByTab);
+          setCustomQuestions(questionsByTab);
+        }
+      } catch (error) {
+        logger.error('Error fetching custom questions:', error);
       }
+    };
+
+    if (entityId) {
+      fetchCustomQuestions();
+    }
+  }, [entityId]);
+
+  // Add this function after your imports and before the component
+  const fetchCompanyConfiguration = async (entityId: string, category: string) => {
+    try {
+      const response: any = await httpClient.get(
+        `company-irl/${entityId}/irl-config?category=${encodeURIComponent(category)}`
+      );
+
+      if (response?.data?.status === true) {
+        const responseData = response.data.data;
+
+        if (responseData === null) {
+          return {
+            enabledItems: [],
+            configExists: false,
+          };
+        } else if (responseData?.configuration === null || responseData?.configuration === undefined) {
+          return {
+            enabledItems: [],
+            configExists: false
+          };
+        } else {
+          return {
+            enabledItems: responseData?.configuration?.enabledItems || [],
+            configExists: true,
+          };
+        }
+      }
+
+      return {
+        enabledItems: [],
+        configExists: false,
+      };
     } catch (error) {
-      logger.error('Error fetching custom questions:', error);
+      console.error('Error fetching company configuration:', error);
+      return {
+        enabledItems: [],
+        configExists: false,
+      };
     }
   };
-  
-  if (entityId) {
-    fetchCustomQuestions();
-  }
-}, [entityId]); // Add entityId as dependency
+
+  // Fetch enabled items for all tabs when entityId is available
+  useEffect(() => {
+    const fetchAllEnabledItems = async () => {
+      if (!entityId) return;
+
+      const tabToCategory: Record<string, string> = {
+        'compliance': 'compliance',
+        'business': 'business_operations',
+        'management': 'management',
+        'itsecurity': 'it_security',
+        'governance': 'governance',
+        'facility': 'facility'
+      };
+
+      const newEnabledMap: Record<string, string[]> = {};
+
+      // Fetch for each tab that has configuration
+      for (const [tab, category] of Object.entries(tabToCategory)) {
+        const result = await fetchCompanyConfiguration(entityId, category);
+        if (result.configExists) {
+          newEnabledMap[tab] = result.enabledItems;
+          console.log(`Enabled items for ${tab}:`, result.enabledItems);
+        }
+      }
+
+      setEnabledItemsMap(newEnabledMap);
+    };
+
+    fetchAllEnabledItems();
+  }, [entityId]);
 
   useEffect(() => {
     const userData = localStorage.getItem('fandoro-user');
@@ -180,26 +253,26 @@ useEffect(() => {
     const fetchIrlDate = async () => {
       const res: any = await httpClient.get("company/entity");
       const data = res?.data?.data;
-  
+
       if (res.status === 200) {
         setIrlDate(data?.irl_date ? data.irl_date.split("T")[0] : "");
         setPreviousIrlDate(data?.previous_irl_date || null);
         checkIrlDate(data?.irl_date);
       }
     };
-  
+
     fetchIrlDate();
   }, []);
 
   const checkIrlDate = (dateStr: string) => {
     const today = new Date();
     const irl = new Date(dateStr);
-    
+
     const todayAtMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const irlAtMidnight = new Date(irl.getFullYear(), irl.getMonth(), irl.getDate());
-    
+
     const diffInDays = Math.ceil((irlAtMidnight.getTime() - todayAtMidnight.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (diffInDays < 0) {
       setAlertType("danger");
       toast.error(`IRL deadline has passed (${irl.toLocaleDateString()}).`);
@@ -213,104 +286,95 @@ useEffect(() => {
 
   // Helper function to get items for a specific tab
   const getTabItems = (tabName: string) => {
-    let mainItems: any[] = [];
-    
-    switch(tabName) {
+    let allMainItems: any[] = [];
+
+    // First, get ALL possible items for this tab
+    switch (tabName) {
       case 'company':
-        mainItems = companyItems || [];
+        allMainItems = companyItems || [];
         break;
       case 'hr':
-        mainItems = hrItems || [];
+        allMainItems = hrItems || [];
         break;
       case 'business':
-        mainItems = businessItems || [];
+        allMainItems = businessItems || [];
         break;
       case 'photographs':
-        mainItems = photographsItems || [];
+        allMainItems = photographsItems || [];
         break;
       case 'compliance':
-        mainItems = complianceItems || [];
+        allMainItems = complianceItems || [];
         break;
       case 'management':
-        mainItems = managementItems || [];
+        allMainItems = managementItems || [];
         break;
       case 'itsecurity':
-        mainItems = itSecurityItems || [];
+        allMainItems = itSecurityItems || [];
         break;
       case 'facility':
-        mainItems = facilityItems || [];
+        allMainItems = facilityItems || [];
         break;
       case 'governance':
-        mainItems = governanceItems || [];
+        allMainItems = governanceItems || [];
         break;
       case 'custom':
-        mainItems = [];
+        allMainItems = [];
         break;
       default:
-        mainItems = [];
+        allMainItems = [];
     }
 
+    // Get enabled items for this tab from the map
+    const enabledItems = enabledItemsMap[tabName] || [];
+
+    // Filter main items to only include enabled ones
+    // If no enabled items configured (empty array), show all items
+    const mainItems = enabledItems.length > 0
+      ? allMainItems.filter(item => enabledItems.includes(item.key))
+      : allMainItems;
+
+    // Get custom questions for this tab (rest of your existing code remains the same)
     let tabCustomQuestions: any[] = [];
-  
-  if (tabName === 'custom') {
-    // Get all custom questions that belong to the custom tab
-    const allCustomQuestions = Object.values(customQuestions).flat();
-    
-    // Filter to only include questions that:
-    // - Have tab_name = "custom"
-    // - OR have no tab_name
-    // - OR have tab_name that doesn't match any of our main tabs
-    const mainTabs = ['company', 'hr', 'business', 'photographs', 'compliance', 
-                     'management', 'itsecurity', 'facility', 'governance'];
-    
-    tabCustomQuestions = allCustomQuestions.filter((q: any) => {
-      // If no tab_name, include in custom tab
-      if (!q.tab_name) return true;
-      
-      // If tab_name is an array
-      if (Array.isArray(q.tab_name)) {
-        // If array is empty, include in custom
-        if (q.tab_name.length === 0) return true;
-        // If first element is 'custom', include
-        if (q.tab_name[0] === 'custom') return true;
-        // If first element is not in main tabs, include
-        return !mainTabs.includes(q.tab_name[0]);
-      }
-      
-      // If tab_name is a string
-      if (typeof q.tab_name === 'string') {
-        // If it's 'custom', include
-        if (q.tab_name === 'custom') return true;
-        // If it's not in main tabs, include
-        return !mainTabs.includes(q.tab_name);
-      }
-      
-      return false;
-    });
-    
-    console.log(`Custom tab found ${tabCustomQuestions.length} questions:`, 
-      tabCustomQuestions.map(q => ({
-        id: q._id,
-        text: q.question_text,
-        tab: q.tab_name
-      }))
-    );
-  } else {
-    // For non-custom tabs, get questions that exactly match this tab
-    tabCustomQuestions = customQuestions[tabName] || [];
-  }
-  
+
+    if (tabName === 'custom') {
+      // Get all custom questions that belong to the custom tab
+      const allCustomQuestions = Object.values(customQuestions).flat();
+
+      // Filter to only include questions that belong to custom tab
+      const mainTabs = ['company', 'hr', 'business', 'photographs', 'compliance',
+        'management', 'itsecurity', 'facility', 'governance'];
+
+      tabCustomQuestions = allCustomQuestions.filter((q: any) => {
+        // If no tab_name, include in custom tab
+        if (!q.tab_name) return true;
+
+        // If tab_name is an array
+        if (Array.isArray(q.tab_name)) {
+          if (q.tab_name.length === 0) return true;
+          if (q.tab_name[0] === 'custom') return true;
+          return !mainTabs.includes(q.tab_name[0]);
+        }
+
+        // If tab_name is a string
+        if (typeof q.tab_name === 'string') {
+          if (q.tab_name === 'custom') return true;
+          return !mainTabs.includes(q.tab_name);
+        }
+
+        return false;
+      });
+
+      console.log(`Custom tab found ${tabCustomQuestions.length} questions`);
+    } else {
+      // For non-custom tabs, get questions that exactly match this tab
+      tabCustomQuestions = customQuestions[tabName] || [];
+    }
+
     // Format custom questions to match the same structure as main items
     const formattedCustom = tabCustomQuestions.map((q: any, idx: number) => ({
       key: q.key || `custom_${q._id || idx}`,
       name: q.question_text || q.question || 'Custom Question'
     }));
-
-    console.log(`Tab ${tabName}:`, {
-      mainItems: mainItems.length,
-      customItems: formattedCustom.length,
-      total: mainItems.length + formattedCustom.length
-    });
 
     return {
       main: mainItems,
@@ -323,7 +387,7 @@ useEffect(() => {
   const handleDownloadCurrentTab = () => {
     try {
       const { all } = getTabItems(activeTab);
-      
+
       if (all.length === 0) {
         toast.warning('No questions found for this tab');
         return;
@@ -337,12 +401,12 @@ useEffect(() => {
         'Attachment': '',
         'Company Notes': '',
       }));
-      
+
       const ws = XLSX.utils.json_to_sheet(dataWithSerialNo);
       const wb = XLSX.utils.book_new();
       const tabName = activeTab === 'custom' ? 'Others' : (activeTab.charAt(0).toUpperCase() + activeTab.slice(1));
       XLSX.utils.book_append_sheet(wb, ws, tabName);
-      
+
       ws['!cols'] = [
         { wch: 8 },
         { wch: 60 },
@@ -350,7 +414,7 @@ useEffect(() => {
         { wch: 12 },
         { wch: 15 },
       ];
-      
+
       XLSX.writeFile(wb, `${tabName}_Questions.xlsx`);
       toast.success(`${tabName} template downloaded with ${all.length} questions!`);
     } catch (error) {
@@ -363,17 +427,17 @@ useEffect(() => {
     setDownloading(true);
     try {
       const tabs = [
-        'company', 'hr', 'business', 'photographs', 'compliance', 
+        'company', 'hr', 'business', 'photographs', 'compliance',
         'management', 'itsecurity', 'facility', 'governance', 'custom'
       ];
-      
+
       const wb = XLSX.utils.book_new();
       let totalQuestions = 0;
 
       // Create a sheet for each tab
       for (const tab of tabs) {
         const { all } = getTabItems(tab);
-        
+
         if (all.length > 0) {
           const dataWithSerialNo = all.map((item, index) => ({
             'S. No.': index + 1,
@@ -383,9 +447,9 @@ useEffect(() => {
             'Attachment': '',
             'Company Notes': '',
           }));
-          
+
           const ws = XLSX.utils.json_to_sheet(dataWithSerialNo);
-          
+
           // Set column widths
           ws['!cols'] = [
             { wch: 8 },
@@ -394,9 +458,9 @@ useEffect(() => {
             { wch: 12 },
             { wch: 15 },
           ];
-          
-          const sheetName = tab === 'custom' ? 'Others' : 
-                          (tab.charAt(0).toUpperCase() + tab.slice(1));
+
+          const sheetName = tab === 'custom' ? 'Others' :
+            (tab.charAt(0).toUpperCase() + tab.slice(1));
           XLSX.utils.book_append_sheet(wb, ws, sheetName);
           totalQuestions += all.length;
         }
@@ -475,8 +539,8 @@ useEffect(() => {
               {alertType === "danger"
                 ? "Deadline Missed"
                 : alertType === "warning"
-                ? "Deadline Approaching"
-                : "On Track"}
+                  ? "Deadline Approaching"
+                  : "On Track"}
             </AlertTitle>
             <AlertDescription>
               {alertType === "danger" && (
@@ -497,7 +561,7 @@ useEffect(() => {
             </AlertDescription>
           </Alert>
         )}
-        
+
         <Tabs defaultValue="company" className="space-y-4" onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10">
             <TabsTrigger value="company">Company</TabsTrigger>
@@ -511,12 +575,12 @@ useEffect(() => {
             <TabsTrigger value="governance">Governance</TabsTrigger>
             <TabsTrigger value="custom">Others</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="company">
             <IRLCompanyInformation buttonEnabled={buttonEnabled} />
             <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="company" />
           </TabsContent>
-          
+
           <TabsContent value="hr">
             <IRLHRInformation buttonEnabled={buttonEnabled} />
             <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="hr" />
@@ -538,7 +602,7 @@ useEffect(() => {
           </TabsContent>
 
           <TabsContent value="management">
-            <IRLManagement buttonEnabled={buttonEnabled}/>
+            <IRLManagement buttonEnabled={buttonEnabled} />
             <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="management" />
           </TabsContent>
 
