@@ -90,8 +90,6 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
   const {userRole,isLocation}=useContext(PageAccessContext)
   const [locations, setLocations] = useState<LocationData[]>([]);
 
-  // Available locations
-  // const locations = ['Mumbai Office', 'Delhi Warehouse', 'Bangalore Manufacturing', 'Chennai Office'];
 
 
   const getMetricsKpiData = async (selectedYear) => {
@@ -100,9 +98,12 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
       if(userRole == 'employee' && selectedLocation){
         subQuery += `&locationId=${selectedLocation}`
       }
-      let metricDataResponse = await httpClient.get(`materiality/metrics/data-entry${subQuery}`);
+      // let metricDataResponse = await httpClient.get(`materiality/metrics/data-entry${subQuery}`);4
+      let metricDataResponse = await httpClient.get(`materiality/metrics/data-entry/V1${subQuery}`);
       if (metricDataResponse['data']['status']) {
-        const metricsEntries = metricDataResponse['data']['data']['metricsEntries'];
+        // const metricsEntries = metricDataResponse['data']['data']['metricsEntries'];
+        const metricsEntries = metricDataResponse['data']['data'];
+
         
         let flattenedEntries = [];
         
@@ -129,23 +130,6 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
     }
   }
 
-  
-
-
-
-  // Load existing data entries from localStorage
-  // useEffect(() => {
-    // const savedEntries = localStorage.getItem('esgDataEntries');
-    // if (savedEntries) {
-    //   try {
-    //     const parsedEntries = JSON.parse(savedEntries);
-    //     setDataEntries(parsedEntries);
-    //   } catch (error) {
-    //     console.error('Error loading data entries:', error);
-    //   }
-    // }
-  //   getMetricsKpiData(selectedFinancialYear);
-  // }, [selectedFinancialYear]);
 
   // Save data entries to localStorage whenever they change
   useEffect(() => {
@@ -195,7 +179,31 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
       periodIndex: getAvailablePeriods(tempParsedMetric.code, tempParsedMetric.name).find(p => p.period === selectedPeriod)?.periodIndex || 0,
       locationId: selectedLocation
     };
-    let dataEntryResponse = await httpClient.post('materiality/metrics/data-entry', newEntry)
+
+    //New Flow
+    let metricsEntry={
+      // entityId: entityId,
+      financialYear: selectedFinancialYear,
+      metricId:tempParsedMetric.code,
+      metricName:metric.name,
+      unit:metric.unit,
+      frequency:metric.collectionFrequency,
+      topicId:metric.topic,
+      dataType:metric.dataType,
+      esg:metric.esg,
+      periods: [
+        {
+          period:selectedPeriod,
+          date:entryDate,
+          value:entryValue,
+          status:'PENDING'
+        }
+      ],
+    }
+
+
+    // let dataEntryResponse = await httpClient.post('materiality/metrics/data-entry', newEntry)
+    let dataEntryResponse = await httpClient.post('materiality/metrics/data-entry/V1', [metricsEntry])
     // console.log(`dataEntryResponse`, dataEntryResponse)
     if (dataEntryResponse['data']['status']) {
       toast.success('Data entry submitted successfully');
@@ -494,10 +502,10 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
       setConfiguredMetrics(finalMetrics)
     }
     else{
-      if(selectedLocation){
+      // if(selectedLocation){
         getMetricsKpiData(selectedFinancialYear);
         setConfiguredMetrics(finalMetrics)
-      }
+      // }
     }
   }, [finalMetrics,selectedFinancialYear,userRole,selectedLocation]);
 
@@ -717,6 +725,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                     // Submit all bulk entries
                     const currentDate = new Date().toISOString().split('T')[0];
                     const newEntries: MetricDataEntry[] = [];
+                    const newEntriesTemp = [];
                     // debugger;
                     // console.log("=====>>> ", Object.entries(bulkEntries)
                     //   .filter(([_, value]) => value && value !== ''))
@@ -817,12 +826,33 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                         };
 
                         // console.log(`entry =>`, entry);
+                        let metricsEntry={
+                          // entityId: entityId,
+                          financialYear: selectedFinancialYear,
+                          metricId:metricId,
+                          metricName:metric.name,
+                          unit:metric.unit,
+                          frequency:metric.collectionFrequency,
+                          topicId:metric.topic,
+                          dataType:metric.dataType,
+                          esg:metric.esg,
+                          periods: [
+                            {
+                              period:period !== 'Single Entry' ? period : undefined,
+                              date:currentDate,
+                              value:value,
+                              status:'PENDING'
+                            }
+                          ],
+                        }
                         newEntries.push(entry);
+                        newEntriesTemp.push(metricsEntry)
                       });
 
 
                     if (newEntries.length > 0) {
-                      let dataMultiEntryResponse = await httpClient.post('materiality/metrics/data-entry', newEntries)
+                      // let dataMultiEntryResponse = await httpClient.post('materiality/metrics/data-entry', newEntries)
+                      let dataMultiEntryResponse = await httpClient.post('materiality/metrics/data-entry/V1', newEntries)
                       // console.log(`dataMultiEntryResponse`, dataMultiEntryResponse)
                       if (dataMultiEntryResponse['data']['status']) {
                         toast.success('Data entry submitted successfully');

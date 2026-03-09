@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -177,7 +177,7 @@ export const baseESMSDocumentList = [
 ]
 
 const ESMSPage: React.FC = () => {
-  const { checkPageButtonAccess } = useContext(PageAccessContext);
+  const { checkPageButtonAccess, userRole, isLocation } = useContext(PageAccessContext);
   const [buttonEnabled, setButtonEnabled] = useState(true);
   const [deleteFileDialog, setDeleteFileDialog] = useState<{
     open: boolean;
@@ -673,6 +673,63 @@ const ESMSPage: React.FC = () => {
 
   const confirmDeleteSingleFile = async () => {
   };
+
+  const documentValidAccess = async () => {
+    try {
+      interface AccessData {
+        module: string;
+        scope: string;
+        entity: {
+          id: string;
+          name: string;
+        };
+        role: string;
+      }
+      interface AccessResponse {
+        status: boolean;
+        data: AccessData[];
+      }
+      let accessResponse = await httpClient.get<AccessResponse>('subuser/team/module/access?module=esms');
+      console.log('accessResponse', accessResponse)
+      if(accessResponse.status && accessResponse.data ){
+        let accessData:AccessData[]=accessResponse.data.data
+        let limitedItemStatus=accessData.filter(a => a.scope =='LIMITED').reduce((a,c)=>{
+          a.push(c.entity.id)
+          return a
+        },[]);
+        if(limitedItemStatus && limitedItemStatus.length>0){
+          let filteredDocuments=[];
+          // let items=['epr-used-oil']
+          documentSections.forEach((section)=>{
+            let filteredDoc=section.documents.filter(d => limitedItemStatus.includes(d.id))
+            if(filteredDoc && filteredDoc.length>0){
+              let obj={
+                ...section,
+                documents:filteredDoc
+              }
+              filteredDocuments.push(obj)
+            }
+            
+          })
+          setDocumentSections(filteredDocuments)
+        }
+      }
+    } catch (error) {
+      logger.error('Error saving documents:', error);
+      toast.error('Failed to save documents');
+    }
+  }
+
+  const hasCalledRef = useRef(false);
+
+  useEffect(() => {
+    if (!userRole) return;
+
+    if (userRole === "employee" && !hasCalledRef.current) {
+      hasCalledRef.current = true;
+      documentValidAccess();
+    }
+  }, [userRole]);
 
   return (
     <div className="space-y-6">

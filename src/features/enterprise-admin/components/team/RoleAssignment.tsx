@@ -21,6 +21,7 @@ import { baseESMSDocumentList } from '../../pages/ESMSPage';
 import { Employee } from './EmployeeManagement';
 import { httpClient } from '@/lib/httpClient';
 import { logger } from '@/hooks/logger';
+import { toast } from 'sonner';
 
 // Type definitions for scope-based access
 // type AccessScope = 'ALL' | 'LIMITED';
@@ -34,6 +35,34 @@ interface ModuleAccessState {
   esms: ModuleAccess;
   esg_metrics: ModuleAccess;
 }
+
+export type AccessScope = 'ALL' | 'LIMITED';
+
+export interface ModuleSummary {
+  name: string;
+  scope: AccessScope;
+  itemCount?: number;   // only for LIMITED
+}
+
+export interface MakerCheckerTableView {
+  id: string | number;      // depending on your usage
+  employee: string;
+
+  currentRole: 'Maker' | 'Checker' | 'Viewer';
+  assignedRole: 'Maker' | 'Checker' | 'Viewer';
+
+  department: string;
+  location: string;
+
+  assignedBy: string;
+
+  status: 'Pending' | 'Active' | 'Revoked';
+
+  assignedDate: string;     // YYYY-MM-DD
+
+  modules: ModuleSummary[];
+}
+
 
 // Module and metrics configuration
 // const moduleConfig = {
@@ -95,7 +124,7 @@ interface ModuleAccessState {
 // };
 
 // Type definitions for scope-based access
-type AccessScope = 'ALL' | 'LIMITED';
+// type AccessScope = 'ALL' | 'LIMITED';
 
 interface ModuleAccess {
   scope: AccessScope;
@@ -112,7 +141,7 @@ const moduleConfig = {
   esms: {
     name: 'ESMS',
     description: 'Environmental & Social Management System',
-    subItems: baseESMSDocumentList.reduce((a, c) => { return a.concat(c.documents) }, [])
+    subItems: baseESMSDocumentList.reduce((a, c) => { return a.concat(c.documents.map((doc) => ({name: doc.title,...doc }))) }, [])
   },
   esg_metrics: {
     name: 'ESG Metrics',
@@ -219,6 +248,7 @@ const RoleAssignment = (
     const cached = localStorage.getItem('cached-metrics');
     return cached ? JSON.parse(cached) : [];
   });
+  const [assignments,setAssignments]=useState<MakerCheckerTableView[]>([])
 
   // New scope-based state
   const [moduleAccess, setModuleAccess] = useState<ModuleAccessState>({
@@ -268,52 +298,7 @@ const RoleAssignment = (
     return null;
   };
 
-  // Mock assignment data with scope information
-  const assignments = [
-    {
-      id: 1,
-      employee: 'John Doe',
-      currentRole: 'Maker',
-      assignedRole: 'Checker',
-      department: 'Finance',
-      location: 'Mumbai Office',
-      assignedBy: 'Admin User',
-      status: 'Pending',
-      assignedDate: '2024-01-15',
-      modules: [
-        { name: 'ESMS', scope: 'ALL' as AccessScope },
-        { name: 'ESG Metrics', scope: 'LIMITED' as AccessScope, itemCount: 4 }
-      ]
-    },
-    {
-      id: 2,
-      employee: 'Jane Smith',
-      currentRole: 'Checker',
-      assignedRole: 'Maker',
-      department: 'HR',
-      location: 'Delhi Warehouse',
-      assignedBy: 'Admin User',
-      status: 'Completed',
-      assignedDate: '2024-01-14',
-      modules: [
-        { name: 'ESG Metrics', scope: 'ALL' as AccessScope }
-      ]
-    },
-    {
-      id: 3,
-      employee: 'Mike Johnson',
-      currentRole: null,
-      assignedRole: 'Maker',
-      department: 'Operations',
-      location: 'Bangalore Manufacturing',
-      assignedBy: 'Unit Head',
-      status: 'In Progress',
-      assignedDate: '2024-01-16',
-      modules: [
-        { name: 'ESMS', scope: 'LIMITED' as AccessScope, itemCount: 2 }
-      ]
-    }
-  ];
+  
 
   const transformMetrics = (metrics) => {
     return metrics.map((metric, index) => ({
@@ -321,7 +306,7 @@ const RoleAssignment = (
       title: metric.name,
       ...(metric.id
         ? { id: `${metric.id}` }
-        : { id: `${metric.code}-${metric.name.split(" ").join('::')}` })
+        : { id: `${metric.code}::${metric.name.split(" ").join('_')}` })
     }));
   };
 
@@ -388,13 +373,22 @@ const RoleAssignment = (
         subItems:selectedSubItems,
         moduleAccess
       }
-      console.log('roleAssignmentObj',roleAssignmentObj)
+      // console.log('roleAssignmentObj',roleAssignmentObj)
       let assignmentResponse=await httpClient.post('subuser/role-assignment/maker-checker',
         {data:roleAssignmentObj}
       );
-      console.log('assignmentResponse',assignmentResponse)
+      // console.log('assignmentResponse',assignmentResponse)
+      if(assignmentResponse.status == 201 && assignmentResponse.data['status']){
+        
+        getRoleAssignments();
+        toast.success('Role assignment successfully done.')
+        return ;
+      }
+      
     } catch (error) {
-      logger.error(error.message)
+      console.log('Error,',error)
+      toast.warning(error.data && error.data.message ? error.data.message.split(":")[1].trim():error.message)
+      logger.error(error)
     }
   }
 
@@ -411,6 +405,7 @@ const RoleAssignment = (
   };
 
   const handleModuleEnable = (moduleId: string, enabled: boolean) => {
+    console.log(`Module ${moduleId} enabled:`, enabled);  
     if (enabled) {
       setEnabledModules(prev => [...prev, moduleId]);
       // Default to LIMITED scope when enabling
@@ -547,8 +542,9 @@ const RoleAssignment = (
     }
 
     // All valid - proceed
-    submitData()
-    // handleDialogClose(false);
+    submitData();
+    
+    handleDialogClose(false);
   };
 
   const getStatusIcon = (status: string) => {
@@ -599,6 +595,28 @@ const RoleAssignment = (
     });
     return summaries.join(' • ');
   };
+
+  const getRoleAssignments=async ()=>{
+    try {
+      let roleAssignmentRes=await httpClient.get('subuser/role-assignment/maker-checker');
+      console.log('roleAssignmentRes',roleAssignmentRes)
+      if(roleAssignmentRes['status'] == 200 && roleAssignmentRes['data']['status']){
+        setAssignments(roleAssignmentRes['data']['data'])
+      }
+    } catch (error) {
+      toast.warning(error.message)
+    }
+  }
+
+  const handleUpdateAssignment=()=>{
+    // Similar to submitData but with update endpoint and logic
+  }
+
+  useEffect(()=>{
+    getRoleAssignments()
+  },[])
+
+
 
   return (
     <TooltipProvider>
@@ -790,6 +808,7 @@ const RoleAssignment = (
 
                     <div className="space-y-4">
                       {Object.entries(moduleConfig).map(([moduleId, module]) => {
+                        console.log('Rendering module:', moduleId, 'with access:', moduleAccess[moduleId as keyof ModuleAccessState]);
                         const isEnabled = enabledModules.includes(moduleId);
                         const access = moduleAccess[moduleId as keyof ModuleAccessState];
                         const isExpanded = activeModule === moduleId;
@@ -1213,11 +1232,13 @@ const RoleAssignment = (
                           <Button size="sm" variant="outline">Reject</Button>
                         </>
                       )}
-                      {assignment.status === 'Completed' && (
+                      {assignment.status === 'Active' && (
                         <Button size="sm" variant="outline">View</Button>
                       )}
-                      {assignment.status === 'In Progress' && (
-                        <Button size="sm" variant="outline">Update</Button>
+                      {assignment.status === 'Active' && (
+                        <Button size="sm" variant="outline" onClick={handleUpdateAssignment}>
+                          Update
+                        </Button>
                       )}
                     </div>
                   </TableCell>
