@@ -1,10 +1,13 @@
-
 import React, { useContext, useEffect, useState } from 'react';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { FileSpreadsheet, DownloadCloud } from 'lucide-react';
+import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 import IRLCompanyInformation from '../components/irl/IRLCompanyInformation';
 import IRLHRInformation from '../components/irl/IRLHRInformation';
 import IRLBusinessOperations from '../components/irl/IRLBusinessOperations';
@@ -20,8 +23,60 @@ import { PageAccessContext } from '@/context/PageAccessContext';
 import { httpClient } from '@/lib/httpClient';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
-import { toast } from 'sonner';
-import IRLCustomQuestions from '../components/irl/IRLCustomQuestions'; 
+import IRLCustomQuestions from '../components/irl/IRLCustomQuestions';
+
+// Import all question items from each component
+// Make sure these are exported from their respective files
+// import { companyItems } from '../components/irl/IRLCompanyInformation';
+// import { hrItems } from '../components/irl/IRLHRInformation';
+import { businessItems } from '../components/irl/IRLBusinessOperations';
+// import { photographsItems } from '../components/irl/IRLPhotographs';
+import { complianceItems } from '../components/irl/IRLCompliance';
+import { managementItems } from '../components/irl/IRLManagement';
+import { itSecurityItems } from '../components/irl/IRLITSecurity';
+import { facilityItems } from '../components/irl/IRLAdditionalFacility';
+import { governanceItems } from '../components/irl/IRLGovernance';
+
+const companyItems = [
+  { key: "legalEntityName", name: "Name of legal entity" },
+  { key: "emailId", name: "Email ID" },
+  { key: "incorporationDate", name: "Month & Year of Incorporation" },
+  { key: "companyName", name: "Name of company/brand" },
+  { key: "contactNumber", name: "Contact Number" },
+  { key: "paidUpCapital", name: "Paid Up Capital (Rs)" },
+  { key: "currentTurnover", name: "Turnover - Current Year (Rs)" },
+  { key: "previousTurnover", name: "Turnover - Previous Year (Rs)" },
+  { key: "parentCompany", name: "Name of parent company/subsidiaries (if any)" },
+  { key: "productsServices", name: "List of products/services" },
+  { key: "foundingTeam", name: "About the founding team" }
+];
+
+const hrItems = [
+  { key: "working_hours", name: "Working hours for FTEs" },
+  { key: "shift_timing", name: "Shift timing for contract workers" },
+  { key: "outsourced_services", name: "Outsourced Services" },
+  { key: "facilities_list", name: "List of major facilities" },
+  { key: "product_safety", name: "Product safety certifications" },
+  { key: "emergency_incidents", name: "Emergency incidents" },
+  { key: "employees_table", name: "Human Resource Management - Employees" },
+  { key: "workers_table", name: "Human Resource Management - Workers" },
+  { key: "differently_abled", name: "Human Resource Management - Differently Abled Personnel" },
+  { key: "board_managerial", name: "Key Managerial Positions / Board of Directors" },
+  { key: "retrenchment_details", name: "Retrenchment details" }
+];
+
+const photographsItems = [
+  { key: "electrical_main_panel", name: "Electrical main panel inside the office" },
+  { key: "pantry", name: "Pantry" },
+  { key: "working_areas_occupied", name: "Working areas occupied by the Company" },
+  { key: "emergency_exits", name: "Emergency exits, emergency signages, warning signages" },
+  { key: "overall_office_pictures", name: "General overall office pictures" },
+  { key: "fire_extinguishers_within_office", name: "Fire extinguishers and smoke detectors locations" },
+  { key: "product_labeling", name: "Product labeling" },
+  { key: "app_screenshot", name: "Screenshot of the app" },
+  { key: "dashboard_screenshot", name: "Dashboard screenshot" },
+  { key: "product_packing", name: "Product packaging" }
+];
 
 const IRLPage = () => {
   logger.debug('Rendering IRLPage component');
@@ -32,12 +87,85 @@ const IRLPage = () => {
   const [irlDate, setIrlDate] = useState<string | null>(null);
   const [previousIrlDate, setPreviousIrlDate] = useState<string | null>(null);
   const [alertType, setAlertType] = useState<"success" | "warning" | "danger" | null>(null);
+  const [activeTab, setActiveTab] = useState("company");
+  const [customQuestions, setCustomQuestions] = useState<Record<string, any[]>>({});
+  const [downloading, setDownloading] = useState(false);
+  const [entityId, setEntityId] = useState<string>('');
 
-
+  const getUserEntityId = () => {
+    try {
+      const user = localStorage.getItem('fandoro-user');
+      if (user) {
+        const parsedUser = JSON.parse(user);
+        return parsedUser?.entityId || null;
+      }
+      return null;
+    } catch (error) {
+      logger.error("Error parsing user data:", error);
+      return null;
+    }
+  };
 
   useEffect(() => {
-    // const hasAccess = checkPageButtonAccess('/esg-dd/irl');
-    // setButtonEnabled(hasAccess);
+    const entityIdFromStorage = getUserEntityId();
+    if (entityIdFromStorage) {
+      setEntityId(entityIdFromStorage);
+    }
+  }, []);
+
+ // Fetch custom questions for each tab
+useEffect(() => {
+  const fetchCustomQuestions = async () => {
+    if (!entityId) return; // Make sure entityId exists
+    
+    try {
+      const res: any = await httpClient.get(`custom-questions?entity_id=${entityId}`);
+      console.log('Custom questions API response:', res.data);
+      
+      if (res.status === 200) {
+        const questions = res.data.data || res.data || [];
+        
+        // Organize questions by tab
+        const questionsByTab: Record<string, any[]> = {};
+        
+        questions.forEach((q: any) => {
+          // Determine which tab this question belongs to
+          let tab = 'custom'; // Default tab
+          
+          if (q.tab_name) {
+            // If tab_name exists and is an array
+            if (Array.isArray(q.tab_name) && q.tab_name.length > 0) {
+              tab = q.tab_name[0];
+            } 
+            // If tab_name is a string
+            else if (typeof q.tab_name === 'string' && q.tab_name) {
+              tab = q.tab_name;
+            }
+          }
+          
+          // Initialize array for this tab if it doesn't exist
+          if (!questionsByTab[tab]) {
+            questionsByTab[tab] = [];
+          }
+          
+          // Add question to its tab
+          questionsByTab[tab].push(q);
+        });
+        
+        console.log('Questions organized by tab:', questionsByTab);
+        setCustomQuestions(questionsByTab);
+      }
+    } catch (error) {
+      logger.error('Error fetching custom questions:', error);
+    }
+  };
+  
+  if (entityId) {
+    fetchCustomQuestions();
+  }
+}, [entityId]); // Add entityId as dependency
+
+  useEffect(() => {
     const userData = localStorage.getItem('fandoro-user');
     const user = JSON.parse(userData);
     if (user.isParent === false) {
@@ -62,17 +190,14 @@ const IRLPage = () => {
   
     fetchIrlDate();
   }, []);
-  
 
   const checkIrlDate = (dateStr: string) => {
     const today = new Date();
     const irl = new Date(dateStr);
     
-    // Reset both dates to midnight for proper day comparison
     const todayAtMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const irlAtMidnight = new Date(irl.getFullYear(), irl.getMonth(), irl.getDate());
     
-    // Calculate difference in days using UTC to avoid timezone issues
     const diffInDays = Math.ceil((irlAtMidnight.getTime() - todayAtMidnight.getTime()) / (1000 * 60 * 60 * 24));
     
     if (diffInDays < 0) {
@@ -85,7 +210,213 @@ const IRLPage = () => {
       setAlertType("success");
     }
   };
+
+  // Helper function to get items for a specific tab
+  const getTabItems = (tabName: string) => {
+    let mainItems: any[] = [];
+    
+    switch(tabName) {
+      case 'company':
+        mainItems = companyItems || [];
+        break;
+      case 'hr':
+        mainItems = hrItems || [];
+        break;
+      case 'business':
+        mainItems = businessItems || [];
+        break;
+      case 'photographs':
+        mainItems = photographsItems || [];
+        break;
+      case 'compliance':
+        mainItems = complianceItems || [];
+        break;
+      case 'management':
+        mainItems = managementItems || [];
+        break;
+      case 'itsecurity':
+        mainItems = itSecurityItems || [];
+        break;
+      case 'facility':
+        mainItems = facilityItems || [];
+        break;
+      case 'governance':
+        mainItems = governanceItems || [];
+        break;
+      case 'custom':
+        mainItems = [];
+        break;
+      default:
+        mainItems = [];
+    }
+
+    let tabCustomQuestions: any[] = [];
   
+  if (tabName === 'custom') {
+    // Get all custom questions that belong to the custom tab
+    const allCustomQuestions = Object.values(customQuestions).flat();
+    
+    // Filter to only include questions that:
+    // - Have tab_name = "custom"
+    // - OR have no tab_name
+    // - OR have tab_name that doesn't match any of our main tabs
+    const mainTabs = ['company', 'hr', 'business', 'photographs', 'compliance', 
+                     'management', 'itsecurity', 'facility', 'governance'];
+    
+    tabCustomQuestions = allCustomQuestions.filter((q: any) => {
+      // If no tab_name, include in custom tab
+      if (!q.tab_name) return true;
+      
+      // If tab_name is an array
+      if (Array.isArray(q.tab_name)) {
+        // If array is empty, include in custom
+        if (q.tab_name.length === 0) return true;
+        // If first element is 'custom', include
+        if (q.tab_name[0] === 'custom') return true;
+        // If first element is not in main tabs, include
+        return !mainTabs.includes(q.tab_name[0]);
+      }
+      
+      // If tab_name is a string
+      if (typeof q.tab_name === 'string') {
+        // If it's 'custom', include
+        if (q.tab_name === 'custom') return true;
+        // If it's not in main tabs, include
+        return !mainTabs.includes(q.tab_name);
+      }
+      
+      return false;
+    });
+    
+    console.log(`Custom tab found ${tabCustomQuestions.length} questions:`, 
+      tabCustomQuestions.map(q => ({
+        id: q._id,
+        text: q.question_text,
+        tab: q.tab_name
+      }))
+    );
+  } else {
+    // For non-custom tabs, get questions that exactly match this tab
+    tabCustomQuestions = customQuestions[tabName] || [];
+  }
+  
+    // Format custom questions to match the same structure as main items
+    const formattedCustom = tabCustomQuestions.map((q: any, idx: number) => ({
+      key: q.key || `custom_${q._id || idx}`,
+      name: q.question_text || q.question || 'Custom Question'
+    }));
+
+    console.log(`Tab ${tabName}:`, {
+      mainItems: mainItems.length,
+      customItems: formattedCustom.length,
+      total: mainItems.length + formattedCustom.length
+    });
+
+    return {
+      main: mainItems,
+      custom: formattedCustom,
+      all: [...mainItems, ...formattedCustom]
+    };
+  };
+
+  // Download current tab only
+  const handleDownloadCurrentTab = () => {
+    try {
+      const { all } = getTabItems(activeTab);
+      
+      if (all.length === 0) {
+        toast.warning('No questions found for this tab');
+        return;
+      }
+
+      const dataWithSerialNo = all.map((item, index) => ({
+        'S. No.': index + 1,
+        // 'Key': item.key,
+        'Question': item.name,
+        'Status': '',
+        'Attachment': '',
+        'Company Notes': '',
+      }));
+      
+      const ws = XLSX.utils.json_to_sheet(dataWithSerialNo);
+      const wb = XLSX.utils.book_new();
+      const tabName = activeTab === 'custom' ? 'Others' : (activeTab.charAt(0).toUpperCase() + activeTab.slice(1));
+      XLSX.utils.book_append_sheet(wb, ws, tabName);
+      
+      ws['!cols'] = [
+        { wch: 8 },
+        { wch: 60 },
+        { wch: 8 },
+        { wch: 12 },
+        { wch: 15 },
+      ];
+      
+      XLSX.writeFile(wb, `${tabName}_Questions.xlsx`);
+      toast.success(`${tabName} template downloaded with ${all.length} questions!`);
+    } catch (error) {
+      toast.error('Failed to download template');
+    }
+  };
+
+  // Download all tabs in one Excel file with multiple sheets
+  const handleDownloadAllTabs = async () => {
+    setDownloading(true);
+    try {
+      const tabs = [
+        'company', 'hr', 'business', 'photographs', 'compliance', 
+        'management', 'itsecurity', 'facility', 'governance', 'custom'
+      ];
+      
+      const wb = XLSX.utils.book_new();
+      let totalQuestions = 0;
+
+      // Create a sheet for each tab
+      for (const tab of tabs) {
+        const { all } = getTabItems(tab);
+        
+        if (all.length > 0) {
+          const dataWithSerialNo = all.map((item, index) => ({
+            'S. No.': index + 1,
+            // 'Key': item.key,
+            'Question': item.name,
+            'Status': '',
+            'Attachment': '',
+            'Company Notes': '',
+          }));
+          
+          const ws = XLSX.utils.json_to_sheet(dataWithSerialNo);
+          
+          // Set column widths
+          ws['!cols'] = [
+            { wch: 8 },
+            { wch: 60 },
+            { wch: 8 },
+            { wch: 12 },
+            { wch: 15 },
+          ];
+          
+          const sheetName = tab === 'custom' ? 'Others' : 
+                          (tab.charAt(0).toUpperCase() + tab.slice(1));
+          XLSX.utils.book_append_sheet(wb, ws, sheetName);
+          totalQuestions += all.length;
+        }
+      }
+
+      if (totalQuestions === 0) {
+        toast.warning('No questions found');
+        return;
+      }
+
+      // Download the workbook
+      XLSX.writeFile(wb, 'All_IRL_Questions.xlsx');
+      toast.success(`Downloaded ${totalQuestions} questions across ${tabs.length} tabs!`);
+    } catch (error) {
+      toast.error('Failed to download all templates');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const alertStyles: Record<string, string> = {
     success: "bg-green-50 border-green-400 text-green-900",
     warning: "bg-yellow-50 border-yellow-400 text-yellow-900",
@@ -93,11 +424,7 @@ const IRLPage = () => {
   };
 
   const activeIrlDate = irlDate || previousIrlDate;
-
-  const isExtended =
-  irlDate &&
-  previousIrlDate &&
-  new Date(irlDate) > new Date(previousIrlDate);
+  const isExtended = irlDate && previousIrlDate && new Date(irlDate) > new Date(previousIrlDate);
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -110,11 +437,35 @@ const IRLPage = () => {
   return (
     <UnifiedSidebarLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Information Request List (IRL)</h1>
-          <p className="text-muted-foreground">
-            Complete the comprehensive information request forms for ESG due diligence.
-          </p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Information Request List (IRL)</h1>
+            <p className="text-muted-foreground">
+              Complete the comprehensive information request forms for ESG due diligence.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadCurrentTab}
+              className="flex items-center gap-2"
+              disabled={downloading}
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              Download Current Tab
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleDownloadAllTabs}
+              className="flex items-center gap-2"
+              disabled={downloading}
+            >
+              <DownloadCloud className="h-4 w-4" />
+              {downloading ? 'Downloading...' : 'Download All Tabs'}
+            </Button>
+          </div>
         </div>
 
         {alertType && activeIrlDate && (
@@ -127,33 +478,19 @@ const IRLPage = () => {
                 ? "Deadline Approaching"
                 : "On Track"}
             </AlertTitle>
-
             <AlertDescription>
               {alertType === "danger" && (
-                <>
-                  Your IRL submission deadline{" "}
-                  <b>{new Date(activeIrlDate).toLocaleDateString()}</b> has passed.
-                </>
+                <>Your IRL submission deadline <b>{new Date(activeIrlDate).toLocaleDateString()}</b> has passed.</>
               )}
-
               {alertType === "warning" && (
-                <>
-                  Your IRL submission deadline is approaching on{" "}
-                  <b>{new Date(activeIrlDate).toLocaleDateString()}</b>.
-                </>
+                <>Your IRL submission deadline is approaching on <b>{new Date(activeIrlDate).toLocaleDateString()}</b>.</>
               )}
-
               {alertType === "success" && (
-                <>
-                  Your IRL submission deadline is{" "}
-                  <b>{new Date(activeIrlDate).toLocaleDateString()}</b>. Everything looks good!
-                </>
+                <>Your IRL submission deadline is <b>{new Date(activeIrlDate).toLocaleDateString()}</b>. Everything looks good!</>
               )}
-
               {isExtended && (
                 <div className="mt-2 text-xs text-muted-foreground">
-                  Deadline extended from{" "}
-                  <b>{new Date(previousIrlDate!).toLocaleDateString()}</b> to{" "}
+                  Deadline extended from <b>{new Date(previousIrlDate!).toLocaleDateString()}</b> to{" "}
                   <b>{new Date(irlDate!).toLocaleDateString()}</b>.
                 </div>
               )}
@@ -161,7 +498,7 @@ const IRLPage = () => {
           </Alert>
         )}
         
-        <Tabs defaultValue="company" className="space-y-4">
+        <Tabs defaultValue="company" className="space-y-4" onValueChange={setActiveTab}>
           <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10">
             <TabsTrigger value="company">Company</TabsTrigger>
             <TabsTrigger value="hr">HR</TabsTrigger>
@@ -170,7 +507,6 @@ const IRLPage = () => {
             <TabsTrigger value="compliance">Compliance</TabsTrigger>
             <TabsTrigger value="management">Management</TabsTrigger>
             <TabsTrigger value="itsecurity">IT Security</TabsTrigger>
-            {/* <TabsTrigger value="warehouse">Warehouse</TabsTrigger> */}
             <TabsTrigger value="facility">Facility</TabsTrigger>
             <TabsTrigger value="governance">Governance</TabsTrigger>
             <TabsTrigger value="custom">Others</TabsTrigger>
@@ -211,10 +547,6 @@ const IRLPage = () => {
             <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="itsecurity" />
           </TabsContent>
 
-          {/* <TabsContent value="warehouse">
-            <IRLWarehouse />
-          </TabsContent> */}
-
           <TabsContent value="facility">
             <IRLAdditionalFacility buttonEnabled={buttonEnabled} />
             <IRLCustomQuestions buttonEnabled={buttonEnabled} tabName="facility" />
@@ -226,8 +558,7 @@ const IRLPage = () => {
           </TabsContent>
 
           <TabsContent value="custom">
-            <IRLCustomQuestions buttonEnabled={buttonEnabled} 
-            />
+            <IRLCustomQuestions buttonEnabled={buttonEnabled} />
           </TabsContent>
         </Tabs>
       </div>

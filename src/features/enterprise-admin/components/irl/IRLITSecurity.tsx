@@ -2,7 +2,7 @@ import React from 'react';
 import IRLComplianceTable from './IRLComplianceTable';
 import { logger } from '@/hooks/logger';
 
-const itSecurityItems = [
+export const itSecurityItems = [
   {
     key: "data_security_certifications",
     name: "Data security and privacy certifications (if any)",
