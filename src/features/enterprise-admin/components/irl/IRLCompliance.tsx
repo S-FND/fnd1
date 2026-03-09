@@ -2,7 +2,7 @@
 import React from 'react';
 import IRLComplianceTable from './IRLComplianceTable';
 
-const complianceItems = [
+export const complianceItems = [
   {
     key: "registration_shops_act",
     name: "Registration under State Shops & Establishment Act (for head office in India)",

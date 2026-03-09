@@ -3,7 +3,7 @@ import React from 'react';
 import IRLComplianceTable from './IRLComplianceTable';
 import { logger } from '@/hooks/logger';
 
-const governanceItems = [
+export const governanceItems = [
   {
     key: "corporate_governance_code",
     name: "Corporate Governance Code (if any)"

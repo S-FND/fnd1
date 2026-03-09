@@ -2,7 +2,7 @@ import React from 'react';
 import IRLComplianceTable from './IRLComplianceTable';
 import { logger } from '@/hooks/logger';
 
-const facilityItems = [
+export const facilityItems = [
   {
     key: "consent_to_operate_spcb",
     name: "Consent to Operate granted by State Pollution Control Board (SPCB); Attach the renewal application if CTO is expired or nearing expiration."

@@ -983,17 +983,17 @@ const IRLComplianceTable: React.FC<IRLComplianceTableProps> = ({
 
                   handleVerifyClick(verificationData, title);
                 }}
-                className="h-6 text-xs py-0 px-2"
+                className="h-6 text-xs py-0 px-1 gap-1 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                 disabled={!buttonEnabled || isUserVerified}
               >
                 {isUserVerified ? (
                   <>
-                    <Clock className="h-3 w-3 mr-1" />
+                    <Clock className="h-3 w-3" />
                     Pending Admin
                   </>
                 ) : (
                   <>
-                    <AlertCircle className="h-3 w-3 mr-1" />
+                    <AlertCircle className="h-3 w-3" />
                     Verify
                   </>
                 )}
