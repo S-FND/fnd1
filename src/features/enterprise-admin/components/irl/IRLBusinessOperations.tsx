@@ -1,7 +1,7 @@
 import React from 'react';
 import IRLComplianceTable from './IRLComplianceTable';
 
-const IRLBusinessOperationsItems = [
+export const businessItems = [
   {
     key: "corporate_deck",
     name: "Corporate Deck",
@@ -20,8 +20,8 @@ const IRLBOSecurity = ({ buttonEnabled }: { buttonEnabled: boolean }) => {
       <IRLComplianceTable
         title="Business Operations"
         description="Upload and verify your business operation documents"
-        items={IRLBusinessOperationsItems}
-        buttonEnabled={true}
+        items={businessItems}
+        buttonEnabled={buttonEnabled}
       />
     </div>
   );
