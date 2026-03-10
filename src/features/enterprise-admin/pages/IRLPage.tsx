@@ -38,31 +38,56 @@ import { facilityItems } from '../components/irl/IRLAdditionalFacility';
 import { governanceItems } from '../components/irl/IRLGovernance';
 
 const companyItems = [
-  { key: "legalEntityName", name: "Name of legal entity" },
-  { key: "emailId", name: "Email ID" },
-  { key: "incorporationDate", name: "Month & Year of Incorporation" },
-  { key: "companyName", name: "Name of company/brand" },
-  { key: "contactNumber", name: "Contact Number" },
-  { key: "paidUpCapital", name: "Paid Up Capital (Rs)" },
-  { key: "currentTurnover", name: "Turnover - Current Year (Rs)" },
-  { key: "previousTurnover", name: "Turnover - Previous Year (Rs)" },
-  { key: "parentCompany", name: "Name of parent company/subsidiaries (if any)" },
-  { key: "productsServices", name: "List of products/services" },
-  { key: "foundingTeam", name: "About the founding team" }
+  { key: "gstNumber", name: "GST Number" },
+  { key: "cinNumber", name: "CIN Number" },
+  { key: "industry", name: "Industry" },
+  { key: "website", name: "Company Website" },
+  { key: "assuranceProviderName", name: "Name of Assurance Provider" },
+  { key: "assuranceType", name: "Type of Assurance Obtained" },
+  { key: "financialYearReporting", name: "Financial Year for which reporting is being done" },
+  { key: "businessActivitiesDescription", name: "Provide description of business activities (accounting for 90% of the turnover)" },
+  { key: "registeredOfficeAddress", name: "Registered Office Address" },
+  { key: "headOfficeAddress", name: "Head Office Address" },
+  
+  { key: "legalEntityName", name: "1. Name of legal entity" },
+  { key: "emailId", name: "2. Email ID" },
+  { key: "incorporationDate", name: "3. Month & Year of Incorporation" },
+  { key: "companyName", name: "4. Name of company/brand" },
+  { key: "contactNumber", name: "5. Contact Number" },
+  { key: "paidUpCapital", name: "6. Paid Up Capital (Rs)" },
+  { key: "currentTurnover", name: "7. Turnover - Current Year (Rs)" },
+  { key: "previousTurnover", name: "8. Turnover - Previous Year (Rs)" },
+  { key: "parentCompany", name: "9. Name of parent company/subsidiaries (if any)" },
+  { key: "productsServices", name: "10. List of products/services" },
+  { key: "foundingTeam", name: "11. About the founding team (Name, educational details, previous work experience)" },
+  
+  { key: "totalBeneficiaries", name: "12. Total Beneficiaries/Customer Base" },
+  { key: "litigationDetails", name: "13. Provide details of litigation or financial penalties against Company/Board of Directors/Founders or KMPs, if any?" },
+  { key: "facilitiesCompliance", name: "14(a). Compliances related to facility management (e-waste, waste management, water management, batteries, fire infra, occupancy certificate, fire NOC)" },
+  { key: "labourCompliances", name: "14(b). Labour compliances (on-roll, on-contract)" },
+  { key: "fireTraining", name: "14(c). Fire training" },
+  { key: "hrPoliciesTraining", name: "14(d). Training on HR policies" },
+  { key: "mockDrills", name: "14(e). Mock drills" },
+  { key: "employeeWellbeingHealthInsurance", name: "15. Health insurance - % of employees covered" },
+  { key: "employeeWellbeingAccidentInsurance", name: "16. Accident insurance - % of employees covered" },
+  { key: "employeeWellbeingMaternityBenefits", name: "17. Maternity benefits - % of employees covered" },
+  { key: "employeeWellbeingPaternityBenefits", name: "18. Paternity Benefits - % of employees covered" },
+  { key: "employeeWellbeingDayCare", name: "19. Day Care facilities - % of employees covered" },
+  { key: "employeeWellbeingLifeInsurance", name: "20. Life Insurance - % of employees covered" }
 ];
 
 const hrItems = [
   { key: "working_hours", name: "Working hours for FTEs" },
-  { key: "shift_timing", name: "Shift timing for contract workers" },
-  { key: "outsourced_services", name: "Outsourced Services" },
-  { key: "facilities_list", name: "List of major facilities" },
-  { key: "product_safety", name: "Product safety certifications" },
-  { key: "emergency_incidents", name: "Emergency incidents" },
+  { key: "shift_timing", name: "Shift timing for contract workers (if any)" },
+  { key: "outsourced_services", name: "Any outsourced services through professional services agencies?" },
+  { key: "facilities_list", name: "List of major facilities/Units/Departments (Manufacturing, Laboratory, Cafeteria) provided by property owner in the office space (With number of each facility)" },
+  { key: "product_safety", name: "Certifications (if any) for product safety" },
+  { key: "emergency_incidents", name: "Have the employees (on-roll, contract) been involved in any emergency incidents or accidents occurred in the workplace or during work related activities?" },
   { key: "employees_table", name: "Human Resource Management - Employees" },
   { key: "workers_table", name: "Human Resource Management - Workers" },
   { key: "differently_abled", name: "Human Resource Management - Differently Abled Personnel" },
   { key: "board_managerial", name: "Key Managerial Positions / Board of Directors" },
-  { key: "retrenchment_details", name: "Retrenchment details" }
+  { key: "retrenchment_details", name: "Any retrenchment or mass dismissal of employees conducted?" }
 ];
 
 const photographsItems = [
