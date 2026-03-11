@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,17 +8,206 @@ import { CreateEngagementActivityDialog } from './CreateEngagementActivityDialog
 import PriorityStakeholdersView from './PriorityStakeholdersView';
 import { EngagementActivity } from './types';
 import { format } from 'date-fns';
+import { httpClient } from '@/lib/httpClient';
+import { toast } from 'sonner';
+
+// API Interfaces
+interface ApiEngagementActivity {
+  _id: string;
+  title: string;
+  type: string;
+  purpose: string;
+  description: string;
+  targetStakeholders: string[];
+  topics: string[];
+  scheduledDate?: string;
+  frequency?: string;
+  location?: string;
+  meetingLink?: string;
+  duration?: number;
+  status: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ApiResponse<T> {
+  status: boolean;
+  data?: T;
+  message?: string;
+}
+
+interface ApiStakeholder {
+  _id: string;
+  name: string;
+  organization?: string;
+  email: string;
+  phone: string;
+  subcategoryId: string;
+  engagementLevel: 'low' | 'medium' | 'high';
+  influence: 'low' | 'medium' | 'high';
+  interest: 'low' | 'medium' | 'high';
+  lastContact?: string;
+}
+
+// Transform stakeholder to have both id and _id
+interface TransformedStakeholder {
+  id: string;
+  _id: string;
+  name: string;
+  organization?: string;
+  email: string;
+  phone: string;
+  subcategoryId: string;
+  engagementLevel: 'low' | 'medium' | 'high';
+  influence: 'low' | 'medium' | 'high';
+  interest: 'low' | 'medium' | 'high';
+  lastContact?: string;
+}
 
 const EngagementPlan: React.FC = () => {
   const [activities, setActivities] = useState<EngagementActivity[]>([]);
   const [showPriorityView, setShowPriorityView] = useState(false);
+  const [stakeholders, setStakeholders] = useState<TransformedStakeholder[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   
-  const highPriorityStakeholders = sampleStakeholders.filter(
-    s => s.engagementLevel === 'high' && s.influence === 'high'
+  // Fetch stakeholders and activities on mount
+  useEffect(() => {
+    fetchStakeholders();
+    fetchActivities();
+  }, []);
+
+  const fetchStakeholders = async () => {
+    try {
+      const response = await httpClient.get<ApiStakeholder[]>('stakeholders');
+      if (Array.isArray(response.data)) {
+        // Transform the data to include both id and _id
+        const transformedData: TransformedStakeholder[] = response.data.map(item => ({
+          ...item,
+          id: item._id, // Add id field for the dialog
+        }));
+        setStakeholders(transformedData);
+        console.log('Transformed stakeholders:', transformedData); // Debug log
+      }
+    } catch (error) {
+      console.error('Error fetching stakeholders:', error);
+      // Transform sample data as well
+      const transformedSample = sampleStakeholders.map(item => ({
+        ...item,
+        _id: item.id,
+        id: item.id,
+      }));
+      setStakeholders(transformedSample);
+    }
+  };
+
+  const fetchActivities = async () => {
+    try {
+      setIsLoading(true);
+      const response = await httpClient.get<ApiResponse<ApiEngagementActivity[]>>('stakeholder-engagement-group');
+      
+      if (response.data?.status && response.data?.data) {
+        const transformedActivities: EngagementActivity[] = response.data.data.map(item => ({
+          id: item._id,
+          title: item.title,
+          type: item.type as any,
+          purpose: item.purpose as any,
+          description: item.description,
+          targetStakeholders: item.targetStakeholders,
+          topics: item.topics || [],
+          scheduledDate: item.scheduledDate ? new Date(item.scheduledDate) : undefined,
+          frequency: item.frequency as any,
+          location: item.location,
+          meetingLink: item.meetingLink,
+          duration: item.duration,
+          status: item.status as any,
+          createdBy: item.createdBy,
+          createdAt: new Date(item.createdAt)
+        }));
+        setActivities(transformedActivities);
+      }
+    } catch (error) {
+      console.error('Error fetching activities:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Filter high priority stakeholders from API data
+  const highPriorityStakeholders = stakeholders.filter(
+    (s) => s.engagementLevel === 'high' && s.influence === 'high'
   );
 
-  const handleActivityCreated = (activity: EngagementActivity) => {
-    setActivities([...activities, activity]);
+  const handleActivityCreated = async (activity: EngagementActivity) => {
+    try {
+      // Transform to API format
+      const apiActivity = {
+        title: activity.title,
+        type: activity.type,
+        purpose: activity.purpose,
+        description: activity.description,
+        targetStakeholders: activity.targetStakeholders,
+        topics: activity.topics,
+        scheduledDate: activity.scheduledDate?.toISOString(),
+        frequency: activity.frequency,
+        location: activity.location,
+        meetingLink: activity.meetingLink,
+        duration: activity.duration,
+        status: 'scheduled'
+      };
+
+      const response = await httpClient.post<ApiResponse<ApiEngagementActivity>>(
+        'stakeholder-engagement-group',
+        apiActivity
+      );
+
+      if (response.data?.status && response.data?.data) {
+        const newActivity: EngagementActivity = {
+          id: response.data.data._id,
+          ...activity,
+          createdAt: new Date()
+        };
+        setActivities([...activities, newActivity]);
+        toast.success('Activity created successfully');
+      }
+    } catch (error) {
+      console.error('Error creating activity:', error);
+    }
+  };
+
+  const handleUpdateActivityStatus = async (activityId: string, status: string) => {
+    try {
+      const response = await httpClient.patch<ApiResponse<ApiEngagementActivity>>(
+        `stakeholder-engagement-group/${activityId}`,
+        { status }
+      );
+
+      if (response.data?.status) {
+        setActivities(activities.map(act => 
+          act.id === activityId ? { ...act, status: status as any } : act
+        ));
+        toast.success('Activity status updated');
+      }
+    } catch (error) {
+      console.error('Error updating activity:', error);
+    }
+  };
+
+  const handleDeleteActivity = async (activityId: string) => {
+    if (!confirm('Are you sure you want to delete this activity?')) return;
+
+    try {
+      const response = await httpClient.delete<ApiResponse<void>>(
+        `stakeholder-engagement-group/${activityId}`
+      );
+
+      if (response.data?.status) {
+        setActivities(activities.filter(act => act.id !== activityId));
+        toast.success('Activity deleted successfully');
+      }
+    } catch (error) {
+      console.error('Error deleting activity:', error);
+    }
   };
 
   const getActivityTypeIcon = (type: string) => {
@@ -64,7 +253,16 @@ const EngagementPlan: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Stakeholder Engagement Plan</h1>
-        <CreateEngagementActivityDialog onActivityCreated={handleActivityCreated} />
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={fetchActivities} disabled={isLoading}>
+            <Clock className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <CreateEngagementActivityDialog 
+            onActivityCreated={handleActivityCreated}
+            stakeholders={stakeholders} // Now stakeholders have both id and _id
+          />
+        </div>
       </div>
 
       {/* Recent Activities */}
@@ -175,7 +373,7 @@ const EngagementPlan: React.FC = () => {
                   <p className="text-sm">Add stakeholders with high engagement and influence.</p>
                 </div>
               ) : (
-                highPriorityStakeholders.map(stakeholder => {
+                highPriorityStakeholders.slice(0, 5).map((stakeholder) => {
                   const subcategory = defaultStakeholderSubcategories.find(
                     sc => sc.id === stakeholder.subcategoryId
                   );
@@ -202,6 +400,11 @@ const EngagementPlan: React.FC = () => {
                     </div>
                   );
                 })
+              )}
+              {highPriorityStakeholders.length > 5 && (
+                <p className="text-xs text-center text-muted-foreground">
+                  +{highPriorityStakeholders.length - 5} more
+                </p>
               )}
             </div>
           </CardContent>
