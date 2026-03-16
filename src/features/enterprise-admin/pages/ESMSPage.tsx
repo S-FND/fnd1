@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Upload, FileText, Check, X, Trash2 } from 'lucide-react';
+import { Upload, FileText, Check, X, Trash2, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { httpClient } from '@/lib/httpClient';
 import { ENV } from "@/config/env";
@@ -24,6 +24,7 @@ import { logger } from '@/hooks/logger';
 import { PageAccessContext } from '@/context/PageAccessContext';
 const API_URL = ENV.API_URL;
 import { getS3FilePath } from "@/utils/fileUrl";
+import { Tooltip, TooltipContent, TooltipTrigger } from '@radix-ui/react-tooltip';
 interface ESMSDocument {
   id: string;
   title: string;
@@ -32,6 +33,15 @@ interface ESMSDocument {
   isApplicable: string;
   fileNames?: string[];
   fileUrls?: string[];
+  fileStatus?: FileVerificationSummary[]
+}
+
+interface FileVerificationSummary {
+  fileName: string;
+  status: string;
+  comment: string | null;
+  verifierName: string | null;
+  verifiedDate: string | null;
 }
 
 interface ESMSDocumentSection {
@@ -369,6 +379,22 @@ const ESMSPage: React.FC = () => {
     }
   }, [entityId]);
 
+  function mapFileVerificationData(files: any[]) {
+    return files.map(file => {
+      const latestVersion = file.versions[file.versions.length - 1];
+
+      return {
+        fileName: file.label,
+        status: latestVersion.status,
+        comment: latestVersion.statusReason || null,
+        verifierName: latestVersion.verifiedBy?.name || null,
+        verifiedDate: latestVersion.verifiedBy?.date
+          ? new Date(latestVersion.verifiedBy.date).toLocaleDateString()
+          : null
+      };
+    });
+  }
+
   const loadESMSData = async () => {
     try {
       setIsLoading(true);
@@ -394,7 +420,8 @@ const ESMSPage: React.FC = () => {
                     fileChange: true,
                     isApplicable: "yes",
                     fileNames: savedDoc.file_path.map(fp => fp.split('/').pop() || ''),
-                    fileUrls: fileUrls
+                    fileUrls: fileUrls,
+                    fileStatus: mapFileVerificationData(savedDoc['files'] ?? [])
                   };
                 }
                 else if (savedDoc.isApplicable === "no") {
@@ -403,7 +430,8 @@ const ESMSPage: React.FC = () => {
                     isApplicable: "no",
                     fileChange: false,
                     fileNames: undefined,
-                    fileUrls: undefined
+                    fileUrls: undefined,
+                    fileStatus: mapFileVerificationData(savedDoc['files'] ?? [])
                   };
                 }
               }
@@ -690,26 +718,25 @@ const ESMSPage: React.FC = () => {
         data: AccessData[];
       }
       let accessResponse = await httpClient.get<AccessResponse>('subuser/team/module/access?module=esms');
-      console.log('accessResponse', accessResponse)
-      if(accessResponse.status && accessResponse.data ){
-        let accessData:AccessData[]=accessResponse.data.data
-        let limitedItemStatus=accessData.filter(a => a.scope =='LIMITED').reduce((a,c)=>{
+      if (accessResponse.status && accessResponse.data) {
+        let accessData: AccessData[] = accessResponse.data.data
+        let limitedItemStatus = accessData.filter(a => a.scope == 'LIMITED').reduce((a, c) => {
           a.push(c.entity.id)
           return a
-        },[]);
-        if(limitedItemStatus && limitedItemStatus.length>0){
-          let filteredDocuments=[];
+        }, []);
+        if (limitedItemStatus && limitedItemStatus.length > 0) {
+          let filteredDocuments = [];
           // let items=['epr-used-oil']
-          documentSections.forEach((section)=>{
-            let filteredDoc=section.documents.filter(d => limitedItemStatus.includes(d.id))
-            if(filteredDoc && filteredDoc.length>0){
-              let obj={
+          documentSections.forEach((section) => {
+            let filteredDoc = section.documents.filter(d => limitedItemStatus.includes(d.id))
+            if (filteredDoc && filteredDoc.length > 0) {
+              let obj = {
                 ...section,
-                documents:filteredDoc
+                documents: filteredDoc
               }
               filteredDocuments.push(obj)
             }
-            
+
           })
           setDocumentSections(filteredDocuments)
         }
@@ -872,28 +899,116 @@ const ESMSPage: React.FC = () => {
                             <div className="mt-2 space-y-1">
                               {document.fileNames.map((name, idx) => {
                                 const url = document.fileUrls?.[idx];
+                                const summary = document.fileStatus.find(f => f.fileName == name);
+
+                                const fileStatusClass =
+                                  summary?.status === "APPROVED"
+                                    ? "text-green-600 underline"
+                                    : summary?.status === "REJECTED"
+                                      ? "text-red-600 underline"
+                                      : "text-yellow-600";
                                 return (
+                                  // <div key={idx} className="flex items-center gap-2">
+                                  //   <Badge variant="outline" className="max-w-[180px] truncate">
+                                  //     <FileText className="w-3 h-3 mr-1 flex-shrink-0" />
+                                  //     {name}
+                                  //   </Badge>
+                                  //   {url && (
+                                  //     <>
+                                  //       <Button
+                                  //         variant="ghost"
+                                  //         size="sm"
+                                  //         className="h-6 w-6 p-0 text-blue-600 hover:bg-blue-100"
+                                  //         onClick={() => window.open(url, '_blank')}
+                                  //         title="View file"
+                                  //       >
+                                  //         <FileText className="w-3 h-3" />
+                                  //       </Button>
+                                  //       <Button
+                                  //         variant="ghost"
+                                  //         size="sm"
+                                  //         className="h-6 w-6 p-0 text-destructive hover:bg-red-100"
+                                  //         onClick={() => handleDeleteSingleFile(section.id, document.id, name, url, idx)}
+                                  //         title="Delete file"
+                                  //         disabled={isLoading || !buttonEnabled}
+                                  //       >
+                                  //         <Trash2 className="w-3 h-3" />
+                                  //       </Button>
+                                  //     </>
+                                  //   )}
+                                  // </div>
                                   <div key={idx} className="flex items-center gap-2">
-                                    <Badge variant="outline" className="max-w-[180px] truncate">
+
+                                    <Badge
+                                      variant="outline"
+                                      className={`max-w-[180px] truncate ${fileStatusClass}`}
+                                    >
                                       <FileText className="w-3 h-3 mr-1 flex-shrink-0" />
                                       {name}
                                     </Badge>
+
                                     {url && (
                                       <>
+                                        {/* View */}
                                         <Button
                                           variant="ghost"
                                           size="sm"
                                           className="h-6 w-6 p-0 text-blue-600 hover:bg-blue-100"
-                                          onClick={() => window.open(url, '_blank')}
+                                          onClick={() => window.open(url, "_blank")}
                                           title="View file"
                                         >
                                           <FileText className="w-3 h-3" />
                                         </Button>
+
+                                        {/* Comment Tooltip */}
+                                        {summary?.comment && (
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-6 w-6 p-0 text-amber-600 hover:bg-amber-100"
+                                              >
+                                                <MessageSquare className="w-3 h-3" />
+                                              </Button>
+                                            </TooltipTrigger>
+
+                                            <TooltipContent
+                                              className="max-w-xs text-sm bg-white dark:bg-gray-900 border shadow-lg rounded-md p-3 z-50"
+                                            >
+                                              <div className="space-y-1">
+                                                <div>
+                                                  <span className="font-medium">Status:</span> {summary.status}
+                                                </div>
+
+                                                <div>
+                                                  <span className="font-medium">Comment:</span> {summary.comment}
+                                                </div>
+
+                                                {summary.verifierName && (
+                                                  <div>
+                                                    <span className="font-medium">Verifier:</span> {summary.verifierName}
+                                                  </div>
+                                                )}
+
+                                                {summary.verifiedDate && (
+                                                  <div>
+                                                    <span className="font-medium">Date:</span> {summary.verifiedDate}
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        )}
+
+                                        {/* Delete */}
                                         <Button
                                           variant="ghost"
                                           size="sm"
                                           className="h-6 w-6 p-0 text-destructive hover:bg-red-100"
-                                          onClick={() => handleDeleteSingleFile(section.id, document.id, name, url, idx)}
+                                          onClick={() =>
+                                            handleDeleteSingleFile(section.id, document.id, name, url, idx)
+                                          }
                                           title="Delete file"
                                           disabled={isLoading || !buttonEnabled}
                                         >
@@ -906,11 +1021,25 @@ const ESMSPage: React.FC = () => {
                               })}
                             </div>
                           )}
+
                         </div>
                       )}
                     </div>
                   </div>
+                  {document.isApplicable == 'no' && document.fileStatus && document.fileStatus.length > 0 && (
+                    <div className="mt-2 text-sm text-muted-foreground text-left">
+                      {document.fileStatus.map((file, idx) => (
+                        <div key={idx}>
+                           {file.status}
+                          {file.comment && ` (${file.comment})`}
+                          {file.verifierName && ` | Verified by ${file.verifierName}`}
+                          {file.verifiedDate && ` on ${file.verifiedDate}`}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
+
               ))}
             </div>
           </CardContent>

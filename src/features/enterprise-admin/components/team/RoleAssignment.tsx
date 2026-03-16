@@ -8,9 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { 
-  UserCheck, Clock, CheckCircle, ChevronDown, ChevronRight, X, Users, 
-  Infinity, List, AlertTriangle, Info, Shield, ShieldCheck 
+import {
+  UserCheck, Clock, CheckCircle, ChevronDown, ChevronRight, X, Users,
+  Infinity, List, AlertTriangle, Info, Shield, ShieldCheck
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -45,7 +45,7 @@ export interface ModuleSummary {
 }
 
 export interface MakerCheckerTableView {
-  id: string | number;      // depending on your usage
+  id: string;      // depending on your usage
   employee: string;
 
   currentRole: 'Maker' | 'Checker' | 'Viewer';
@@ -61,6 +61,32 @@ export interface MakerCheckerTableView {
   assignedDate: string;     // YYYY-MM-DD
 
   modules: ModuleSummary[];
+}
+
+export interface ModuleItem {
+  id: string;
+  name: string;
+}
+
+export interface ModuleAcces {
+  name: string;
+  scope: 'ALL' | 'LIMITED';
+  itemCount: number;
+  items: ModuleItem[];
+}
+
+export interface AccessDetailsState {
+  id: string;
+  employee: string;
+  assignedBy: string;
+  assignedDate: string;
+
+  assignedRole: 'maker' | 'checker' | 'viewer';
+  currentRole: 'maker' | 'checker' | 'viewer';
+
+  status: boolean;
+
+  modules: ModuleAcces[];
 }
 
 
@@ -141,7 +167,7 @@ const moduleConfig = {
   esms: {
     name: 'ESMS',
     description: 'Environmental & Social Management System',
-    subItems: baseESMSDocumentList.reduce((a, c) => { return a.concat(c.documents.map((doc) => ({name: doc.title,...doc }))) }, [])
+    subItems: baseESMSDocumentList.reduce((a, c) => { return a.concat(c.documents.map((doc) => ({ name: doc.title, ...doc }))) }, [])
   },
   esg_metrics: {
     name: 'ESG Metrics',
@@ -158,13 +184,13 @@ const moduleConfig = {
   }
 };
 
-const teamMembers = [
-  { id: 'john', name: 'John Doe', department: 'Finance' },
-  { id: 'jane', name: 'Jane Smith', department: 'HR' },
-  { id: 'mike', name: 'Mike Johnson', department: 'Operations' },
-  { id: 'sarah', name: 'Sarah Williams', department: 'Compliance' },
-  { id: 'david', name: 'David Brown', department: 'IT' },
-];
+// const teamMembers = [
+//   { id: 'john', name: 'John Doe', department: 'Finance' },
+//   { id: 'jane', name: 'Jane Smith', department: 'HR' },
+//   { id: 'mike', name: 'Mike Johnson', department: 'Operations' },
+//   { id: 'sarah', name: 'Sarah Williams', department: 'Compliance' },
+//   { id: 'david', name: 'David Brown', department: 'IT' },
+// ];
 
 // Scope explanation component
 const ScopeExplanation = ({ scope, moduleName }: { scope: AccessScope; moduleName: string }) => {
@@ -243,12 +269,13 @@ const RoleAssignment = (
     esg_metrics: []
   });
   const [expandedModules, setExpandedModules] = useState<string[]>([]);
-  const [teamMembers, setTeamMembers] = useState<Employee[]>(employees);
+  const [teamMembers, setTeamMembers] = useState<Employee[]>([]);
   const [metricSubItems, setMetricSubItems] = useState(() => {
     const cached = localStorage.getItem('cached-metrics');
     return cached ? JSON.parse(cached) : [];
   });
-  const [assignments,setAssignments]=useState<MakerCheckerTableView[]>([])
+  const [assignments, setAssignments] = useState<MakerCheckerTableView[]>([]);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false)
 
   // New scope-based state
   const [moduleAccess, setModuleAccess] = useState<ModuleAccessState>({
@@ -278,8 +305,11 @@ const RoleAssignment = (
     toScope: AccessScope;
   } | null>(null);
 
-  
-  
+  const [dialogOpenFor, setDialogOpenFor] = useState<'create' | 'update' | 'view'>('create');
+  const [accessDetails, setAccessDetails] = useState<AccessDetailsState | null>(null);
+
+
+
 
   // Check if a module has an error (LIMITED scope with no items selected)
   const hasModuleError = (moduleId: string): boolean => {
@@ -298,7 +328,7 @@ const RoleAssignment = (
     return null;
   };
 
-  
+
 
   const transformMetrics = (metrics) => {
     return metrics.map((metric, index) => ({
@@ -362,32 +392,39 @@ const RoleAssignment = (
     getMaterialityData()
   }, [])
 
-  const submitData= async ()=>{
+  const submitData = async () => {
     try {
-      let roleAssignmentObj={
-        teamMembers:selectedEmployees,
-        role:selectedRole,
-        location:selectedLocation,
-        department:selectedDepartment,
-        module:selectedModules,
-        subItems:selectedSubItems,
+      let roleAssignmentObj = {
+        teamMembers: selectedEmployees,
+        role: selectedRole,
+        location: selectedLocation,
+        department: selectedDepartment,
+        module: selectedModules,
+        subItems: selectedSubItems,
         moduleAccess
       }
-      // console.log('roleAssignmentObj',roleAssignmentObj)
-      let assignmentResponse=await httpClient.post('subuser/role-assignment/maker-checker',
-        {data:roleAssignmentObj}
+      console.log('roleAssignmentObj', roleAssignmentObj)
+      let url;
+      if (dialogOpenFor == 'create') {
+        url = 'subuser/role-assignment/maker-checker'
+      }
+      else {
+        url = 'subuser/role-assignment/maker-checker/update'
+      }
+      let assignmentResponse = await httpClient.post(url,
+        { data: roleAssignmentObj }
       );
       // console.log('assignmentResponse',assignmentResponse)
-      if(assignmentResponse.status == 201 && assignmentResponse.data['status']){
-        
+      if (assignmentResponse.status == 201 && assignmentResponse.data['status']) {
+
         getRoleAssignments();
         toast.success('Role assignment successfully done.')
-        return ;
+        return;
       }
-      
+
     } catch (error) {
-      console.log('Error,',error)
-      toast.warning(error.data && error.data.message ? error.data.message.split(":")[1].trim():error.message)
+      console.log('Error,', error)
+      toast.warning(error.data && error.data.message ? error.data.message.split(":")[1].trim() : error.message)
       logger.error(error)
     }
   }
@@ -405,7 +442,7 @@ const RoleAssignment = (
   };
 
   const handleModuleEnable = (moduleId: string, enabled: boolean) => {
-    console.log(`Module ${moduleId} enabled:`, enabled);  
+    console.log(`Module ${moduleId} enabled:`, enabled);
     if (enabled) {
       setEnabledModules(prev => [...prev, moduleId]);
       // Default to LIMITED scope when enabling
@@ -458,7 +495,7 @@ const RoleAssignment = (
         selectedItems: toScope === 'ALL' ? [] : prev[moduleId as keyof ModuleAccessState].selectedItems
       }
     }));
-    
+
     setScopeChangeConfirm(null);
   };
 
@@ -515,8 +552,12 @@ const RoleAssignment = (
   };
 
   const handleDialogClose = (open: boolean) => {
+    setViewDialogOpen(open)
     setIsAssignDialogOpen(open);
-    if (!open) resetForm();
+    if (!open) {
+      resetForm();
+      setDialogOpenFor('create')
+    }
   };
 
   // Check if any module has validation errors
@@ -532,7 +573,7 @@ const RoleAssignment = (
   // Handle submit with validation
   const handleSubmit = () => {
     setHasAttemptedSubmit(true);
-    
+
     // Check for errors
     const firstError = getFirstModuleWithError();
     if (firstError) {
@@ -543,7 +584,7 @@ const RoleAssignment = (
 
     // All valid - proceed
     submitData();
-    
+
     handleDialogClose(false);
   };
 
@@ -596,11 +637,11 @@ const RoleAssignment = (
     return summaries.join(' • ');
   };
 
-  const getRoleAssignments=async ()=>{
+  const getRoleAssignments = async () => {
     try {
-      let roleAssignmentRes=await httpClient.get('subuser/role-assignment/maker-checker');
-      console.log('roleAssignmentRes',roleAssignmentRes)
-      if(roleAssignmentRes['status'] == 200 && roleAssignmentRes['data']['status']){
+      let roleAssignmentRes = await httpClient.get('subuser/role-assignment/maker-checker');
+      // console.log('roleAssignmentRes', roleAssignmentRes)
+      if (roleAssignmentRes['status'] == 200 && roleAssignmentRes['data']['status']) {
         setAssignments(roleAssignmentRes['data']['data'])
       }
     } catch (error) {
@@ -608,13 +649,52 @@ const RoleAssignment = (
     }
   }
 
-  const handleUpdateAssignment=()=>{
+  const buildModuleAccess = (data: any): ModuleAccessState => {
+    const result: ModuleAccessState = {
+      esms: { scope: 'LIMITED', selectedItems: [] },
+      esg_metrics: { scope: 'LIMITED', selectedItems: [] }
+    };
+
+    data.modules?.forEach((module: any) => {
+      if (module.name === "ESMS") {
+        result.esms = {
+          scope: module.scope,
+          selectedItems: module.items?.map((i: any) => i.id) || []
+        };
+      }
+
+      if (module.name === "ESG Metrics") {
+        result.esg_metrics = {
+          scope: module.scope,
+          selectedItems: module.items?.map((i: any) => i.id) || []
+        };
+      }
+    });
+
+    return result;
+  };
+
+  const handleUpdateAssignment = async (assignment: MakerCheckerTableView) => {
     // Similar to submitData but with update endpoint and logic
+    console.log('assignment', assignment)
+    setIsAssignDialogOpen(true);
+    setDialogOpenFor('update')
+    setSelectedEmployees([assignment.id])
+    setSelectedRole(assignment.currentRole.toLowerCase())
+    setEnabledModules(assignment.modules.map(m => m.name.toLowerCase().split(" ").join("_")));
+
+    setModuleAccess(buildModuleAccess(assignment))
   }
 
-  useEffect(()=>{
+  const handleViewAssignment=(item)=>{
+    setViewDialogOpen(true);
+    setAccessDetails(item)
+  }
+
+  useEffect(() => {
+    setTeamMembers(employees)
     getRoleAssignments()
-  },[])
+  }, [])
 
 
 
@@ -635,459 +715,456 @@ const RoleAssignment = (
                 <DialogHeader className="shrink-0">
                   <DialogTitle>Assign Maker–Checker Role</DialogTitle>
                   <DialogDescription>
-                    Configure role access permissions for team members. Choose between full access 
+                    Configure role access permissions for team members. Choose between full access
                     (includes future items) or specific access (selected items only).
                   </DialogDescription>
                 </DialogHeader>
-                
+
                 {/* Scrollable form content */}
                 <div className="flex-1 overflow-y-auto pr-2 -mr-2">
                   <div className="space-y-6 py-2">
-                  {/* Team Member Selection */}
-                  <div className="space-y-3">
-                    <Label className="text-base font-semibold">Select Team Members</Label>
-                    
-                    {/* Multi-select Dropdown */}
-                    <Popover open={employeeDropdownOpen} onOpenChange={setEmployeeDropdownOpen}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={employeeDropdownOpen}
-                          className="w-full justify-between h-auto min-h-10 py-2"
-                        >
-                          <div className="flex items-center gap-2">
-                            <Users className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">
-                              {selectedEmployees.length === 0 
-                                ? "Select team members..." 
-                                : `${selectedEmployees.length} member(s) selected`}
-                            </span>
-                          </div>
-                          <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-[400px] p-0" align="start">
-                        <Command>
-                          <CommandInput placeholder="Search team members..." />
-                          <CommandList>
-                            <CommandEmpty>No team member found.</CommandEmpty>
-                            <CommandGroup>
-                              <CommandItem
-                                onSelect={() => handleSelectAllEmployees(selectedEmployees.length !== teamMembers.length)}
-                                className="cursor-pointer"
-                              >
-                                <Checkbox 
-                                  checked={selectedEmployees.length === teamMembers.length}
-                                  className="mr-2"
-                                />
-                                <span className="font-medium">Select All ({teamMembers.length})</span>
-                              </CommandItem>
-                              <div className="h-px bg-border my-1" />
-                              {teamMembers.map((member) => (
+                    {/* Team Member Selection */}
+                    <div className="space-y-3">
+                      <Label className="text-base font-semibold">Select Team Members</Label>
+                      {/* Multi-select Dropdown */}
+                      <Popover open={employeeDropdownOpen} onOpenChange={setEmployeeDropdownOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            role="combobox"
+                            aria-expanded={employeeDropdownOpen}
+                            className="w-full justify-between h-auto min-h-10 py-2"
+                            disabled={['update', 'view'].includes(dialogOpenFor)}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-muted-foreground">
+                                {selectedEmployees.length === 0
+                                  ? "Select team members..."
+                                  : `${selectedEmployees.length} member(s) selected`}
+                              </span>
+                            </div>
+                            <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[400px] p-0" align="start">
+                          <Command>
+                            <CommandInput placeholder="Search team members..." />
+                            <CommandList>
+                              <CommandEmpty>No team member found.</CommandEmpty>
+                              <CommandGroup>
                                 <CommandItem
-                                  key={member._id}
-                                  onSelect={() => handleEmployeeToggle(member._id)}
+                                  onSelect={() => handleSelectAllEmployees(selectedEmployees.length !== teamMembers.length)}
                                   className="cursor-pointer"
                                 >
-                                  <Checkbox 
-                                    checked={selectedEmployees.includes(member._id)}
+                                  <Checkbox
+                                    checked={selectedEmployees.length === teamMembers.length}
                                     className="mr-2"
                                   />
-                                  <span>{member.name}</span>
-                                  <span className="ml-auto text-xs text-muted-foreground">
-                                    {member.department}
-                                  </span>
+                                  <span className="font-medium">Select All ({teamMembers.length})</span>
                                 </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-
-                    {/* Selected Members Chips */}
-                    {selectedEmployees.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {selectedEmployees.map((empId) => {
-                          const member = teamMembers.find(m => m._id === empId);
-                          if (!member) return null;
-                          return (
-                            <Badge 
-                              key={empId} 
-                              variant="secondary" 
-                              className="pl-2 pr-1 py-1 flex items-center gap-1"
-                            >
-                              {member.name}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-4 w-4 p-0 hover:bg-destructive/20 rounded-full"
-                                onClick={() => handleEmployeeToggle(empId)}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            </Badge>
-                          );
-                        })}
-                        {selectedEmployees.length > 1 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 text-xs text-muted-foreground hover:text-destructive"
-                            onClick={() => setSelectedEmployees([])}
-                          >
-                            Clear all
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Role Selection */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="newRole">Assign Role</Label>
-                      <Select value={selectedRole} onValueChange={setSelectedRole}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="maker">Maker</SelectItem>
-                          <SelectItem value="checker">Checker</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label htmlFor="assignLocation">Location</Label>
-                      <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select location" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="mumbai">Mumbai Office</SelectItem>
-                          <SelectItem value="delhi">Delhi Warehouse</SelectItem>
-                          <SelectItem value="bangalore">Bangalore Manufacturing</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="assignDepartment">Department</Label>
-                    <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select department" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="hr">HR</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="finance">Finance</SelectItem>
-                        <SelectItem value="operations">Operations</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Module Access Configuration - NEW DESIGN */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-base font-semibold">Configure Module Access</Label>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                            <Info className="h-4 w-4 text-muted-foreground" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p className="font-medium mb-1">Access Types</p>
-                          <p className="text-xs"><strong>Full Access:</strong> All current and future items</p>
-                          <p className="text-xs"><strong>Specific Access:</strong> Only selected items</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-
-                    <div className="space-y-4">
-                      {Object.entries(moduleConfig).map(([moduleId, module]) => {
-                        console.log('Rendering module:', moduleId, 'with access:', moduleAccess[moduleId as keyof ModuleAccessState]);
-                        const isEnabled = enabledModules.includes(moduleId);
-                        const access = moduleAccess[moduleId as keyof ModuleAccessState];
-                        const isExpanded = activeModule === moduleId;
-                        const hasError = hasAttemptedSubmit && hasModuleError(moduleId);
-                        
-                        return (
-                          <div 
-                            key={moduleId} 
-                            className={`border rounded-lg overflow-hidden transition-colors ${
-                              hasError ? 'border-destructive' : ''
-                            }`}
-                          >
-                            {/* Module Header */}
-                            <div className={`flex items-center justify-between p-3 ${
-                              hasError ? 'bg-destructive/5' : 'bg-muted/30'
-                            }`}>
-                              <div className="flex items-center gap-3">
-                                <Checkbox
-                                  id={`enable-${moduleId}`}
-                                  checked={isEnabled}
-                                  onCheckedChange={(checked) => handleModuleEnable(moduleId, checked as boolean)}
-                                />
-                                <div className="flex items-center gap-2">
-                                  <div>
-                                    <Label htmlFor={`enable-${moduleId}`} className="font-medium cursor-pointer">
-                                      {module.name}
-                                    </Label>
-                                    <p className="text-xs text-muted-foreground">{module.description}</p>
-                                  </div>
-                                  
-                                  {/* Error indicator with tooltip */}
-                                  {isEnabled && hasModuleError(moduleId) && (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div className="flex items-center">
-                                          <AlertTriangle className="h-4 w-4 text-destructive" />
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent side="right">
-                                        <p>Select at least one item or switch to Full Access</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  )}
-                                </div>
-                              </div>
-                              
-                              {isEnabled && (
-                                <div className="flex items-center gap-2">
-                                  {access.scope === 'ALL' ? (
-                                    <Badge className="bg-primary/10 text-primary border-primary/20">
-                                      <Infinity className="h-3 w-3 mr-1" />
-                                      Future-Inclusive
-                                    </Badge>
-                                  ) : access.selectedItems.length > 0 ? (
-                                    <Badge variant="secondary">
-                                      <List className="h-3 w-3 mr-1" />
-                                      {access.selectedItems.length} Selected
-                                    </Badge>
-                                  ) : null}
-                                  
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 w-6 p-0"
-                                    onClick={() => toggleModuleExpand(moduleId)}
+                                <div className="h-px bg-border my-1" />
+                                {teamMembers.map((member) => (
+                                  <CommandItem
+                                    key={member._id}
+                                    onSelect={() => handleEmployeeToggle(member._id)}
+                                    className="cursor-pointer"
                                   >
-                                    {isExpanded ? (
-                                      <ChevronDown className="h-4 w-4" />
-                                    ) : (
-                                      <ChevronRight className="h-4 w-4" />
+                                    <Checkbox
+                                      checked={selectedEmployees.includes(member._id)}
+                                      className="mr-2"
+                                    />
+                                    <span>{member.name}</span>
+                                    <span className="ml-auto text-xs text-muted-foreground">
+                                      {member.department}
+                                    </span>
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+
+                      {/* Selected Members Chips */}
+                      {selectedEmployees.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {selectedEmployees.map((empId) => {
+                            const member = teamMembers.find(m => m._id === empId);
+                            if (!member) return null;
+                            return (
+                              <Badge
+                                key={empId}
+                                variant="secondary"
+                                className="pl-2 pr-1 py-1 flex items-center gap-1"
+                              >
+                                {member.name}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-4 w-4 p-0 hover:bg-destructive/20 rounded-full"
+                                  onClick={() => handleEmployeeToggle(empId)}
+                                  disabled={['update', 'view'].includes(dialogOpenFor)}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </Badge>
+                            );
+                          })}
+                          {selectedEmployees.length > 1 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 text-xs text-muted-foreground hover:text-destructive"
+                              onClick={() => setSelectedEmployees([])}
+                            >
+                              Clear all
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Role Selection */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="newRole">Assign Role</Label>
+                        <Select value={selectedRole} onValueChange={setSelectedRole} disabled={['update', 'view'].includes(dialogOpenFor)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select role" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="maker">Maker</SelectItem>
+                            <SelectItem value="checker">Checker</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {/* <div>
+                        <Label htmlFor="assignLocation">Location</Label>
+                        <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select location" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="mumbai">Mumbai Office</SelectItem>
+                            <SelectItem value="delhi">Delhi Warehouse</SelectItem>
+                            <SelectItem value="bangalore">Bangalore Manufacturing</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>*/}
+                    </div> 
+
+                    {/* <div>
+                      <Label htmlFor="assignDepartment">Department</Label>
+                      <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select department" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="hr">HR</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="finance">Finance</SelectItem>
+                          <SelectItem value="operations">Operations</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div> */}
+
+                    {/* Module Access Configuration - NEW DESIGN */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-base font-semibold">Configure Module Access</Label>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                              <Info className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs">
+                            <p className="font-medium mb-1">Access Types</p>
+                            <p className="text-xs"><strong>Full Access:</strong> All current and future items</p>
+                            <p className="text-xs"><strong>Specific Access:</strong> Only selected items</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+
+                      <div className="space-y-4">
+                        {Object.entries(moduleConfig).map(([moduleId, module]) => {
+                          console.log('Rendering module:', moduleId, 'with access:', moduleAccess[moduleId as keyof ModuleAccessState]);
+                          const isEnabled = enabledModules.includes(moduleId);
+                          const access = moduleAccess[moduleId as keyof ModuleAccessState];
+                          const isExpanded = activeModule === moduleId;
+                          const hasError = hasAttemptedSubmit && hasModuleError(moduleId);
+
+                          return (
+                            <div
+                              key={moduleId}
+                              className={`border rounded-lg overflow-hidden transition-colors ${hasError ? 'border-destructive' : ''
+                                }`}
+                            >
+                              {/* Module Header */}
+                              <div className={`flex items-center justify-between p-3 ${hasError ? 'bg-destructive/5' : 'bg-muted/30'
+                                }`}>
+                                <div className="flex items-center gap-3">
+                                  <Checkbox
+                                    id={`enable-${moduleId}`}
+                                    checked={isEnabled}
+                                    onCheckedChange={(checked) => handleModuleEnable(moduleId, checked as boolean)}
+                                  />
+                                  <div className="flex items-center gap-2">
+                                    <div>
+                                      <Label htmlFor={`enable-${moduleId}`} className="font-medium cursor-pointer">
+                                        {module.name}
+                                      </Label>
+                                      <p className="text-xs text-muted-foreground">{module.description}</p>
+                                    </div>
+
+                                    {/* Error indicator with tooltip */}
+                                    {isEnabled && hasModuleError(moduleId) && (
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <div className="flex items-center">
+                                            <AlertTriangle className="h-4 w-4 text-destructive" />
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent side="right">
+                                          <p>Select at least one item or switch to Full Access</p>
+                                        </TooltipContent>
+                                      </Tooltip>
                                     )}
-                                  </Button>
+                                  </div>
+                                </div>
+
+                                {isEnabled && (
+                                  <div className="flex items-center gap-2">
+                                    {access.scope === 'ALL' ? (
+                                      <Badge className="bg-primary/10 text-primary border-primary/20">
+                                        <Infinity className="h-3 w-3 mr-1" />
+                                        Future-Inclusive
+                                      </Badge>
+                                    ) : access.selectedItems.length > 0 ? (
+                                      <Badge variant="secondary">
+                                        <List className="h-3 w-3 mr-1" />
+                                        {access.selectedItems.length} Selected
+                                      </Badge>
+                                    ) : null}
+
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0"
+                                      onClick={() => toggleModuleExpand(moduleId)}
+                                    >
+                                      {isExpanded ? (
+                                        <ChevronDown className="h-4 w-4" />
+                                      ) : (
+                                        <ChevronRight className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Module Access Configuration */}
+                              {isEnabled && isExpanded && (
+                                <div className="p-4 space-y-4 border-t">
+                                  {/* Access Type Selection - Radio Group */}
+                                  <div className="space-y-3">
+                                    <Label className="text-sm font-medium">Access Type</Label>
+                                    <RadioGroup
+                                      value={access.scope}
+                                      onValueChange={(value) => handleScopeChange(moduleId, value as AccessScope)}
+                                      className="space-y-3"
+                                    >
+                                      {/* Full Access Option */}
+                                      <div className={`flex items-start space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${access.scope === 'ALL'
+                                        ? 'border-primary bg-primary/5'
+                                        : 'border-transparent bg-muted/30 hover:bg-muted/50'
+                                        }`}>
+                                        <RadioGroupItem value="ALL" id={`${moduleId}-all`} className="mt-1" />
+                                        <div className="flex-1">
+                                          <div className="flex items-center gap-2">
+                                            <Label htmlFor={`${moduleId}-all`} className="font-medium cursor-pointer">
+                                              Full Access
+                                            </Label>
+                                            <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+                                              <Infinity className="h-3 w-3 mr-1" />
+                                              Future-Inclusive
+                                            </Badge>
+                                          </div>
+                                          <p className="text-sm text-muted-foreground mt-1">
+                                            Grant access to <strong>all {module.subItems.length} current items</strong> and
+                                            any new {module.name} items added in the future. No manual updates required.
+                                          </p>
+                                        </div>
+                                      </div>
+
+                                      {/* Specific Access Option */}
+                                      <div className={`flex items-start space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${access.scope === 'LIMITED'
+                                        ? 'border-primary bg-primary/5'
+                                        : 'border-transparent bg-muted/30 hover:bg-muted/50'
+                                        }`}>
+                                        <RadioGroupItem value="LIMITED" id={`${moduleId}-limited`} className="mt-1" />
+                                        <div className="flex-1">
+                                          <div className="flex items-center gap-2">
+                                            <Label htmlFor={`${moduleId}-limited`} className="font-medium cursor-pointer">
+                                              Specific Access
+                                            </Label>
+                                            <Badge variant="outline" className="text-xs">
+                                              <List className="h-3 w-3 mr-1" />
+                                              Selected Only
+                                            </Badge>
+                                          </div>
+                                          <p className="text-sm text-muted-foreground mt-1">
+                                            Grant access only to items you select below.
+                                            New items will <strong>not</strong> be automatically accessible.
+                                          </p>
+                                        </div>
+                                      </div>
+                                    </RadioGroup>
+                                  </div>
+
+                                  {/* Item Selection (only for LIMITED scope) */}
+                                  {access.scope === 'LIMITED' && (
+                                    <div className="space-y-3 pt-2">
+                                      <Label className="text-sm font-medium">
+                                        Select Items ({access.selectedItems.length}/{module.subItems.length})
+                                      </Label>
+
+                                      {/* Searchable Multi-select Dropdown for Items */}
+                                      <Popover
+                                        open={itemDropdownOpen[moduleId as keyof typeof itemDropdownOpen]}
+                                        onOpenChange={(open) => setItemDropdownOpen(prev => ({ ...prev, [moduleId]: open }))}
+                                      >
+                                        <PopoverTrigger asChild>
+                                          <Button
+                                            variant="outline"
+                                            role="combobox"
+                                            aria-expanded={itemDropdownOpen[moduleId as keyof typeof itemDropdownOpen]}
+                                            className="w-full justify-between h-auto min-h-10 py-2"
+                                          >
+                                            <div className="flex items-center gap-2">
+                                              <List className="h-4 w-4 text-muted-foreground" />
+                                              <span className="text-muted-foreground">
+                                                {access.selectedItems.length === 0
+                                                  ? `Select ${module.name} items...`
+                                                  : `${access.selectedItems.length} item(s) selected`}
+                                              </span>
+                                            </div>
+                                            <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+                                          </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-[350px] p-0" align="start">
+                                          <Command>
+                                            <CommandInput placeholder={`Search ${module.name} items...`} />
+                                            <CommandList>
+                                              <CommandEmpty>No items found.</CommandEmpty>
+                                              <CommandGroup>
+                                                <CommandItem
+                                                  onSelect={() => handleSelectAllItems(moduleId, access.selectedItems.length !== module.subItems.length)}
+                                                  className="cursor-pointer"
+                                                >
+                                                  <Checkbox
+                                                    checked={access.selectedItems.length === module.subItems.length}
+                                                    className="mr-2"
+                                                  />
+                                                  <span className="font-medium">Select All ({module.subItems.length})</span>
+                                                </CommandItem>
+                                                <div className="h-px bg-border my-1" />
+                                                {module.subItems.map((item) => (
+                                                  <CommandItem
+                                                    key={item.id}
+                                                    onSelect={() => handleItemToggle(moduleId, item.id, !access.selectedItems.includes(item.id))}
+                                                    className="cursor-pointer"
+                                                  >
+                                                    <Checkbox
+                                                      checked={access.selectedItems.includes(item.id)}
+                                                      className="mr-2"
+                                                    />
+                                                    <span>{item.name}</span>
+                                                  </CommandItem>
+                                                ))}
+                                              </CommandGroup>
+                                            </CommandList>
+                                          </Command>
+                                        </PopoverContent>
+                                      </Popover>
+
+                                      {/* Selected Items Chips */}
+                                      {access.selectedItems.length > 0 && (
+                                        <div className="flex flex-wrap gap-2">
+                                          {access.selectedItems.map((itemId) => {
+                                            const item = module.subItems.find(i => i.id === itemId);
+                                            if (!item) return null;
+                                            return (
+                                              <Badge
+                                                key={itemId}
+                                                variant="secondary"
+                                                className="pl-2 pr-1 py-1 flex items-center gap-1"
+                                              >
+                                                {item.name}
+                                                <Button
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  className="h-4 w-4 p-0 hover:bg-destructive/20 rounded-full"
+                                                  onClick={() => handleItemToggle(moduleId, itemId, false)}
+                                                >
+                                                  <X className="h-3 w-3" />
+                                                </Button>
+                                              </Badge>
+                                            );
+                                          })}
+                                          {access.selectedItems.length > 1 && (
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              className="h-6 text-xs text-muted-foreground hover:text-destructive"
+                                              onClick={() => handleSelectAllItems(moduleId, false)}
+                                            >
+                                              Clear all
+                                            </Button>
+                                          )}
+                                        </div>
+                                      )}
+
+                                      {/* Warning if no items selected */}
+                                      {access.selectedItems.length === 0 && (
+                                        <div className="flex items-center gap-2 text-destructive text-sm">
+                                          <AlertTriangle className="h-4 w-4" />
+                                          <span>Select at least one item or switch to Full Access</span>
+                                        </div>
+                                      )}
+
+                                      {/* Info about selecting all visible items */}
+                                      {access.selectedItems.length === module.subItems.length && (
+                                        <div className="flex items-start gap-2 p-2 bg-accent/50 border border-accent rounded text-sm">
+                                          <Info className="h-4 w-4 text-accent-foreground mt-0.5 shrink-0" />
+                                          <p className="text-muted-foreground">
+                                            You've selected all current items, but new items added later
+                                            won't be included. Consider <strong>Full Access</strong> if you
+                                            want future items to be automatically accessible.
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+
+                                  {/* Full Access Summary */}
+                                  {access.scope === 'ALL' && (
+                                    <div className="flex items-start gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg text-sm">
+                                      <ShieldCheck className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                                      <p className="text-muted-foreground">
+                                        This user will have access to all <strong>{module.subItems.length}</strong> current items
+                                        and will automatically gain access when new {module.name} items are added.
+                                      </p>
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
-
-                            {/* Module Access Configuration */}
-                            {isEnabled && isExpanded && (
-                              <div className="p-4 space-y-4 border-t">
-                                {/* Access Type Selection - Radio Group */}
-                                <div className="space-y-3">
-                                  <Label className="text-sm font-medium">Access Type</Label>
-                                  <RadioGroup
-                                    value={access.scope}
-                                    onValueChange={(value) => handleScopeChange(moduleId, value as AccessScope)}
-                                    className="space-y-3"
-                                  >
-                                    {/* Full Access Option */}
-                                    <div className={`flex items-start space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
-                                      access.scope === 'ALL' 
-                                        ? 'border-primary bg-primary/5' 
-                                        : 'border-transparent bg-muted/30 hover:bg-muted/50'
-                                    }`}>
-                                      <RadioGroupItem value="ALL" id={`${moduleId}-all`} className="mt-1" />
-                                      <div className="flex-1">
-                                        <div className="flex items-center gap-2">
-                                          <Label htmlFor={`${moduleId}-all`} className="font-medium cursor-pointer">
-                                            Full Access
-                                          </Label>
-                                          <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
-                                            <Infinity className="h-3 w-3 mr-1" />
-                                            Future-Inclusive
-                                          </Badge>
-                                        </div>
-                                        <p className="text-sm text-muted-foreground mt-1">
-                                          Grant access to <strong>all {module.subItems.length} current items</strong> and 
-                                          any new {module.name} items added in the future. No manual updates required.
-                                        </p>
-                                      </div>
-                                    </div>
-
-                                    {/* Specific Access Option */}
-                                    <div className={`flex items-start space-x-3 p-3 rounded-lg border-2 cursor-pointer transition-colors ${
-                                      access.scope === 'LIMITED' 
-                                        ? 'border-primary bg-primary/5' 
-                                        : 'border-transparent bg-muted/30 hover:bg-muted/50'
-                                    }`}>
-                                      <RadioGroupItem value="LIMITED" id={`${moduleId}-limited`} className="mt-1" />
-                                      <div className="flex-1">
-                                        <div className="flex items-center gap-2">
-                                          <Label htmlFor={`${moduleId}-limited`} className="font-medium cursor-pointer">
-                                            Specific Access
-                                          </Label>
-                                          <Badge variant="outline" className="text-xs">
-                                            <List className="h-3 w-3 mr-1" />
-                                            Selected Only
-                                          </Badge>
-                                        </div>
-                                        <p className="text-sm text-muted-foreground mt-1">
-                                          Grant access only to items you select below. 
-                                          New items will <strong>not</strong> be automatically accessible.
-                                        </p>
-                                      </div>
-                                    </div>
-                                  </RadioGroup>
-                                </div>
-
-                                {/* Item Selection (only for LIMITED scope) */}
-                                {access.scope === 'LIMITED' && (
-                                  <div className="space-y-3 pt-2">
-                                    <Label className="text-sm font-medium">
-                                      Select Items ({access.selectedItems.length}/{module.subItems.length})
-                                    </Label>
-                                    
-                                    {/* Searchable Multi-select Dropdown for Items */}
-                                    <Popover 
-                                      open={itemDropdownOpen[moduleId as keyof typeof itemDropdownOpen]} 
-                                      onOpenChange={(open) => setItemDropdownOpen(prev => ({ ...prev, [moduleId]: open }))}
-                                    >
-                                      <PopoverTrigger asChild>
-                                        <Button
-                                          variant="outline"
-                                          role="combobox"
-                                          aria-expanded={itemDropdownOpen[moduleId as keyof typeof itemDropdownOpen]}
-                                          className="w-full justify-between h-auto min-h-10 py-2"
-                                        >
-                                          <div className="flex items-center gap-2">
-                                            <List className="h-4 w-4 text-muted-foreground" />
-                                            <span className="text-muted-foreground">
-                                              {access.selectedItems.length === 0 
-                                                ? `Select ${module.name} items...` 
-                                                : `${access.selectedItems.length} item(s) selected`}
-                                            </span>
-                                          </div>
-                                          <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
-                                        </Button>
-                                      </PopoverTrigger>
-                                      <PopoverContent className="w-[350px] p-0" align="start">
-                                        <Command>
-                                          <CommandInput placeholder={`Search ${module.name} items...`} />
-                                          <CommandList>
-                                            <CommandEmpty>No items found.</CommandEmpty>
-                                            <CommandGroup>
-                                              <CommandItem
-                                                onSelect={() => handleSelectAllItems(moduleId, access.selectedItems.length !== module.subItems.length)}
-                                                className="cursor-pointer"
-                                              >
-                                                <Checkbox 
-                                                  checked={access.selectedItems.length === module.subItems.length}
-                                                  className="mr-2"
-                                                />
-                                                <span className="font-medium">Select All ({module.subItems.length})</span>
-                                              </CommandItem>
-                                              <div className="h-px bg-border my-1" />
-                                              {module.subItems.map((item) => (
-                                                <CommandItem
-                                                  key={item.id}
-                                                  onSelect={() => handleItemToggle(moduleId, item.id, !access.selectedItems.includes(item.id))}
-                                                  className="cursor-pointer"
-                                                >
-                                                  <Checkbox 
-                                                    checked={access.selectedItems.includes(item.id)}
-                                                    className="mr-2"
-                                                  />
-                                                  <span>{item.name}</span>
-                                                </CommandItem>
-                                              ))}
-                                            </CommandGroup>
-                                          </CommandList>
-                                        </Command>
-                                      </PopoverContent>
-                                    </Popover>
-
-                                    {/* Selected Items Chips */}
-                                    {access.selectedItems.length > 0 && (
-                                      <div className="flex flex-wrap gap-2">
-                                        {access.selectedItems.map((itemId) => {
-                                          const item = module.subItems.find(i => i.id === itemId);
-                                          if (!item) return null;
-                                          return (
-                                            <Badge 
-                                              key={itemId} 
-                                              variant="secondary" 
-                                              className="pl-2 pr-1 py-1 flex items-center gap-1"
-                                            >
-                                              {item.name}
-                                              <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-4 w-4 p-0 hover:bg-destructive/20 rounded-full"
-                                                onClick={() => handleItemToggle(moduleId, itemId, false)}
-                                              >
-                                                <X className="h-3 w-3" />
-                                              </Button>
-                                            </Badge>
-                                          );
-                                        })}
-                                        {access.selectedItems.length > 1 && (
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 text-xs text-muted-foreground hover:text-destructive"
-                                            onClick={() => handleSelectAllItems(moduleId, false)}
-                                          >
-                                            Clear all
-                                          </Button>
-                                        )}
-                                      </div>
-                                    )}
-
-                                    {/* Warning if no items selected */}
-                                    {access.selectedItems.length === 0 && (
-                                      <div className="flex items-center gap-2 text-destructive text-sm">
-                                        <AlertTriangle className="h-4 w-4" />
-                                        <span>Select at least one item or switch to Full Access</span>
-                                      </div>
-                                    )}
-
-                                    {/* Info about selecting all visible items */}
-                                    {access.selectedItems.length === module.subItems.length && (
-                                      <div className="flex items-start gap-2 p-2 bg-accent/50 border border-accent rounded text-sm">
-                                        <Info className="h-4 w-4 text-accent-foreground mt-0.5 shrink-0" />
-                                        <p className="text-muted-foreground">
-                                          You've selected all current items, but new items added later 
-                                          won't be included. Consider <strong>Full Access</strong> if you 
-                                          want future items to be automatically accessible.
-                                        </p>
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-
-                                {/* Full Access Summary */}
-                                {access.scope === 'ALL' && (
-                                  <div className="flex items-start gap-2 p-3 bg-primary/5 border border-primary/20 rounded-lg text-sm">
-                                    <ShieldCheck className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                                    <p className="text-muted-foreground">
-                                      This user will have access to all <strong>{module.subItems.length}</strong> current items 
-                                      and will automatically gain access when new {module.name} items are added.
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
 
                   </div>
                 </div>
@@ -1136,8 +1213,8 @@ const RoleAssignment = (
                     <Button onClick={() => handleDialogClose(false)} variant="outline">
                       Cancel
                     </Button>
-                    <Button 
-                      onClick={handleSubmit} 
+                    <Button
+                      onClick={handleSubmit}
                       disabled={!isFormValid()}
                       className="relative"
                     >
@@ -1160,8 +1237,8 @@ const RoleAssignment = (
                 <TableHead>Current Role</TableHead>
                 <TableHead>Assigned Role</TableHead>
                 <TableHead>Module Access</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Location</TableHead>
+                {/* <TableHead>Department</TableHead>
+                <TableHead>Location</TableHead> */}
                 <TableHead>Assigned By</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
@@ -1215,8 +1292,8 @@ const RoleAssignment = (
                       ))}
                     </div>
                   </TableCell>
-                  <TableCell>{assignment.department}</TableCell>
-                  <TableCell>{assignment.location}</TableCell>
+                  {/* <TableCell>{assignment.department}</TableCell>
+                  <TableCell>{assignment.location}</TableCell> */}
                   <TableCell>{assignment.assignedBy}</TableCell>
                   <TableCell>
                     <Badge variant={getStatusVariant(assignment.status)} className="flex items-center gap-1 w-fit">
@@ -1233,10 +1310,10 @@ const RoleAssignment = (
                         </>
                       )}
                       {assignment.status === 'Active' && (
-                        <Button size="sm" variant="outline">View</Button>
+                        <Button size="sm" variant="outline" onClick={() => handleViewAssignment(assignment)}>View</Button>
                       )}
                       {assignment.status === 'Active' && (
-                        <Button size="sm" variant="outline" onClick={handleUpdateAssignment}>
+                        <Button size="sm" variant="outline" onClick={() => handleUpdateAssignment(assignment)}>
                           Update
                         </Button>
                       )}
@@ -1295,6 +1372,87 @@ const RoleAssignment = (
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+
+      <Dialog open={viewDialogOpen} onOpenChange={handleDialogClose}>
+        {/* <DialogTrigger asChild>
+          <Button>
+            <UserCheck className="h-4 w-4 mr-2" />
+            Assign Role
+          </Button>
+        </DialogTrigger> */}
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+          <DialogHeader className="shrink-0">
+            <DialogTitle>Access Details</DialogTitle>
+            <DialogDescription>
+              Role access permissions for team members.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="overflow-y-auto pr-2 space-y-6">
+
+            {/* User Info */}
+            <div className="border rounded-lg p-4">
+              <h3 className="font-semibold text-sm mb-3">User Information</h3>
+
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div><span className="text-muted-foreground">Employee:</span> {accessDetails?.employee}</div>
+                <div><span className="text-muted-foreground">Role:</span> {accessDetails?.currentRole}</div>
+                <div><span className="text-muted-foreground">Assigned By:</span> {accessDetails?.assignedBy}</div>
+                <div><span className="text-muted-foreground">Assigned Date:</span> {accessDetails?.assignedDate}</div>
+              </div>
+
+              <div className="mt-3">
+                <Badge variant={accessDetails?.status ? "default" : "secondary"}>
+                  {accessDetails?.status ? "Active" : "Inactive"}
+                </Badge>
+              </div>
+            </div>
+
+            {/* Module Access */}
+            <div className="border rounded-lg p-4">
+              <h3 className="font-semibold text-sm mb-3">Module Access</h3>
+
+              <div className="space-y-4">
+                {accessDetails?.modules.map((module) => (
+                  <div key={module.name} className="border rounded-md p-3">
+
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="font-medium">{module.name}</span>
+
+                      <Badge variant={module.scope === "ALL" ? "default" : "outline"}>
+                        {module.scope}
+                      </Badge>
+                    </div>
+
+                    {module.scope === "LIMITED" && (
+                      <ul className="text-sm text-muted-foreground list-disc ml-4">
+                        {module.items.map((item) => (
+                          <li key={item.id}>{item.name}</li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {module.scope === "ALL" && (
+                      <p className="text-sm text-muted-foreground">
+                        All items accessible
+                      </p>
+                    )}
+
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+
+          {/* <div className="flex justify-end gap-2 pt-4 border-t">
+            <Button variant="outline" onClick={handleDialogClose}>
+              Close
+            </Button>
+          </div> */}
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
   );
 };
