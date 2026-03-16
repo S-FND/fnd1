@@ -14,6 +14,12 @@ import FlexibleDataInput from './FlexibleDataInput';
 import { httpClient } from '@/lib/httpClient';
 import { logger } from '@/hooks/logger';
 import { PageAccessContext } from '@/context/PageAccessContext';
+
+const statusDot = {
+  APPROVED: "bg-green-500",
+  REJECTED: "bg-red-500",
+  PENDING: "bg-yellow-500"
+};
 import DynamicYearFilter, { getCurrentFinancialYear } from "@/hooks/DynamicYearFilter"; 
 
 interface MaterialTopic {
@@ -43,6 +49,12 @@ interface MetricDataEntry {
   period?: string; // e.g., "Q1", "January", "Week 1", etc.
   periodIndex?: number; // For ordering periods
   locationId?: string; // Location identifier
+  status?: string;
+  comment?: string;
+  verifiedBy?: {
+    name: string;
+    date: Date;
+  }
 }
 
 interface MetricPeriod {
@@ -53,6 +65,12 @@ interface MetricPeriod {
   value: any;
   isCompleted: boolean;
   dueDate: string;
+  status?: string;
+  comment?: string;
+  verifiedBy?: {
+    name: string;
+    date: Date;
+  }
 }
 
 interface MetricsDataEntryProps {
@@ -79,25 +97,25 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
 
   const [selectedLocation, setSelectedLocation] = useState<string>('');
 
-  const {userRole,isLocation}=useContext(PageAccessContext)
+  const { userRole, isLocation } = useContext(PageAccessContext)
   const [locations, setLocations] = useState<LocationData[]>([]);
 
-  // Available locations
-  // const locations = ['Mumbai Office', 'Delhi Warehouse', 'Bangalore Manufacturing', 'Chennai Office'];
 
 
   const getMetricsKpiData = async (selectedYear) => {
     try {
       let subQuery = `?year=${selectedYear}`;
-      if(userRole == 'employee' && selectedLocation){
+      if (userRole == 'employee' && selectedLocation) {
         subQuery += `&locationId=${selectedLocation}`
       }
-      let metricDataResponse = await httpClient.get(`materiality/metrics/data-entry${subQuery}`);
+      // let metricDataResponse = await httpClient.get(`materiality/metrics/data-entry${subQuery}`);4
+      let metricDataResponse = await httpClient.get(`materiality/metrics/data-entry/V1${subQuery}`);
       if (metricDataResponse['data']['status']) {
-        const metricsEntries = metricDataResponse['data']['data']['metricsEntries'];
-        
+        // const metricsEntries = metricDataResponse['data']['data']['metricsEntries'];
+        const metricsEntries = metricDataResponse['data']['data'];
+
         let flattenedEntries = [];
-        
+
         if (Array.isArray(metricsEntries)) {
           flattenedEntries = metricsEntries.flatMap(entry => {
             if (Array.isArray(entry)) {
@@ -110,34 +128,17 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
         } else {
           flattenedEntries = [];
         }
-        
+
         setDataEntries(flattenedEntries);
       } else {
         setDataEntries([]);
       }
     } catch (error) {
       logger.error("Error fetching metrics KPI data:", error);
-      setDataEntries([]); 
+      setDataEntries([]);
     }
   }
 
-  
-
-
-
-  // Load existing data entries from localStorage
-  // useEffect(() => {
-    // const savedEntries = localStorage.getItem('esgDataEntries');
-    // if (savedEntries) {
-    //   try {
-    //     const parsedEntries = JSON.parse(savedEntries);
-    //     setDataEntries(parsedEntries);
-    //   } catch (error) {
-    //     console.error('Error loading data entries:', error);
-    //   }
-    // }
-  //   getMetricsKpiData(selectedFinancialYear);
-  // }, [selectedFinancialYear]);
 
   // Save data entries to localStorage whenever they change
   useEffect(() => {
@@ -151,7 +152,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
     }
 
     // Validate location selection. put a check if location is selected if logged user is employee
-    if (!selectedLocation && userRole == 'employee') {
+    if (!selectedLocation && userRole == 'employee' && localStorage.getItem("fandoro-user") && JSON.parse(localStorage.getItem("fandoro-user")).isLocation) {
       toast.error('Please select a location');
       return;
     }
@@ -187,7 +188,31 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
       periodIndex: getAvailablePeriods(tempParsedMetric.code, tempParsedMetric.name).find(p => p.period === selectedPeriod)?.periodIndex || 0,
       locationId: selectedLocation
     };
-    let dataEntryResponse = await httpClient.post('materiality/metrics/data-entry', newEntry)
+
+    //New Flow
+    let metricsEntry = {
+      // entityId: entityId,
+      financialYear: selectedFinancialYear,
+      metricId: tempParsedMetric.code,
+      metricName: metric.name,
+      unit: metric.unit,
+      frequency: metric.collectionFrequency,
+      topicId: metric.topic,
+      dataType: metric.dataType,
+      esg: metric.esg,
+      periods: [
+        {
+          period: selectedPeriod,
+          date: entryDate,
+          value: entryValue,
+          status: 'PENDING'
+        }
+      ],
+    }
+
+
+    // let dataEntryResponse = await httpClient.post('materiality/metrics/data-entry', newEntry)
+    let dataEntryResponse = await httpClient.post('materiality/metrics/data-entry/V1', [metricsEntry])
     // console.log(`dataEntryResponse`, dataEntryResponse)
     if (dataEntryResponse['data']['status']) {
       toast.success('Data entry submitted successfully');
@@ -273,7 +298,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
         break;
       case 'Monthly':
         const months = ['April', 'May', 'June', 'July', 'August', 'September',
-        'October', 'November', 'December', 'January', 'February', 'March'];
+          'October', 'November', 'December', 'January', 'February', 'March'];
         months.forEach((month, index) => {
           const monthNum = String(index + 1).padStart(2, '0');
           const daysInMonth = new Date(year, index + 1, 0).getDate();
@@ -341,7 +366,10 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
         value: existingEntry?.value || '',
         isCompleted: !!existingEntry,
         dueDate: period.dueDate,
-        metricName: metric.name
+        metricName: metric.name,
+        status: existingEntry?.status,
+        comment: existingEntry?.comment,
+        verifiedBy: existingEntry?.verifiedBy
       };
     });
   };
@@ -371,7 +399,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
           "October", "November", "December", "January", "February", "March"
         ];
         const fyMonthIndex = (month + 9) % 12;
-        
+
         for (let m = 0; m <= month; m++) {
           periods.push(`${monthNames[m]}`);
         }
@@ -418,24 +446,24 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
     const lastEntry = getLastEntryDate(metric.code);
     const allEntryPeriod = getAllEntryPeriod(metric.code)
     let allPeriodsTillDate = getAllPeriodTillNow(new Date(), metric.collectionFrequency.toLowerCase() as PeriodType);
-    let checkEntries=dataEntries.filter((entry) => entry.metricName == metric.name && entry.financialYear == selectedFinancialYear );
+    let checkEntries = dataEntries.filter((entry) => entry.metricName == metric.name && entry.financialYear == selectedFinancialYear);
     const missingPeriods = allPeriodsTillDate.filter(
       p => !checkEntries.some(e => e.period === p)
     );
-    
+
     // console.log(`metric ==> `, metric.name)
     // console.log(`allPeriodsTillDate ==> `, allPeriodsTillDate)
     // console.log(`checkEntries ==> `, checkEntries)
     // console.log(`missingPeriods ==> `, missingPeriods)
     // return isOverdue(lastEntry || '', metric.collectionFrequency);
-    return missingPeriods.length>0;
+    return missingPeriods.length > 0;
   }) || [];
 
-  const getUserAccessLevel = async() => {
+  const getUserAccessLevel = async () => {
     try {
-      let accessData=await httpClient.get('subuser/access');
-      if(accessData['data']['status']){
-        if(accessData['data']['locationsData'] && accessData['data']['locationsData'].length>0){
+      let accessData = await httpClient.get('subuser/access');
+      if (accessData['data']['status']) {
+        if (accessData['data']['locationsData'] && accessData['data']['locationsData'].length > 0) {
           // let locs=accessData['locationsData'].map((loc) => loc.name)
           setLocations(accessData['data']['locationsData'])
           setSelectedLocation(accessData['data']['locationsData'][0]._id)
@@ -473,25 +501,25 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
 
 
   useEffect(() => {
-    if(userRole){
-      if(userRole == 'employee'){
+    if (userRole) {
+      if (userRole == 'employee') {
         getUserAccessLevel()
       }
     }
   }, [userRole])
 
   useEffect(() => {
-    if(userRole !== 'employee'){
+    if (userRole !== 'employee') {
       getMetricsKpiData(selectedFinancialYear);
       setConfiguredMetrics(finalMetrics)
     }
-    else{
-      if(selectedLocation){
-        getMetricsKpiData(selectedFinancialYear);
-        setConfiguredMetrics(finalMetrics)
-      }
+    else {
+      // if(selectedLocation){
+      getMetricsKpiData(selectedFinancialYear);
+      setConfiguredMetrics(finalMetrics)
+      // }
     }
-  }, [finalMetrics,selectedFinancialYear,userRole,selectedLocation]);
+  }, [finalMetrics, selectedFinancialYear, userRole, selectedLocation]);
 
   return (
     <div className="space-y-6">
@@ -507,12 +535,12 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
               </CardDescription>
             </div>
             <div className="flex gap-2">
-            {userRole == 'employee' && isLocation && <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+              {userRole == 'employee' && isLocation && <Select value={selectedLocation} onValueChange={setSelectedLocation}>
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder="Select Location" />
                 </SelectTrigger>
                 <SelectContent>
-                  
+
                   {locations && locations.map(location => (
                     <SelectItem key={location._id} value={location._id}>
                       <div className="flex items-center gap-2">
@@ -698,6 +726,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                     // Submit all bulk entries
                     const currentDate = new Date().toISOString().split('T')[0];
                     const newEntries: MetricDataEntry[] = [];
+                    const newEntriesTemp = [];
                     // debugger;
                     // console.log("=====>>> ", Object.entries(bulkEntries)
                     //   .filter(([_, value]) => value && value !== ''))
@@ -746,20 +775,20 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                       .forEach(([key, value]) => {
                         let metricId: string;
                         let period: string;
-                        let metricName:string;
+                        let metricName: string;
 
                         // Extract metricId and period correctly
                         if (key.includes('_') && !key.startsWith('entry_')) {
                           const parts = key.split('_');
                           period = parts.pop()!;       // last part = "January"
-                          metricName=parts.pop()!;   // second last part = "Revenue"
+                          metricName = parts.pop()!;   // second last part = "Revenue"
                           metricId = parts.join('_');  // rest = "RR-BI-430a.1"
                         } else {
                           metricId = key;
                           period = 'Single Entry';
-                          metricName=key;
+                          metricName = key;
                         }
-                        console.log(`metricname => `, metricName) 
+                        console.log(`metricname => `, metricName)
                         // Find matching metric
                         const metric = configuredMetrics?.find(m => m.code === metricId && m.name == metricName);
                         if (!metric) return;
@@ -798,12 +827,33 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                         };
 
                         // console.log(`entry =>`, entry);
+                        let metricsEntry = {
+                          // entityId: entityId,
+                          financialYear: selectedFinancialYear,
+                          metricId: metricId,
+                          metricName: metric.name,
+                          unit: metric.unit,
+                          frequency: metric.collectionFrequency,
+                          topicId: metric.topic,
+                          dataType: metric.dataType,
+                          esg: metric.esg,
+                          periods: [
+                            {
+                              period: period !== 'Single Entry' ? period : undefined,
+                              date: currentDate,
+                              value: value,
+                              status: 'PENDING'
+                            }
+                          ],
+                        }
                         newEntries.push(entry);
+                        newEntriesTemp.push(metricsEntry)
                       });
 
 
                     if (newEntries.length > 0) {
-                      let dataMultiEntryResponse = await httpClient.post('materiality/metrics/data-entry', newEntries)
+                      // let dataMultiEntryResponse = await httpClient.post('materiality/metrics/data-entry', newEntries)
+                      let dataMultiEntryResponse = await httpClient.post('materiality/metrics/data-entry/V1', newEntries)
                       // console.log(`dataMultiEntryResponse`, dataMultiEntryResponse)
                       if (dataMultiEntryResponse['data']['status']) {
                         toast.success('Data entry submitted successfully');
@@ -891,7 +941,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                     </div>
 
                     {/* Period status grid */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                    {/* <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
                       {periods.slice(0, 12).map(period => (
                         <div
                           key={period.id}
@@ -901,8 +951,104 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                             }`}
                         >
                           {period.period}
+                          {period.status && <span
+                            className={`w-2 h-2 rounded-full mt-1 ${statusDot[period.status.toUpperCase()]}`}
+                          />}
                         </div>
+                        
                       ))}
+                      {periods.length > 12 && (
+                        <div className="p-2 text-xs text-center rounded border bg-gray-50 border-gray-200 text-gray-600">
+                          +{periods.length - 12} more
+                        </div>
+                      )}
+                    </div> */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+                      {periods.slice(0, 12).map(period => {
+
+                        const statusDot = {
+                          APPROVED: "bg-green-500",
+                          REJECTED: "bg-red-500",
+                          PENDING: "bg-yellow-500"
+                        };
+
+                        const commentColor = {
+                          APPROVED: "text-green-600",
+                          REJECTED: "text-red-600",
+                          PENDING: "text-yellow-600"
+                        };
+
+                        return (
+                          <div
+                            key={period.id}
+                            className={`p-2 text-xs text-center rounded border relative group ${period.isCompleted
+                              ? 'bg-green-50 border-green-200 text-green-800'
+                              : 'bg-gray-50 border-gray-200 text-gray-600'
+                              }`}
+                          >
+                            {/* Status Dot */}
+                            {period.status && <span
+                              className={`absolute top-1 right-1 w-2 h-2 rounded-full ${statusDot[period.status.toUpperCase()] || "bg-gray-400"
+                                }`}
+                            />}
+
+                            {period.period}
+
+                            {/* Comment Icon */}
+                            {period.comment && period.status && (
+                              <div className="absolute bottom-1 right-1 group cursor-pointer">
+
+                                <span
+                                  className={`text-[12px] ${commentColor[period.status.toUpperCase()] || "text-gray-500"
+                                    }`}
+                                >
+                                  💬
+                                </span>
+
+                                {/* Comment Card */}
+                                <div className="hidden group-hover:block absolute bottom-full right-0 mb-2 w-56 bg-white border rounded-lg shadow-lg text-xs p-3 z-20">
+
+                                  {/* Header */}
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="font-semibold text-gray-700">Comment</span>
+                                    <span className={`text-[10px] font-medium ${commentColor[period.status.toUpperCase()] || "text-gray-500"
+                                      }`}>
+                                      {period.status}
+                                    </span>
+                                  </div>
+
+                                  {/* Comment Text */}
+                                  <div className="text-gray-800 mb-2 leading-relaxed">
+                                    {period.comment}
+                                  </div>
+
+                                  {/* Divider */}
+                                  <div className="border-t pt-2 text-[10px] text-gray-500">
+
+                                    <div className="font-medium">
+                                      {period.verifiedBy?.name}
+                                    </div>
+
+                                    <div>
+                                      {new Date(period.verifiedBy?.date).toLocaleDateString()}
+                                    </div>
+
+                                  </div>
+                                </div>
+
+                              </div>
+                            )}
+
+                            {/* Hover Tooltip */}
+                            {/* {period.comment && (
+                              <div className="absolute hidden group-hover:block z-10 bottom-full mb-2 left-1/2 -translate-x-1/2 bg-white border rounded shadow text-xs p-2 w-40">
+                                {period.comment}
+                              </div>
+                            )} */}
+                          </div>
+                        );
+                      })}
+
                       {periods.length > 12 && (
                         <div className="p-2 text-xs text-center rounded border bg-gray-50 border-gray-200 text-gray-600">
                           +{periods.length - 12} more

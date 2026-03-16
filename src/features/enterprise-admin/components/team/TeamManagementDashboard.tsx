@@ -9,7 +9,7 @@ import LocationManagement from './LocationManagement';
 import RoleAssignment from './RoleAssignment';
 import UnitHeadsManagement from './UnitHeadsManagement';
 import SubsidiaryCompany from './SubsidiaryCompany';
-import { fetchLocationData, fetchTeamData,fetchSubsidiaries } from "../../services/teamMangment";
+import { fetchLocationData, fetchTeamData, fetchSubsidiaries } from "../../services/teamMangment";
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
@@ -28,14 +28,14 @@ const TeamManagementDashboard = () => {
     // locations: 0,
     // unitHeads: 0,
     // pendingAssignments: 0,
-    subsidiaryCompany:0
+    subsidiaryCompany: 0
   });
 
   const [employees, setEmployees] = useState([]);
   const [locations, setLocations] = useState([]);
   const [subsidiaries, setSubsidiaries] = useState([]);
-  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
-  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
+  const { isLoading } = useRouteProtection(['admin', 'manager', 'employee']);
+  const { user, isAuthenticated, isAuthenticatedStatus } = useAuth();
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -46,34 +46,34 @@ const TeamManagementDashboard = () => {
   }
 
   const fetchEmployeeCount = useCallback(async () => {
-    setLoading(prev => ({...prev, employees: true}));
+    setLoading(prev => ({ ...prev, employees: true }));
     try {
       const response = await fetchTeamData();
       if (response?.data?.[0]?.subuser) {
         const transformed = transformEmployeeData(response.data[0].subuser);
         setEmployees(transformed);
-        setCounts(prev => ({...prev, employees: transformed.length}));
+        setCounts(prev => ({ ...prev, employees: transformed.length }));
       }
     } catch (error) {
       toast.error("Failed to fetch employees");
     } finally {
-      setLoading(prev => ({...prev, employees: false}));
+      setLoading(prev => ({ ...prev, employees: false }));
     }
   }, []);
 
   const fetchLocationCount = useCallback(async () => {
-    setLoading(prev => ({...prev, locations: true}));
+    setLoading(prev => ({ ...prev, locations: true }));
     try {
       const response = await fetchLocationData();
       if (response?.data) {
         const activeLocations = response.data.filter(location => location.active !== false);
         setLocations(activeLocations);
-        setCounts(prev => ({...prev, locations: activeLocations.length}));
+        setCounts(prev => ({ ...prev, locations: activeLocations.length }));
       }
     } catch (error) {
       toast.error("Failed to fetch locations");
     } finally {
-      setLoading(prev => ({...prev, locations: false}));
+      setLoading(prev => ({ ...prev, locations: false }));
     }
   }, []);
 
@@ -116,93 +116,38 @@ const TeamManagementDashboard = () => {
     }));
   };
 
-  const stats = [
-    {
-      title: 'Total Employees',
-      value: loading.employees ? <Loader2 className="h-6 w-6 animate-spin" /> : counts.employees,
-      icon: Users,
-      description: 'Across all locations',
-      key: 'employees'
-    },
-    // {
-    //   title: 'Locations',
-    //   value: loading.locations ? <Loader2 className="h-6 w-6 animate-spin" /> : counts.locations,
-    //   icon: MapPin,
-    //   description: 'Cities and units',
-    //   key: 'locations'
-    // },
-    // {
-    //   title: 'Pending Assignments',
-    //   value: counts.pendingAssignments,
-    //   icon: UserPlus,
-    //   description: 'Role assignments',
-    //   key: 'pendingAssignments'
-    // },
-    // {
-    //   title: 'Unit Heads',
-    //   value: counts.unitHeads,
-    //   icon: Building2,
-    //   description: 'Department leaders',
-    //   key: 'unitHeads'
-    // },
-    {
-      title: 'Subsidiary Company',
-      value: loading.subsidiaries ? <Loader2 className="h-6 w-6 animate-spin" /> : counts.subsidiaryCompany,
-      icon: Building2,
-      description: 'Companines List',
-      key: 'subsidiaryCompany'
-    }
-    
-  ];
-
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.icon className="h-5 w-5 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold flex items-center justify-start h-8">
-                {stat.value}
-              </div>
-              <p className="text-xs text-muted-foreground">{stat.description}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
       {/* Main Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="employees">Employees</TabsTrigger>
           {/* <TabsTrigger value="locations">Locations</TabsTrigger> */}
-          {/* <TabsTrigger value="roles">Role Assignment</TabsTrigger>
-          <TabsTrigger value="unit-heads">Unit Heads</TabsTrigger> */}
+          <TabsTrigger value="roles">Role Assignment</TabsTrigger>
+          {/*<TabsTrigger value="unit-heads">Unit Heads</TabsTrigger> */}
           <TabsTrigger value="subsidiary-company">Subsidiary Company</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="employees">
-          <EmployeeManagement 
-            employees={employees} 
+          <EmployeeManagement
+            employees={employees}
             locations={locations}
-            refreshData={refreshData} 
-            loading={loading.employees} 
+            refreshData={refreshData}
+            loading={loading.employees}
           />
         </TabsContent>
-        
+
         {/* <TabsContent value="locations">
           <LocationManagement locations={locations} refreshData={refreshData} />
-        </TabsContent>
-        
+        </TabsContent> */}
+
         <TabsContent value="roles">
-          <RoleAssignment />
+          <RoleAssignment
+            employees={employees}
+          />
         </TabsContent>
-        
-        <TabsContent value="unit-heads">
+
+        {/* <TabsContent value="unit-heads">
           <UnitHeadsManagement />
         </TabsContent> */}
 
