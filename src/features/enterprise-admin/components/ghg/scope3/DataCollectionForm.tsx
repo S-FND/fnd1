@@ -23,7 +23,7 @@ import { httpClient } from '@/lib/httpClient';
 import { logger } from '@/hooks/logger';
 import { SignedUploadUrl, uploadFilesInParallel } from '@/utils/parallelUploader';
 import { toast } from 'sonner';
-
+import DynamicYearFilter, { getCurrentFinancialYear } from "@/hooks/DynamicYearFilter"; 
 // Extended VerificationStatus to include 'Draft'
 type VerificationStatus = 'Pending' | 'Verified' | 'Rejected' | 'Draft';
 
@@ -59,18 +59,6 @@ const MOCK_TEAM_MEMBERS = [
   { id: '2', name: 'Rajesh Kumar' },
   { id: '3', name: 'Priya Patel' },
 ];
-
-const getCurrentFinancialYear = (): string => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth(); // 0 = Jan
-
-  // Financial year starts in April (month >= 3)
-  const startYear = month >= 3 ? year : year - 1;
-  const endYear = startYear + 1;
-
-  return `${startYear}-${endYear}`;
-};
 
 export const Scope3DataCollectionForm = () => {
   const navigate = useNavigate();
@@ -636,28 +624,17 @@ export const Scope3DataCollectionForm = () => {
                 defaultFrequency={safeTemplate.measurementFrequency}
                 disabled={true}
               />
-              <div className="space-y-2">
-                <Label>Reporting Year</Label>
-                <Select
-                  value={selectedYear}
-                  onValueChange={setSelectedYear}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Financial Year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 5 }, (_, i) => {
-                      const start = new Date().getFullYear() - i;
-                      const fy = `${start}-${start + 1}`;
-                      return (
-                        <SelectItem key={fy} value={fy}>
-                          FY {start}-{(start + 1).toString().slice(-2)}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
+              <div className="space-y-2 flex flex-col items-center">
+                  <Label>Reporting Year</Label>
+                  <div className="space-y-1 flex flex-col items-center">
+                  <DynamicYearFilter
+                    selectedYear={selectedYear}
+                    onYearChange={setSelectedYear}
+                    className="w-[180px]"
+                    showCurrentYearIndicator
+                  />
+                  </div>
+                </div>
             </div>
           </CardContent>
         </Card>

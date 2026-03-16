@@ -2,7 +2,7 @@
 import React from 'react';
 import IRLComplianceTable from './IRLComplianceTable';
 
-const complianceItems = [
+export const complianceItems = [
   {
     key: "registration_shops_act",
     name: "Registration under State Shops & Establishment Act (for head office in India)",
@@ -74,7 +74,7 @@ const complianceItems = [
     name: "Record on investigation of complaints related to sexual harassment (if any)",
   }, {
     key: "posh_annual_returns",
-    name: "POSH Annual Returns for calendar year 2024",
+    name: "POSH Annual Returns for previous filed calendar year",
   }, {
     key: "records_maternity_benefits",
     name: "Records of maternity benefits provided",

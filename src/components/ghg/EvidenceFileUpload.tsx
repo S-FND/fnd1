@@ -167,7 +167,7 @@ export const EvidenceFileUpload: React.FC<EvidenceFileUploadProps> = ({
         <div>
           <input
             type="file"
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.csv"
+            // accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.csv"
             multiple
             onChange={handleFileUpload}
             disabled={uploading}

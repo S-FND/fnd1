@@ -10,7 +10,8 @@ export const fundingStageOptions = [
   'Pre-IPO',
   'Public Listed',
   'Bootstrapped',
-  'Government Funded'
+  'Government Funded',
+  'Not Applicable'
 ];
 
 export const employeeStrengthOptions = [

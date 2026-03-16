@@ -20,6 +20,8 @@ const statusDot = {
   REJECTED: "bg-red-500",
   PENDING: "bg-yellow-500"
 };
+import DynamicYearFilter, { getCurrentFinancialYear } from "@/hooks/DynamicYearFilter"; 
+
 interface MaterialTopic {
   id: string;
   topic: string;
@@ -76,14 +78,6 @@ interface MetricsDataEntryProps {
   finalMetrics: ESGMetricWithTracking[]
 }
 
-const financialYearList = [
-  { value: "2020-2021", label: "2020-2021" },
-  { value: "2021-2022", label: "2021-2022" },
-  { value: "2022-2023", label: "2022-2023" },
-  { value: "2023-2024", label: "2023-2024" },
-  { value: "2024-2025", label: "2024-2025" },
-  { value: "2025-2026", label: "2025-2026" },
-];
 export interface LocationData {
   _id: string; // use string if you serialize from backend
   name: string;
@@ -96,7 +90,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
   const [selectedMetric, setSelectedMetric] = useState<string>('');
   const [entryValue, setEntryValue] = useState<any>('');
   const [entryDate, setEntryDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [selectedFinancialYear, setSelectedFinancialYear] = useState<string>(financialYearList.reverse()[0].value);
+  const [selectedFinancialYear, setSelectedFinancialYear] = useState<string>(getCurrentFinancialYear());
   const [showBulkEntry, setShowBulkEntry] = useState<boolean>(false);
   const [bulkEntries, setBulkEntries] = useState<{ [key: string]: any }>({});
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
@@ -557,23 +551,12 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                   ))}
                 </SelectContent>
               </Select>}
-              <Select value={selectedFinancialYear} onValueChange={setSelectedFinancialYear}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {
-
-                    financialYearList.map((year) => {
-                      // const year = new Date().getFullYear() - i;
-                      return (
-                        <SelectItem key={year.value} value={year.label}>
-                          {year.label}
-                        </SelectItem>
-                      );
-                    })}
-                </SelectContent>
-              </Select>
+              <DynamicYearFilter
+                selectedYear={selectedFinancialYear}
+                onYearChange={setSelectedFinancialYear}
+                className="w-[180px]"
+                showCurrentYearIndicator
+              />
               <Button
                 variant="outline"
                 onClick={() => setShowBulkEntry(!showBulkEntry)}

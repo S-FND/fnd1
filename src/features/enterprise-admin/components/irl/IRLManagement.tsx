@@ -2,7 +2,7 @@
 import React from 'react';
 import IRLComplianceTable from './IRLComplianceTable';
 
-const managementItems = [
+export const managementItems = [
   {
     key: "organization_chart",
     name: "Organization chart",
