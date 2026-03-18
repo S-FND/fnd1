@@ -552,7 +552,7 @@ const RoleAssignment = (
   };
 
   const handleDialogClose = (open: boolean) => {
-    setViewDialogOpen(open)
+    // setViewDialogOpen(open)
     setIsAssignDialogOpen(open);
     if (!open) {
       resetForm();
@@ -1374,7 +1374,7 @@ const RoleAssignment = (
       </AlertDialog>
 
 
-      <Dialog open={viewDialogOpen} onOpenChange={handleDialogClose}>
+      <Dialog open={viewDialogOpen} onOpenChange={()=>setViewDialogOpen(!viewDialogOpen)}>
         {/* <DialogTrigger asChild>
           <Button>
             <UserCheck className="h-4 w-4 mr-2" />
