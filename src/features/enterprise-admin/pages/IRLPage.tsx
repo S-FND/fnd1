@@ -38,6 +38,17 @@ import { facilityItems } from '../components/irl/IRLAdditionalFacility';
 import { governanceItems } from '../components/irl/IRLGovernance';
 
 const companyItems = [
+  { key: "gstNumber", name: "GST Number" },
+  { key: "cinNumber", name: "CIN Number" },
+  { key: "industry", name: "Industry" },
+  { key: "website", name: "Company Website" },
+  { key: "assuranceProviderName", name: "Name of Assurance Provider" },
+  { key: "assuranceType", name: "Type of Assurance Obtained" },
+  { key: "financialYearReporting", name: "Financial Year for which reporting is being done" },
+  { key: "businessActivitiesDescription", name: "Provide description of business activities (accounting for 90% of the turnover)" },
+  { key: "registeredOfficeAddress", name: "Registered Office Address" },
+  { key: "headOfficeAddress", name: "Head Office Address" },
+  
   { key: "legalEntityName", name: "Name of legal entity" },
   { key: "emailId", name: "Email ID" },
   { key: "incorporationDate", name: "Month & Year of Incorporation" },
@@ -48,21 +59,35 @@ const companyItems = [
   { key: "previousTurnover", name: "Turnover - Previous Year (Rs)" },
   { key: "parentCompany", name: "Name of parent company/subsidiaries (if any)" },
   { key: "productsServices", name: "List of products/services" },
-  { key: "foundingTeam", name: "About the founding team" }
+  { key: "foundingTeam", name: "About the founding team (Name, educational details, previous work experience)" },
+  
+  { key: "totalBeneficiaries", name: "Total Beneficiaries/Customer Base" },
+  { key: "litigationDetails", name: "Provide details of litigation or financial penalties against Company/Board of Directors/Founders or KMPs, if any?" },
+  { key: "facilitiesCompliance", name: "Compliances related to facility management (e-waste, waste management, water management, batteries, fire infra, occupancy certificate, fire NOC)" },
+  { key: "labourCompliances", name: "Labour compliances (on-roll, on-contract)" },
+  { key: "fireTraining", name: "Fire training" },
+  { key: "hrPoliciesTraining", name: "Training on HR policies" },
+  { key: "mockDrills", name: "Mock drills" },
+  { key: "employeeWellbeingHealthInsurance", name: "Health insurance - % of employees covered" },
+  { key: "employeeWellbeingAccidentInsurance", name: "Accident insurance - % of employees covered" },
+  { key: "employeeWellbeingMaternityBenefits", name: "Maternity benefits - % of employees covered" },
+  { key: "employeeWellbeingPaternityBenefits", name: "Paternity Benefits - % of employees covered" },
+  { key: "employeeWellbeingDayCare", name: "Day Care facilities - % of employees covered" },
+  { key: "employeeWellbeingLifeInsurance", name: "Life Insurance - % of employees covered" }
 ];
 
 const hrItems = [
   { key: "working_hours", name: "Working hours for FTEs" },
-  { key: "shift_timing", name: "Shift timing for contract workers" },
-  { key: "outsourced_services", name: "Outsourced Services" },
-  { key: "facilities_list", name: "List of major facilities" },
-  { key: "product_safety", name: "Product safety certifications" },
-  { key: "emergency_incidents", name: "Emergency incidents" },
+  { key: "shift_timing", name: "Shift timing for contract workers (if any)" },
+  { key: "outsourced_services", name: "Any outsourced services through professional services agencies?" },
+  { key: "facilities_list", name: "List of major facilities/Units/Departments (Manufacturing, Laboratory, Cafeteria) provided by property owner in the office space (With number of each facility)" },
+  { key: "product_safety", name: "Certifications (if any) for product safety" },
+  { key: "emergency_incidents", name: "Have the employees (on-roll, contract) been involved in any emergency incidents or accidents occurred in the workplace or during work related activities?" },
   { key: "employees_table", name: "Human Resource Management - Employees" },
   { key: "workers_table", name: "Human Resource Management - Workers" },
   { key: "differently_abled", name: "Human Resource Management - Differently Abled Personnel" },
   { key: "board_managerial", name: "Key Managerial Positions / Board of Directors" },
-  { key: "retrenchment_details", name: "Retrenchment details" }
+  { key: "retrenchment_details", name: "Any retrenchment or mass dismissal of employees conducted?" }
 ];
 
 const photographsItems = [
