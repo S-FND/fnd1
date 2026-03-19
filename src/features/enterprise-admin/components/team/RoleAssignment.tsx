@@ -252,8 +252,9 @@ const ScopeExplanation = ({ scope, moduleName }: { scope: AccessScope; moduleNam
 // ];
 
 const RoleAssignment = (
-  { employees }: {
+  { employees,refreshData }: {
     employees: Employee[];
+    refreshData: () => void;
   }
 ) => {
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
@@ -418,6 +419,8 @@ const RoleAssignment = (
       if (assignmentResponse.status == 201 && assignmentResponse.data['status']) {
 
         getRoleAssignments();
+        handleDialogClose(false);
+        refreshData();
         toast.success('Role assignment successfully done.')
         return;
       }
@@ -585,7 +588,7 @@ const RoleAssignment = (
     // All valid - proceed
     submitData();
 
-    handleDialogClose(false);
+    // handleDialogClose(false);
   };
 
   const getStatusIcon = (status: string) => {
