@@ -144,6 +144,7 @@ const TeamManagementDashboard = () => {
         <TabsContent value="roles">
           <RoleAssignment
             employees={employees}
+            refreshData={refreshData}
           />
         </TabsContent>
 
