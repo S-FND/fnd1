@@ -108,7 +108,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
       if (userRole == 'employee' && selectedLocation) {
         subQuery += `&locationId=${selectedLocation}`
       }
-      // let metricDataResponse = await httpClient.get(`materiality/metrics/data-entry${subQuery}`);4
+      // let metricDataResponse = await httpClient.get(`materiality/metrics/data-entry${subQuery}`);
       let metricDataResponse = await httpClient.get(`materiality/metrics/data-entry/V1${subQuery}`);
       if (metricDataResponse['data']['status']) {
         // const metricsEntries = metricDataResponse['data']['data']['metricsEntries'];
@@ -481,11 +481,15 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
 
 
   useEffect(() => {
+
     if (selectedPeriod && selectedMetric && selectedFinancialYear && dataEntries) {
       let checkExistingValue = dataEntries.filter((entry) => entry.financialYear == selectedFinancialYear && entry.period == selectedPeriod && entry.metricId == JSON.parse(selectedMetric).code && entry.metricName == JSON.parse(selectedMetric).name);
-      // console.log(`selectedMetric == checkExistingValue => `, checkExistingValue)
+      console.log(`selectedMetric == checkExistingValue => `, checkExistingValue)
       if (checkExistingValue && checkExistingValue.length > 0 && checkExistingValue[0]['value']) {
         setEntryValue(checkExistingValue[0]['value'])
+      }
+      else{
+        setEntryValue(null)
       }
     }
 
@@ -847,13 +851,24 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                           ],
                         }
                         newEntries.push(entry);
-                        newEntriesTemp.push(metricsEntry)
+                        const existingIndex = newEntriesTemp.findIndex(
+                          (newM) =>
+                            newM.metricId === metricsEntry.metricId &&
+                            newM.topicId === metricsEntry.topicId &&
+                            newM.metricName === metricsEntry.metricName
+                        );
+                        
+                        if (existingIndex !== -1) {
+                          newEntriesTemp[existingIndex]['periods'] = [...newEntriesTemp[existingIndex]['periods'],metricsEntry.periods[0]];
+                        } else {
+                          newEntriesTemp.push(metricsEntry);
+                        }
                       });
 
 
                     if (newEntries.length > 0) {
                       // let dataMultiEntryResponse = await httpClient.post('materiality/metrics/data-entry', newEntries)
-                      let dataMultiEntryResponse = await httpClient.post('materiality/metrics/data-entry/V1', newEntries)
+                      let dataMultiEntryResponse = await httpClient.post('materiality/metrics/data-entry/V1', newEntriesTemp)
                       // console.log(`dataMultiEntryResponse`, dataMultiEntryResponse)
                       if (dataMultiEntryResponse['data']['status']) {
                         toast.success('Data entry submitted successfully');
