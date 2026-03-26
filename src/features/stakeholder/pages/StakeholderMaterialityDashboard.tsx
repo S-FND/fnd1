@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { MaterialTopic } from '../../enterprise-admin/data/frameworkTopics';
+import { httpClient } from '@/lib/httpClient';
 
 interface StakeholderPrioritization {
   topicId: string;
@@ -23,7 +24,27 @@ interface StakeholderMaterialityDashboardProps {
   onSubmitPrioritizations?: (prioritizations: StakeholderPrioritization[]) => void;
   existingPrioritizations?: StakeholderPrioritization[];
   hasSubmitted?: boolean;
+  stakeholderId?: string;
+  companyId?: string;
 }
+
+interface FandoroUser {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+  entityId: string | null;
+  entityType: number;
+  companyId?: string;
+  hasSubmitted?: boolean;
+  assessmentSubmittedAt?: string;
+  team_member_id?: string;
+  isParent?: boolean;
+  emailVerified?: boolean;
+}
+
+const DEFAULT_IMPACT = 5;
+const AUTO_SAVE_DELAY = 1500;
 
 const StakeholderMaterialityDashboard: React.FC<StakeholderMaterialityDashboardProps> = ({
   stakeholderName,
@@ -32,53 +53,328 @@ const StakeholderMaterialityDashboard: React.FC<StakeholderMaterialityDashboardP
   onSavePrioritizations,
   onSubmitPrioritizations,
   existingPrioritizations = [],
-  hasSubmitted = false
+  hasSubmitted = false,
+  stakeholderId: propStakeholderId,
+  companyId: propCompanyId
 }) => {
   const [prioritizations, setPrioritizations] = useState<StakeholderPrioritization[]>([]);
   const [currentTopicIndex, setCurrentTopicIndex] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [user, setUser] = useState<FandoroUser | null>(null);
 
+  // Load user from localStorage
   useEffect(() => {
-    // Initialize prioritizations with existing data or defaults
-    const initialPrioritizations = topics.map(topic => {
-      const existing = existingPrioritizations.find(p => p.topicId === topic.id);
-      return existing || {
-        topicId: topic.id,
-        businessImpact: 5,
-        sustainabilityImpact: 5,
-        comments: ''
-      };
-    });
-    setPrioritizations(initialPrioritizations);
-  }, [topics, existingPrioritizations]);
-
-  const updatePrioritization = (topicId: string, field: keyof StakeholderPrioritization, value: any) => {
-    setPrioritizations(prev => prev.map(p => 
-      p.topicId === topicId ? { ...p, [field]: value } : p
-    ));
-  };
-
-  const handleSave = () => {
-    onSavePrioritizations(prioritizations);
-  };
-
-  const handleSubmit = () => {
-    if (onSubmitPrioritizations) {
-      onSubmitPrioritizations(prioritizations);
+    try {
+      const userStr = localStorage.getItem('fandoro-user');
+      console.log('fandoro-user:', userStr);
+      if (userStr) {
+        const userData: FandoroUser = JSON.parse(userStr);
+        setUser(userData);
+      } else {
+        console.warn('No fandoro-user found in localStorage');
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
     }
+  }, []);
+
+  // Get effective stakeholderId and companyId
+  const effectiveStakeholderId = useMemo(() => {
+    return propStakeholderId || user?._id;
+  }, [propStakeholderId, user]);
+
+  const effectiveCompanyId = useMemo(() => {
+    if (propCompanyId) return propCompanyId;
+    if (user?.companyId) return user.companyId;
+    if ((user as any)?.companyEntityId) return (user as any).companyEntityId;
+    if (user?.entityId) return user.entityId;
+    return null;
+  }, [propCompanyId, user]);
+
+  // Debug log
+  useEffect(() => {
+    console.log('=== Debug IDs ===');
+    console.log('propStakeholderId:', propStakeholderId);
+    console.log('propCompanyId:', propCompanyId);
+    console.log('user?._id:', user?._id);
+    console.log('effectiveStakeholderId:', effectiveStakeholderId);
+    console.log('effectiveCompanyId:', effectiveCompanyId);
+  }, [propStakeholderId, propCompanyId, user, effectiveStakeholderId, effectiveCompanyId]);
+
+  const getStorageKey = useCallback(() => {
+    const userId = effectiveStakeholderId;
+    const compId = effectiveCompanyId;
+    return `materiality_${userId}_${compId}_${groupName.replace(/\s/g, '_')}`;
+  }, [effectiveStakeholderId, effectiveCompanyId, groupName]);
+
+  // Load data from API - Updated to new endpoint
+  const loadFromAPI = useCallback(async () => {
+    if (!effectiveStakeholderId || !groupName) {
+      console.warn('Missing params');
+      return null;
+    }
+  
+    try {
+      const url = `stakeholders-materiality/assessment?stakeholderId=${effectiveStakeholderId}&groupName=${encodeURIComponent(groupName)}`;
+      console.log('Loading from API:', url);
+      const response: any = await httpClient.get(url);
+      return response?.data || response;
+    } catch (error) {
+      console.error('API load error:', error);
+      return null;
+    }
+  }, [effectiveStakeholderId, groupName]);
+
+  // Save to API - Updated to new endpoint
+  const saveToAPI = useCallback(async (responses: StakeholderPrioritization[], action: 'save' | 'submit') => {
+    if (!effectiveStakeholderId || !groupName) {
+      console.warn('No stakeholderId or groupName available for API save');
+      return false;
+    }
+
+    try {
+      const payload = {
+        stakeholderId: effectiveStakeholderId,
+        stakeholderName: user?.name || stakeholderName,
+        stakeholderEmail: user?.email,
+        groupName: groupName,
+        responses: responses.map(r => ({
+          topicId: r.topicId,
+          topicName: topics.find(t => t.id === r.topicId)?.name || '',
+          businessImpact: r.businessImpact,
+          sustainabilityImpact: r.sustainabilityImpact,
+          comments: r.comments || '',
+          confidence: 0.8,
+          lastUpdated: new Date()
+        })),
+        action: action,
+        metadata: {
+          assessmentVersion: '1.0',
+          completionTime: Date.now(),
+          deviceInfo: navigator.userAgent
+        }
+      };
+
+      console.log('Saving to API:', payload);
+      const response: any = await httpClient.post('stakeholders-materiality/assessment', payload);
+
+      if (response.data?.success === true || response.status === 201 || response.status === 200) {
+        setLastSaved(new Date());
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('API save error:', error);
+      return false;
+    }
+  }, [effectiveStakeholderId, stakeholderName, user, groupName, topics]);
+
+  // Load saved data
+  useEffect(() => {
+    const loadData = async () => {
+      if (!effectiveStakeholderId) return;
+  
+      setIsLoading(true);
+  
+      try {
+        const apiData = await loadFromAPI();
+  
+        if (apiData?.responses && apiData.responses.length > 0) {
+          setPrioritizations(apiData.responses);
+        } else {
+          // Initialize fresh
+          setPrioritizations(
+            topics.map((t) => ({
+              topicId: t.id,
+              businessImpact: DEFAULT_IMPACT,
+              sustainabilityImpact: DEFAULT_IMPACT,
+              comments: ''
+            }))
+          );
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    if (topics.length > 0) {
+      loadData();
+    }
+  }, [effectiveStakeholderId, topics, loadFromAPI]);
+
+  // Initialize prioritizations
+  useEffect(() => {
+    if (!isLoading && !hasSubmitted && prioritizations.length === 0 && topics.length > 0) {
+      if (existingPrioritizations.length > 0) {
+        setPrioritizations(existingPrioritizations);
+      } else {
+        const initialPrioritizations = topics.map(topic => {
+          const existing = existingPrioritizations.find(p => p.topicId === topic.id);
+          return existing || {
+            topicId: topic.id,
+            businessImpact: DEFAULT_IMPACT,
+            sustainabilityImpact: DEFAULT_IMPACT,
+            comments: ''
+          };
+        });
+        setPrioritizations(initialPrioritizations);
+      }
+    }
+  }, [topics, existingPrioritizations, hasSubmitted, isLoading, prioritizations.length]);
+
+  // Auto-save
+  useEffect(() => {
+    if (hasSubmitted || prioritizations.length === 0 || isLoading) return;
+    
+    const hasChanges = prioritizations.some(p => 
+      p.businessImpact !== DEFAULT_IMPACT || 
+      p.sustainabilityImpact !== DEFAULT_IMPACT || 
+      p.comments
+    );
+    
+    if (!hasChanges) return;
+    
+    const timer = setTimeout(async () => {
+      const storageKey = getStorageKey();
+      localStorage.setItem(storageKey, JSON.stringify({
+        prioritizations,
+        timestamp: new Date().toISOString(),
+        stakeholderName,
+        groupName,
+        version: '1.0'
+      }));
+      
+      if (effectiveStakeholderId && groupName) {
+        await saveToAPI(prioritizations, 'save');
+      }
+    }, AUTO_SAVE_DELAY);
+    
+    return () => clearTimeout(timer);
+  }, [prioritizations, saveToAPI, getStorageKey, stakeholderName, groupName, hasSubmitted, effectiveStakeholderId, isLoading]);
+
+  const updatePrioritization = useCallback((topicId: string, field: keyof StakeholderPrioritization, value: any) => {
+    setPrioritizations(prev => {
+      const updated = prev.map(p => 
+        p.topicId === topicId ? { ...p, [field]: value } : p
+      );
+      return updated;
+    });
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    if (isSaving) return;
+    
+    setIsSaving(true);
+    try {
+      const hasAnyProgress = prioritizations.some(p => 
+        p.businessImpact !== DEFAULT_IMPACT || 
+        p.sustainabilityImpact !== DEFAULT_IMPACT || 
+        p.comments
+      );
+      
+      if (!hasAnyProgress) {
+        toast.info('No changes to save');
+        return;
+      }
+      
+      const storageKey = getStorageKey();
+      localStorage.setItem(storageKey, JSON.stringify({
+        prioritizations,
+        timestamp: new Date().toISOString(),
+        stakeholderName,
+        groupName,
+        version: '1.0'
+      }));
+      
+      if (effectiveStakeholderId && groupName) {
+        const result = await saveToAPI(prioritizations, 'save');
+        if (result) {
+          toast.success('Synced to server');
+        }
+      }
+      
+      onSavePrioritizations(prioritizations);
+      
+      const completedCount = prioritizations.filter(p => 
+        p.businessImpact !== DEFAULT_IMPACT || 
+        p.sustainabilityImpact !== DEFAULT_IMPACT || 
+        p.comments
+      ).length;
+      
+      toast.success('Draft saved successfully!', {
+        description: `${completedCount} of ${topics.length} topics completed`,
+      });
+    } catch (error) {
+      console.error('Save error:', error);
+      toast.error('Failed to save draft');
+    } finally {
+      setIsSaving(false);
+    }
+  }, [prioritizations, onSavePrioritizations, saveToAPI, getStorageKey, stakeholderName, groupName, isSaving, topics.length, effectiveStakeholderId]);
+
+  const handleSubmit = async () => {
+    if (!effectiveStakeholderId || !groupName) {
+      toast.error('Missing stakeholder information');
+      return;
+    }
+  
+    setIsSubmitting(true);
+    const success = await saveToAPI(prioritizations, "submit");
+    if (success) {
+      toast.success("Assessment submitted successfully!");
+      if (onSubmitPrioritizations) {
+        onSubmitPrioritizations(prioritizations);
+      }
+    } else {
+      toast.error("Submit failed");
+    }
+  
+    setIsSubmitting(false);
   };
 
-  const currentTopic = topics[currentTopicIndex];
+  const currentTopic: any = topics[currentTopicIndex];
   const currentPrioritization = prioritizations.find(p => p.topicId === currentTopic?.id);
 
-  if (!currentTopic || !currentPrioritization) {
-    return <div>Loading...</div>;
+  const completedCount = useMemo(() => 
+    prioritizations.filter(p => 
+      p.businessImpact !== DEFAULT_IMPACT || 
+      p.sustainabilityImpact !== DEFAULT_IMPACT || 
+      p.comments
+    ).length,
+    [prioritizations]
+  );
+
+  const allCompleted = useMemo(() => completedCount === topics.length, [completedCount, topics.length]);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-muted-foreground">Loading assessment...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
-  const completedCount = prioritizations.filter(p => 
-    p.businessImpact !== 5 || p.sustainabilityImpact !== 5 || p.comments
-  ).length;
-
-  const allCompleted = completedCount === topics.length;
+  if (!currentTopic || !currentPrioritization) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <p className="text-muted-foreground">No topics available</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (hasSubmitted) {
     return (
@@ -122,17 +418,7 @@ const StakeholderMaterialityDashboard: React.FC<StakeholderMaterialityDashboardP
             <h3 className="text-lg font-semibold">{currentTopic.name}</h3>
             <p className="text-sm text-muted-foreground">{currentTopic.description}</p>
             <div className="flex gap-2">
-              <Badge 
-                variant="outline" 
-                style={{ 
-                  backgroundColor: `${currentTopic.category === 'Environment' ? '#22c55e' : 
-                                     currentTopic.category === 'Social' ? '#60a5fa' : '#f59e0b'}20`,
-                  color: currentTopic.category === 'Environment' ? '#22c55e' : 
-                         currentTopic.category === 'Social' ? '#60a5fa' : '#f59e0b',
-                  borderColor: currentTopic.category === 'Environment' ? '#22c55e' : 
-                               currentTopic.category === 'Social' ? '#60a5fa' : '#f59e0b'
-                }}
-              >
+              <Badge variant="outline">
                 {currentTopic.category}
               </Badge>
               <Badge variant="secondary">{currentTopic.framework}</Badge>
@@ -200,6 +486,12 @@ const StakeholderMaterialityDashboard: React.FC<StakeholderMaterialityDashboardP
             />
           </div>
 
+          {lastSaved && (
+            <div className="text-xs text-green-600 text-right">
+              Last saved: {lastSaved.toLocaleTimeString()}
+            </div>
+          )}
+
           <div className="flex justify-between">
             <Button
               variant="outline"
@@ -210,8 +502,12 @@ const StakeholderMaterialityDashboard: React.FC<StakeholderMaterialityDashboardP
             </Button>
             
             <div className="space-x-2">
-              <Button variant="outline" onClick={handleSave}>
-                Save Draft
+              <Button 
+                variant="outline" 
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? 'Saving...' : 'Save Draft'}
               </Button>
               
               {currentTopicIndex < topics.length - 1 ? (
@@ -223,8 +519,8 @@ const StakeholderMaterialityDashboard: React.FC<StakeholderMaterialityDashboardP
               ) : (
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button className="bg-green-600 hover:bg-green-700" disabled={!allCompleted}>
-                      {allCompleted ? 'Submit Assessment' : `Complete ${topics.length - completedCount} More`}
+                    <Button className="bg-green-600 hover:bg-green-700" disabled={!allCompleted || isSubmitting}>
+                      {isSubmitting ? 'Submitting...' : (allCompleted ? 'Submit Assessment' : `Complete ${topics.length - completedCount} More`)}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
@@ -257,8 +553,8 @@ const StakeholderMaterialityDashboard: React.FC<StakeholderMaterialityDashboardP
             {topics.map((topic, index) => {
               const prioritization = prioritizations.find(p => p.topicId === topic.id);
               const isCompleted = prioritization && (
-                prioritization.businessImpact !== 5 || 
-                prioritization.sustainabilityImpact !== 5 || 
+                prioritization.businessImpact !== DEFAULT_IMPACT || 
+                prioritization.sustainabilityImpact !== DEFAULT_IMPACT || 
                 prioritization.comments
               );
               
@@ -268,9 +564,12 @@ const StakeholderMaterialityDashboard: React.FC<StakeholderMaterialityDashboardP
                   variant={index === currentTopicIndex ? "default" : isCompleted ? "secondary" : "outline"}
                   size="sm"
                   onClick={() => setCurrentTopicIndex(index)}
-                  className="text-xs"
+                  className="text-xs relative"
                 >
                   {index + 1}
+                  {isCompleted && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full" />
+                  )}
                 </Button>
               );
             })}

@@ -183,6 +183,12 @@ const ManageStakeholders: React.FC = () => {
     try {
       setIsSubmitting(true);
       console.log('Submitting stakeholder data:', data);
+      const entityId = JSON.parse(localStorage.getItem('fandoro-user') || '{}').entityId;
+      if (!entityId) {
+        console.log('EntityId is missing login agian.');
+        setIsSubmitting(false);
+        return;
+      }
       
       const formattedData = {
         name: data.name,
@@ -193,8 +199,8 @@ const ManageStakeholders: React.FC = () => {
         notes: data.notes || '',
         engagementLevel: data.engagementLevel,
         influence: data.influence,
-        interest: data.interest
-        // No _id for create
+        interest: data.interest,
+        entityId
       };
 
       const response = await httpClient.post<ApiResponse<any>>(

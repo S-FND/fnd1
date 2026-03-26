@@ -123,6 +123,7 @@ export const useAuthProvider = () => {
         break;
       case "StakeHolder":
         navigate("/stakeholders/dashboard")
+        break;
       default:
         navigate(from || "/settings");
     }
