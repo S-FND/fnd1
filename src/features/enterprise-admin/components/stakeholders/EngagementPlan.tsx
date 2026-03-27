@@ -92,7 +92,7 @@ const EngagementPlan: React.FC = () => {
     } catch (error) {
       console.error('Error fetching stakeholders:', error);
       // Transform sample data as well
-      const transformedSample = sampleStakeholders.map(item => ({
+      const transformedSample: any = sampleStakeholders.map(item => ({
         ...item,
         _id: item.id,
         id: item.id,
@@ -104,26 +104,46 @@ const EngagementPlan: React.FC = () => {
   const fetchActivities = async () => {
     try {
       setIsLoading(true);
-      const response = await httpClient.get<ApiResponse<ApiEngagementActivity[]>>('stakeholder-engagement-group');
-      
+  
+      const response = await httpClient.get<ApiResponse<ApiEngagementActivity[]>>(
+        'stakeholder-engagement-group/activities'
+      );
+  
       if (response.data?.status && response.data?.data) {
-        const transformedActivities: EngagementActivity[] = response.data.data.map(item => ({
-          id: item._id,
-          title: item.title,
-          type: item.type as any,
-          purpose: item.purpose as any,
-          description: item.description,
-          targetStakeholders: item.targetStakeholders,
-          topics: item.topics || [],
-          scheduledDate: item.scheduledDate ? new Date(item.scheduledDate) : undefined,
-          frequency: item.frequency as any,
-          location: item.location,
-          meetingLink: item.meetingLink,
-          duration: item.duration,
-          status: item.status as any,
-          createdBy: item.createdBy,
-          createdAt: new Date(item.createdAt)
-        }));
+        const transformedActivities: EngagementActivity[] =
+          response.data.data.map((item) => {
+            // ✅ handle both populated and non-populated
+            const stakeholderIds = (item.targetStakeholders || []).map((s: any) =>
+              typeof s === 'string' ? s : s?._id
+            );
+  
+            return {
+              id: item._id,
+              title: item.title,
+              type: item.type as any,
+              purpose: item.purpose as any,
+              description: item.description,
+  
+              targetStakeholders: stakeholderIds,
+              targetStakeholderDetails:
+                typeof item.targetStakeholders?.[0] === 'object'
+                  ? item.targetStakeholders
+                  : [],
+  
+              topics: item.topics || [],
+              scheduledDate: item.scheduledDate
+                ? new Date(item.scheduledDate)
+                : undefined,
+              frequency: item.frequency as any,
+              location: item.location,
+              meetingLink: item.meetingLink,
+              duration: item.duration,
+              status: item.status as any,
+              createdBy: item.createdBy,
+              createdAt: new Date(item.createdAt),
+            };
+          });
+  
         setActivities(transformedActivities);
       }
     } catch (error) {
@@ -248,6 +268,23 @@ const EngagementPlan: React.FC = () => {
   if (showPriorityView) {
     return <PriorityStakeholdersView onBack={() => setShowPriorityView(false)} />;
   }
+
+  // 🔥 Priority Matrix Logic
+const manageClosely = stakeholders.filter(
+  (s) => s.influence === 'high' && s.interest === 'high'
+);
+
+const keepSatisfied = stakeholders.filter(
+  (s) => s.influence === 'high' && s.interest !== 'high'
+);
+
+const keepInformed = stakeholders.filter(
+  (s) => s.influence !== 'high' && s.interest === 'high'
+);
+
+const monitor = stakeholders.filter(
+  (s) => s.influence !== 'high' && s.interest !== 'high'
+);
   
   return (
     <div className="space-y-6">
@@ -283,7 +320,7 @@ const EngagementPlan: React.FC = () => {
                       <div className="text-sm text-muted-foreground flex items-center gap-4">
                         <span className="flex items-center gap-1">
                           <Users className="h-3 w-3" />
-                          {activity.targetStakeholders.length} stakeholder(s)
+                          {activity.targetStakeholders?.length || 0} stakeholder(s)
                         </span>
                         {activity.scheduledDate && (
                           <span className="flex items-center gap-1">
@@ -333,27 +370,68 @@ const EngagementPlan: React.FC = () => {
             <CardDescription>Organize stakeholders by influence and interest</CardDescription>
           </CardHeader>
           <CardContent className="h-80 relative">
-            <div className="absolute inset-0 p-6">
-              <div className="grid grid-cols-2 grid-rows-2 h-full border">
-                <div className="border-r border-b p-2 bg-amber-50">
-                  <div className="mb-2 font-semibold">Keep Satisfied</div>
-                  <div className="text-xs">(High influence, Low interest)</div>
-                </div>
-                <div className="border-b p-2 bg-green-50">
-                  <div className="mb-2 font-semibold">Manage Closely</div>
-                  <div className="text-xs">(High influence, High interest)</div>
-                </div>
-                <div className="border-r p-2">
-                  <div className="mb-2 font-semibold">Monitor</div>
-                  <div className="text-xs">(Low influence, Low interest)</div>
-                </div>
-                <div className="p-2 bg-blue-50">
-                  <div className="mb-2 font-semibold">Keep Informed</div>
-                  <div className="text-xs">(Low influence, High interest)</div>
-                </div>
-              </div>
+  <div className="absolute inset-0 p-4">
+    <div className="grid grid-cols-2 grid-rows-2 h-full border text-xs">
+
+      {/* Keep Satisfied */}
+      <div className="border-r border-b p-2 bg-amber-50 overflow-auto">
+        <div className="font-semibold mb-1">Keep Satisfied</div>
+        {keepSatisfied.length === 0 ? (
+          <p className="text-muted-foreground">No stakeholders</p>
+        ) : (
+          keepSatisfied.map(s => (
+            <div key={s.id} className="truncate">
+              • {s.name}
             </div>
-          </CardContent>
+          ))
+        )}
+      </div>
+
+      {/* Manage Closely */}
+      <div className="border-b p-2 bg-green-50 overflow-auto">
+        <div className="font-semibold mb-1">Manage Closely</div>
+        {manageClosely.length === 0 ? (
+          <p className="text-muted-foreground">No stakeholders</p>
+        ) : (
+          manageClosely.map(s => (
+            <div key={s.id} className="truncate font-medium">
+              • {s.name}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Monitor */}
+      <div className="border-r p-2 overflow-auto">
+        <div className="font-semibold mb-1">Monitor</div>
+        {monitor.length === 0 ? (
+          <p className="text-muted-foreground">No stakeholders</p>
+        ) : (
+          monitor.map(s => (
+            <div key={s.id} className="truncate">
+              • {s.name}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Keep Informed */}
+      <div className="p-2 bg-blue-50 overflow-auto">
+        <div className="font-semibold mb-1">Keep Informed</div>
+        {keepInformed.length === 0 ? (
+          <p className="text-muted-foreground">No stakeholders</p>
+        ) : (
+          keepInformed.map(s => (
+            <div key={s.id} className="truncate">
+              • {s.name}
+            </div>
+          ))
+        )}
+      </div>
+
+    </div>
+  </div>
+</CardContent>
           <CardFooter className="text-sm text-muted-foreground">
             Based on power/interest grid analysis
           </CardFooter>
