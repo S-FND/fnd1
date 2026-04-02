@@ -129,6 +129,12 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
     open: false,
     employee: null,
   });
+  const [confirmText, setConfirmText] = useState("");
+  
+  const handleOpenDelete = (employee) => {
+    setDeleteDialog({ open: true, employee });
+    setConfirmText(""); // reset input
+  };
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -476,7 +482,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
     try {
       const response: any = await deleteEmployee(deleteDialog.employee._id);
 
-console.log('response',response[0]?.data?.state);
+
       if (response[0]?.status === true) {
         toast.success('Employee deleted successfully');
         await refreshData();
@@ -837,6 +843,69 @@ console.log('response',response[0]?.data?.state);
         </DialogContent>
       </Dialog>
 
+      <Dialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteDialog({ open: false, employee: null });
+            setConfirmText("");
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <h2 className="text-lg font-semibold text-red-600">
+              Delete Employee
+            </h2>
+          </DialogHeader>
+
+          {/* Confirmation Message */}
+          <div className="py-3 text-sm text-gray-600">
+            <p className="mb-2">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-gray-800">
+                {deleteDialog.employee?.name}
+              </span>
+              ?
+            </p>
+            <p className="text-xs text-gray-500">
+              This action cannot be undone. All associated data, including access permissions,
+              records, and configurations will be permanently removed.
+            </p>
+          </div>
+
+          {/* Input */}
+          <div className="mt-3">
+            <input
+              type="text"
+              placeholder='Type "DELETE" to confirm'
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialog({ open: false, employee: null });
+                setConfirmText("");
+              }}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              variant="destructive"
+              disabled={confirmText !== "DELETE"}
+              onClick={confirmDelete}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Add Employee Dialog (Placeholder) */}
       <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
@@ -907,7 +976,7 @@ console.log('response',response[0]?.data?.state);
     </Card>
 
     {/* Delete Confirmation Dialog */}
-<AlertDialog 
+{/* <AlertDialog 
   open={deleteDialog.open} 
   onOpenChange={(open) => !open && setDeleteDialog({ open: false, employee: null })}
 >
@@ -930,7 +999,7 @@ console.log('response',response[0]?.data?.state);
       </AlertDialogAction>
     </AlertDialogFooter>
   </AlertDialogContent>
-</AlertDialog>
+</AlertDialog> */}
 
 </>
   );
