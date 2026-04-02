@@ -23,6 +23,7 @@ import { logger } from '@/hooks/logger';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { httpClient } from '@/lib/httpClient';
 
 // import { UserPlus, Search, Filter, Edit, Users, Eye } from 'lucide-react';
 
@@ -108,8 +109,12 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [locationNameMap, setLocationNameMap] = useState<Map<string, string>>(new Map());
   const [isAssignmentDialogOpen, setIsAssignmentDialogOpen] = useState(false);
-  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
-  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
+  const { isLoading } = useRouteProtection(['admin', 'manager', 'employee']);
+  const { user, isAuthenticated, isAuthenticatedStatus } = useAuth();
+  const [confirmText,setConfirmText]=useState(null)
+  const [isDeleteDialogOpen,setIsDeleteDialogOpen]=useState(false);
+  const [employeeName,setEmployeeName]=useState(null);
+  const [idToDelete,setIdToDelete]=useState(null)
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -432,12 +437,12 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
       toast.error("Please fill all fields");
       return;
     }
-  
+
     try {
       const [result, error] = await createEmployee({
         employeeList: [newEmployee]
       });
-  
+
       if (result) {
         toast.success("Employee added successfully!");
         setIsAddDialogOpen(false);
@@ -450,6 +455,18 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
       console.error(err);
     }
   };
+
+  const handleDeleteEmployee=async ()=>{
+    if(!idToDelete){
+      toast.error('User Id not selected for deletion')
+    }
+    let idDeleteResponse=await httpClient.delete(`subuser/${idToDelete}`);
+    if(idDeleteResponse.status){
+      toast.success('User deleted successfully');
+      refreshData();
+      setIsDeleteDialogOpen(false)
+    }
+  }
 
 
   return (
@@ -509,7 +526,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
               <TableHead>Email</TableHead>
               <TableHead>Employee ID</TableHead>
               {/* <TableHead>Role</TableHead> */}
-              <TableHead>Location</TableHead>
+              {/* <TableHead>Location</TableHead> */}
               <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -525,7 +542,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
                     {employee.roles}
                   </Badge>
                 </TableCell> */}
-                <TableCell>{getLocationName(employee.selectedLocation || employee.location)}</TableCell>
+                {/* <TableCell>{getLocationName(employee.selectedLocation || employee.location)}</TableCell> */}
                 <TableCell>
                   <Badge variant={employee.active ? 'default' : 'destructive'}>
                     {employee.active ? 'Active' : 'Inactive'}
@@ -557,13 +574,17 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
                       <Users className="h-3 w-3 mr-1" />
                       Assign
                     </Button> */}
-                    {/* <Button
+                    <Button
                       size="sm"
                       variant={employee.active ? "destructive" : "default"}
-                      onClick={() => handleActivateEmployee(employee, !employee.active)}
+                      onClick={() => {
+                        setIsDeleteDialogOpen(true);
+                        setEmployeeName(employee.name);
+                        setIdToDelete(employee._id)
+                       }}
                     >
-                      {employee.active ? 'Deactivate' : 'Activate'}
-                    </Button> */}
+                      Delete
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -789,73 +810,126 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <h2 className="text-lg font-semibold text-red-600">
+              Delete Employee
+            </h2>
+          </DialogHeader>
+
+          {/* Confirmation Message */}
+          <div className="py-3 text-sm text-gray-600">
+            <p className="mb-2">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-gray-800">
+                {employeeName}
+              </span>
+              ?
+            </p>
+            <p className="text-xs text-gray-500">
+              This action cannot be undone. All associated data, including access permissions,
+              records, and configurations will be permanently removed.
+            </p>
+          </div>
+
+          {/* Optional Safety Input */}
+          <div className="mt-3">
+            <input
+              type="text"
+              placeholder='Type "DELETE" to confirm'
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              variant="destructive"
+              disabled={confirmText !== "DELETE"}
+              onClick={handleDeleteEmployee}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Add Employee Dialog (Placeholder) */}
       <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
-          setIsAddDialogOpen(open);
-          if (!open) {
-            // Reset form when closing
-            setNewEmployee({ name: '', email: '', employeeId: '' });
-          }
-        }}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add New Employee</DialogTitle>
-            </DialogHeader>
+        setIsAddDialogOpen(open);
+        if (!open) {
+          // Reset form when closing
+          setNewEmployee({ name: '', email: '', employeeId: '' });
+        }
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Employee</DialogTitle>
+          </DialogHeader>
 
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              handleAddEmployee(); // Your submit function
-            }}>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="add-name">Full Name</Label>
-                  <Input
-                    id="add-name"
-                    placeholder="Enter full name"
-                    value={newEmployee.name}
-                    onChange={(e) => setNewEmployee(prev => ({ ...prev, name: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="add-email">Email</Label>
-                  <Input
-                    id="add-email"
-                    type="email"
-                    placeholder="Enter email address"
-                    value={newEmployee.email}
-                    onChange={(e) => setNewEmployee(prev => ({ ...prev, email: e.target.value.toLowerCase() }))}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="add-employeeId">Employee ID</Label>
-                  <Input
-                    id="add-employeeId"
-                    placeholder="Enter employee ID"
-                    value={newEmployee.employeeId}
-                    onChange={(e) => setNewEmployee(prev => ({ ...prev, employeeId: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setIsAddDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" className="flex-1">
-                    Add Employee
-                  </Button>
-                </div>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            handleAddEmployee(); // Your submit function
+          }}>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="add-name">Full Name</Label>
+                <Input
+                  id="add-name"
+                  placeholder="Enter full name"
+                  value={newEmployee.name}
+                  onChange={(e) => setNewEmployee(prev => ({ ...prev, name: e.target.value }))}
+                  required
+                />
               </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+              <div>
+                <Label htmlFor="add-email">Email</Label>
+                <Input
+                  id="add-email"
+                  type="email"
+                  placeholder="Enter email address"
+                  value={newEmployee.email}
+                  onChange={(e) => setNewEmployee(prev => ({ ...prev, email: e.target.value.toLowerCase() }))}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="add-employeeId">Employee ID</Label>
+                <Input
+                  id="add-employeeId"
+                  placeholder="Enter employee ID"
+                  value={newEmployee.employeeId}
+                  onChange={(e) => setNewEmployee(prev => ({ ...prev, employeeId: e.target.value }))}
+                  required
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setIsAddDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" className="flex-1">
+                  Add Employee
+                </Button>
+              </div>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

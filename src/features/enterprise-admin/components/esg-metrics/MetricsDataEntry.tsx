@@ -200,6 +200,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
       topicId: metric.topic,
       dataType: metric.dataType,
       esg: metric.esg,
+      industry: metric.industry ? metric.industry : '',
       periods: [
         {
           period: selectedPeriod,
@@ -841,6 +842,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                           topicId: metric.topic,
                           dataType: metric.dataType,
                           esg: metric.esg,
+                          industry: metric.industry,
                           periods: [
                             {
                               period: period !== 'Single Entry' ? period : undefined,

@@ -26,7 +26,7 @@ export const getCurrentFinancialYear = (): string => {
 };
 
 // Generate default year options (last 5 years)
-export const generateYearOptions = (count: number = 5): string[] => {
+export const generateYearOptions = (count: number = 10): string[] => {
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth(); // 0 = Jan
 

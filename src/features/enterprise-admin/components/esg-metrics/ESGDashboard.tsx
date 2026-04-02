@@ -17,7 +17,7 @@ import GroupedBarChart from './graphTemp1';
 import NestedStackedBarChart from './graphTemp1';
 import { logger } from '@/hooks/logger';
 // import { SmartChart } from '@/components/charts/SmartChart';
-import DynamicYearFilter, { getCurrentFinancialYear } from "@/hooks/DynamicYearFilter"; 
+import DynamicYearFilter, { getCurrentFinancialYear } from "@/hooks/DynamicYearFilter";
 interface MetricDataEntry {
   id: string;
   metricId: string;

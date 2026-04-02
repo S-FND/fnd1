@@ -18,9 +18,9 @@ const CustomDashboardTab = ({ graphData, selectedMetric, selectedPeriod, selecte
         }
     }, [graphData])
 
-    // useEffect(() => {
-    //     console.log("This is metrics in custom dashboard tab", metrics)
-    // }, [metrics])
+    useEffect(() => {
+        console.log("This is metrics in custom dashboard tab", metrics)
+    }, [metrics])
     return (
         <section>
             <p className="mt-2">
