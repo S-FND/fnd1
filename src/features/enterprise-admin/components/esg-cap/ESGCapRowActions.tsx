@@ -168,7 +168,7 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
             />
             {selectedFile ? (
               <div className="flex flex-col items-center gap-2">
-                <CheckCircle2 className="h-10 w-10 text-green-600" />
+                <CheckCircle2 className="h-10 w-10 text-primary" />
                 <p className="text-sm font-medium">{selectedFile.name}</p>
                 <p className="text-xs text-muted-foreground">
                   {(selectedFile.size / 1024).toFixed(1)} KB
