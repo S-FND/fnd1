@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useContext } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
@@ -16,6 +16,7 @@ import { CategoryBadge } from '../components/esg-cap/CategoryBadge';
 import { HighlightDiff } from '@/components/esg-cap/HighlightDiff';
 import { Badge } from '@/components/ui/badge';
 import { ESGCapPriority } from '../types/esgDD';
+import { cn } from '@/lib/utils';
 
 import {
   fetchEsgCap,
@@ -137,6 +138,7 @@ const ComparePlanView = ({
       return dateString;
     }
   };
+  
   const ExpandableText = ({ text, length = 50 }: { text: string; length?: number }) => {
     const [expanded, setExpanded] = useState(false);
 
@@ -193,7 +195,7 @@ const ComparePlanView = ({
 
   const SortableHeader = ({ field, title }: { field: keyof ESGCapItem; title: string }) => (
     <TableHead
-      className="cursor-pointer hover:bg-muted/50"
+      className="cursor-pointer hover:bg-muted/50 whitespace-nowrap"
       onClick={() => requestSort(field)}
     >
       {title}
@@ -209,7 +211,7 @@ const ComparePlanView = ({
 
   return (
     <div className="overflow-x-auto">
-      <Table>
+      <Table className="min-w-[1200px]">
         <TableHeader>
           <TableRow className="bg-gray-100 font-medium">
             <TableHead className="w-[60px] text-center">S. No</TableHead>
@@ -223,7 +225,6 @@ const ComparePlanView = ({
             <TableHead>CP/CS</TableHead>
             <TableHead>Actual Date</TableHead>
             <TableHead>Status</TableHead>
-            {/* <TableHead>Changes</TableHead> */}
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -238,9 +239,14 @@ const ComparePlanView = ({
             return (
               <TableRow
                 key={itemId}
-                className={hasChanges ? "bg-yellow-50" : ""}
+                className={cn(
+                  "hover:bg-gray-50 transition-colors",
+                  hasChanges && "bg-yellow-50"
+                )}
               >
-                <TableCell className="text-center">{index + 1}</TableCell>
+                <TableCell className="text-center font-medium">
+                  {index + 1}
+                </TableCell>
 
                 <TableCell className={changedFields.item ? "border-l-4 border-yellow-500" : ""}>
                   <ExpandableText text={item.item || ""} />
@@ -249,12 +255,11 @@ const ComparePlanView = ({
                 <TableCell>
                   <CategoryBadge
                     category={item.category}
-                  // HighlightDiff={changedFields.category}
                   />
                 </TableCell>
 
                 <TableCell className={`${changedFields.priority ? "border-l-4 border-yellow-500" : ""} px-2 py-1 text-center`}>
-                  <span className={`${getPriorityStyles(item.priority)} px-2 py-1 rounded`}>
+                  <span className={`${getPriorityStyles(item.priority)} px-2 py-1 rounded text-sm whitespace-nowrap`}>
                     {item.priority || ""}
                   </span>
                 </TableCell>
@@ -269,28 +274,23 @@ const ComparePlanView = ({
 
                 <TableCell className={changedFields.deliverable ? "border-l-4 border-yellow-500" : ""}>
                   <ExpandableText text={item.deliverable || ""} />
-
                 </TableCell>
 
                 <TableCell className={changedFields.targetDate ? "border-l-4 border-yellow-500" : ""}>
-                  {formatDate(item.targetDate) || `Invalid Date`}
+                  <span className="whitespace-nowrap">{formatDate(item.targetDate) || `Invalid Date`}</span>
                 </TableCell>
 
                 <TableCell className={changedFields.CS ? "border-l-4 border-yellow-500" : ""}>
-                  {item.CS || ""}
+                  {item.CS || "-"}
                 </TableCell>
 
                 <TableCell className={changedFields.actualDate ? "border-l-4 border-yellow-500" : ""}>
-                  {formatDate(item.actualDate)}
+                  <span className="whitespace-nowrap">{formatDate(item.actualDate) || "-"}</span>
                 </TableCell>
 
-                {/* <TableCell className={changedFields.status ? "border-l-4 border-yellow-500" : ""}>
-                  {item.status}
-                </TableCell> */}
-                <TableCell style={{ padding: "0.3rem" }}>
+                <TableCell>
                   <StatusBadge status={item.status} highlight={changedFields.status} />
                 </TableCell>
-
 
                 <TableCell>
                   {hasChanges ? (
@@ -300,7 +300,7 @@ const ComparePlanView = ({
                           <button
                             key={field}
                             onClick={() => onRevertField(String(itemId), field as keyof ESGCapItem)}
-                            className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-colors"
+                            className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-colors whitespace-nowrap"
                           >
                             {field}
                           </button>
@@ -318,6 +318,7 @@ const ComparePlanView = ({
                       variant="outline"
                       size="sm"
                       onClick={() => onRevertItem(String(itemId))}
+                      className="whitespace-nowrap"
                     >
                       Revert
                     </Button>
@@ -349,8 +350,6 @@ const ESGCapPage = () => {
   const [buttonEnabled, setButtonEnabled] = useState(false);
 
   useEffect(() => {
-    // const hasAccess = checkPageButtonAccess('/esg-dd/cap');
-    // setButtonEnabled(hasAccess);
     const userData = localStorage.getItem('fandoro-user');
     const user = JSON.parse(userData);
     if (user.isParent === false) {
@@ -396,7 +395,6 @@ const ESGCapPage = () => {
           investorPlanFinalStatus: data.investorPlanFinalStatus,
         });
 
-        // Set original plan if we have history
         if (data.planHistoryDetails?.length > 0) {
           setOriginalPlan(data.planHistoryDetails[0].requestPlan || []);
         }
@@ -421,13 +419,9 @@ const ESGCapPage = () => {
 
       switch (action) {
         case 'requestChange':
-          // Get current user type to determine which plan to update in comparePlan
           const isFounder = user?.entityType === 2;
-
-          // Create the updated comparePlan for the request
           let updatedComparePlan = esgCap.comparePlan;
 
-          // If comparePlan doesn't exist, create it
           if (!updatedComparePlan) {
             updatedComparePlan = {
               founderPlan: isFounder ? esgCap.plan : [],
@@ -436,7 +430,6 @@ const ESGCapPage = () => {
               investorPlanLastUpdate: isFounder ? null : Date.now()
             };
           } else {
-            // If comparePlan exists, update the appropriate plan based on user type
             updatedComparePlan = {
               ...updatedComparePlan,
               ...(isFounder
@@ -466,13 +459,9 @@ const ESGCapPage = () => {
           break;
 
         case 'accept':
-          // Get current user type to determine which plan to update in comparePlan
           const acceptIsFounder = user?.entityType === 2;
-
-          // Create the updated comparePlan for acceptance
           let acceptComparePlan = esgCap.comparePlan;
 
-          // If comparePlan doesn't exist, create it
           if (!acceptComparePlan) {
             acceptComparePlan = {
               founderPlan: acceptIsFounder ? esgCap.plan : [],
@@ -481,7 +470,6 @@ const ESGCapPage = () => {
               investorPlanLastUpdate: acceptIsFounder ? null : Date.now()
             };
           } else {
-            // If comparePlan exists, update the appropriate plan based on user type
             acceptComparePlan = {
               ...acceptComparePlan,
               ...(acceptIsFounder
@@ -507,12 +495,9 @@ const ESGCapPage = () => {
           break;
 
         case 'update':
-          // For update action, we still need to include comparePlan data
           const updateIsFounder = user?.entityType === 2;
-
           let updateComparePlan = esgCap.comparePlan;
 
-          // If comparePlan doesn't exist, create it
           if (!updateComparePlan) {
             updateComparePlan = {
               founderPlan: updateIsFounder ? esgCap.plan : [],
@@ -521,7 +506,6 @@ const ESGCapPage = () => {
               investorPlanLastUpdate: updateIsFounder ? null : Date.now()
             };
           } else {
-            // If comparePlan exists, update the appropriate plan based on user type
             updateComparePlan = {
               ...updateComparePlan,
               ...(updateIsFounder
@@ -542,7 +526,6 @@ const ESGCapPage = () => {
             plan: esgCap.plan,
             comparePlan: updateComparePlan
           };
-          // logger.log("Update Payload:", finalData);
           response = await updatePlan(finalData);
           break;
       }
@@ -562,7 +545,6 @@ const ESGCapPage = () => {
     loadData();
   }, [entityId]);
 
-  // Apply filters and search
   const filteredItems = esgCap?.plan?.filter(item => {
     const matchesSearch =
       item.item?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
@@ -573,7 +555,6 @@ const ESGCapPage = () => {
     return matchesSearch && matchesStatus && matchesCategory;
   }) || [];
 
-  // Apply sorting
   const sortedItems = [...filteredItems].sort((a, b) => {
     if (!sortConfig) return 0;
 
@@ -592,7 +573,6 @@ const ESGCapPage = () => {
     return 0;
   });
 
-  // Sort function
   const requestSort = (key: keyof ESGCapItem) => {
     let direction: 'asc' | 'desc' = 'asc';
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -601,9 +581,7 @@ const ESGCapPage = () => {
     setSortConfig({ key, direction });
   };
 
-  // Handle revert to original item
   const handleRevertItem = (itemId: string) => {
-    // Use proper ID handling with fallback
     const originalItem = originalPlan.find(item => String(item.id) === itemId);
     if (originalItem) {
       setEsgCap(prev => {
@@ -619,9 +597,7 @@ const ESGCapPage = () => {
     }
   };
 
-  // Handle revert specific field
   const handleRevertField = (itemId: string, field: keyof ESGCapItem) => {
-    // Use proper ID handling with fallback
     const originalItem = originalPlan.find(item => String(item.id) === itemId);
     if (originalItem && field in originalItem) {
       setEsgCap(prev => {
@@ -637,7 +613,6 @@ const ESGCapPage = () => {
     }
   };
 
-  // Toggle comparison view
   const toggleComparisonView = () => {
     if (showComparisonView) {
       setShowComparisonView(false);
@@ -648,19 +623,14 @@ const ESGCapPage = () => {
     }
   };
 
-  // Check if accept button should be disabled
   const shouldDisableAcceptButton = () => {
     if (!esgCap || !esgCap.founderPlanFinalStatus) return false;
-    // Disable accept button if founder has already accepted
     if (user?.entityType === 2 && esgCap.founderPlanFinalStatus === true) {
       return true;
     }
-
-    // Disable accept button if investor has already accepted
     if (user?.entityType === 1 && esgCap.investorPlanFinalStatus) {
       return true;
     }
-
     return false;
   };
 
@@ -680,7 +650,6 @@ const ESGCapPage = () => {
   const handleUpdateItem = (updatedItem: ESGCapItem) => {
     setEsgCap(prev => {
       if (!prev) return prev;
-
       return {
         ...prev,
         plan: prev.plan.map(item =>
@@ -691,30 +660,28 @@ const ESGCapPage = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <UnifiedSidebarLayout>
-        <div className="space-y-6">
-          <div>
-            <Link to="/esg-dd" className="text-sm text-muted-foreground hover:text-foreground flex items-center mb-2">
+        <div className="space-y-6 p-1 pb-8">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <Link to="/esg-dd" className="text-sm text-muted-foreground hover:text-foreground flex items-center mb-2 w-fit">
               <ArrowLeft className="h-4 w-4 mr-1" /> Back to ESG DD
             </Link>
-            <h1 className="text-2xl font-bold tracking-tight">ESG Corrective Action Plan</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-3xl font-bold tracking-tight">ESG Corrective Action Plan</h1>
+            <p className="text-muted-foreground mt-1">
               Track and manage corrective actions from ESG due diligence assessments.
             </p>
           </div>
 
-          <Card className="h-[calc(100vh-12rem)] flex flex-col">
-            <CardHeader className="flex-shrink-0">
-              <CardTitle>ESG CAP Items</CardTitle>
-              <CardDescription>
-                Manage and track all ESG corrective action items across assessments.
-                {esgCap?.finalPlan && <span className="ml-2 text-green-600">(Final Plan)</span>}
+          <Card className="shadow-lg border-0">
+            <CardHeader className="border-b bg-gray-50/50">
+              <CardDescription className="text-sm">
+                {esgCap?.finalPlan && <span className="text-green-600 font-medium">✓ Final Plan</span>}
               </CardDescription>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col overflow-hidden">
-              <div className="flex justify-between items-center mb-4">
-                <div className="flex-shrink-0">
+            <CardContent className="p-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div className="w-full sm:w-auto">
                   <ESGCapFilters
                     searchTerm={searchTerm}
                     setSearchTerm={setSearchTerm}
@@ -730,7 +697,10 @@ const ESGCapPage = () => {
                     <Button
                       variant={showComparisonView ? "default" : "outline"}
                       onClick={toggleComparisonView}
-                      className={showComparisonView ? "border-purple-500 text-purple-500" : ""}
+                      className={cn(
+                        "transition-all",
+                        showComparisonView && "bg-purple-600 hover:bg-purple-700 text-white"
+                      )}
                     >
                       <ArrowLeft className="h-4 w-4 mr-1" />
                       <ArrowRight className="h-4 w-4 mr-1" />
@@ -740,51 +710,46 @@ const ESGCapPage = () => {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-auto">
-                {showComparisonView ? (
-                  <ComparePlanView
-                    currentPlan={esgCap?.plan || []}
-                    originalPlan={originalPlan}
-                    onRevertItem={handleRevertItem}
-                    onRevertField={handleRevertField}
-                    showComparisonView={showComparisonView}
-                  />
-                ) : (
-                  <ESGCapTable
-                    sortedItems={sortedItems}
-                    sortConfig={sortConfig}
-                    requestSort={requestSort}
-                    onItemUpdate={handleUpdateItem}
-                    buttonEnabled={buttonEnabled}
-                  />
-                )}
+              <div className="border rounded-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  {showComparisonView ? (
+                    <ComparePlanView
+                      currentPlan={esgCap?.plan || []}
+                      originalPlan={originalPlan}
+                      onRevertItem={handleRevertItem}
+                      onRevertField={handleRevertField}
+                      showComparisonView={showComparisonView}
+                    />
+                  ) : (
+                    <ESGCapTable
+                      sortedItems={sortedItems}
+                      sortConfig={sortConfig}
+                      requestSort={requestSort}
+                      onItemUpdate={handleUpdateItem}
+                      buttonEnabled={buttonEnabled}
+                    />
+                  )}
+                </div>
               </div>
 
-              <div className="flex justify-end gap-2 mt-4 flex-shrink-0">
-                {/* {!esgCap?.finalPlan ? ( */}
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleAction('requestChange')}
-                    disabled={isLoading || !buttonEnabled}
-                  >
-                    Request CAP Change
-                  </Button>
-                  <Button
-                    onClick={() => handleAction('accept')}
-                    disabled={isLoading || !buttonEnabled}
-                  >
-                    Accept CAP
-                  </Button>
-                </>
-                {/* ) : (
-                  <Button
-                    onClick={() => handleAction('update')}
-                    disabled={loading}
-                  >
-                    Update
-                  </Button>
-                )} */}
+              <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => handleAction('requestChange')}
+                  disabled={loading || !buttonEnabled}
+                  className="hover:bg-amber-50"
+                >
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Request CAP Change
+                </Button>
+                <Button
+                  onClick={() => handleAction('accept')}
+                  disabled={loading || !buttonEnabled || shouldDisableAcceptButton()}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Accept CAP
+                </Button>
               </div>
             </CardContent>
           </Card>
