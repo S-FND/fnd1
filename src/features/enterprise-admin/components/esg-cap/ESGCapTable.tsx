@@ -22,7 +22,7 @@ export const ESGCapTable: React.FC<ESGCapTableProps> = ({
 }) => {
   return (
     <div className="space-y-6">
-      <div className="overflow-x-auto">
+      <div className="rounded-md border overflow-hidden">
         <Table>
           <ESGCapTableHeader 
             sortConfig={sortConfig} 

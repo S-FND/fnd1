@@ -14,11 +14,11 @@ export const ESGCapTableHeader: React.FC<ESGCapTableHeaderProps> = ({
   requestSort 
 }) => {
   return (
-    <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
-      <TableRow className="hover:bg-transparent">
-        <TableHead className="w-[60px] text-center font-semibold">S. No</TableHead>
+    <TableHeader>
+      <TableRow>
+        <TableHead className="w-[60px] text-center">S. No</TableHead>
         <TableHead 
-          className="cursor-pointer hover:bg-muted/80 font-semibold transition-colors"
+          className="cursor-pointer hover:bg-muted/50"
           onClick={() => requestSort('issue')}
         >
           Item
@@ -28,9 +28,9 @@ export const ESGCapTableHeader: React.FC<ESGCapTableHeaderProps> = ({
               <ArrowDown className="h-4 w-4 inline ml-1" />
           )}
         </TableHead>
-        <TableHead className="font-semibold">Category</TableHead>
+        <TableHead>Category</TableHead>
         <TableHead 
-          className="cursor-pointer hover:bg-muted/80 font-semibold transition-colors"
+          className="cursor-pointer hover:bg-muted/50"
           onClick={() => requestSort('priority')}
         >
           Priority
@@ -40,11 +40,11 @@ export const ESGCapTableHeader: React.FC<ESGCapTableHeaderProps> = ({
               <ArrowDown className="h-4 w-4 inline ml-1" />
           )}
         </TableHead>
-        <TableHead className="font-semibold">Measures and/or Corrective Actions</TableHead>
-        <TableHead className="font-semibold">Resource & Responsibility</TableHead>
-        <TableHead className="font-semibold">Expected Deliverable</TableHead>
+        <TableHead>Measures and/or Corrective Actions</TableHead>
+        <TableHead>Resource & Responsibility</TableHead>
+        <TableHead>Expected Deliverable</TableHead>
         <TableHead 
-          className="cursor-pointer hover:bg-muted/80 font-semibold transition-colors"
+          className="cursor-pointer hover:bg-muted/50"
           onClick={() => requestSort('deadline')}
         >
           Target Date
@@ -54,11 +54,11 @@ export const ESGCapTableHeader: React.FC<ESGCapTableHeaderProps> = ({
               <ArrowDown className="h-4 w-4 inline ml-1" />
           )}
         </TableHead>
-        <TableHead className="font-semibold">CP/CS</TableHead>
-        <TableHead className="font-semibold">Actual Date</TableHead>
-        <TableHead className="font-semibold">Status</TableHead>
-        <TableHead className="text-right font-semibold">Actions</TableHead>
-        <TableHead className="font-semibold">Remarks</TableHead>
+        <TableHead>CP/CS</TableHead>
+        <TableHead>Actual Date</TableHead>
+        <TableHead>Status</TableHead>
+        <TableHead className="text-right">Actions</TableHead>
+        <TableHead>Remarks</TableHead>
       </TableRow>
     </TableHeader>
   );
