@@ -91,7 +91,7 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
     <>
       <div className="flex items-center gap-1.5">
         {hasDocument && (
-          <Badge variant="outline" className="text-xs gap-1 text-green-700 border-green-300 bg-green-50">
+          <Badge variant="outline" className="text-xs gap-1 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950">
             <FileText className="h-3 w-3" />
             Doc
           </Badge>
