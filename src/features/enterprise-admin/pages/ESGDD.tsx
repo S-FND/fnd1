@@ -7,15 +7,15 @@ import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { FileText, FileSearch, Database, Plus } from 'lucide-react';
+import { FileText, FileSearch, Database, Plus, ArrowRight } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { logger } from '@/hooks/logger';
 
 const ESGDDPage = () => {
   logger.debug('Rendering ESGDDPage component');
-  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
-  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
+  const { isLoading } = useRouteProtection(['admin', 'manager', 'employee']);
+  const { user, isAuthenticated, isAuthenticatedStatus } = useAuth();
   const navigate = useNavigate();
   const [showNewESGDD, setShowNewESGDD] = useState(false);
   const [selectedType, setSelectedType] = useState<'manual' | 'automated'>('manual');
@@ -39,19 +39,17 @@ const ESGDDPage = () => {
   return (
     <UnifiedSidebarLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">ESG Due Diligence</h1>
-            <p className="text-muted-foreground">
-              Create, manage, and track ESG due diligence assessments and corrective action plans.
-            </p>
-          </div>
-          {/* <Button onClick={() => setShowNewESGDD(true)}>
+      <div style={{ marginTop: '18px' }}>
+          <h1 className="text-2xl font-bold tracking-tight">ESG Due Diligence</h1>
+          <p className="text-muted-foreground">
+            Create, manage, and track ESG due diligence assessments and corrective action plans.
+          </p>
+        </div>
+        {/* <Button onClick={() => setShowNewESGDD(true)}>
             <Plus className="h-4 w-4 mr-2" />
             New ESG DD
           </Button> */}
-        </div>
-        
+
         {showNewESGDD && (
           <Card className="border-primary/20">
             <CardHeader>
@@ -82,61 +80,94 @@ const ESGDDPage = () => {
             </CardContent>
           </Card>
         )}
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="transition-all hover:border-primary/50 hover:shadow-md">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
-                <FileSearch className="h-5 w-5 text-primary" />
-                ESG DD Reports
-              </CardTitle>
-              <CardDescription>View and manage all ESG due diligence reports</CardDescription>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
+          {/* Card 1: ESG DD Reports */}
+          <Card className="group relative overflow-hidden border-border bg-card transition-all duration-300 hover:shadow-lg hover:-translate-y-1 h-full flex flex-col">
+            <div className="absolute top-0 left-0 w-full h-1 bg-primary opacity-0 transition-opacity group-hover:opacity-100" />
+            <CardHeader className="pb-2">
+              <div className="flex flex-col items-center mb-1">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <FileSearch className="h-5 w-5" />
+                </div>
+                <div className="flex items-center gap-3 mb-2">
+                  <CardTitle className="text-lg font-semibold">ESG DD Reports</CardTitle>
+                </div>
+              </div>
+              <CardDescription className="text-sm">
+                View and manage all ESG due diligence reports
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Access all your ESG due diligence reports, both manual and automated, 
+            <CardContent className="flex-grow flex flex-col justify-between pt-2">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Access all your ESG due diligence reports, both manual and automated,
                 with filtering and search capabilities.
               </p>
-              <Button asChild className="w-full">
-                <Link to="/esg-dd/reports">View ESG DD Reports</Link>
+              <Button asChild className="w-full mt-4 gap-2 group-hover:bg-primary/90">
+                <Link to="/esg-dd/reports">
+                  View ESG DD Reports
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </Button>
             </CardContent>
           </Card>
-          
-          <Card className="transition-all hover:border-primary/50 hover:shadow-md">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
-                <Database className="h-5 w-5 text-primary" />
-                ESG CAP
-              </CardTitle>
-              <CardDescription>Manage ESG corrective action plans</CardDescription>
+
+          {/* Card 2: ESG CAP */}
+          <Card className="group relative overflow-hidden border-border bg-card transition-all duration-300 hover:shadow-lg hover:-translate-y-1 h-full flex flex-col">
+            <div className="absolute top-0 left-0 w-full h-1 bg-primary opacity-0 transition-opacity group-hover:opacity-100" />
+            <CardHeader className="pb-2">
+              <div className="flex flex-col items-center mb-1">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <Database className="h-5 w-5" />
+                </div>
+                <div className="flex items-center gap-3 mb-2">
+                  <CardTitle className="text-lg font-semibold">ESG CAP</CardTitle>
+                </div>
+              </div>
+              <CardDescription className="text-sm">
+                Manage ESG corrective action plans
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Track and manage corrective action plans generated from ESG due diligence, 
+            <CardContent className="flex-grow flex flex-col justify-between pt-2">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Track and manage corrective action plans generated from ESG due diligence,
                 including timelines, responsibilities, and completion status.
               </p>
-              <Button asChild className="w-full">
-                <Link to="/esg-dd/cap">View ESG CAP</Link>
+              <Button asChild className="w-full mt-4 gap-2 group-hover:bg-primary/90">
+                <Link to="/esg-dd/cap">
+                  View ESG CAP
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </Button>
             </CardContent>
           </Card>
-          
-          <Card className="transition-all hover:border-primary/50 hover:shadow-md">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-primary" />
-                Information Request List
-              </CardTitle>
-              <CardDescription>Complete comprehensive information requests</CardDescription>
+
+          {/* Card 3: Information Request List */}
+          <Card className="group relative overflow-hidden border-border bg-card transition-all duration-300 hover:shadow-lg hover:-translate-y-1 h-full flex flex-col">
+            <div className="absolute top-0 left-0 w-full h-1 bg-primary opacity-0 transition-opacity group-hover:opacity-100" />
+            <CardHeader className="pb-2">
+              <div className="flex flex-col items-center mb-1">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div className="flex items-center gap-3 mb-2">
+                  <CardTitle className="text-lg font-semibold">Information Request List</CardTitle>
+                </div>
+              </div>
+              <CardDescription className="text-sm">
+                Complete comprehensive information requests
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Fill out detailed information request forms for ESG due diligence 
+            <CardContent className="flex-grow flex flex-col justify-between pt-2">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Fill out detailed information request forms for ESG due diligence
                 covering all aspects of your business operations.
               </p>
-              <Button asChild className="w-full">
-                <Link to="/esg-dd/irl">View IRL</Link>
+              <Button asChild className="w-full mt-4 gap-2 group-hover:bg-primary/90">
+                <Link to="/esg-dd/irl">
+                  View IRL
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </Button>
             </CardContent>
           </Card>

@@ -1046,7 +1046,7 @@ const ESMSPage: React.FC = () => {
         </Card>
       ))}
 
-      <div className="flex justify-end">
+      {/* <div className="flex justify-end">
         <Button
           onClick={saveAllDocuments}
           disabled={isLoading || !buttonEnabled}
@@ -1054,7 +1054,7 @@ const ESMSPage: React.FC = () => {
         >
           {isLoading ? 'Saving...' : 'Save All Documents'}
         </Button>
-      </div>
+      </div> */}
 
       {/* Single File Delete Confirmation Dialog */}
       <AlertDialog

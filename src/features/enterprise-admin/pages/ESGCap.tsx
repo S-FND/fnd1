@@ -195,7 +195,7 @@ const ComparePlanView = ({
 
   const SortableHeader = ({ field, title }: { field: keyof ESGCapItem; title: string }) => (
     <TableHead
-      className="cursor-pointer hover:bg-muted/50 whitespace-nowrap"
+      className="cursor-pointer hover:bg-muted/50 whitespace-nowrap !text-black"
       onClick={() => requestSort(field)}
     >
       {title}
@@ -213,19 +213,19 @@ const ComparePlanView = ({
     <div className="overflow-x-auto">
       <Table className="min-w-[1200px]">
         <TableHeader>
-          <TableRow className="bg-gray-100 font-medium">
-            <TableHead className="w-[60px] text-center">S. No</TableHead>
+          <TableRow className="bg-[#f1f5f9] font-medium">
+            <TableHead className="w-[60px] text-center !text-black">S. No</TableHead>
             <SortableHeader field="item" title="Item" />
-            <TableHead>Category</TableHead>
+            <TableHead className="!text-black">Category</TableHead>
             <SortableHeader field="priority" title="Priority" />
-            <TableHead>Measures and/or Corrective Actions</TableHead>
-            <TableHead>Resource & Responsibility</TableHead>
-            <TableHead>Expected Deliverable</TableHead>
+            <TableHead className="!text-black">Measures and/or Corrective Actions</TableHead>
+            <TableHead className="!text-black">Resource & Responsibility</TableHead>
+            <TableHead className="!text-black">Expected Deliverable</TableHead>
             <SortableHeader field="targetDate" title="Target Date" />
-            <TableHead>CP/CS</TableHead>
-            <TableHead>Actual Date</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead className="!text-black">CP/CS</TableHead>
+            <TableHead className="!text-black">Actual Date</TableHead>
+            <TableHead className="!text-black">Status</TableHead>
+            <TableHead className="!text-black">Actions</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -662,8 +662,8 @@ const ESGCapPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <UnifiedSidebarLayout>
-        <div className="space-y-6 p-1 pb-8">
-          <div className="bg-white rounded-lg shadow-sm p-6">
+        {/* <div className="space-y-6 p-1 pb-8"> */}
+          {/* <div className="bg-white rounded-lg shadow-sm p-6">
             <Link to="/esg-dd" className="text-sm text-muted-foreground hover:text-foreground flex items-center mb-2 w-fit">
               <ArrowLeft className="h-4 w-4 mr-1" /> Back to ESG DD
             </Link>
@@ -671,12 +671,16 @@ const ESGCapPage = () => {
             <p className="text-muted-foreground mt-1">
               Track and manage corrective actions from ESG due diligence assessments.
             </p>
-          </div>
+          </div> */}
 
           <Card className="shadow-lg border-0">
-            <CardHeader className="border-b bg-gray-50/50">
+            <CardHeader className="border-b ">
               <CardDescription className="text-sm">
-                {esgCap?.finalPlan && <span className="text-green-600 font-medium">✓ Final Plan</span>}
+                {/* {esgCap?.finalPlan && <span className="text-green-600 font-medium">✓ Final Plan</span>} */}
+                <h1 className="text-3xl font-bold tracking-tight">ESG Corrective Action Plan</h1>
+                <p className="mt-1">
+                  Track and manage corrective actions from ESG due diligence assessments.
+                </p>
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
@@ -753,7 +757,7 @@ const ESGCapPage = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
+        {/* </div> */}
       </UnifiedSidebarLayout>
     </div>
   );

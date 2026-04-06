@@ -125,14 +125,14 @@ export const Navbar: React.FC = () => {
           )} */}
 
           {/* Search */}
-          <div className="relative hidden md:block">
+          {/* <div className="relative hidden md:block">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <input type="search" placeholder="Search..." className="rounded-md border border-input bg-background px-3 py-2 pl-8 text-sm" />
-          </div>
+          </div> */}
 
           {/* Notification */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            {/* <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
@@ -141,7 +141,7 @@ export const Navbar: React.FC = () => {
                   </span>
                 )}
               </Button>
-            </DropdownMenuTrigger>
+            </DropdownMenuTrigger> */}
             <DropdownMenuContent align="end" className="w-80 z-50">
               <DropdownMenuLabel>
                 Notifications {unreadCount > 0 && `(${unreadCount} unread)`}
@@ -184,9 +184,9 @@ export const Navbar: React.FC = () => {
           </DropdownMenu>
 
           {/* Help */}
-          <Button variant="ghost" size="icon">
+          {/* <Button variant="ghost" size="icon">
             <HelpCircle className="h-5 w-5" />
-          </Button>
+          </Button> */}
 
           {/* User Menu */}
           {user ? (
