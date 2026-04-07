@@ -7,9 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { socketConnect } from '@/context/SocketContext'; // Import your socket function
-import { toast } from 'sonner'; // Import toast for notifications
+import { socketConnect } from '@/context/SocketContext';
+import { toast } from 'sonner';
 import { logger } from '@/hooks/logger';
+
+interface NavbarProps {
+  hideSidebarTrigger?: boolean; // Add prop to hide sidebar trigger
+}
 
 interface Notification {
   _id: string;
@@ -20,7 +24,7 @@ interface Notification {
   createdAt: string;
 }
 
-export const Navbar: React.FC = () => {
+export const Navbar: React.FC<NavbarProps> = ({ hideSidebarTrigger = false }) => {
   const { user, logout } = useAuth();
   const { isOverlayActive, toggleOverlay } = useOverlay();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -101,9 +105,9 @@ export const Navbar: React.FC = () => {
   return (
     <header className="border-b sticky top-0 z-40 bg-background">
       <div className="flex h-16 items-center px-4 md:px-6">
-        {/* Left side with sidebar trigger */}
+        {/* Left side with sidebar trigger - Hide when needed */}
         <div className="flex items-center gap-4">
-          <SidebarTrigger />
+          {!hideSidebarTrigger && <SidebarTrigger />}
         </div>
 
         {/* Search and Right Actions */}

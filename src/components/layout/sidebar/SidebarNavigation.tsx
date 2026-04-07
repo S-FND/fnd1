@@ -1,4 +1,3 @@
-
 import React, { useContext, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuSubButton, SidebarMenuSubItem } from '@/components/ui/sidebar';
@@ -33,91 +32,111 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   const location = useLocation();
   const { user } = useAuth();
   const { pageAccessList, checkPageButtonAccess, setPageAccessList, userRole } = useContext(PageAccessContext);
-  // const {User}=useContext(AuthProvider)
-  // const visibleItems = getNavigationItems('all-access' );
-  // || role
 
   const [visibleItems, setVisibleItems] = useState<any[]>([]);
   const [allowedUrlsList, setAllowedUrlsList] = useState<string[]>([]);
+  
+  // ✅ NEW: Add state for sidebarHide settings
+  const [sidebarHideMap, setSidebarHideMap] = useState<Record<string, boolean>>({});
 
   const { isVerifier, loading: verifierLoading } = useVerifierStatus();
 
-  // Filter items based on verifier status
-//  const visibleItems = getNavigationItems(role).filter(item => {
-//     // Show "Approvals to be Done" for admins, managers, unit_admins, or verified verifiers
-//     if (item.name === 'Approvals to be Done') {
-//       // Show for admin roles always (don't wait for verifier check), or if user is specifically a verifier
-//       const isAdminRole = ['admin', 'manager', 'unit_admin', 'portfolio_company_admin', 'super_admin'].includes(role);
-//       return isAdminRole || isVerifier;
-//     }
-//     return true;
-//   });
+  // ✅ NEW: Function to get sidebarHide settings from localStorage
+  const getSidebarHideSettings = () => {
+    try {
+      const accessData = localStorage.getItem('fandoro-access');
+      if (!accessData || accessData === 'undefined' || accessData === 'null') {
+        return {};
+      }
+      const parsed = JSON.parse(accessData);
+      const companyFeatures = parsed['companyFeaturePageAccess'] || [];
+      const hideMap: Record<string, boolean> = {};
+      companyFeatures.forEach((feature: any) => {
+        hideMap[feature.feature] = feature.sidebarHide === true;
+      });
+      return hideMap;
+    } catch (error) {
+      console.error('Error getting sidebar hide settings:', error);
+      return {};
+    }
+  };
 
+  // ✅ NEW: Function to check if menu item should be visible
+  const shouldShowMenuItem = (featureName: string): boolean => {
+    return sidebarHideMap[featureName] !== true;
+  };
 
   useEffect(() => {
+    // ✅ NEW: Load sidebarHide settings
+    const hideSettings = getSidebarHideSettings();
+    setSidebarHideMap(hideSettings);
+    
     logger.debug("User role in SidebarNavigation:", userRole);
     let loggedInUser = localStorage.getItem('fandoro-user');
     let loggedInUserRole = loggedInUser ? JSON.parse(loggedInUser).role : null;
     logger.debug("🔵 SidebarNavigation: Logged in user role:", loggedInUserRole);
     logger.debug("🔵 SidebarNavigation: Page access list:", pageAccessList);
-    //!pageAccessList || pageAccessList.length === 0 && 
+    
     if (loggedInUserRole === 'admin') {
-      logger.debug("🔵 SidebarNavigation: No page access found.");
-
-
-      // If no permissions, show all menus
-      setVisibleItems(getNavigationItems(loggedInUserRole !== 'admin' ? 'all-access' : 'admin'));
+      logger.debug("🔵 SidebarNavigation: Admin user - filtering with sidebarHide");
+      
+      // ✅ CHANGED: Filter admin menus by sidebarHide
+      const allMenus = getNavigationItems('admin');
+      const filteredMenus = allMenus.filter(menu => {
+        const shouldHide = hideSettings[menu.name] === true;
+        if (shouldHide) {
+          logger.debug(`Hiding ${menu.name} - sidebarHide is true`);
+        }
+        return !shouldHide;
+      });
+      setVisibleItems(filteredMenus);
+      
     } else {
       // Filter based on permissions
       const allowedUrls = pageAccessList
         .filter((p: PageAccessItem) => !['no_access'].includes(p.accessLevel) && p.url)
-        .map((p: PageAccessItem) => p.url); logger.debug("🔵 SidebarNavigation: Allowed URLs from pageAccessList:", allowedUrls);
+        .map((p: PageAccessItem) => p.url);
+      logger.debug("🔵 SidebarNavigation: Allowed URLs from pageAccessList:", allowedUrls);
       setAllowedUrlsList(allowedUrls);
+      
       const filtered = getNavigationItems("all-access")
         .map((menu) => {
+          // ✅ CHANGED: Check sidebarHide first
+          if (hideSettings[menu.name] === true) {
+            logger.debug(`Excluding ${menu.name} - sidebarHide is true`);
+            return null;
+          }
+          
           // Check if parent menu itself has permission
           const menuAllowed = allowedUrls.includes(menu.href);
 
-          // Filter submenus that have permission
+          // Filter submenus that have permission AND not hidden by sidebarHide
           let allowedSubmenus = [];
           if (menu.submenu && menu.submenu.length > 0) {
-            allowedSubmenus = menu.submenu.filter((sub) => allowedUrls.includes(sub.href));
+            allowedSubmenus = menu.submenu.filter((sub) => {
+              const subAllowed = allowedUrls.includes(sub.href);
+              const subNotHidden = hideSettings[sub.name] !== true;
+              return subAllowed && subNotHidden;
+            });
           }
 
-          // Include menu if:
-          // 1️⃣ Parent menu is allowed OR
-          // 2️⃣ Any submenu is allowed
+          // Include menu if parent is allowed OR has allowed submenus
           if (menuAllowed || allowedSubmenus.length > 0) {
             return { ...menu, submenu: allowedSubmenus };
           }
 
-          return null; // exclude menu
+          return null;
         })
         .filter(Boolean);
 
-      // setVisibleItems(filtered);
       setVisibleItems(Array.isArray(filtered) ? filtered : []);
     }
   }, [pageAccessList]);
 
-  // useEffect(() => {
-  //   logger.debug("🔵 SidebarNavigation: Updated visibleItems:", visibleItems);
-  // }, [visibleItems]);
-
-  // useEffect(() => {
-  //   let userData = user;
-  //   logger.log('🔵 SidebarNavigation: User data:', userData);
-  //   let localStorageData = JSON.parse(localStorage.getItem('fandoro-user'));
-  //   logger.log('🔵 SidebarNavigation: LocalStorage user data:', localStorageData);
-
-  //   logger.debug("🔵 SidebarNavigation: Checking page access for role:", pageAccessList);
-  //   console.log("🔵 SidebarNavigation: Checking page access for visibleItems:", visibleItems);
-  //   logger.debug("🔵 SidebarNavigation: Current user checkPageAccess:", checkPageAccess('/admin'));
-  // }, []);
-
   useEffect(() => {
     logger.debug("🔵 SidebarNavigation: Expanded menus state changed:", expandedMenus);
   }, [expandedMenus]);
+  
   const safeVisibleItems = Array.isArray(visibleItems) ? visibleItems : [];
 
   return (
@@ -127,32 +146,32 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
           {safeVisibleItems.map((item) => {
             const isActive = location.pathname === item.href ||
               (item.href !== '/' && location.pathname.startsWith(item.href));
+            
             // Handle special menu items with submenus
             if (item.name === 'ESG Management') {
+              // ✅ CHANGED: Filter submenu items
+              const filteredSubmenu = item.submenu?.filter((sub: any) => shouldShowMenuItem(sub.name)) || [];
               return (
                 <ESGManagementSubmenu
                   key={item.name}
-                  submenu={item.submenu}
+                  submenu={filteredSubmenu}
                   isExpanded={expandedMenus.esgManagement}
-                  // allowedUrls={allowedUrlsList}
                   onToggle={() => toggleMenu('esgManagement')}
                 />
               );
             }
-
             else if (item.name === 'ESG DD') {
+              // ✅ CHANGED: Filter submenu items
+              const filteredSubmenu = item.submenu?.filter((sub: any) => shouldShowMenuItem(sub.name)) || [];
               return (
                 <ESGDDSubmenu
                   key={item.name}
-                  submenu={item.submenu}
+                  submenu={filteredSubmenu}
                   isExpanded={expandedMenus.esgdd}
-                  // allowedUrls={allowedUrlsList}
                   onToggle={() => toggleMenu('esgdd')}
                 />
-
               );
             }
-
             else if (item.name === 'Audit') {
               return (
                 <AuditSubmenu
@@ -162,18 +181,21 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 />
               );
             }
-
             else if (item.name === 'Reports') {
+              // ✅ CHANGED: Filter submenu items
+              const filteredSubmenu = item.submenu?.filter((sub: any) => shouldShowMenuItem(sub.name)) || [];
               return (
                 <ReportsSubmenu
                   key={item.name}
+                  submenu={filteredSubmenu}
                   isExpanded={expandedMenus.reports}
                   onToggle={() => toggleMenu('reports')}
                 />
               );
             }
-
             else if (item.name === 'Stakeholders') {
+              // ✅ CHANGED: Filter submenu items
+              const filteredSubmenu = item.submenu?.filter((sub: any) => shouldShowMenuItem(sub.name)) || [];
               return (
                 <StakeholdersSubmenu
                   key={item.name}
@@ -183,8 +205,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 />
               );
             }
-
-            if (item.name === 'SDG') {
+            else if (item.name === 'SDG') {
               return (
                 <SDGSubmenu
                   key={item.name}
@@ -193,7 +214,6 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 />
               );
             }
-
             // Regular menu items
             else {
               return (
