@@ -16,9 +16,8 @@ interface FlexibleDataInputProps {
 }
 
 const FlexibleDataInput: React.FC<FlexibleDataInputProps> = ({ metric, value, onChange }) => {
-  // console.log('FlexibleDataInput :: value :: ',value)
   const [tableData, setTableData] = useState<string[][]>(() => {
-    if (metric.dataType === 'Table' && value && Array.isArray(value)) {
+    if (metric.dataType === 'Table' && value && Array.isArray(value) && value.length > 0) {
       return value;
     }
     const rows = metric.inputFormat?.tableRows || 1;
