@@ -480,6 +480,17 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
 
 
 
+  // useEffect(() => {
+  //   if (selectedPeriod && selectedMetric && selectedFinancialYear && dataEntries) {
+  //     let checkExistingValue = dataEntries.filter((entry) => entry.financialYear == selectedFinancialYear && entry.period == selectedPeriod && entry.metricId == JSON.parse(selectedMetric).code && entry.metricName == JSON.parse(selectedMetric).name);
+  //     // console.log(`selectedMetric == checkExistingValue => `, checkExistingValue)
+  //     if (checkExistingValue && checkExistingValue.length > 0 && checkExistingValue[0]['value']) {
+  //       setEntryValue(checkExistingValue[0]['value'])
+  //     }
+  //   }
+
+  // }, [selectedPeriod, selectedMetric, selectedFinancialYear])
+
   useEffect(() => {
 
     if (selectedPeriod && selectedMetric && selectedFinancialYear && dataEntries) {
@@ -492,8 +503,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
         setEntryValue(null)
       }
     }
-
-  }, [selectedPeriod, selectedMetric, selectedFinancialYear])
+  }, [selectedPeriod, selectedMetric, selectedFinancialYear, dataEntries, configuredMetrics]);
   // useEffect(() => {
   //   console.log(`bulkEntries => `, bulkEntries)
   // }, [bulkEntries])
@@ -638,6 +648,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                     </p>
                   </div>
                   <FlexibleDataInput
+                    key={`${selectedMetric}_${selectedPeriod}`}
                     metric={configuredMetrics?.find(m => m.code === JSON.parse(selectedMetric)?.code && m.name == JSON.parse(selectedMetric)?.name)!}
                     value={entryValue}
                     onChange={setEntryValue}
