@@ -161,7 +161,7 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
         <Button variant="outline" size="sm" onClick={() => setIsReviewOpen(true)}>
           Review
         </Button>
-        <TooltipProvider delayDuration={300}>
+        {(import.meta.env.VITE_AI_ESGCAP_ENABLED || import.meta.env.VITE_AI_ESGCAP_ENABLED == 'true') && <TooltipProvider delayDuration={300}>
           <Tooltip>
             <TooltipTrigger asChild>
               <DropdownMenu>
@@ -179,7 +179,7 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleDownload}>
                     <Download className="mr-2 h-4 w-4" />
-                    view Document
+                    View Document
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleDownloadTemplate}>
@@ -197,7 +197,7 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
               <p>More actions</p>
             </TooltipContent>
           </Tooltip>
-        </TooltipProvider>
+        </TooltipProvider>}
       </div>
 
       {/* Review Dialog */}
