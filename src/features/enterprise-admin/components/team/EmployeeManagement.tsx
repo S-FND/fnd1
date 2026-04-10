@@ -555,7 +555,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
               <TableHead>Email</TableHead>
               <TableHead>Employee ID</TableHead>
               {/* <TableHead>Role</TableHead> */}
-              <TableHead>Location</TableHead>
+              {/* <TableHead>Location</TableHead> */}
               <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -571,7 +571,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
                     {employee.roles}
                   </Badge>
                 </TableCell> */}
-                <TableCell>{getLocationName(employee.selectedLocation || employee.location)}</TableCell>
+                {/* <TableCell>{getLocationName(employee.selectedLocation || employee.location)}</TableCell> */}
                 <TableCell>
                   <Badge variant={employee.active ? 'default' : 'destructive'}>
                     {employee.active ? 'Active' : 'Inactive'}
@@ -585,7 +585,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
                       onClick={() => handleViewDetails(employee)}
                     >
                       <Eye className="h-3 w-3 mr-1" />
-                      Details
+                      {/* Details */}
                     </Button>
                     <Button
                       size="sm"
@@ -593,7 +593,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
                       onClick={() => handleEditEmployee(employee)}
                     >
                       <Edit className="h-3 w-3 mr-1" />
-                      Edit
+                      {/* Edit */}
                     </Button>
                     <Button
                       size="sm"
@@ -601,7 +601,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
                       onClick={() => handleDeleteEmployeeClick(employee)}
                     >
                       <Trash2 className="h-3 w-3 mr-1" />
-                      Delete
+                      {/* Delete */}
                     </Button>
                     {/* <Button
                       size="sm"
