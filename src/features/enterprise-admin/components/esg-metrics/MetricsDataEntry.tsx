@@ -452,16 +452,61 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
 
 
 
+  // useEffect(() => {
+  //   if (selectedPeriod && selectedMetric && selectedFinancialYear && dataEntries) {
+  //     let checkExistingValue = dataEntries.filter((entry) => entry.financialYear == selectedFinancialYear && entry.period == selectedPeriod && entry.metricId == JSON.parse(selectedMetric).code && entry.metricName == JSON.parse(selectedMetric).name);
+  //     // console.log(`selectedMetric == checkExistingValue => `, checkExistingValue)
+  //     if (checkExistingValue && checkExistingValue.length > 0 && checkExistingValue[0]['value']) {
+  //       setEntryValue(checkExistingValue[0]['value'])
+  //     }
+  //   }
+
+  // }, [selectedPeriod, selectedMetric, selectedFinancialYear])
+
   useEffect(() => {
-    if (selectedPeriod && selectedMetric && selectedFinancialYear && dataEntries) {
-      let checkExistingValue = dataEntries.filter((entry) => entry.financialYear == selectedFinancialYear && entry.period == selectedPeriod && entry.metricId == JSON.parse(selectedMetric).code && entry.metricName == JSON.parse(selectedMetric).name);
-      // console.log(`selectedMetric == checkExistingValue => `, checkExistingValue)
-      if (checkExistingValue && checkExistingValue.length > 0 && checkExistingValue[0]['value']) {
-        setEntryValue(checkExistingValue[0]['value'])
+    if (selectedPeriod && selectedMetric && selectedFinancialYear && dataEntries.length > 0) {
+      try {
+        const parsedMetric = JSON.parse(selectedMetric);
+        
+        // Find existing entry - MAKE SURE THIS MATCHES YOUR DATA STRUCTURE
+        const existingEntry = dataEntries.find(entry => {
+          const matches = entry.financialYear === selectedFinancialYear && 
+                 entry.period === selectedPeriod && 
+                 entry.metricId === parsedMetric.code && 
+                 entry.metricName === parsedMetric.name;
+          
+          if (matches) {
+            console.log('✅ Found matching entry:', entry);
+          }
+          return matches;
+        });
+        
+        if (existingEntry && existingEntry.value) {
+          console.log('📝 Setting entryValue to:', existingEntry.value);
+          setEntryValue(existingEntry.value);
+        } else {
+          console.log('❌ No existing entry found for:', {
+            metric: parsedMetric.name,
+            period: selectedPeriod,
+            year: selectedFinancialYear
+          });
+          
+          // Reset to empty based on data type
+          const metric = configuredMetrics?.find(m => m.code === parsedMetric.code);
+          if (metric?.dataType === 'Table') {
+            const columns = metric.inputFormat?.tableColumns || [];
+            const rows = metric.inputFormat?.tableRows || 1;
+            const emptyTable = Array(rows).fill(null).map(() => Array(columns.length).fill(''));
+            setEntryValue(emptyTable);
+          } else {
+            setEntryValue('');
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing selected metric:', error);
       }
     }
-
-  }, [selectedPeriod, selectedMetric, selectedFinancialYear])
+  }, [selectedPeriod, selectedMetric, selectedFinancialYear, dataEntries, configuredMetrics]);
   // useEffect(() => {
   //   console.log(`bulkEntries => `, bulkEntries)
   // }, [bulkEntries])
@@ -606,6 +651,7 @@ const MetricsDataEntry: React.FC<MetricsDataEntryProps> = ({ materialTopics, fin
                     </p>
                   </div>
                   <FlexibleDataInput
+                    key={`${selectedMetric}_${selectedPeriod}`}
                     metric={configuredMetrics?.find(m => m.code === JSON.parse(selectedMetric)?.code && m.name == JSON.parse(selectedMetric)?.name)!}
                     value={entryValue}
                     onChange={setEntryValue}
