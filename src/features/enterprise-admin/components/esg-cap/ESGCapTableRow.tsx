@@ -58,7 +58,7 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
         <CategoryBadge category={item.category} />
       </TableCell>
       <TableCell style={{ padding: "0.3rem" }}>
-        <PriorityBadge priority={item.priority} />
+        {item.priority}
       </TableCell>
       <TableCell style={{ padding: "0.3rem" }}> {showFullMeasures ? item.measures : truncateText(item.measures || "")}
         {item.measures && item.measures.length > 50 && (

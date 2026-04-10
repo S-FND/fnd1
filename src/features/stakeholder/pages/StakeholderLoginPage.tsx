@@ -126,7 +126,7 @@ const StakeholderLoginPage: React.FC = () => {
     }));
 
     // Update the stakeholder data
-    const stakeholders = getStoredStakeholders();
+    const stakeholders: any = getStoredStakeholders();
     const updatedStakeholders = stakeholders.map(s => 
       s.id === stakeholderData.stakeholder.id 
         ? { ...s, prioritizations: stakeholderPrioritizations }
@@ -157,7 +157,7 @@ const StakeholderLoginPage: React.FC = () => {
     }));
 
     // Update the stakeholder data in localStorage
-    const stakeholders = getStoredStakeholders();
+    const stakeholders: any = getStoredStakeholders();
     const updatedStakeholders = stakeholders.map(s => 
       s.id === stakeholderData.stakeholder.id 
         ? { ...s, prioritizations: stakeholderPrioritizations }
@@ -268,9 +268,9 @@ const StakeholderLoginPage: React.FC = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Materiality Assessment Portal</h1>
-            <p className="text-muted-foreground">
+            {/* <p className="text-muted-foreground">
               Welcome, {stakeholderData?.stakeholderName} | Assessment Group: {stakeholderData.groupName}
-            </p>
+            </p> */}
           </div>
           <div className="flex gap-2">
             {stakeholderData?.canViewResults && (
@@ -290,7 +290,7 @@ const StakeholderLoginPage: React.FC = () => {
                 </Button>
               </>
             )}
-            <Button 
+            {/* <Button 
               variant="outline" 
               onClick={() => {
                 setIsAuthenticated(false);
@@ -299,7 +299,7 @@ const StakeholderLoginPage: React.FC = () => {
               }}
             >
               Logout
-            </Button>
+            </Button> */}
           </div>
         </div>
 

@@ -7,9 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { socketConnect } from '@/context/SocketContext'; // Import your socket function
-import { toast } from 'sonner'; // Import toast for notifications
+import { socketConnect } from '@/context/SocketContext';
+import { toast } from 'sonner';
 import { logger } from '@/hooks/logger';
+
+interface NavbarProps {
+  hideSidebarTrigger?: boolean; // Add prop to hide sidebar trigger
+}
 
 interface Notification {
   _id: string;
@@ -20,7 +24,7 @@ interface Notification {
   createdAt: string;
 }
 
-export const Navbar: React.FC = () => {
+export const Navbar: React.FC<NavbarProps> = ({ hideSidebarTrigger = false }) => {
   const { user, logout } = useAuth();
   const { isOverlayActive, toggleOverlay } = useOverlay();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -101,9 +105,9 @@ export const Navbar: React.FC = () => {
   return (
     <header className="border-b sticky top-0 z-40 bg-background">
       <div className="flex h-16 items-center px-4 md:px-6">
-        {/* Left side with sidebar trigger */}
+        {/* Left side with sidebar trigger - Hide when needed */}
         <div className="flex items-center gap-4">
-          <SidebarTrigger />
+          {!hideSidebarTrigger && <SidebarTrigger />}
         </div>
 
         {/* Search and Right Actions */}
@@ -125,14 +129,14 @@ export const Navbar: React.FC = () => {
           )} */}
 
           {/* Search */}
-          <div className="relative hidden md:block">
+          {/* <div className="relative hidden md:block">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <input type="search" placeholder="Search..." className="rounded-md border border-input bg-background px-3 py-2 pl-8 text-sm" />
-          </div>
+          </div> */}
 
           {/* Notification */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            {/* <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-5 w-5" />
                 {unreadCount > 0 && (
@@ -141,7 +145,7 @@ export const Navbar: React.FC = () => {
                   </span>
                 )}
               </Button>
-            </DropdownMenuTrigger>
+            </DropdownMenuTrigger> */}
             <DropdownMenuContent align="end" className="w-80 z-50">
               <DropdownMenuLabel>
                 Notifications {unreadCount > 0 && `(${unreadCount} unread)`}
@@ -184,9 +188,9 @@ export const Navbar: React.FC = () => {
           </DropdownMenu>
 
           {/* Help */}
-          <Button variant="ghost" size="icon">
+          {/* <Button variant="ghost" size="icon">
             <HelpCircle className="h-5 w-5" />
-          </Button>
+          </Button> */}
 
           {/* User Menu */}
           {user ? (
