@@ -184,7 +184,11 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
       employeeId: employee.employeeId || '',
       // roles: Array.isArray(employee.roles) ? employee.roles : [employee.roles],
       designation: employee.designation || '',
-      locations: Array.isArray(employee.locations) ? employee.locations : [],
+      locations: Array.isArray(employee.locations) && employee.locations.length
+      ? employee.locations
+      : employee.selectedLocation
+        ? [employee.selectedLocation]
+        : [],
       selectedLocation: employee.locations?.[0] || employee.location || '',
       active: employee.active || false,
       superUserId: employee.superUserId || '',
@@ -226,12 +230,18 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
 
       // Merge updates with original employee data to ensure all required fields are present
       const completePayload = {
-        ...selectedEmployee, // Keep all original fields
-        ...editForm,        // Apply updates
-        updatedAt: new Date().toISOString() // Update timestamp
+        _id: selectedEmployee._id,
+        name: editForm.name,
+        email: editForm.email,
+        employeeId: editForm.employeeId,
+        designation: editForm.designation,
+        locations: editForm.selectedLocation ? [editForm.selectedLocation] : [],
+        active: editForm.active,
+        mobile: editForm.mobile,
+        updatedAt: new Date().toISOString()
       };
 
-      logger.log('Sending complete payload to /subuser/activate:', completePayload);
+      logger.log('Sending complete payload to /subuser/activate: work', completePayload);
 
       const [response, error] = await updateEmployee(completePayload);
       logger.log('API Response:', response);
