@@ -106,15 +106,16 @@ const TeamManagementDashboard = () => {
   }, [fetchEmployeeCount, fetchLocationCount, fetchSubsidiariesCount]);
 
   const transformEmployeeData = (subusers) => {
-    return subusers.map(emp => ({
-      ...emp,
-      role: emp.accessUrls?.includes('admin') ? 'Admin' : 'User',
-      department: 'General',
-      location: emp?.userAccess?.[0]?.location || 'Unassigned',
-      city: emp.selectedLocation?.split(' ')[0] || 'Unknown',
-      status: emp.active ? 'Active' : 'Inactive'
-    }));
-  };
+    return subusers.map(emp => {
+        const userAccessLocations = emp?.userAccess?.[0]?.locations || [];
+        
+        return {
+            ...emp,
+            locations: userAccessLocations,
+            status: emp.active ? 'Active' : 'Inactive'
+        };
+    });
+};
 
   const stats = [
     {

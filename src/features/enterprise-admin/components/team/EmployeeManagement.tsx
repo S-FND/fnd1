@@ -34,8 +34,9 @@ interface Employee {
   active: boolean;
   selectedLocation: string;
   // roles: string;
-  department: string;
+  designation: string;
   location: string;
+  locations?: string[];
   userAccess: string[];
   createdAt: string;
   updatedAt: string;
@@ -143,7 +144,8 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
     email: '',
     employeeId: '',
     // roles: [],
-    department: '',
+    designation: '',
+    locations: [],
     selectedLocation: '',
     active: false,
     superUserId: '',
@@ -181,8 +183,9 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
       email: employee.email || '',
       employeeId: employee.employeeId || '',
       // roles: Array.isArray(employee.roles) ? employee.roles : [employee.roles],
-      department: employee.department || '',
-      selectedLocation: employee.location || '',
+      designation: employee.designation || '',
+      locations: Array.isArray(employee.locations) ? employee.locations : [],
+      selectedLocation: employee.locations?.[0] || employee.location || '',
       active: employee.active || false,
       superUserId: employee.superUserId || '',
       parentUserId: employee.parentUserId || '',
@@ -356,9 +359,10 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
     // const matchesRole = filterRole === 'all' || employee.roles === filterRole;
     const matchesRole = filterRole === 'all';
 
-    const loc = employee.selectedLocation || employee.location || 'Unassigned';
+    const employeeLocations = employee.locations || [];
     const matchesLocation = filterLocation === 'all' ||
-      (filterLocation && getLocationName(loc) === getLocationName(filterLocation));
+        employeeLocations.includes(filterLocation) ||
+        (filterLocation && getLocationName(employeeLocations[0]) === getLocationName(filterLocation));
 
     return matchesSearch && matchesRole && matchesLocation;
   });
@@ -525,7 +529,20 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
                     {employee.roles}
                   </Badge>
                 </TableCell> */}
-                <TableCell>{getLocationName(employee.selectedLocation || employee.location)}</TableCell>
+                {/* <TableCell>{getLocationName(employee.selectedLocation || employee.location)}</TableCell> */}
+                <TableCell>
+                    {employee.locations && employee.locations.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                            {employee.locations.map(locId => (
+                                <Badge key={locId} variant="outline" className="text-xs">
+                                    {getLocationName(locId)}
+                                </Badge>
+                            ))}
+                        </div>
+                    ) : (
+                        getLocationName(employee.selectedLocation || employee.location) || 'Unassigned'
+                    )}
+                </TableCell>
                 <TableCell>
                   <Badge variant={employee.active ? 'default' : 'destructive'}>
                     {employee.active ? 'Active' : 'Inactive'}
@@ -630,8 +647,8 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
               <Label htmlFor="edit-department">Department</Label>
               <Input
                 id="edit-department"
-                value={editForm.department}
-                onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
+                value={editForm.designation}
+                onChange={(e) => setEditForm({ ...editForm, designation: e.target.value })}
               />
             </div>
             <div>
