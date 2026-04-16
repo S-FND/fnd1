@@ -26,6 +26,7 @@ import {
 } from '../services/esgdd';
 import { logger } from '@/hooks/logger';
 import { PageAccessContext } from '@/context/PageAccessContext';
+import Loader from '@/components/ui/loader';
 
 interface PlanHistory {
   updateByUserId: string;
@@ -348,6 +349,7 @@ const ESGCapPage = () => {
   const [originalPlan, setOriginalPlan] = useState<ESGCapItem[]>([]);
   const {checkPageButtonAccess}=useContext(PageAccessContext);
   const [buttonEnabled, setButtonEnabled] = useState(false);
+  const [loadingMessage,setLoadingMessage]=useState("Loading ...")
 
   useEffect(() => {
     const userData = localStorage.getItem('fandoro-user');
@@ -380,6 +382,7 @@ const ESGCapPage = () => {
     if (!entityId) return;
 
     setLoading(true);
+    setLoadingMessage("Loading esg items ...")
     try {
       const data = await fetchEsgCap(entityId);
       if (data?.status) {
@@ -413,6 +416,7 @@ const ESGCapPage = () => {
     if (!esgCap || !esgCap?.entityId) return;
 
     setLoading(true);
+    setLoadingMessage("Processing data ...")
     try {
       let response;
       let finalData: any;
@@ -661,6 +665,7 @@ const ESGCapPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <Loader show={loading} />
       <UnifiedSidebarLayout>
         {/* <div className="space-y-6 p-1 pb-8"> */}
           {/* <div className="bg-white rounded-lg shadow-sm p-6">
@@ -696,7 +701,7 @@ const ESGCapPage = () => {
                   />
                 </div>
 
-                <div className="flex gap-2">
+                {/* <div className="flex gap-2">
                   {originalPlan.length > 0 && (
                     <Button
                       variant={showComparisonView ? "default" : "outline"}
@@ -711,7 +716,7 @@ const ESGCapPage = () => {
                       {showComparisonView ? "Exit Comparison" : "Compare Changes"}
                     </Button>
                   )}
-                </div>
+                </div> */}
               </div>
 
               <div className="border rounded-lg overflow-hidden">

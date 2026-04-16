@@ -34,6 +34,8 @@ import { getPolicyTemplate } from '@/data/policyTemplates';
 import { getSOPTemplate } from '@/data/sopTemplates';
 import { getLogTemplate } from '@/data/logTemplates';
 import { DocumentTemplateModal } from './DocumentTemplateModal';
+import { AiDialog } from '@/components/esg-cap/AiDialog';
+// import Loader from '@/components/ui/loader';
 
 interface ESGCapRowActionsProps {
   item: ESGCapItem;
@@ -53,7 +55,7 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showViewerModal, setShowViewerModal] = useState(false);
   const [documentCount, setDocumentCount] = useState(0);
-  const [isViewAiOpen, setIsViewAiOpen]=useState(false)
+  const [isViewAiOpen, setIsViewAiOpen] = useState(false)
 
   // Simulate document existence per item
   const hasDocument = !!item.actualCompletionDate;
@@ -151,6 +153,7 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
 
   return (
     <>
+      
       <div className="flex items-center gap-1.5">
         {hasDocument && (
           <Badge variant="outline" className="text-xs gap-1 text-green-700 border-green-300 bg-green-50">
@@ -186,10 +189,10 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
                     <Download className="mr-2 h-4 w-4" />
                     Download Template
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={()=>{setIsViewAiOpen(true)}}>
+                  {item.aiResponseRaw && <DropdownMenuItem onClick={() => { setIsViewAiOpen(true) }}>
                     <Download className="mr-2 h-4 w-4" />
-                    View details
-                  </DropdownMenuItem>
+                    View AI Insights
+                  </DropdownMenuItem>}
                 </DropdownMenuContent>
               </DropdownMenu>
             </TooltipTrigger>
@@ -335,7 +338,7 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
           </DialogFooter>
         </DialogContent>
       </Dialog> */}
-      <Dialog open={isViewAiOpen} onOpenChange={setIsViewAiOpen}>
+      {/* <Dialog open={isViewAiOpen} onOpenChange={setIsViewAiOpen}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{item.item}</DialogTitle>
@@ -346,7 +349,6 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
 
           <div className="space-y-6">
 
-            {/* 🔹 BASIC INFO */}
             <div>
               <h3 className="font-semibold mb-2">Basic Information</h3>
               <div className="grid grid-cols-2 gap-3 text-sm">
@@ -359,7 +361,6 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
               </div>
             </div>
 
-            {/* 🔹 AI INSIGHTS */}
             <div>
               <h3 className="font-semibold mb-2">AI Insights</h3>
               <p className="text-sm text-muted-foreground">
@@ -370,7 +371,6 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
               </p>
             </div>
 
-            {/* 🔹 REQUIRED EVIDENCE */}
             {item.aiResponseRaw?.requiredEvidence && (
               <div>
                 <h3 className="font-semibold mb-2">Required Evidence</h3>
@@ -387,7 +387,6 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
               </div>
             )}
 
-            {/* 🔹 TEMPLATES */}
             {item.aiResponseRaw?.templates?.length > 0 && (
               <div>
                 <h3 className="font-semibold mb-2">Suggested Templates</h3>
@@ -403,7 +402,6 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
                         Type: {template.type} • Format: {template.format}
                       </p>
 
-                      {/* Dynamic Structure Render */}
                       {template.structure?.components && (
                         <ul className="list-disc ml-5 text-sm">
                           {template.structure.components.map((c: string, i: number) => (
@@ -443,7 +441,8 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
+      <AiDialog isViewAiOpen={isViewAiOpen} onOpenChange={setIsViewAiOpen} item={item} />
     </>
   );
 
