@@ -64,7 +64,7 @@ export const ESGCapTableHeader: React.FC<ESGCapTableHeaderProps> = ({
         <TableHead className="!text-black">Actual Date</TableHead>
         <TableHead className="!text-black">Status</TableHead>
         <TableHead className="text-right !text-black">Actions</TableHead>
-        <TableHead className="!text-black">Remarks</TableHead>
+        {/* <TableHead className="!text-black">Remarks</TableHead> */}
 
       </TableRow>
     </TableHeader>
