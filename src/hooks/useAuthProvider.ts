@@ -18,13 +18,24 @@ export const useAuthProvider = () => {
   // let isAuthenticated=false;
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("fandoro-user");
-    const storedPermissions = localStorage.getItem("fandoro-permissions");
-    const storedToken = localStorage.getItem("fandoro-token");
-    
-    if (storedUser) setUser(JSON.parse(storedUser));
-    if (storedPermissions) setPermissions(JSON.parse(storedPermissions));
-    if (storedToken) setToken(storedToken);
+    try {
+      const storedUser = localStorage.getItem("fandoro-user");
+      const storedPermissions = localStorage.getItem("fandoro-permissions");
+      const storedToken = localStorage.getItem("fandoro-token");
+  
+      if (storedUser && storedUser !== "undefined") {
+        setUser(JSON.parse(storedUser));
+      }
+  
+      if (storedPermissions && storedPermissions !== "undefined") {
+        setPermissions(JSON.parse(storedPermissions));
+      }
+  
+      if (storedToken) setToken(storedToken);
+    } catch (e) {
+      console.error("Error parsing user data", e);
+    }
+  
     setIsLoading(false);
   }, []);
   
@@ -123,7 +134,6 @@ export const useAuthProvider = () => {
         break;
       case "StakeHolder":
         navigate("/stakeholders/dashboard")
-        break;
       default:
         navigate(from || "/settings");
     }
@@ -163,38 +173,38 @@ export const useAuthProvider = () => {
     return Boolean(permissions[feature].write);
   };
 
-  const isAuthenticatedStatus=(roles:string[])=>{
-    const storedUser:User = JSON.parse(localStorage.getItem("fandoro-user"));
-    const storedPermissions = localStorage.getItem("fandoro-permissions");
+  const isAuthenticatedStatus = (roles: string[]) => {
+    let storedUser: User | null = null;
+  
+    try {
+      const data = localStorage.getItem("fandoro-user");
+      if (data && data !== "undefined") {
+        storedUser = JSON.parse(data);
+      }
+    } catch {}
+  
     const storedToken = localStorage.getItem("fandoro-token");
-    // console.log('storedUser',storedUser)
-    // console.log('storedUser role',storedUser.role)
-    // debugger;
-    if(storedUser && storedToken ){
-      if(roles && roles.length>0){
-        if(roles.includes(storedUser.role)){
-          setIsLoading(false)
-          return true;
-        }
-        else{
-          setIsLoading(false)
-          return false;
-        }
+  
+    if (storedUser && storedToken) {
+      if (roles?.length > 0) {
+        return roles.includes(storedUser.role);
       }
-      else{
-      setIsLoading(false)
       return true;
-      }
     }
-    else{
-      return false;
-    }
-  }
+  
+    return false;
+  };
 
-  useEffect(()=>{
-    setUser(JSON.parse(localStorage.getItem("fandoro-user")))
-    setIsLoading(false)
-  },[])
+  useEffect(() => {
+    try {
+      const data = localStorage.getItem("fandoro-user");
+      if (data && data !== "undefined") {
+        setUser(JSON.parse(data));
+      }
+    } catch {}
+  
+    setIsLoading(false);
+  }, []);
 
   return {
     user,

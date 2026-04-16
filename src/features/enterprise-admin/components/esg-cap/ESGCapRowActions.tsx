@@ -364,10 +364,10 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
             <div>
               <h3 className="font-semibold mb-2">AI Insights</h3>
               <p className="text-sm text-muted-foreground">
-                {item.aiResponseRaw.reasoning}
+                {item.aiResponseRaw?.reasoning}
               </p>
               <p className="text-xs mt-1">
-                Confidence: {(item.aiResponseRaw.confidence * 100).toFixed(0)}%
+                Confidence: {(item.aiResponseRaw?.confidence * 100).toFixed(0)}%
               </p>
             </div>
 
