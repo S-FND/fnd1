@@ -206,7 +206,7 @@ const IRLPage = () => {
           newEnabledMap[tab] = 'all';
         }
       }
-      
+
       setEnabledItemsMap(newEnabledMap);
       setConfigLoaded(true);
     };
@@ -281,9 +281,9 @@ const IRLPage = () => {
       // Check main items
       const allMainItems = getMainItemsForTab(tabName);
       const enabledConfig = enabledItemsMap[tabName];
-      
+
       let hasMainQuestions = false;
-      
+
       // Safely check the config
       if (enabledConfig === 'all') {
         // No config exists - show all items
@@ -317,10 +317,10 @@ const IRLPage = () => {
   // Get visible tabs based on which tabs have questions
   const visibleTabs = useMemo(() => {
     if (!configLoaded) return [];
-    
-    const allTabs = ['company', 'hr', 'business', 'photographs', 'compliance', 
-                     'management', 'itsecurity', 'facility', 'governance', 'custom'];
-    
+
+    const allTabs = ['company', 'hr', 'business', 'photographs', 'compliance',
+      'management', 'itsecurity', 'facility', 'governance', 'custom'];
+
     const visible = allTabs.filter(tab => {
       try {
         return hasTabQuestions(tab);
@@ -329,7 +329,7 @@ const IRLPage = () => {
         return false;
       }
     });
-    
+
     console.log('Visible tabs:', visible);
     return visible;
   }, [configLoaded, hasTabQuestions]);
@@ -345,9 +345,9 @@ const IRLPage = () => {
   const getTabItems = (tabName) => {
     const allMainItems = getMainItemsForTab(tabName);
     const enabledConfig = enabledItemsMap[tabName];
-    
+
     let mainItems = [];
-    
+
     if (enabledConfig === 'all') {
       // No config exists - show all items
       mainItems = allMainItems;
@@ -414,7 +414,8 @@ const IRLPage = () => {
       }));
       const ws = XLSX.utils.json_to_sheet(dataWithSerialNo);
       const wb = XLSX.utils.book_new();
-      const tabName = activeTab === 'custom' ? 'Others' : (activeTab.charAt(0).toUpperCase() + activeTab.slice(1));
+      // const tabName = activeTab === 'custom' ? 'Others' : (activeTab.charAt(0).toUpperCase() + activeTab.slice(1));
+      const tabName = activeTab === 'itsecurity' ? 'IT Security' : (activeTab === 'custom' ? 'Others' : (activeTab.charAt(0).toUpperCase() + activeTab.slice(1)));
       XLSX.utils.book_append_sheet(wb, ws, tabName);
       ws['!cols'] = [{ wch: 8 }, { wch: 60 }, { wch: 8 }, { wch: 12 }, { wch: 15 }];
       XLSX.writeFile(wb, `${tabName}_Questions.xlsx`);
@@ -442,7 +443,8 @@ const IRLPage = () => {
           }));
           const ws = XLSX.utils.json_to_sheet(dataWithSerialNo);
           ws['!cols'] = [{ wch: 8 }, { wch: 60 }, { wch: 8 }, { wch: 12 }, { wch: 15 }];
-          const sheetName = tab === 'custom' ? 'Others' : (tab.charAt(0).toUpperCase() + tab.slice(1));
+          // const sheetName = tab === 'custom' ? 'Others' : (tab.charAt(0).toUpperCase() + tab.slice(1));
+          const sheetName = tab === 'itsecurity' ? 'IT Security' : (tab === 'custom' ? 'Others' : (tab.charAt(0).toUpperCase() + tab.slice(1)));
           XLSX.utils.book_append_sheet(wb, ws, sheetName);
           totalQuestions += all.length;
         }
@@ -480,21 +482,37 @@ const IRLPage = () => {
   return (
     <UnifiedSidebarLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Information Request List (IRL)</h1>
+        <div className="flex flex-col gap-3">
+          {/* Header */}
+          <div style={{ marginTop: '18px' }}>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Information Request List (IRL)
+            </h1>
             <p className="text-muted-foreground">
               Complete the comprehensive information request forms for ESG due diligence.
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleDownloadCurrentTab} disabled={downloading}>
+
+          {/* Buttons row (below header) */}
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadCurrentTab}
+              disabled={downloading}
+            >
               <FileSpreadsheet className="h-4 w-4" />
               Download Current Tab
             </Button>
-            <Button variant="default" size="sm" onClick={handleDownloadAllTabs} disabled={downloading}>
+
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleDownloadAllTabs}
+              disabled={downloading}
+            >
               <DownloadCloud className="h-4 w-4" />
-              {downloading ? 'Downloading...' : 'Download All Tabs'}
+              {downloading ? "Downloading..." : "Download All Tabs"}
             </Button>
           </div>
         </div>

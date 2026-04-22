@@ -82,7 +82,7 @@ const ESGMetricsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div style={{ marginTop: '18px' }}>
         <h1 className="text-2xl font-bold tracking-tight">ESG Metrics Management</h1>
         <p className="text-muted-foreground">
           Configure and manage ESG metrics. You can upload metrics directly or link them to material topics from your materiality assessment

@@ -74,22 +74,22 @@ const StakeholderLoginPage: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast.error('Please enter both email and password');
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
       // Get stakeholder data from stored stakeholders
       const stakeholder = getStakeholderByEmail(email);
       const sessionConfig = mockStakeholderSessions[email as keyof typeof mockStakeholderSessions];
-      
+
       if (stakeholder && sessionConfig && password === 'stakeholder123') {
         const hasSubmitted = stakeholder.prioritizations.length > 0;
-        
+
         const stakeholderData = {
           stakeholder,
           stakeholderName: stakeholder.name,
@@ -98,7 +98,7 @@ const StakeholderLoginPage: React.FC = () => {
           hasSubmitted,
           canViewResults: sessionConfig.canViewResults
         };
-        
+
         setStakeholderData(stakeholderData);
         setIsAuthenticated(true);
         setCurrentView(hasSubmitted ? 'results' : 'assessment');
@@ -115,7 +115,7 @@ const StakeholderLoginPage: React.FC = () => {
 
   const handleSavePrioritizations = (prioritizations: any[]) => {
     if (!stakeholderData?.stakeholder) return;
-    
+
     // Convert prioritizations to the proper format
     const stakeholderPrioritizations: StakeholderPrioritization[] = prioritizations.map(p => ({
       topicId: p.topicId,
@@ -127,26 +127,26 @@ const StakeholderLoginPage: React.FC = () => {
 
     // Update the stakeholder data
     const stakeholders: any = getStoredStakeholders();
-    const updatedStakeholders = stakeholders.map(s => 
-      s.id === stakeholderData.stakeholder.id 
+    const updatedStakeholders = stakeholders.map(s =>
+      s.id === stakeholderData.stakeholder.id
         ? { ...s, prioritizations: stakeholderPrioritizations }
         : s
     );
-    
+
     saveStakeholders(updatedStakeholders);
-    
+
     // Update local state to reflect the save (but not submitted yet)
     setStakeholderData({
       ...stakeholderData,
       stakeholder: { ...stakeholderData.stakeholder, prioritizations: stakeholderPrioritizations }
     });
-    
+
     toast.success('Your prioritizations have been saved as draft!');
   };
 
   const handleSubmitPrioritizations = (prioritizations: any[]) => {
     if (!stakeholderData?.stakeholder) return;
-    
+
     // Convert prioritizations to the proper format  
     const stakeholderPrioritizations: StakeholderPrioritization[] = prioritizations.map(p => ({
       topicId: p.topicId,
@@ -158,14 +158,14 @@ const StakeholderLoginPage: React.FC = () => {
 
     // Update the stakeholder data in localStorage
     const stakeholders: any = getStoredStakeholders();
-    const updatedStakeholders = stakeholders.map(s => 
-      s.id === stakeholderData.stakeholder.id 
+    const updatedStakeholders = stakeholders.map(s =>
+      s.id === stakeholderData.stakeholder.id
         ? { ...s, prioritizations: stakeholderPrioritizations }
         : s
     );
-    
+
     saveStakeholders(updatedStakeholders);
-    
+
     // Update local state to reflect submission
     setStakeholderData({
       ...stakeholderData,
@@ -173,7 +173,7 @@ const StakeholderLoginPage: React.FC = () => {
       hasSubmitted: true,
       canViewResults: true
     });
-    
+
     setCurrentView('results');
     toast.success('Your prioritizations have been submitted successfully!');
   };
@@ -210,7 +210,7 @@ const StakeholderLoginPage: React.FC = () => {
   //                     required
   //                   />
   //                 </div>
-                  
+
   //                 <div className="space-y-2">
   //                   <Label htmlFor="password">Password</Label>
   //                   <Input
@@ -222,7 +222,7 @@ const StakeholderLoginPage: React.FC = () => {
   //                     required
   //                   />
   //                 </div>
-                  
+
   //                 <Button 
   //                   type="submit" 
   //                   className="w-full" 
@@ -231,7 +231,7 @@ const StakeholderLoginPage: React.FC = () => {
   //                   {isLoading ? 'Logging in...' : 'Login'}
   //                 </Button>
   //               </form>
-                
+
   //               <div className="mt-6 space-y-3">
   //                 <div className="text-center text-sm text-muted-foreground">
   //                   <p className="font-medium mb-2">Demo Accounts:</p>
@@ -265,26 +265,34 @@ const StakeholderLoginPage: React.FC = () => {
   return (
     <UnifiedSidebarLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Materiality Assessment Portal</h1>
-            {/* <p className="text-muted-foreground">
-              Welcome, {stakeholderData?.stakeholderName} | Assessment Group: {stakeholderData.groupName}
-            </p> */}
+        <div className="flex flex-col gap-3">
+          {/* Header */}
+          <div className="flex justify-center text-center">
+            <div style={{ marginTop: '18px' }}>
+              <h1 className="text-2xl font-bold tracking-tight">
+                Materiality Assessment Portal
+              </h1>
+              {/* <p className="text-muted-foreground">
+        Welcome, {stakeholderData?.stakeholderName} | Assessment Group: {stakeholderData.groupName}
+      </p> */}
+            </div>
           </div>
-          <div className="flex gap-2">
+
+          {/* Actions */}
+          <div className="flex justify-end gap-2">
             {stakeholderData?.canViewResults && (
               <>
                 <Button
-                  variant={currentView === 'assessment' ? 'default' : 'outline'}
-                  onClick={() => setCurrentView('assessment')}
+                  variant={currentView === "assessment" ? "default" : "outline"}
+                  onClick={() => setCurrentView("assessment")}
                   disabled={stakeholderData.hasSubmitted}
                 >
                   Assessment
                 </Button>
+
                 <Button
-                  variant={currentView === 'results' ? 'default' : 'outline'}
-                  onClick={() => setCurrentView('results')}
+                  variant={currentView === "results" ? "default" : "outline"}
+                  onClick={() => setCurrentView("results")}
                 >
                   Results
                 </Button>

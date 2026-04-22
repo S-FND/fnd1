@@ -760,7 +760,7 @@ const ESMSPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div style={{ marginTop: '18px' }}>
         <h1 className="text-2xl font-bold tracking-tight">Environmental and Social Management System (ESMS)</h1>
         <p className="text-muted-foreground">
           Comprehensive ESG management framework and documentation
