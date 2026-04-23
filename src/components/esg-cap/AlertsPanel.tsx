@@ -17,7 +17,7 @@ export const AlertsPanel = ({
   onItemClick,
   finalPlan 
 }: AlertsPanelProps) => {
-  const [isOpen, setIsOpen] = useState(true); // Changed to true to show expanded by default
+  const [isOpen, setIsOpen] = useState(false);
 
   const totalAlerts = overdueItems.length + approachingDeadlines.length;
 
@@ -90,12 +90,12 @@ export const AlertsPanel = ({
                     key={item.id}
                     className="flex items-center justify-between p-2 bg-red-50 rounded border border-red-200"
                   >
-                    <div>
+                    <div className="flex items-center gap-2">
                       <p className="text-sm font-medium text-red-900">
                         {item.item}
                       </p>
                       <p className="text-xs text-red-600">
-                        Due: {item.targetDate
+                        • Due Date: {item.targetDate
                           ? new Date(item.targetDate).toLocaleDateString()
                           : "N/A"}
                       </p>
@@ -129,12 +129,12 @@ export const AlertsPanel = ({
                     key={item.id}
                     className="flex items-center justify-between p-2 bg-yellow-50 rounded border border-yellow-200"
                   >
-                    <div>
+                    <div className="flex items-center gap-2">
                       <p className="text-sm font-medium text-yellow-900">
                         {item.item}
                       </p>
                       <p className="text-xs text-yellow-600">
-                        Due: {item.targetDate
+                      • Due Date: {item.targetDate
                           ? new Date(item.targetDate).toLocaleDateString()
                           : "N/A"}
                       </p>

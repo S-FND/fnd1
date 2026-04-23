@@ -136,7 +136,7 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
           </div>
 
           {/* 6. ESG Lever */}
-          <div>
+          {/* <div>
             <Label htmlFor="esgLever">ESG Lever</Label>
             <Input
               id="esgLever"
@@ -145,7 +145,7 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
               disabled={isAccepted}
               placeholder="e.g., Policy, Training, Technology"
             />
-          </div>
+          </div> */}
 
           {/* 7. Measures */}
           <div>
