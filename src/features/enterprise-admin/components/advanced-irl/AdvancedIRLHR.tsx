@@ -124,10 +124,10 @@ const AdvancedIRLHR = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Advanced IRL - HR Information</CardTitle>
+        {/* <CardTitle>Advanced IRL - HR Information</CardTitle>
         <CardDescription>
           Comprehensive HR and employee-related information for BRSR compliance
-        </CardDescription>
+        </CardDescription> */}
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Working Hours */}

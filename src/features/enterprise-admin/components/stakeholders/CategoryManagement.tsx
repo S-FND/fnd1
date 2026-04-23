@@ -90,20 +90,20 @@ const CategoryManagement: React.FC = () => {
   const fetchCategories = async () => {
     try {
       setIsLoading(true);
-      
+
       // Build query params based on active tab filter
       const params = new URLSearchParams();
       if (activeTab !== 'all') {
         params.append('category', activeTab);
       }
-      
-      const url = activeTab === 'all' 
-        ? ENDPOINTS.LIST 
+
+      const url = activeTab === 'all'
+        ? ENDPOINTS.LIST
         : `${ENDPOINTS.LIST}?${params.toString()}`;
-      
+
       const response = await httpClient.get<ApiResponse<ApiCategory[]>>(url);
       console.log('Category list response:', response);
-      
+
       if (response.data?.status === true && response.data?.data) {
         if (Array.isArray(response.data.data)) {
           const transformedData: StakeholderSubcategory[] = response.data.data.map((item: ApiCategory) => ({
@@ -152,7 +152,7 @@ const CategoryManagement: React.FC = () => {
     try {
       setIsSubmitting(true);
       console.log('Submitting category data:', data);
-      
+
       const createDto = {
         name: data.name,
         description: data.description,
@@ -160,11 +160,11 @@ const CategoryManagement: React.FC = () => {
       };
 
       const response = await httpClient.post<ApiResponse<ApiCategory>>(
-        ENDPOINTS.CREATE, 
+        ENDPOINTS.CREATE,
         createDto
       );
       console.log('Create category response:', response);
-      
+
       if (response.data?.status === true && response.data?.data) {
         const newCategory: StakeholderSubcategory = {
           id: response.data.data._id,
@@ -172,7 +172,7 @@ const CategoryManagement: React.FC = () => {
           description: response.data.data.description || '',
           category: response.data.data.category
         };
-        
+
         setCategories(prev => [...prev, newCategory]);
         toast.success(response.data.message || 'Category created successfully');
         setIsDialogOpen(false);
@@ -193,11 +193,11 @@ const CategoryManagement: React.FC = () => {
 
   const onSubmitEdit = async (data: StakeholderSubcategory) => {
     if (!editingCategory) return;
-    
+
     try {
       setIsSubmitting(true);
       console.log('Updating category:', data);
-      
+
       const updateDto = {
         name: data.name,
         description: data.description,
@@ -209,19 +209,19 @@ const CategoryManagement: React.FC = () => {
         updateDto
       );
       console.log('Update category response:', response);
-      
+
       if (response.data?.status === true && response.data?.data) {
-        setCategories(prev => prev.map(cat => 
-          cat.id === editingCategory.id 
+        setCategories(prev => prev.map(cat =>
+          cat.id === editingCategory.id
             ? {
-                id: response.data.data._id,
-                name: response.data.data.name,
-                description: response.data.data.description || '',
-                category: response.data.data.category
-              }
+              id: response.data.data._id,
+              name: response.data.data.name,
+              description: response.data.data.description || '',
+              category: response.data.data.category
+            }
             : cat
         ));
-        
+
         toast.success(response.data.message || 'Category updated successfully');
         setIsEditDialogOpen(false);
         setEditingCategory(null);
@@ -237,13 +237,13 @@ const CategoryManagement: React.FC = () => {
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
-    
+
     try {
       setIsLoading(true);
       const response = await httpClient.delete<ApiResponse<void>>(
         ENDPOINTS.DELETE(id)
       );
-      
+
       if (response.data?.status === true) {
         setCategories(prev => prev.filter(cat => cat.id !== id));
         toast.success(response.data.message || 'Category deleted successfully');
@@ -266,7 +266,7 @@ const CategoryManagement: React.FC = () => {
     // Check if already initialized recently (within last 30 seconds)
     if (lastInitialized && (new Date().getTime() - lastInitialized.getTime() < 30000)) {
       const secondsAgo = Math.round((new Date().getTime() - lastInitialized.getTime()) / 1000);
-      
+
       // Show a more informative confirmation
       if (!confirm(
         `⚠️ Categories were already initialized ${secondsAgo} seconds ago.\n\n` +
@@ -289,30 +289,30 @@ const CategoryManagement: React.FC = () => {
         return;
       }
     }
-    
+
     try {
       setIsInitializing(true);
       setInitResult(null);
-      
+
       const toastId = toast.loading('Initializing default categories...');
-      
+
       console.log('Calling initialize endpoint:', ENDPOINTS.INITIALIZE);
       const response = await httpClient.post<ApiResponse<InitializeResult>>(
         ENDPOINTS.INITIALIZE,
         {}
       );
-      
+
       console.log('Initialize response:', response);
-      
+
       if (response.data?.status === true) {
         // Set last initialized time
         setLastInitialized(new Date());
-        
+
         // Store result if available
         if (response.data.data) {
           setInitResult(response.data.data);
         }
-        
+
         // Show success message with details
         const result = response.data.data;
         if (result) {
@@ -320,7 +320,7 @@ const CategoryManagement: React.FC = () => {
             `✅ Initialized: ${result.created} created, ${result.skipped} skipped`,
             { id: toastId, duration: 5000 }
           );
-          
+
           if (result.created > 0) {
             setShowInitSuccess(true);
           } else {
@@ -335,15 +335,15 @@ const CategoryManagement: React.FC = () => {
             { id: toastId, duration: 3000 }
           );
         }
-        
+
         // Refresh the categories list
         await fetchCategories();
       } else {
-    
+
       }
     } catch (error: any) {
       console.error('Error initializing defaults:', error);
-      
+
       // Handle specific error cases
       if (error.response?.status === 409) {
         toast.warning(
@@ -352,8 +352,8 @@ const CategoryManagement: React.FC = () => {
         );
         // Still refresh to show existing categories
         await fetchCategories();
-      } else if (error.response?.data?.message?.includes('duplicate') || 
-                 error.response?.data?.message?.includes('already exists')) {
+      } else if (error.response?.data?.message?.includes('duplicate') ||
+        error.response?.data?.message?.includes('already exists')) {
         toast.info(
           'Categories already exist. No duplicates created.',
           { duration: 4000 }
@@ -361,11 +361,11 @@ const CategoryManagement: React.FC = () => {
         // Still refresh to show existing categories
         await fetchCategories();
       } else {
-       
+
       }
     } finally {
       setIsInitializing(false);
-      
+
       // Auto-hide success message after 5 seconds
       setTimeout(() => setShowInitSuccess(false), 5000);
     }
@@ -421,26 +421,32 @@ const CategoryManagement: React.FC = () => {
         </Alert>
       )}
 
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Stakeholder Categories</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage stakeholder categories and types for your organization
-          </p>
+      <div className="flex flex-col gap-3">
+        {/* Header (centered) */}
+        <div className="flex justify-center text-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Stakeholder Categories
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Manage stakeholder categories and types for your organization
+            </p>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
+
+        {/* Actions row */}
+        <div className="flex justify-end gap-2 flex-wrap">
+          <Button
+            variant="outline"
             onClick={handleRefresh}
             disabled={isLoading || isInitializing}
             size="default"
           >
-            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            {isLoading ? 'Loading...' : 'Refresh'}
+            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            {isLoading ? "Loading..." : "Refresh"}
           </Button>
-          
-          {/* Initialize Defaults Button */}
-          <Button 
+
+          <Button
             variant={hasCategories ? "secondary" : "default"}
             onClick={handleInitializeDefaults}
             disabled={isLoading || isInitializing}
@@ -455,11 +461,10 @@ const CategoryManagement: React.FC = () => {
             ) : (
               <>
                 <Database className="mr-2 h-4 w-4" />
-                {lastInitialized ? 'Re-initialize' : 'Initialize Defaults'}
+                {lastInitialized ? "Re-initialize" : "Initialize Defaults"}
               </>
             )}
-            
-            {/* Show cooldown indicator if recently initialized */}
+
             {!isInitializing && lastInitialized && (
               <span className="absolute -top-1 -right-1 flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
@@ -467,7 +472,7 @@ const CategoryManagement: React.FC = () => {
               </span>
             )}
           </Button>
-          
+
           {/* Create Dialog */}
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
@@ -492,9 +497,9 @@ const CategoryManagement: React.FC = () => {
                       <FormItem>
                         <FormLabel>Category Name *</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="e.g., Executive Team, Board Members, Investors" 
-                            {...field} 
+                          <Input
+                            placeholder="e.g., Executive Team, Board Members, Investors"
+                            {...field}
                             disabled={isSubmitting}
                           />
                         </FormControl>
@@ -502,7 +507,7 @@ const CategoryManagement: React.FC = () => {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={createForm.control}
                     name="description"
@@ -510,11 +515,11 @@ const CategoryManagement: React.FC = () => {
                       <FormItem>
                         <FormLabel>Description</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            placeholder="Describe the purpose and typical stakeholders in this category" 
+                          <Textarea
+                            placeholder="Describe the purpose and typical stakeholders in this category"
                             className="resize-none"
                             rows={3}
-                            {...field} 
+                            {...field}
                             disabled={isSubmitting}
                           />
                         </FormControl>
@@ -522,7 +527,7 @@ const CategoryManagement: React.FC = () => {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={createForm.control}
                     name="category"
@@ -558,11 +563,11 @@ const CategoryManagement: React.FC = () => {
                       </FormItem>
                     )}
                   />
-                  
+
                   <DialogFooter className="pt-4">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       onClick={() => {
                         setIsDialogOpen(false);
                         createForm.reset({
@@ -571,7 +576,7 @@ const CategoryManagement: React.FC = () => {
                           description: '',
                           category: 'internal'
                         });
-                      }} 
+                      }}
                       disabled={isSubmitting}
                     >
                       Cancel
@@ -609,9 +614,9 @@ const CategoryManagement: React.FC = () => {
                       <FormItem>
                         <FormLabel>Category Name *</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="e.g., Executive Team, Board Members, Investors" 
-                            {...field} 
+                          <Input
+                            placeholder="e.g., Executive Team, Board Members, Investors"
+                            {...field}
                             disabled={isSubmitting}
                           />
                         </FormControl>
@@ -619,7 +624,7 @@ const CategoryManagement: React.FC = () => {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={editForm.control}
                     name="description"
@@ -627,11 +632,11 @@ const CategoryManagement: React.FC = () => {
                       <FormItem>
                         <FormLabel>Description</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            placeholder="Describe the purpose and typical stakeholders in this category" 
+                          <Textarea
+                            placeholder="Describe the purpose and typical stakeholders in this category"
                             className="resize-none"
                             rows={3}
-                            {...field} 
+                            {...field}
                             disabled={isSubmitting}
                           />
                         </FormControl>
@@ -639,7 +644,7 @@ const CategoryManagement: React.FC = () => {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={editForm.control}
                     name="category"
@@ -675,16 +680,16 @@ const CategoryManagement: React.FC = () => {
                       </FormItem>
                     )}
                   />
-                  
+
                   <DialogFooter className="pt-4">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
+                    <Button
+                      type="button"
+                      variant="outline"
                       onClick={() => {
                         setIsEditDialogOpen(false);
                         setEditingCategory(null);
                         editForm.reset();
-                      }} 
+                      }}
                       disabled={isSubmitting}
                     >
                       Cancel
@@ -704,7 +709,7 @@ const CategoryManagement: React.FC = () => {
           </Dialog>
         </div>
       </div>
-      
+
       <Card className="shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex justify-between items-center">
@@ -720,8 +725,8 @@ const CategoryManagement: React.FC = () => {
               </CardDescription>
             </div>
             {!hasCategories && !isLoading && (
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="sm"
                 onClick={handleInitializeDefaults}
                 disabled={isInitializing}
@@ -740,7 +745,7 @@ const CategoryManagement: React.FC = () => {
               <TabsTrigger value="internal">Internal</TabsTrigger>
               <TabsTrigger value="external">External</TabsTrigger>
             </TabsList>
-            
+
             {/* All Categories Tab */}
             <TabsContent value="all" className="space-y-4">
               <div className="rounded-md border">
@@ -775,7 +780,7 @@ const CategoryManagement: React.FC = () => {
                               </p>
                             </div>
                             <div className="flex gap-2">
-                              <Button 
+                              <Button
                                 variant="outline"
                                 onClick={() => setIsDialogOpen(true)}
                                 disabled={isInitializing}
@@ -783,7 +788,7 @@ const CategoryManagement: React.FC = () => {
                                 <Plus className="mr-2 h-4 w-4" />
                                 Add Manually
                               </Button>
-                              <Button 
+                              <Button
                                 onClick={handleInitializeDefaults}
                                 disabled={isInitializing}
                               >
@@ -808,11 +813,10 @@ const CategoryManagement: React.FC = () => {
                         <TableRow key={category.id} className="group">
                           <TableCell className="font-medium">{category.name}</TableCell>
                           <TableCell>
-                            <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                              category.category === 'internal' 
-                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' 
+                            <div className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${category.category === 'internal'
+                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
                                 : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300'
-                            }`}>
+                              }`}>
                               {category.category === 'internal' ? 'Internal' : 'External'}
                             </div>
                           </TableCell>
@@ -821,9 +825,9 @@ const CategoryManagement: React.FC = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 className="h-8 w-8"
                                 onClick={() => handleEdit(category)}
                                 disabled={isLoading || isInitializing}
@@ -832,9 +836,9 @@ const CategoryManagement: React.FC = () => {
                                 <Pencil className="h-4 w-4" />
                                 <span className="sr-only">Edit</span>
                               </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
                                 onClick={() => handleDelete(category.id, category.name)}
                                 disabled={isLoading || isInitializing}
@@ -852,7 +856,7 @@ const CategoryManagement: React.FC = () => {
                 </Table>
               </div>
             </TabsContent>
-            
+
             {/* Internal Categories Tab */}
             <TabsContent value="internal" className="space-y-4">
               {/* Similar content as before but with initialize button in empty state */}
@@ -880,7 +884,7 @@ const CategoryManagement: React.FC = () => {
                         <TableCell colSpan={3} className="text-center py-12 text-muted-foreground">
                           <div className="flex flex-col items-center gap-4">
                             <p className="text-lg">No internal categories found</p>
-                            <Button 
+                            <Button
                               variant="outline"
                               onClick={handleInitializeDefaults}
                               disabled={isInitializing}
@@ -903,9 +907,9 @@ const CategoryManagement: React.FC = () => {
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
                                   className="h-8 w-8"
                                   onClick={() => handleEdit(category)}
                                   disabled={isLoading || isInitializing}
@@ -913,9 +917,9 @@ const CategoryManagement: React.FC = () => {
                                 >
                                   <Pencil className="h-4 w-4" />
                                 </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
                                   className="h-8 w-8 text-destructive hover:text-destructive"
                                   onClick={() => handleDelete(category.id, category.name)}
                                   disabled={isLoading || isInitializing}
@@ -932,7 +936,7 @@ const CategoryManagement: React.FC = () => {
                 </Table>
               </div>
             </TabsContent>
-            
+
             {/* External Categories Tab */}
             <TabsContent value="external" className="space-y-4">
               {/* Similar content as before but with initialize button in empty state */}
@@ -960,7 +964,7 @@ const CategoryManagement: React.FC = () => {
                         <TableCell colSpan={3} className="text-center py-12 text-muted-foreground">
                           <div className="flex flex-col items-center gap-4">
                             <p className="text-lg">No external categories found</p>
-                            <Button 
+                            <Button
                               variant="outline"
                               onClick={handleInitializeDefaults}
                               disabled={isInitializing}
@@ -983,9 +987,9 @@ const CategoryManagement: React.FC = () => {
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
                                   className="h-8 w-8"
                                   onClick={() => handleEdit(category)}
                                   disabled={isLoading || isInitializing}
@@ -993,9 +997,9 @@ const CategoryManagement: React.FC = () => {
                                 >
                                   <Pencil className="h-4 w-4" />
                                 </Button>
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
                                   className="h-8 w-8 text-destructive hover:text-destructive"
                                   onClick={() => handleDelete(category.id, category.name)}
                                   disabled={isLoading || isInitializing}

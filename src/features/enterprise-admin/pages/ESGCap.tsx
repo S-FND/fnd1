@@ -17,6 +17,8 @@ import { HighlightDiff } from '@/components/esg-cap/HighlightDiff';
 import { Badge } from '@/components/ui/badge';
 import { ESGCapPriority } from '../types/esgDD';
 import { cn } from '@/lib/utils';
+import { AlertsPanel } from '@/components/esg-cap/AlertsPanel';
+import { useESGCAPAlerts } from '@/hooks/useESGCAPAlerts';
 
 import {
   fetchEsgCap,
@@ -183,11 +185,11 @@ const ComparePlanView = ({
   const getPriorityStyles = (priority: ESGCapPriority) => {
     switch (priority.toLowerCase()) {
       case 'high':
-        return 'bg-red-500 text-white';      // destructive
+        return 'bg-red-500 text-white';
       case 'medium':
-        return 'bg-yellow-400 text-black';   // warning
+        return 'bg-yellow-400 text-black';
       case 'low':
-        return 'bg-gray-300 text-black';     // muted
+        return 'bg-gray-300 text-black';
       default:
         return 'bg-gray-300 text-black';
     }
@@ -350,6 +352,8 @@ const ESGCapPage = () => {
   const {checkPageButtonAccess}=useContext(PageAccessContext);
   const [buttonEnabled, setButtonEnabled] = useState(false);
   const [loadingMessage,setLoadingMessage]=useState("Loading ...")
+  const [selectedItem, setSelectedItem] = useState<ESGCapItem | null>(null);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('fandoro-user');
@@ -411,6 +415,8 @@ const ESGCapPage = () => {
       setLoading(false);
     }
   };
+
+  const isPlanFinalized = esgCap?.finalPlan === true;
 
   const handleAction = async (action: 'requestChange' | 'accept' | 'update') => {
     if (!esgCap || !esgCap?.entityId) return;
@@ -549,6 +555,8 @@ const ESGCapPage = () => {
     loadData();
   }, [entityId]);
 
+  const alerts = useESGCAPAlerts(esgCap?.plan || [], originalPlan, esgCap?.finalPlan || false);
+
   const filteredItems = esgCap?.plan?.filter(item => {
     const matchesSearch =
       item.item?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
@@ -628,6 +636,7 @@ const ESGCapPage = () => {
   };
 
   const shouldDisableAcceptButton = () => {
+    if (isPlanFinalized) return true;
     if (!esgCap || !esgCap.founderPlanFinalStatus) return false;
     if (user?.entityType === 2 && esgCap.founderPlanFinalStatus === true) {
       return true;
@@ -636,6 +645,10 @@ const ESGCapPage = () => {
       return true;
     }
     return false;
+  };
+
+  const shouldDisableRequestButton = () => {
+    return loading || !buttonEnabled || isPlanFinalized;
   };
 
   logger.log('shouldDisableAcceptButton', shouldDisableAcceptButton());
@@ -663,106 +676,96 @@ const ESGCapPage = () => {
     });
   };
 
+  const handleReview = (item: ESGCapItem) => {
+    setSelectedItem(item);
+    setReviewDialogOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      <Loader show={loading} />
+      <Loader show={loading} text={loadingMessage} />
       <UnifiedSidebarLayout>
-        {/* <div className="space-y-6 p-1 pb-8"> */}
-          {/* <div className="bg-white rounded-lg shadow-sm p-6">
-            <Link to="/esg-dd" className="text-sm text-muted-foreground hover:text-foreground flex items-center mb-2 w-fit">
-              <ArrowLeft className="h-4 w-4 mr-1" /> Back to ESG DD
-            </Link>
-            <h1 className="text-3xl font-bold tracking-tight">ESG Corrective Action Plan</h1>
-            <p className="text-muted-foreground mt-1">
-              Track and manage corrective actions from ESG due diligence assessments.
-            </p>
-          </div> */}
+        <Card className="shadow-lg border-0">
+          <CardHeader className="border-b">
+            <CardDescription className="text-sm">
+              <h1 className="text-3xl font-bold tracking-tight">ESG Corrective Action Plan</h1>
+              <p className="mt-1">
+                Track and manage corrective actions from ESG due diligence assessments.
+              </p>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6">
+            {/* Filters Section */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+              <div className="w-full sm:w-auto">
+                <ESGCapFilters
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  statusFilter={statusFilter}
+                  setStatusFilter={setStatusFilter}
+                  categoryFilter={categoryFilter}
+                  setCategoryFilter={setCategoryFilter}
+                />
+              </div>
+            </div>
 
-          <Card className="shadow-lg border-0">
-            <CardHeader className="border-b ">
-              <CardDescription className="text-sm">
-                {/* {esgCap?.finalPlan && <span className="text-green-600 font-medium">✓ Final Plan</span>} */}
-                <h1 className="text-3xl font-bold tracking-tight">ESG Corrective Action Plan</h1>
-                <p className="mt-1">
-                  Track and manage corrective actions from ESG due diligence assessments.
-                </p>
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                <div className="w-full sm:w-auto">
-                  <ESGCapFilters
-                    searchTerm={searchTerm}
-                    setSearchTerm={setSearchTerm}
-                    statusFilter={statusFilter}
-                    setStatusFilter={setStatusFilter}
-                    categoryFilter={categoryFilter}
-                    setCategoryFilter={setCategoryFilter}
+            {/* Alerts Panel - MOVED OUTSIDE the filters container */}
+            {esgCap?.plan && esgCap.plan.length > 0 && (
+              <div className="mb-6">
+                <AlertsPanel
+                  overdueItems={alerts.overdueItems}
+                  approachingDeadlines={alerts.approachingDeadlines}
+                  onItemClick={handleReview}
+                  finalPlan={esgCap?.finalPlan}
+                />
+              </div>
+            )}
+
+            {/* Table Section */}
+            <div className="border rounded-lg overflow-hidden">
+              <div className="overflow-x-auto">
+                {showComparisonView ? (
+                  <ComparePlanView
+                    currentPlan={esgCap?.plan || []}
+                    originalPlan={originalPlan}
+                    onRevertItem={handleRevertItem}
+                    onRevertField={handleRevertField}
+                    showComparisonView={showComparisonView}
                   />
-                </div>
-
-                {/* <div className="flex gap-2">
-                  {originalPlan.length > 0 && (
-                    <Button
-                      variant={showComparisonView ? "default" : "outline"}
-                      onClick={toggleComparisonView}
-                      className={cn(
-                        "transition-all",
-                        showComparisonView && "bg-purple-600 hover:bg-purple-700 text-white"
-                      )}
-                    >
-                      <ArrowLeft className="h-4 w-4 mr-1" />
-                      <ArrowRight className="h-4 w-4 mr-1" />
-                      {showComparisonView ? "Exit Comparison" : "Compare Changes"}
-                    </Button>
-                  )}
-                </div> */}
+                ) : (
+                  <ESGCapTable
+                    sortedItems={sortedItems}
+                    sortConfig={sortConfig}
+                    requestSort={requestSort}
+                    onItemUpdate={handleUpdateItem}
+                    buttonEnabled={buttonEnabled}
+                  />
+                )}
               </div>
+            </div>
 
-              <div className="border rounded-lg overflow-hidden">
-                <div className="overflow-x-auto">
-                  {showComparisonView ? (
-                    <ComparePlanView
-                      currentPlan={esgCap?.plan || []}
-                      originalPlan={originalPlan}
-                      onRevertItem={handleRevertItem}
-                      onRevertField={handleRevertField}
-                      showComparisonView={showComparisonView}
-                    />
-                  ) : (
-                    <ESGCapTable
-                      sortedItems={sortedItems}
-                      sortConfig={sortConfig}
-                      requestSort={requestSort}
-                      onItemUpdate={handleUpdateItem}
-                      buttonEnabled={buttonEnabled}
-                    />
-                  )}
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => handleAction('requestChange')}
-                  disabled={loading || !buttonEnabled}
-                  className="hover:bg-amber-50"
-                >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Request CAP Change
-                </Button>
-                <Button
-                  onClick={() => handleAction('accept')}
-                  disabled={loading || !buttonEnabled || shouldDisableAcceptButton()}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Accept CAP
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        {/* </div> */}
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => handleAction('requestChange')}
+                disabled={shouldDisableRequestButton()} 
+                className="hover:bg-amber-50"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Request CAP Change
+              </Button>
+              <Button
+                onClick={() => handleAction('accept')}
+                disabled={loading || !buttonEnabled || shouldDisableAcceptButton()}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Accept CAP
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </UnifiedSidebarLayout>
     </div>
   );

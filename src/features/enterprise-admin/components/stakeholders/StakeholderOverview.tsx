@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  BarChart3, 
-  Network, 
-  Users, 
-  Building2, 
-  UserCircle, 
-  Briefcase, 
+import {
+  BarChart3,
+  Network,
+  Users,
+  Building2,
+  UserCircle,
+  Briefcase,
   Award,
   TrendingUp,
   TrendingDown,
@@ -66,7 +66,7 @@ const StakeholderOverview: React.FC<StakeholderOverviewProps> = ({ onNavigateToM
     try {
       setIsLoading(true);
       const response = await httpClient.get<ApiStakeholder[]>(API_ENDPOINTS.STAKEHOLDERS.LIST);
-      
+
       if (response.status === 200 && response.data) {
         if (Array.isArray(response.data)) {
           setStakeholders(response.data);
@@ -102,7 +102,7 @@ const StakeholderOverview: React.FC<StakeholderOverviewProps> = ({ onNavigateToM
     const subcategory = defaultStakeholderSubcategories.find(sc => sc.id === s.subcategoryId);
     return subcategory?.category === 'internal';
   }).length;
-  
+
   const externalCount = stakeholders.filter(s => {
     const subcategory = defaultStakeholderSubcategories.find(sc => sc.id === s.subcategoryId);
     return subcategory?.category === 'external';
@@ -111,7 +111,7 @@ const StakeholderOverview: React.FC<StakeholderOverviewProps> = ({ onNavigateToM
   const highEngagement = stakeholders.filter(s => s.engagementLevel === 'high').length;
   const mediumEngagement = stakeholders.filter(s => s.engagementLevel === 'medium').length;
   const lowEngagement = stakeholders.filter(s => s.engagementLevel === 'low').length;
-  
+
   const categoryCount = new Set(stakeholders.map(s => s.subcategoryId)).size;
 
   // Get stakeholders by category
@@ -264,23 +264,30 @@ const StakeholderOverview: React.FC<StakeholderOverviewProps> = ({ onNavigateToM
   return (
     <div className="space-y-6">
       {/* Header with refresh */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Stakeholder Overview</h2>
-          <p className="text-muted-foreground">
-            Monitor and analyze your stakeholder relationships
-          </p>
+      <div className="flex flex-col gap-3">
+        {/* Header */}
+          <div style={{ marginTop: '18px' }}>
+            <h2 className="text-2xl font-bold tracking-tight">
+              Stakeholder Overview
+            </h2>
+            <p className="text-muted-foreground">
+              Monitor and analyze your stakeholder relationships
+            </p>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={handleRefresh}
-          disabled={isLoading}
-          className="gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          {isLoading ? 'Refreshing...' : 'Refresh Data'}
-        </Button>
+
+        {/* Button below header */}
+        <div className="flex justify-end">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isLoading}
+            className="gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            {isLoading ? "Refreshing..." : "Refresh Data"}
+          </Button>
+        </div>
       </div>
 
       {/* Analytics Cards */}
@@ -362,7 +369,7 @@ const StakeholderOverview: React.FC<StakeholderOverviewProps> = ({ onNavigateToM
               <TabsTrigger value="internal">Internal</TabsTrigger>
               <TabsTrigger value="external">External</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="all" className="space-y-4">
               {stakeholders.length === 0 ? (
                 <div className="text-center py-12">
@@ -411,8 +418,8 @@ const StakeholderOverview: React.FC<StakeholderOverviewProps> = ({ onNavigateToM
                           </div>
                         ))}
                         {internalCount > 5 && (
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             className="w-full mt-2 text-sm"
                             onClick={handleNavigateToManage}
                           >
@@ -454,8 +461,8 @@ const StakeholderOverview: React.FC<StakeholderOverviewProps> = ({ onNavigateToM
                           </div>
                         ))}
                         {externalCount > 5 && (
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             className="w-full mt-2 text-sm"
                             onClick={handleNavigateToManage}
                           >
@@ -469,7 +476,7 @@ const StakeholderOverview: React.FC<StakeholderOverviewProps> = ({ onNavigateToM
                 </div>
               )}
             </TabsContent>
-            
+
             <TabsContent value="internal" className="space-y-4">
               {internalCount === 0 ? (
                 <div className="text-center py-12">
@@ -509,7 +516,7 @@ const StakeholderOverview: React.FC<StakeholderOverviewProps> = ({ onNavigateToM
                       </Card>
                     ))}
                   </div>
-                  
+
                   <div className="flex justify-center">
                     <Button onClick={handleNavigateToManage} variant="outline">
                       Manage All Internal Stakeholders
@@ -518,7 +525,7 @@ const StakeholderOverview: React.FC<StakeholderOverviewProps> = ({ onNavigateToM
                 </div>
               )}
             </TabsContent>
-            
+
             <TabsContent value="external" className="space-y-4">
               {externalCount === 0 ? (
                 <div className="text-center py-12">
@@ -558,7 +565,7 @@ const StakeholderOverview: React.FC<StakeholderOverviewProps> = ({ onNavigateToM
                       </Card>
                     ))}
                   </div>
-                  
+
                   <div className="flex justify-center">
                     <Button onClick={handleNavigateToManage} variant="outline">
                       Manage All External Stakeholders

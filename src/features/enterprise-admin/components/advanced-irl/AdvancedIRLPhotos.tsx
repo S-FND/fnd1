@@ -47,10 +47,10 @@ const AdvancedIRLPhotos = () => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Advanced IRL - Photo Documentation</CardTitle>
+        {/* <CardTitle>Advanced IRL - Photo Documentation</CardTitle>
         <CardDescription>
           Upload required photographs and screenshots for facility and product documentation
-        </CardDescription>
+        </CardDescription> */}
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Office Infrastructure Photos */}

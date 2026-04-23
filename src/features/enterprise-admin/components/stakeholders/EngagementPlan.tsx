@@ -70,7 +70,7 @@ const EngagementPlan: React.FC = () => {
   const [showPriorityView, setShowPriorityView] = useState(false);
   const [stakeholders, setStakeholders] = useState<TransformedStakeholder[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Fetch stakeholders and activities on mount
   useEffect(() => {
     fetchStakeholders();
@@ -104,11 +104,11 @@ const EngagementPlan: React.FC = () => {
   const fetchActivities = async () => {
     try {
       setIsLoading(true);
-  
+
       const response = await httpClient.get<ApiResponse<ApiEngagementActivity[]>>(
         'stakeholder-engagement-group/activities'
       );
-  
+
       if (response.data?.status && response.data?.data) {
         const transformedActivities: EngagementActivity[] =
           response.data.data.map((item) => {
@@ -116,20 +116,20 @@ const EngagementPlan: React.FC = () => {
             const stakeholderIds = (item.targetStakeholders || []).map((s: any) =>
               typeof s === 'string' ? s : s?._id
             );
-  
+
             return {
               id: item._id,
               title: item.title,
               type: item.type as any,
               purpose: item.purpose as any,
               description: item.description,
-  
+
               targetStakeholders: stakeholderIds,
               targetStakeholderDetails:
                 typeof item.targetStakeholders?.[0] === 'object'
                   ? item.targetStakeholders
                   : [],
-  
+
               topics: item.topics || [],
               scheduledDate: item.scheduledDate
                 ? new Date(item.scheduledDate)
@@ -143,7 +143,7 @@ const EngagementPlan: React.FC = () => {
               createdAt: new Date(item.createdAt),
             };
           });
-  
+
         setActivities(transformedActivities);
       }
     } catch (error) {
@@ -203,7 +203,7 @@ const EngagementPlan: React.FC = () => {
       );
 
       if (response.data?.status) {
-        setActivities(activities.map(act => 
+        setActivities(activities.map(act =>
           act.id === activityId ? { ...act, status: status as any } : act
         ));
         toast.success('Activity status updated');
@@ -270,34 +270,42 @@ const EngagementPlan: React.FC = () => {
   }
 
   // 🔥 Priority Matrix Logic
-const manageClosely = stakeholders.filter(
-  (s) => s.influence === 'high' && s.interest === 'high'
-);
+  const manageClosely = stakeholders.filter(
+    (s) => s.influence === 'high' && s.interest === 'high'
+  );
 
-const keepSatisfied = stakeholders.filter(
-  (s) => s.influence === 'high' && s.interest !== 'high'
-);
+  const keepSatisfied = stakeholders.filter(
+    (s) => s.influence === 'high' && s.interest !== 'high'
+  );
 
-const keepInformed = stakeholders.filter(
-  (s) => s.influence !== 'high' && s.interest === 'high'
-);
+  const keepInformed = stakeholders.filter(
+    (s) => s.influence !== 'high' && s.interest === 'high'
+  );
 
-const monitor = stakeholders.filter(
-  (s) => s.influence !== 'high' && s.interest !== 'high'
-);
-  
+  const monitor = stakeholders.filter(
+    (s) => s.influence !== 'high' && s.interest !== 'high'
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Stakeholder Engagement Plan</h1>
-        <div className="flex gap-2">
+      <div className="flex flex-col gap-3">
+        {/* Header (centered) */}
+        <div style={{ marginTop: '18px' }}>
+          <h1 className="text-2xl font-bold">
+            Stakeholder Engagement Plan
+          </h1>
+        </div>
+
+        {/* Actions row */}
+        <div className="flex justify-end gap-2 flex-wrap">
           <Button variant="outline" onClick={fetchActivities} disabled={isLoading}>
-            <Clock className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <Clock className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-          <CreateEngagementActivityDialog 
+
+          <CreateEngagementActivityDialog
             onActivityCreated={handleActivityCreated}
-            stakeholders={stakeholders} // Now stakeholders have both id and _id
+            stakeholders={stakeholders}
           />
         </div>
       </div>
@@ -362,7 +370,7 @@ const monitor = stakeholders.filter(
           )}
         </Card>
       )}
-      
+
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -370,73 +378,73 @@ const monitor = stakeholders.filter(
             <CardDescription>Organize stakeholders by influence and interest</CardDescription>
           </CardHeader>
           <CardContent className="h-80 relative">
-  <div className="absolute inset-0 p-4">
-    <div className="grid grid-cols-2 grid-rows-2 h-full border text-xs">
+            <div className="absolute inset-0 p-4">
+              <div className="grid grid-cols-2 grid-rows-2 h-full border text-xs">
 
-      {/* Keep Satisfied */}
-      <div className="border-r border-b p-2 bg-amber-50 overflow-auto">
-        <div className="font-semibold mb-1">Keep Satisfied</div>
-        {keepSatisfied.length === 0 ? (
-          <p className="text-muted-foreground">No stakeholders</p>
-        ) : (
-          keepSatisfied.map(s => (
-            <div key={s.id} className="truncate">
-              • {s.name}
+                {/* Keep Satisfied */}
+                <div className="border-r border-b p-2 bg-amber-50 overflow-auto">
+                  <div className="font-semibold mb-1">Keep Satisfied</div>
+                  {keepSatisfied.length === 0 ? (
+                    <p className="text-muted-foreground">No stakeholders</p>
+                  ) : (
+                    keepSatisfied.map(s => (
+                      <div key={s.id} className="truncate">
+                        • {s.name}
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Manage Closely */}
+                <div className="border-b p-2 bg-green-50 overflow-auto">
+                  <div className="font-semibold mb-1">Manage Closely</div>
+                  {manageClosely.length === 0 ? (
+                    <p className="text-muted-foreground">No stakeholders</p>
+                  ) : (
+                    manageClosely.map(s => (
+                      <div key={s.id} className="truncate font-medium">
+                        • {s.name}
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Monitor */}
+                <div className="border-r p-2 overflow-auto">
+                  <div className="font-semibold mb-1">Monitor</div>
+                  {monitor.length === 0 ? (
+                    <p className="text-muted-foreground">No stakeholders</p>
+                  ) : (
+                    monitor.map(s => (
+                      <div key={s.id} className="truncate">
+                        • {s.name}
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Keep Informed */}
+                <div className="p-2 bg-blue-50 overflow-auto">
+                  <div className="font-semibold mb-1">Keep Informed</div>
+                  {keepInformed.length === 0 ? (
+                    <p className="text-muted-foreground">No stakeholders</p>
+                  ) : (
+                    keepInformed.map(s => (
+                      <div key={s.id} className="truncate">
+                        • {s.name}
+                      </div>
+                    ))
+                  )}
+                </div>
+
+              </div>
             </div>
-          ))
-        )}
-      </div>
-
-      {/* Manage Closely */}
-      <div className="border-b p-2 bg-green-50 overflow-auto">
-        <div className="font-semibold mb-1">Manage Closely</div>
-        {manageClosely.length === 0 ? (
-          <p className="text-muted-foreground">No stakeholders</p>
-        ) : (
-          manageClosely.map(s => (
-            <div key={s.id} className="truncate font-medium">
-              • {s.name}
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Monitor */}
-      <div className="border-r p-2 overflow-auto">
-        <div className="font-semibold mb-1">Monitor</div>
-        {monitor.length === 0 ? (
-          <p className="text-muted-foreground">No stakeholders</p>
-        ) : (
-          monitor.map(s => (
-            <div key={s.id} className="truncate">
-              • {s.name}
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Keep Informed */}
-      <div className="p-2 bg-blue-50 overflow-auto">
-        <div className="font-semibold mb-1">Keep Informed</div>
-        {keepInformed.length === 0 ? (
-          <p className="text-muted-foreground">No stakeholders</p>
-        ) : (
-          keepInformed.map(s => (
-            <div key={s.id} className="truncate">
-              • {s.name}
-            </div>
-          ))
-        )}
-      </div>
-
-    </div>
-  </div>
-</CardContent>
+          </CardContent>
           <CardFooter className="text-sm text-muted-foreground">
             Based on power/interest grid analysis
           </CardFooter>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>High Priority Stakeholders</CardTitle>
@@ -471,7 +479,7 @@ const monitor = stakeholders.filter(
                           {subcategory?.category === 'internal' ? 'Internal' : 'External'}
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
-                          Last contact: {stakeholder.lastContact ? 
+                          Last contact: {stakeholder.lastContact ?
                             new Date(stakeholder.lastContact).toLocaleDateString() : 'Never'}
                         </div>
                       </div>
@@ -487,8 +495,8 @@ const monitor = stakeholders.filter(
             </div>
           </CardContent>
           <CardFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full"
               onClick={() => setShowPriorityView(true)}
             >
@@ -497,7 +505,7 @@ const monitor = stakeholders.filter(
           </CardFooter>
         </Card>
       </div>
-      
+
       <Card>
         <CardHeader>
           <CardTitle>Engagement Strategy</CardTitle>
@@ -509,17 +517,17 @@ const monitor = stakeholders.filter(
               <h3 className="font-semibold mb-1">Manage Closely (High influence, High interest)</h3>
               <p className="text-sm">These are key stakeholders who should be fully engaged and their support is critical. Regular face-to-face meetings, consistent updates, and integration into decision-making processes.</p>
             </div>
-            
+
             <div className="p-4 rounded-md border-l-4 border-amber-400 bg-amber-50">
               <h3 className="font-semibold mb-1">Keep Satisfied (High influence, Low interest)</h3>
               <p className="text-sm">Keep these stakeholders satisfied but don't overwhelm them with communications. Focus on areas of specific interest, provide targeted updates, and address concerns promptly.</p>
             </div>
-            
+
             <div className="p-4 rounded-md border-l-4 border-blue-400 bg-blue-50">
               <h3 className="font-semibold mb-1">Keep Informed (Low influence, High interest)</h3>
               <p className="text-sm">Keep these stakeholders adequately informed and ensure no major issues are arising. Regular newsletters, website updates, and open channels for questions and feedback.</p>
             </div>
-            
+
             <div className="p-4 rounded-md border-l-4 border-gray-400 bg-gray-50">
               <h3 className="font-semibold mb-1">Monitor (Low influence, Low interest)</h3>
               <p className="text-sm">Monitor these stakeholders but don't overwhelm them with excessive communications. Provide access to general information through websites or annual reports.</p>
