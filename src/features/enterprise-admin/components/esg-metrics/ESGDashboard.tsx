@@ -357,7 +357,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics, finalMetric
     // Go through each metric in your graphData
     Object.keys(graphData).forEach(metricName => {
       // Find the corresponding metric in finalMetricsList
-      const finalMetric = (finalMetricsList ?? []).find(m => m.name === metricName);
+      const finalMetric = finalMetricsList.find(m => m.name === metricName);
 
       if (finalMetric && finalMetric.esg) {
         const esgCat = finalMetric.esg.trim();
@@ -686,7 +686,7 @@ const ESGDashboard: React.FC<ESGDashboardProps> = ({ materialTopics, finalMetric
                           </div>
                           <ul className="ml-6 list-disc space-y-1 text-sm">
                             {Object.keys(graphData).filter(metricName => {
-                              const finalMetric = (finalMetricsList ?? []).find(m => m.name === metricName);
+                              const finalMetric = finalMetricsList.find(m => m.name === metricName);
                               if (!finalMetric) return false;
                               const esg = finalMetric.esg?.trim().toLowerCase() || '';
                               if (cat.category === 'Environmental') return esg.includes('environ');

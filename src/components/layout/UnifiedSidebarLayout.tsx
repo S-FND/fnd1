@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -12,12 +13,10 @@ import { logger } from '@/hooks/logger';
 
 interface UnifiedSidebarLayoutProps {
   children: React.ReactNode;
-  hideSidebar?: boolean;
 }
 
 export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({
-  children,
-  hideSidebar = false
+  children
 }) => {
   logger.log('🔵 UnifiedSidebarLayout: Starting to render');
   const { user, logout } = useAuth();
@@ -27,21 +26,21 @@ export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({
   logger.log('🔵 UnifiedSidebarLayout: About to return JSX');
   
   return (
-    <SidebarProvider defaultOpen={!hideSidebar}>
-      <div className="flex min-h-screen w-full bg-background">
-        {!hideSidebar && <UnifiedSidebar />}
-        <div className={`flex-1 flex flex-col min-w-0 overflow-hidden ${hideSidebar ? 'w-full' : ''}`}>
-          <Navbar hideSidebarTrigger={hideSidebar} /> {/* Pass prop to Navbar */}
-          <main className="flex-1 overflow-auto w-full">
-            <PageOverlay>
-              <div className="w-full">
-                {children}
-              </div>
-            </PageOverlay>
-          </main>
-        </div>
+    <SidebarProvider defaultOpen={true}>
+    <div className="flex min-h-screen w-full bg-background">
+      <UnifiedSidebar />
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <Navbar />
+        <main className="flex-1 overflow-auto w-full">
+          <PageOverlay>
+            <div className="w-full">
+              {children}
+            </div>
+          </PageOverlay>
+        </main>
       </div>
-    </SidebarProvider>
+    </div>
+  </SidebarProvider>
   );
 };
 
@@ -51,7 +50,7 @@ const UnifiedSidebar: React.FC = () => {
   const role = user?.role || 'employee';
   const sidebarContentRef = useRef<HTMLDivElement>(null);
   const [scrollPosition, setScrollPosition] = useState(0);
-  const path = location.pathname.split('/')[1];
+  const path = location.pathname.split('/')[1]; //
   
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
     esgManagement: path == 'esg',
@@ -77,6 +76,7 @@ const UnifiedSidebar: React.FC = () => {
   // Restore scroll position after menu state changes
   useEffect(() => {
     if (sidebarContentRef.current && scrollPosition > 0) {
+      // Use setTimeout to ensure the DOM has updated
       setTimeout(() => {
         if (sidebarContentRef.current) {
           sidebarContentRef.current.scrollTop = scrollPosition;
@@ -86,7 +86,7 @@ const UnifiedSidebar: React.FC = () => {
   }, [expandedMenus, scrollPosition]);
 
   useEffect(() => {
-    logger.log("🔵 UnifiedSidebar: Location changed to", location.pathname, location.pathname.startsWith('/esg'));
+    logger.log("🔵 UnifiedSidebar: Location changed to", location.pathname,location.pathname.startsWith('/esg'));
     logger.debug("🔵 UnifiedSidebar: Expanded menus state changed:", expandedMenus);
   }, [expandedMenus]);
 

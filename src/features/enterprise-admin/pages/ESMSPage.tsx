@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Upload, FileText, Check, X, Trash2, MessageSquare } from 'lucide-react';
+import { Upload, FileText, Check, X, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { httpClient } from '@/lib/httpClient';
 import { ENV } from "@/config/env";
@@ -24,7 +24,6 @@ import { logger } from '@/hooks/logger';
 import { PageAccessContext } from '@/context/PageAccessContext';
 const API_URL = ENV.API_URL;
 import { getS3FilePath } from "@/utils/fileUrl";
-import { Tooltip, TooltipContent, TooltipTrigger } from '@radix-ui/react-tooltip';
 interface ESMSDocument {
   id: string;
   title: string;
@@ -33,15 +32,6 @@ interface ESMSDocument {
   isApplicable: string;
   fileNames?: string[];
   fileUrls?: string[];
-  fileStatus?: FileVerificationSummary[]
-}
-
-interface FileVerificationSummary {
-  fileName: string;
-  status: string;
-  comment: string | null;
-  verifierName: string | null;
-  verifiedDate: string | null;
 }
 
 interface ESMSDocumentSection {
@@ -51,143 +41,8 @@ interface ESMSDocumentSection {
   documents: ESMSDocument[];
 }
 
-export const baseESMSDocumentList = [
-  {
-    id: 'compliance',
-    title: 'Compliance - Registration/Filing/Returns/Reports',
-    description: 'Legal compliance documents and regulatory registrations',
-    documents: [
-      { id: 'env-clearance', title: 'Environmental clearances', fileChange: false, isApplicable: "yes" },
-      { id: 'hazard-waste', title: 'Hazardous waste authorizations', fileChange: false, isApplicable: "yes" },
-      { id: 'epr-ewaste', title: 'EPR Registration and Filing - E-waste', fileChange: false, isApplicable: "yes" },
-      { id: 'epr-used-oil', title: 'EPR Registration and Filing - Used Oil', fileChange: false, isApplicable: "yes" },
-      { id: 'epr-plastic', title: 'EPR Registration and Filing - Plastic', fileChange: false, isApplicable: "yes" },
-      { id: 'epr-battery', title: 'EPR Registration and Filing - Battery', fileChange: false, isApplicable: "yes" },
-      { id: 'epr-tyre', title: 'EPR Registration and Filing - Tyre', fileChange: false, isApplicable: "yes" },
-      { id: 'waste-recycling', title: 'Authorized waste recycling/disposal certificates', fileChange: false, isApplicable: "yes" },
-      {
-        id: 'pollution-consent',
-        title: 'State Pollution Control Board Consent',
-        subItems: ['Consent to Establish', 'Consent to Operate'],
-        fileChange: false,
-        isApplicable: "yes"
-      },
-      { id: 'trem-card', title: 'TREM Card for Transportation', fileChange: false, isApplicable: "yes" },
-      { id: 'building-stability', title: 'Building Stability Certificate', fileChange: false, isApplicable: "yes" },
-      { id: 'electrical-inspector', title: 'Electrical Inspector for operation of Generator set(s)', fileChange: false, isApplicable: "yes" },
-      { id: 'industrial-order', title: 'Industrial Standing Order approved from Factory Inspector', fileChange: false, isApplicable: "yes" },
-      { id: 'psara-license', title: 'PSARA license of the Security Agency (under Private Security Agency Regulation Act)', fileChange: false, isApplicable: "yes" },
-      { id: 'factory-plan', title: 'Factory Approved Plan by DISH (Dept. of Industrial Safety & Health)', fileChange: false, isApplicable: "yes" },
-      { id: 'env-statement', title: 'Environmental Statement in Form V', fileChange: false, isApplicable: "yes" },
-      { id: 'esia-reports', title: 'Environmental & Social Impact Assessment (ESIA/EIA) Reports', fileChange: false, isApplicable: "yes" },
-      { id: 'bore-well', title: 'Registration Certificate of bore well', fileChange: false, isApplicable: "yes" },
-      { id: 'groundwater-license', title: 'Groundwater use license/registration (Central Ground Water Authority)', fileChange: false, isApplicable: "yes" },
-      { id: 'factories-license', title: 'Factories Act License', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-reg-principal', title: 'Labor Department Registrations - Principal Employer', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-reg-minimum-wages', title: 'Labor Department Registrations - Minimum wages', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-reg-muster-roll', title: 'Labor Department Registrations - Muster roll', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-reg-accident', title: 'Labor Department Registrations - Accident/incident', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-reg-leave-compliance', title: 'Labor Department Registrations - Leave compliance as per S&E Act', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-reg-holiday-list', title: 'Labor Department Registrations - Holiday List as per S&E Act', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-reg-interstate', title: 'Labor Department Registrations - Inter-state Migrant labor Registration', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-reg-construction', title: 'Labor Department Registrations - Building & Other Construction Workers', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-reg-welfare', title: 'Labor Department Registrations - Labor Welfare Fund', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-reg-trade-union', title: 'Labor Department Registrations - Trade Union', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-register-overtime', title: 'Labor Department Registers - Overtime', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-register-wages', title: 'Labor Department Registers - Wages (including deductions, fines, advances)', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-register-attendance', title: 'Labor Department Registers - Muster roll / Attendance', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-register-accident', title: 'Labor Department Registers - Accident/incident', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-register-maternity', title: 'Labor Department Registers - Maternity Benefit register', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-register-grievance', title: 'Labor Department Registers - Grievance Register', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-returns-factory', title: 'Labor Department Annual returns filing - Factory Annual Return (Form 21)', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-returns-minimum-wages', title: 'Labor Department Annual returns filing - Minimum wages', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-returns-muster-roll', title: 'Labor Department Annual returns filing - Muster roll', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-returns-accident', title: 'Labor Department Annual returns filing - Accident/incident', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-returns-contract', title: 'Labor Department Annual returns filing - Contract labor', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-returns-maternity', title: 'Labor Department Annual returns filing - Maternity Benefits', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-returns-interstate', title: 'Labor Department Annual returns filing - Inter-state Migrant labor', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-returns-construction', title: 'Labor Department Annual returns filing - Building & Other Construction Workers', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-returns-welfare', title: 'Labor Department Annual returns filing - Labor Welfare Fund', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-returns-trade-union', title: 'Labor Department Annual returns filing - Trade Union', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-returns-posh', title: 'Labor Department Annual returns filing - POSH', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-returns-gratuity', title: 'Labor Department Annual returns filing - Gratuity', fileChange: false, isApplicable: "yes" },
-      { id: 'labor-returns-bonus', title: 'Labor Department Annual returns filing - Payment of Bonus', fileChange: false, isApplicable: "yes" },
-      { id: 'display-abstracts', title: 'Display Requirements- Facility - Abstracts of major Acts (Wages, Bonus, Equal Remuneration, Minimum Wage, Child Labour, etc.)', fileChange: false, isApplicable: "yes" },
-      { id: 'display-name-address', title: 'Display Requirements- Facility - Name & address of the establishment', fileChange: false, isApplicable: "yes" },
-      { id: 'display-working-hours', title: 'Display Requirements- Facility - Working hours', fileChange: false, isApplicable: "yes" },
-      { id: 'display-holidays', title: 'Display Requirements- Facility - List of holidays', fileChange: false, isApplicable: "yes" },
-      { id: 'display-factory-license', title: 'Display Requirements- Facility - Factory license', fileChange: false, isApplicable: "yes" },
-      { id: 'display-fssai', title: 'Display Requirements- Facility - FSSAI License', fileChange: false, isApplicable: "yes" },
-      { id: 'display-emergency', title: 'Display Requirements- Facility - Emergency Contacts', fileChange: false, isApplicable: "yes" },
-      { id: 'display-grievance', title: 'Display Requirements- Facility - Grievance Redressal Mechanism Policy and Procedure (English and Local language)', fileChange: false, isApplicable: "yes" },
-      { id: 'esic-registration', title: 'ESIC Registration', fileChange: false, isApplicable: "yes" },
-      { id: 'epfo-registration', title: 'EPFO Registration', fileChange: false, isApplicable: "yes" },
-      { id: 'professional-tax', title: 'Professional Tax Registration', fileChange: false, isApplicable: "yes" },
-      { id: 'shops-establishment', title: 'Shops and Establishment Registration', fileChange: false, isApplicable: "yes" },
-      { id: 'building-occupancy', title: 'Building Occupancy Certificate (BOC)', fileChange: false, isApplicable: "yes" },
-      { id: 'fire-noc', title: 'Fire NOC', fileChange: false, isApplicable: "yes" },
-      { id: 'fssai-cert', title: 'FSSAI Certification', fileChange: false, isApplicable: "yes" },
-      { id: 'cdsco-registration', title: 'CDSCO Registration', fileChange: false, isApplicable: "yes" },
-      { id: 'electricity-serc', title: 'Electricity Regulatory Registration - SERC (State Electricity Regulatory Commission)', fileChange: false, isApplicable: "yes" },
-      { id: 'electricity-cerc', title: 'Electricity Regulatory Registration - CERC (Central Electricity Regulatory Commission)', fileChange: false, isApplicable: "yes" },
-      { id: 'msme-registration', title: 'MSME (Udyam) Registration', fileChange: false, isApplicable: "yes" },
-      { id: 'ssi-registration', title: 'National Small-Scale Industries Registration', fileChange: false, isApplicable: "yes" },
-      { id: 'iec-certificate', title: 'Importer-Exporter Code Certificate', fileChange: false, isApplicable: "yes" },
-      { id: 'trade-license', title: 'Trade License', fileChange: false, isApplicable: "yes" },
-      { id: 'legal-metrology', title: 'Legal Metrology Certificate', fileChange: false, isApplicable: "yes" },
-      { id: 'bis-certificate', title: 'BIS Certificate', fileChange: false, isApplicable: "yes" },
-      { id: 'rohs-certificate', title: 'RoHS Certificate', fileChange: false, isApplicable: "yes" },
-    ]
-  },
-  {
-    id: 'policies',
-    title: 'Policies/SOPs',
-    description: 'Corporate policies and standard operating procedures',
-    documents: [
-      { id: 'esg-policy', title: 'Environmental, Social, and Governance Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'code-conduct', title: 'Code of Conduct and Business Ethics', fileChange: false, isApplicable: "yes" },
-      { id: 'ehs-policy', title: 'Environment, Health, Safety (EHS) Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'human-rights', title: 'Human Rights and Fair Labor Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'equal-opportunity', title: 'Equal Opportunity Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'diversity-policy', title: 'Diversity, Equity & Inclusion Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'gender-equality', title: 'Gender Equality Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'employee-handbook', title: 'Employee Handbook', fileChange: false, isApplicable: "yes" },
-      { id: 'hr-policy', title: 'HR Policy and Procedures', fileChange: false, isApplicable: "yes" },
-      { id: 'anti-bribery', title: 'Anti-Bribery and Anti-Corruption Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'whistleblower', title: 'Whistleblower Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'grievance-redressal', title: 'Grievance Redressal Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'responsible-sourcing', title: 'Responsible Sourcing & Supply Chain Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'stakeholder-engagement', title: 'Stakeholder Engagement Plan', fileChange: false, isApplicable: "yes" },
-      { id: 'community-development', title: 'Community Development Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'data-privacy', title: 'Data Privacy and Protection Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'occupational-health', title: 'Occupational Health and Safety Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'energy-management', title: 'Energy Management Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'biodiversity-conservation', title: 'Biodiversity Conservation Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'waste-management', title: 'Waste Management Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'water-resource', title: 'Water Resource Management Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'land-acquisition', title: 'Land Acquisition and Resettlement Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'child-labor', title: 'Child Labor & Forced Labor Prohibition Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'retrenchment-policy', title: 'Retrenchment Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'posh-policy', title: 'Prevention of Sexual Harassment (POSH) Policy', fileChange: false, isApplicable: "yes" },
-      { id: 'risk-management', title: 'Risk Management Framework (including E&S risks)', fileChange: false, isApplicable: "yes" },
-      { id: 'materiality-assessment', title: 'Materiality Assessment Framework', fileChange: false, isApplicable: "yes" },
-      { id: 'supplier-code', title: 'Supplier Code of Conduct', fileChange: false, isApplicable: "yes" },
-      { id: 'monitoring-sop', title: 'Monitoring & Measurement SOP (for ESG KPIs and compliance tracking)', fileChange: false, isApplicable: "yes" },
-      { id: 'record-keeping', title: 'Record Keeping & Documentation SOP', fileChange: false, isApplicable: "yes" },
-      { id: 'hira', title: 'Hazard Identification and Risk Assessment (HIRA)', fileChange: false, isApplicable: "yes" },
-      { id: 'ppe-usage', title: 'PPE Usage Policy and SOP', fileChange: false, isApplicable: "yes" },
-      { id: 'job-safety', title: 'Job/Process Safety Analysis', fileChange: false, isApplicable: "yes" },
-      { id: 'legal-compliance', title: 'Legal Compliance Register', fileChange: false, isApplicable: "yes" },
-      { id: 'emergency-response', title: 'Emergency Response and Preparedness Plan', fileChange: false, isApplicable: "yes" },
-      { id: 'fire-safety', title: 'Fire and Electrical Safety Certificates and SOP', fileChange: false, isApplicable: "yes" },
-      { id: 'incident-management', title: 'Incident Management Policy and Register', fileChange: false, isApplicable: "yes" },
-      { id: 'first-aid', title: 'First Aid Policy and Consumption Records', fileChange: false, isApplicable: "yes" },
-    ]
-  }
-]
-
 const ESMSPage: React.FC = () => {
-  const { checkPageButtonAccess, userRole, isLocation } = useContext(PageAccessContext);
+  const {checkPageButtonAccess}=useContext(PageAccessContext);
   const [buttonEnabled, setButtonEnabled] = useState(true);
   const [deleteFileDialog, setDeleteFileDialog] = useState<{
     open: boolean;
@@ -379,22 +234,6 @@ const ESMSPage: React.FC = () => {
     }
   }, [entityId]);
 
-  function mapFileVerificationData(files: any[]) {
-    return files.map(file => {
-      const latestVersion = file.versions[file.versions.length - 1];
-
-      return {
-        fileName: file.label,
-        status: latestVersion.status,
-        comment: latestVersion.statusReason || null,
-        verifierName: latestVersion.verifiedBy?.name || null,
-        verifiedDate: latestVersion.verifiedBy?.date
-          ? new Date(latestVersion.verifiedBy.date).toLocaleDateString()
-          : null
-      };
-    });
-  }
-
   const loadESMSData = async () => {
     try {
       setIsLoading(true);
@@ -420,8 +259,7 @@ const ESMSPage: React.FC = () => {
                     fileChange: true,
                     isApplicable: "yes",
                     fileNames: savedDoc.file_path.map(fp => fp.split('/').pop() || ''),
-                    fileUrls: fileUrls,
-                    fileStatus: mapFileVerificationData(savedDoc['files'] ?? [])
+                    fileUrls: fileUrls
                   };
                 }
                 else if (savedDoc.isApplicable === "no") {
@@ -430,8 +268,7 @@ const ESMSPage: React.FC = () => {
                     isApplicable: "no",
                     fileChange: false,
                     fileNames: undefined,
-                    fileUrls: undefined,
-                    fileStatus: mapFileVerificationData(savedDoc['files'] ?? [])
+                    fileUrls: undefined
                   };
                 }
               }
@@ -702,65 +539,9 @@ const ESMSPage: React.FC = () => {
   const confirmDeleteSingleFile = async () => {
   };
 
-  const documentValidAccess = async () => {
-    try {
-      interface AccessData {
-        module: string;
-        scope: string;
-        entity: {
-          id: string;
-          name: string;
-        };
-        role: string;
-      }
-      interface AccessResponse {
-        status: boolean;
-        data: AccessData[];
-      }
-      let accessResponse = await httpClient.get<AccessResponse>('subuser/team/module/access?module=esms');
-      if (accessResponse.status && accessResponse.data) {
-        let accessData: AccessData[] = accessResponse.data.data
-        let limitedItemStatus = accessData.filter(a => a.scope == 'LIMITED').reduce((a, c) => {
-          a.push(c.entity.id)
-          return a
-        }, []);
-        if (limitedItemStatus && limitedItemStatus.length > 0) {
-          let filteredDocuments = [];
-          // let items=['epr-used-oil']
-          documentSections.forEach((section) => {
-            let filteredDoc = section.documents.filter(d => limitedItemStatus.includes(d.id))
-            if (filteredDoc && filteredDoc.length > 0) {
-              let obj = {
-                ...section,
-                documents: filteredDoc
-              }
-              filteredDocuments.push(obj)
-            }
-
-          })
-          setDocumentSections(filteredDocuments)
-        }
-      }
-    } catch (error) {
-      logger.error('Error saving documents:', error);
-      toast.error('Failed to save documents');
-    }
-  }
-
-  const hasCalledRef = useRef(false);
-
-  useEffect(() => {
-    if (!userRole) return;
-
-    if (userRole === "employee" && !hasCalledRef.current) {
-      hasCalledRef.current = true;
-      documentValidAccess();
-    }
-  }, [userRole]);
-
   return (
     <div className="space-y-6">
-      <div style={{ marginTop: '18px' }}>
+      <div>
         <h1 className="text-2xl font-bold tracking-tight">Environmental and Social Management System (ESMS)</h1>
         <p className="text-muted-foreground">
           Comprehensive ESG management framework and documentation
@@ -899,116 +680,28 @@ const ESMSPage: React.FC = () => {
                             <div className="mt-2 space-y-1">
                               {document.fileNames.map((name, idx) => {
                                 const url = document.fileUrls?.[idx];
-                                const summary = document.fileStatus.find(f => f.fileName == name);
-
-                                const fileStatusClass =
-                                  summary?.status === "APPROVED"
-                                    ? "text-green-600 underline"
-                                    : summary?.status === "REJECTED"
-                                      ? "text-red-600 underline"
-                                      : "text-yellow-600";
                                 return (
-                                  // <div key={idx} className="flex items-center gap-2">
-                                  //   <Badge variant="outline" className="max-w-[180px] truncate">
-                                  //     <FileText className="w-3 h-3 mr-1 flex-shrink-0" />
-                                  //     {name}
-                                  //   </Badge>
-                                  //   {url && (
-                                  //     <>
-                                  //       <Button
-                                  //         variant="ghost"
-                                  //         size="sm"
-                                  //         className="h-6 w-6 p-0 text-blue-600 hover:bg-blue-100"
-                                  //         onClick={() => window.open(url, '_blank')}
-                                  //         title="View file"
-                                  //       >
-                                  //         <FileText className="w-3 h-3" />
-                                  //       </Button>
-                                  //       <Button
-                                  //         variant="ghost"
-                                  //         size="sm"
-                                  //         className="h-6 w-6 p-0 text-destructive hover:bg-red-100"
-                                  //         onClick={() => handleDeleteSingleFile(section.id, document.id, name, url, idx)}
-                                  //         title="Delete file"
-                                  //         disabled={isLoading || !buttonEnabled}
-                                  //       >
-                                  //         <Trash2 className="w-3 h-3" />
-                                  //       </Button>
-                                  //     </>
-                                  //   )}
-                                  // </div>
                                   <div key={idx} className="flex items-center gap-2">
-
-                                    <Badge
-                                      variant="outline"
-                                      className={`max-w-[180px] truncate ${fileStatusClass}`}
-                                    >
+                                    <Badge variant="outline" className="max-w-[180px] truncate">
                                       <FileText className="w-3 h-3 mr-1 flex-shrink-0" />
                                       {name}
                                     </Badge>
-
                                     {url && (
                                       <>
-                                        {/* View */}
                                         <Button
                                           variant="ghost"
                                           size="sm"
                                           className="h-6 w-6 p-0 text-blue-600 hover:bg-blue-100"
-                                          onClick={() => window.open(url, "_blank")}
+                                          onClick={() => window.open(url, '_blank')}
                                           title="View file"
                                         >
                                           <FileText className="w-3 h-3" />
                                         </Button>
-
-                                        {/* Comment Tooltip */}
-                                        {summary?.comment && (
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-6 w-6 p-0 text-amber-600 hover:bg-amber-100"
-                                              >
-                                                <MessageSquare className="w-3 h-3" />
-                                              </Button>
-                                            </TooltipTrigger>
-
-                                            <TooltipContent
-                                              className="max-w-xs text-sm bg-white dark:bg-gray-900 border shadow-lg rounded-md p-3 z-50"
-                                            >
-                                              <div className="space-y-1">
-                                                <div>
-                                                  <span className="font-medium">Status:</span> {summary.status}
-                                                </div>
-
-                                                <div>
-                                                  <span className="font-medium">Comment:</span> {summary.comment}
-                                                </div>
-
-                                                {summary.verifierName && (
-                                                  <div>
-                                                    <span className="font-medium">Verifier:</span> {summary.verifierName}
-                                                  </div>
-                                                )}
-
-                                                {summary.verifiedDate && (
-                                                  <div>
-                                                    <span className="font-medium">Date:</span> {summary.verifiedDate}
-                                                  </div>
-                                                )}
-                                              </div>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        )}
-
-                                        {/* Delete */}
                                         <Button
                                           variant="ghost"
                                           size="sm"
                                           className="h-6 w-6 p-0 text-destructive hover:bg-red-100"
-                                          onClick={() =>
-                                            handleDeleteSingleFile(section.id, document.id, name, url, idx)
-                                          }
+                                          onClick={() => handleDeleteSingleFile(section.id, document.id, name, url, idx)}
                                           title="Delete file"
                                           disabled={isLoading || !buttonEnabled}
                                         >
@@ -1021,32 +714,18 @@ const ESMSPage: React.FC = () => {
                               })}
                             </div>
                           )}
-
                         </div>
                       )}
                     </div>
                   </div>
-                  {document.isApplicable == 'no' && document.fileStatus && document.fileStatus.length > 0 && (
-                    <div className="mt-2 text-sm text-muted-foreground text-left">
-                      {document.fileStatus.map((file, idx) => (
-                        <div key={idx}>
-                           {file.status}
-                          {file.comment && ` (${file.comment})`}
-                          {file.verifierName && ` | Verified by ${file.verifierName}`}
-                          {file.verifiedDate && ` on ${file.verifiedDate}`}
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
-
               ))}
             </div>
           </CardContent>
         </Card>
       ))}
 
-      {/* <div className="flex justify-end">
+      <div className="flex justify-end">
         <Button
           onClick={saveAllDocuments}
           disabled={isLoading || !buttonEnabled}
@@ -1054,7 +733,7 @@ const ESMSPage: React.FC = () => {
         >
           {isLoading ? 'Saving...' : 'Save All Documents'}
         </Button>
-      </div> */}
+      </div>
 
       {/* Single File Delete Confirmation Dialog */}
       <AlertDialog

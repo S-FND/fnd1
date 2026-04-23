@@ -63,10 +63,10 @@ const AdvancedIRLITSecurity = () => {
   return (
     <Card>
       <CardHeader>
-        {/* <CardTitle>Advanced IRL - IT Security</CardTitle>
+        <CardTitle>Advanced IRL - IT Security</CardTitle>
         <CardDescription>
           IT security policies, data protection measures, and cybersecurity compliance
-        </CardDescription> */}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* IT Security Policies */}

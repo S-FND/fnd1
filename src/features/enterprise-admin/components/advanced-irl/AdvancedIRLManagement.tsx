@@ -48,10 +48,10 @@ const AdvancedIRLManagement = () => {
   return (
     <Card>
       <CardHeader>
-        {/* <CardTitle>Advanced IRL - Management Systems</CardTitle>
+        <CardTitle>Advanced IRL - Management Systems</CardTitle>
         <CardDescription>
           Management systems, policies, governance, and NGRBC principle compliance
-        </CardDescription> */}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Organization Structure */}

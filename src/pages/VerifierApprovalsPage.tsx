@@ -21,45 +21,6 @@ import { httpClient } from '@/lib/httpClient';
 import { PageAccessContext } from '@/context/PageAccessContext';
 import { PageOverlay } from '@/components/ui/page-overlay';
 import { useOverlay } from '@/context/OverlayContext';
-import { baseESMSDocumentList } from '@/features/enterprise-admin/pages/ESMSPage';
-
-
-export interface MetricPeriod {
-  period: string;
-  date: string;
-  value: string[][];
-  status: "PENDING" | "APPROVED" | "REJECTED";
-  makerId: string;
-}
-export interface MetricData {
-  _id: string;
-  entityId: string;
-  financialYear: string;
-
-  metricId: string;
-  metricName: string;
-  frequency: string;
-  unit: string;
-
-  topicId: string;
-  dataType: string;
-  esg: "Environmental" | "Social" | "Governance" | string;
-
-  periods: MetricPeriod[];
-
-  period: string;
-  date: string;
-  value: string[][];
-  status: "PENDING" | "APPROVED" | "REJECTED";
-  makerId: string;
-
-  createdAt: Date | string;
-  updatedAt: Date | string;
-  maker?: {
-    name: string;
-    email: string;
-  }
-}
 
 interface ApprovalItem {
   _id: string;
@@ -80,10 +41,6 @@ interface ApprovalItem {
   assignedVerifierId?: string;
   assignedVerifierName?: string;
   dataCollectionId?: string;
-  dataType?: string;
-  value?: string[][] | string | number;
-  url?: string;
-  responseType?: string;
 }
 
 interface Verifier {
@@ -166,21 +123,21 @@ export interface GHGScopeItem {
   type?: string;
   _id: string;
   entityId: string;
-  priority?: 'low' | 'medium' | 'high' | 'critical';
-  facilityName?: string;
-  sourceCategory?: string;
-  sourceDescription?: string;
-  sourceType?: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  facilityName: string;
+  sourceCategory: string;
+  sourceDescription: string;
+  sourceType: string;
 
-  fuelType?: string;
-  measurementFrequency?: 'Monthly' | 'Quarterly' | 'Yearly';
+  fuelType: string;
+  measurementFrequency: 'Monthly' | 'Quarterly' | 'Yearly';
 
-  dataCollections?: GHGDataCollection;
+  dataCollections: GHGDataCollection;
 
-  verifiers?: AssignedUser[];
-  collectors?: AssignedUser[];
+  verifiers: AssignedUser[];
+  collectors: AssignedUser[];
 
-  scope?: 'Scope 1' | 'Scope 2' | 'Scope 3' | 'Scope 4';
+  scope: 'Scope 1' | 'Scope 2' | 'Scope 3' | 'Scope 4';
   assignedVerifierName?: string;
   assignedVerifierId?: string;
   submittedBy?: string;
@@ -188,44 +145,6 @@ export interface GHGScopeItem {
   verifierEmail?: string;
   dataCollectionId?: string;
   activityDataUnit?: string;
-  dataType?: string;
-  value?: string[][] | string | number;
-  period?: string;
-  url?: string;
-  responseType?: string;
-  filename?: string;
-}
-
-export enum ESMSResponseType {
-  FILE = "FILE",
-  NOT_APPLICABLE = "NOT_APPLICABLE"
-}
-
-export enum ESMSStatus {
-  PENDING = "PENDING",
-  APPROVED = "APPROVED",
-  REJECTED = "REJECTED"
-}
-
-export interface IESMSDocument {
-  documentKey: string;
-
-  url: string | null;
-
-  responseType: ESMSResponseType;
-
-  status: ESMSStatus;
-
-  makerId: string;
-
-  makerName: string;
-
-  uploadedAt: Date;
-  fileName: string;
-}
-
-export interface IESMSRecord {
-  esms: IESMSDocument[];
 }
 
 
@@ -252,6 +171,25 @@ const VerifierApprovalsPage: React.FC = () => {
   const [ghgApprovalItems, setGhgApprovalItems] = useState<GHGScopeItem[]>([]);
 
   const { checkPageOverlayAccess } = useOverlay();
+
+  // useEffect(() => {
+  //   const init = async () => {
+  //     if (user?.email) {
+  //       await fetchUserProfile();
+  //     }
+  //     await Promise.all([fetchApprovalItems(), fetchVerifiers()]);
+  //   };
+  //   init();
+  // }, [user]);
+
+  // Use demo data if no real data is loaded
+  // useEffect(() => {
+  //   if (!loading && approvalItems.length === 0) {
+  //     setUseDemoData(true);
+  //     // setApprovalItems(DEMO_APPROVAL_ITEMS);
+  //     setVerifiers(DEMO_VERIFIERS);
+  //   }
+  // }, [loading, approvalItems.length]);
 
   const fetchUserProfile = async () => {
     if (!user?.email) return;
@@ -360,45 +298,23 @@ const VerifierApprovalsPage: React.FC = () => {
     }
   };
 
-  const getEsmsSignedUrl = async (documentKey, fileKey) => {
-    // let signedUrlResponse=await httpClient.get(`ghg-accounting/item-verify/file-signed-url?document=${documentKey}&fileKey=${fileKey}`);
-    // console.log('signedUrlResponse',signedUrlResponse)
-  }
-
   const handleAcceptClick = (item: ApprovalItem | GHGScopeItem) => {
-    getEsmsSignedUrl(item._id, item.url)
     setSelectedItem(item);
     setReviewDialogOpen(true);
   };
 
-  const handleApproveWithComment = async (itemId: string, dataCollectionId: string, period: string, comment: string) => {
+  const handleApproveWithComment = async (itemId: string, dataCollectionId: string, comment: string) => {
     try {
-      const item = ghgApprovalItems.filter(i => i._id === itemId) as GHGScopeItem[];
-      //&& i.dataCollectionId === dataCollectionId
-      if (!item || item.length == 0) throw new Error('Item not found');
 
-      if (['ghg_activity', "esg-metrics", 'esms'].includes(item[0].type)) {
-        let payload = {
+      const item = ghgApprovalItems.find(i => i._id === itemId && i.dataCollectionId === dataCollectionId);
+      if (!item) throw new Error('Item not found');
+
+      if (item.type === 'ghg_activity') {
+        let approveDataResult = await httpClient.post('ghg-accounting/verify-ghg-data', {
+          dataCollectionId: dataCollectionId,
           verificationStatus: 'Verified',
           verificationComments: comment,
-          type: item[0].type
-        };
-        if (item[0].type == 'ghg_activity') {
-          if (item[0].dataCollectionId == dataCollectionId) {
-            throw new Error(`Data Collection Id doesn't match`);
-          }
-          payload['dataCollectionId'] = dataCollectionId
-        }
-        else if (item[0].type == 'esg-metrics') {
-          let periodFind = item.find(i => i.period == period)
-          payload['entryId'] = periodFind._id;
-          payload['period'] = periodFind.period
-        }
-        else if (item[0].type == 'esms') {
-          payload['documentKey'] = item[0]._id
-          payload['label'] = item[0].filename
-        }
-        let approveDataResult = await httpClient.post('ghg-accounting/verify-ghg-data', payload);
+        });
         if (approveDataResult.status !== 200) {
           throw new Error('Failed to approve GHG activity data');
         }
@@ -421,53 +337,17 @@ const VerifierApprovalsPage: React.FC = () => {
     setRejectDialogOpen(true);
   };
 
-  const handleRejectWithComment = async (itemId: string, dataCollectionId: string, period: string, comment: string) => {
+  const handleRejectWithComment = async (itemId: string, dataCollectionId: string, comment: string) => {
     try {
-      // const item = ghgApprovalItems.find(i => i._id === itemId && i.dataCollectionId === dataCollectionId);
-      // if (!item) throw new Error('Item not found');
+      const item = ghgApprovalItems.find(i => i._id === itemId && i.dataCollectionId === dataCollectionId);
+      if (!item) throw new Error('Item not found');
 
-      // if (item.type === 'ghg_activity') {
-      //   let approveDataResult = await httpClient.post('ghg-accounting/verify-ghg-data', {
-      //     dataCollectionId: dataCollectionId,
-      //     verificationStatus: 'Rejected',
-      //     verificationComments: comment,
-      //   });
-      //   if (approveDataResult.status !== 200) {
-      //     throw new Error('Failed to approve GHG activity data');
-      //   }
-      //   else {
-      //     getItemsToBeVerified();
-      //     toast.success('Rejected successfully');
-      //   }
-
-      // }
-      debugger;
-      const item = ghgApprovalItems.filter(i => i._id === itemId) as GHGScopeItem[];
-      //&& i.dataCollectionId === dataCollectionId
-      if (!item || item.length == 0) throw new Error('Item not found');
-
-      if (['ghg_activity', "esg-metrics","esms"].includes(item[0].type)) {
-        let payload = {
+      if (item.type === 'ghg_activity') {
+        let approveDataResult = await httpClient.post('ghg-accounting/verify-ghg-data', {
+          dataCollectionId: dataCollectionId,
           verificationStatus: 'Rejected',
           verificationComments: comment,
-          type: item[0].type
-        };
-        if (item[0].type == 'ghg_activity') {
-          if (item[0].dataCollectionId == dataCollectionId) {
-            throw new Error(`Data Collection Id doesn't match`);
-          }
-          payload['dataCollectionId'] = dataCollectionId
-        }
-        else if (item[0].type == 'esg-metrics') {
-          let periodFind = item.find(i => i.period == period)
-          payload['entryId'] = periodFind._id;
-          payload['period'] = periodFind.period
-        }
-        else if (item[0].type == 'esms') {
-          payload['documentKey'] = item[0]._id
-          payload['label'] = item[0].filename
-        }
-        let approveDataResult = await httpClient.post('ghg-accounting/verify-ghg-data', payload);
+        });
         if (approveDataResult.status !== 200) {
           throw new Error('Failed to approve GHG activity data');
         }
@@ -539,133 +419,19 @@ const VerifierApprovalsPage: React.FC = () => {
 
   const ghgCount = ghgApprovalItems.length;
 
-  // const getItemsToBeVerified = async () => {
-  //   try {
-  //     setLoading(true);
-  //     let result = await httpClient.get('ghg-accounting/items/tobe-verified');
-  //     if (result.status !== 200) {
-  //       throw new Error('Failed to load items to be verified');
-  //     }
-  //     const esmsDocuments = baseESMSDocumentList.flatMap(c => c.documents);
-  //     const transformedItems = result['data']['ghg']['sourceDetails'].map((item: GHGScopeItem) => {
-  //       const dataQuality = item.dataCollections?.dataQuality?.toLowerCase() || 'medium';
-  //       let priority: 'low' | 'medium' | 'high' | 'critical';
-
-  //       // Map dataQuality to priority
-  //       switch (dataQuality) {
-  //         case 'low': priority = 'low'; break;
-  //         case 'medium': priority = 'medium'; break;
-  //         case 'high': priority = 'high'; break;
-  //         default: priority = 'medium';
-  //       }
-
-  //       return {
-  //         _id: item._id,
-  //         type: 'ghg_activity' as const,
-  //         module: 'GHG',
-  //         title: `${item.sourceCategory} - ${item.dataCollections.reportingPeriod} - ${item.dataCollections.reportingMonth} ${item.dataCollections.reportingYear}`,
-  //         description: item.sourceDescription,
-  //         submittedBy: item.collectors[0]?.name || 'Unknown',
-  //         submittedAt: item.dataCollections.updatedAt,
-  //         status: item.dataCollections.verificationStatus.toLowerCase(),
-  //         priority: priority, // This is the priority field that filters will use
-  //         facility: item.facilityName,
-  //         scope: item.scope,
-  //         category: item.sourceCategory,
-  //         link: `/ghg-accounting/data-entry?source=${item._id}&dataCollectionId=${item.dataCollections._id}`,
-  //         assignedVerifierId: item.verifiers[0]?._id,
-  //         assignedVerifierName: item.verifiers[0]?.name || 'Unknown',
-  //         submittedByEmail: item.collectors[0]?.email || 'Unknown',
-  //         verifierEmail: item.verifiers[0]?.email || 'Unknown',
-  //         dataCollectionId: item.dataCollections._id,
-  //         activityDataValue: `${item.dataCollections.activityDataValue} ${item.activityDataUnit} of ${getGetDataValueLabel(item)}`,
-  //         dataCollections: item.dataCollections,
-  //         dataQuality: dataQuality // Keep original dataQuality for filtering
-  //       };
-  //     });
-  //     let metricItems = result.data['metricData'] && (result.data['metricData'] as MetricData[]).map((item: MetricData) => {
-  //       return {
-  //         _id: item._id,
-  //         type: 'esg-metrics' as const,
-  //         module: 'ESG Metrics',
-  //         title: `${item.metricName} - ${item.frequency} - ${item.period} ${item.financialYear}`,
-  //         description: '',
-  //         submittedBy: item.maker?.name || 'Unknown',
-  //         submittedAt: item.date,
-  //         status: item.status.toLowerCase(),
-  //         priority: 'high', // This is the priority field that filters will use
-  //         dataType: item.dataType,
-  //         submittedByEmail: item.maker?.email || 'Unknown',
-  //         value: item.value,
-  //         period: item.period
-  //       };
-  //     });
-  //     const documentMap = new Map(
-  //       esmsDocuments.map(doc => [doc.id.split('-').join('_'), doc])
-  //     );
-
-
-  //     let esmsItems=result.data['esms'] && (result.data['esms'] as IESMSDocument[] ).map(esms=>{
-  //       const findKey = documentMap.get(esms.documentKey);
-  //       return {
-  //         _id:esms.documentKey,
-  //         type:'esms' as const,
-  //         module:'ESMS',
-  //         title:findKey?.title ?? 'Not Found',
-  //         description:"",
-  //         submittedBy:esms.makerName,
-  //         submittedAt:esms.uploadedAt,
-  //         status:esms.status,
-  //         url:esms.url,
-  //         responseType:esms.responseType
-  //       }
-  //     })
-  //     console.log("esmsItems",esmsItems)
-  //     setGhgApprovalItems([...transformedItems, ...metricItems,...esmsItems]);
-  //     return result.data;
-  //   } catch (error) {
-  //     console.error('Error fetching items to be verified:', error);
-  //     toast.error('Failed to load items to be verified');
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // }
   const getItemsToBeVerified = async () => {
     try {
-
-      interface ToBeVerifiedResponse {
-        ghg: {
-          sourceDetails: GHGScopeItem[];
-        };
-        metricData: MetricData[];
-        esms: IESMSDocument[];
-      }
       setLoading(true);
-
-      const result = await httpClient.get<ToBeVerifiedResponse>('ghg-accounting/items/tobe-verified');
-
+      let result = await httpClient.get('ghg-accounting/items/tobe-verified');
       if (result.status !== 200) {
         throw new Error('Failed to load items to be verified');
       }
 
-      const esmsDocuments = baseESMSDocumentList.flatMap(c => c.documents);
-      interface BaseESMSDocument {
-        id: string;
-        title: string;
-      }
-
-      const documentMap: Record<string, BaseESMSDocument> = {};
-
-      esmsDocuments.forEach(doc => {
-        documentMap[doc.id.replace(/-/g, "_")] = doc;
-      });
-
-      const transformedItems = result.data.ghg.sourceDetails.map((item: GHGScopeItem) => {
-
+      const transformedItems = result['data']['sourceDetails'].map((item: GHGScopeItem) => {
         const dataQuality = item.dataCollections?.dataQuality?.toLowerCase() || 'medium';
+        let priority: 'low' | 'medium' | 'high' | 'critical';
 
-        let priority: 'low' | 'medium' | 'high';
-
+        // Map dataQuality to priority
         switch (dataQuality) {
           case 'low': priority = 'low'; break;
           case 'medium': priority = 'medium'; break;
@@ -679,84 +445,34 @@ const VerifierApprovalsPage: React.FC = () => {
           module: 'GHG',
           title: `${item.sourceCategory} - ${item.dataCollections.reportingPeriod} - ${item.dataCollections.reportingMonth} ${item.dataCollections.reportingYear}`,
           description: item.sourceDescription,
-          submittedBy: item.collectors?.[0]?.name || 'Unknown',
+          submittedBy: item.collectors[0]?.name || 'Unknown',
           submittedAt: item.dataCollections.updatedAt,
           status: item.dataCollections.verificationStatus.toLowerCase(),
-          priority: 'high' as 'low' | 'medium' | 'high' | 'critical',
+          priority: priority, // This is the priority field that filters will use
           facility: item.facilityName,
           scope: item.scope,
           category: item.sourceCategory,
           link: `/ghg-accounting/data-entry?source=${item._id}&dataCollectionId=${item.dataCollections._id}`,
-          assignedVerifierId: item.verifiers?.[0]?._id,
-          assignedVerifierName: item.verifiers?.[0]?.name || 'Unknown',
-          submittedByEmail: item.collectors?.[0]?.email || 'Unknown',
-          verifierEmail: item.verifiers?.[0]?.email || 'Unknown',
+          assignedVerifierId: item.verifiers[0]?._id,
+          assignedVerifierName: item.verifiers[0]?.name || 'Unknown',
+          submittedByEmail: item.collectors[0]?.email || 'Unknown',
+          verifierEmail: item.verifiers[0]?.email || 'Unknown',
           dataCollectionId: item.dataCollections._id,
           activityDataValue: `${item.dataCollections.activityDataValue} ${item.activityDataUnit} of ${getGetDataValueLabel(item)}`,
           dataCollections: item.dataCollections,
-          dataQuality,
-          entityId: null
+          dataQuality: dataQuality // Keep original dataQuality for filtering
         };
       });
 
-      const metricItems = (result.data.metricData ?? []).map((item: MetricData) => ({
-        _id: item._id,
-        type: 'esg-metrics' as const,
-        module: 'ESG Metrics',
-        title: `${item.metricName} - ${item.frequency} - ${item.period} ${item.financialYear}`,
-        description: '',
-        submittedBy: item.maker?.name || 'Unknown',
-        submittedAt: item.date,
-        status: item.status.toLowerCase(),
-        priority: 'high' as 'low' | 'medium' | 'high' | 'critical',
-        dataType: item.dataType,
-        submittedByEmail: item.maker?.email || 'Unknown',
-        value: item.value,
-        period: item.period,
-        entityId: null
-      }));
-
-      const esmsItems = (result.data.esms ?? []).map((esms: IESMSDocument) => {
-
-        const findKey = documentMap[esms.documentKey];
-
-        return {
-          _id: esms.documentKey,
-          type: 'esms' as const,
-          module: 'ESMS',
-          title: findKey?.title ?? 'Not Found',
-          description: '',
-          submittedBy: esms.makerName,
-          submittedAt: esms.uploadedAt,
-          status: esms.status,
-          url: esms.url,
-          responseType: esms.responseType,
-          priority: 'high' as 'low' | 'medium' | 'high' | 'critical',
-          entityId: null,
-          filename: esms.fileName
-        };
-
-      });
-
-      setGhgApprovalItems([
-        ...transformedItems,
-        ...metricItems,
-        ...esmsItems
-      ]);
-
+      setGhgApprovalItems(transformedItems);
       return result.data;
-
     } catch (error) {
-
       console.error('Error fetching items to be verified:', error);
       toast.error('Failed to load items to be verified');
-
     } finally {
-
       setLoading(false);
-
     }
-  };
+  }
 
   useEffect(() => {
     let userDetails = localStorage.getItem('fandoro-user');
@@ -775,13 +491,13 @@ const VerifierApprovalsPage: React.FC = () => {
 
   }, []);
 
-  // useEffect(() => {
-  //   console.log('Approval Items:', approvalItems);
-  // }, [approvalItems]);
+  useEffect(() => {
+    console.log('Approval Items:', approvalItems);
+  }, [approvalItems]);
 
-  // useEffect(() => {
-  //   console.log('GHG Approval Items:', ghgApprovalItems);
-  // }, [ghgApprovalItems]);
+  useEffect(() => {
+    console.log('GHG Approval Items:', ghgApprovalItems);
+  }, [ghgApprovalItems]);
 
   if (loading) {
     return (
@@ -1021,7 +737,7 @@ const VerifierApprovalsPage: React.FC = () => {
                           <TableRow key={`${item._id}-${index}`}>
                             <TableCell className="font-medium">{index + 1}</TableCell>
 
-                            <TableCell>{getModuleBadge(item.module)}</TableCell>
+                            <TableCell>{getModuleBadge('GHG')}</TableCell>
 
                             <TableCell>
                               {getPriorityBadge(item.priority || 'medium')}

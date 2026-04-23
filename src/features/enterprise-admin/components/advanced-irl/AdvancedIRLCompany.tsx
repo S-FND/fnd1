@@ -106,10 +106,10 @@ const AdvancedIRLCompany = () => {
   return (
     <Card>
       <CardHeader>
-        {/* <CardTitle>Advanced IRL - Company Information</CardTitle>
+        <CardTitle>Advanced IRL - Company Information</CardTitle>
         <CardDescription>
           Comprehensive company information for BRSR compliance and advanced ESG due diligence
-        </CardDescription> */}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Contact Details */}

@@ -66,7 +66,7 @@ const UnitsPage = () => {
   return (
     <UnifiedSidebarLayout>
       <div className="space-y-6">
-        <div style={{ marginTop: '18px' }}>
+        <div>
           <h1 className="text-2xl font-bold tracking-tight">Locations Management</h1>
           <p className="text-muted-foreground">
             Manage your company's units across multiple locations
