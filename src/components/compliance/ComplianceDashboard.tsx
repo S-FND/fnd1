@@ -9,7 +9,7 @@ import { complianceItems } from '@/data';
 const ComplianceDashboard: React.FC = () => {
   return (
     <div className="space-y-6">
-      <div className="flex flex-col space-y-1.5">
+      <div className="flex flex-col space-y-1.5" style={{ marginTop: '18px' }}>
         <h2 className="text-2xl font-bold">Compliance Management</h2>
         <p className="text-muted-foreground">
           Track regulatory compliance, audits, and reporting requirements

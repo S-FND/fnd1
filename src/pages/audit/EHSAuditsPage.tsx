@@ -62,7 +62,7 @@ const EHSAuditsPage = () => {
   return (
     <UnifiedSidebarLayout>
       <div className="space-y-6">
-        <div>
+        <div style={{ marginTop: '18px' }}>
           <h1 className="text-2xl font-bold tracking-tight">EHS Audits</h1>
           <p className="text-muted-foreground">
             Environment, Health & Safety audit management and compliance tracking
