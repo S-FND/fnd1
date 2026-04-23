@@ -34,7 +34,7 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
   const [showFullItem, setShowFullItem] = useState(false);
   const [showFullIssue, setShowFullIssue] = useState(false);
   const [showFullRelatedFinding, setShowFullRelatedFinding] = useState(false);
-  const [showFullEsgLever, setShowFullEsgLever] = useState(false);
+  // const [showFullEsgLever, setShowFullEsgLever] = useState(false);
   const [showFullMeasures, setShowFullMeasures] = useState(false);
   const [showFullResource, setShowFullResource] = useState(false);
   const [showFullDeliverable, setShowFullDeliverable] = useState(false);
@@ -89,14 +89,14 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
       </TableCell>
       
       {/* 6. ESG Lever */}
-      <TableCell style={{ padding: "0.3rem" }}>
+      {/* <TableCell style={{ padding: "0.3rem" }}>
         {showFullEsgLever ? item.esgLever : truncateText(item.esgLever, 50)}
         {item.esgLever && item.esgLever.length > 50 && (
           <button onClick={() => setShowFullEsgLever(!showFullEsgLever)} className="ml-2 text-blue-600 underline text-xs">
             {showFullEsgLever ? "View less" : "View full"}
           </button>
         )}
-      </TableCell>
+      </TableCell> */}
       
       {/* 7. Measures */}
       <TableCell style={{ padding: "0.3rem" }}>

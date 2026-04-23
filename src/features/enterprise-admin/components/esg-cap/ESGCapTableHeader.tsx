@@ -84,7 +84,7 @@ export const ESGCapTableHeader: React.FC<any> = ({
         </TableHead>
 
         {/* 6. ESG Lever */}
-        <TableHead 
+        {/* <TableHead 
           className="cursor-pointer hover:bg-gray-200 !text-black"
           onClick={() => requestSort('esgLever')}
         >
@@ -94,7 +94,7 @@ export const ESGCapTableHeader: React.FC<any> = ({
               <ArrowUp className="h-4 w-4 inline ml-1" /> : 
               <ArrowDown className="h-4 w-4 inline ml-1" />
           )}
-        </TableHead>
+        </TableHead> */}
 
         {/* 7. Measures & Corrective Actions */}
         <TableHead 
