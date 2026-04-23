@@ -46,8 +46,9 @@ export interface Employee {
   active: boolean;
   selectedLocation: string;
   // roles: string;
-  department: string;
+  designation: string;
   location: string;
+  locations?: string[];
   userAccess: string[];
   createdAt: string;
   updatedAt: string;
@@ -168,7 +169,8 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
     email: '',
     employeeId: '',
     // roles: [],
-    department: '',
+    designation: '',
+    locations: [],
     selectedLocation: '',
     active: false,
     superUserId: '',
@@ -206,8 +208,13 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
       email: employee.email || '',
       employeeId: employee.employeeId || '',
       // roles: Array.isArray(employee.roles) ? employee.roles : [employee.roles],
-      department: employee.department || '',
-      selectedLocation: employee.location || '',
+      designation: employee.designation || '',
+      locations: Array.isArray(employee.locations) && employee.locations.length
+      ? employee.locations
+      : employee.selectedLocation
+        ? [employee.selectedLocation]
+        : [],
+      selectedLocation: employee.locations?.[0] || employee.location || '',
       active: employee.active || false,
       superUserId: employee.superUserId || '',
       parentUserId: employee.parentUserId || '',
@@ -248,12 +255,18 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
 
       // Merge updates with original employee data to ensure all required fields are present
       const completePayload = {
-        ...selectedEmployee, // Keep all original fields
-        ...editForm,        // Apply updates
-        updatedAt: new Date().toISOString() // Update timestamp
+        _id: selectedEmployee._id,
+        name: editForm.name,
+        email: editForm.email,
+        employeeId: editForm.employeeId,
+        designation: editForm.designation,
+        locations: editForm.selectedLocation ? [editForm.selectedLocation] : [],
+        active: editForm.active,
+        mobile: editForm.mobile,
+        updatedAt: new Date().toISOString()
       };
 
-      logger.log('Sending complete payload to /subuser/activate:', completePayload);
+      logger.log('Sending complete payload to /subuser/activate: work', completePayload);
 
       const response :any = await updateEmployee(completePayload);
       logger.log('API Response:', response);
@@ -379,9 +392,10 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
     // const matchesRole = filterRole === 'all' || employee.roles === filterRole;
     const matchesRole = filterRole === 'all';
 
-    const loc = employee.selectedLocation || employee.location || 'Unassigned';
+    const employeeLocations = employee.locations || [];
     const matchesLocation = filterLocation === 'all' ||
-      (filterLocation && getLocationName(loc) === getLocationName(filterLocation));
+        employeeLocations.includes(filterLocation) ||
+        (filterLocation && getLocationName(employeeLocations[0]) === getLocationName(filterLocation));
 
     return matchesSearch && matchesRole && matchesLocation;
   });
@@ -684,8 +698,8 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
               <Label htmlFor="edit-department">Department</Label>
               <Input
                 id="edit-department"
-                value={editForm.department}
-                onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
+                value={editForm.designation}
+                onChange={(e) => setEditForm({ ...editForm, designation: e.target.value })}
               />
             </div>
             <div>
