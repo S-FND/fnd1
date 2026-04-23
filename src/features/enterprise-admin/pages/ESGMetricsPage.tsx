@@ -31,8 +31,7 @@ const ESGMetricsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [finalizedTopics, setFinalizedTopics] = useState<MaterialTopic[]>([]);
   const [finalMetrics,setFinalMetrics]=useState();
-  const [customMetrics,setCustomMetrics]=useState();
-  const [isParent,setIsParent]=useState(false)
+  const [customMetrics,setCustomMetrics]=useState()
 
   const getMaterialityData = async () => {
     try {
@@ -62,27 +61,33 @@ const ESGMetricsPage: React.FC = () => {
 
   // Load finalized topics from materiality assessment
   useEffect(() => {
+    // const savedTopics = localStorage.getItem('finalizedMaterialTopics');
+    // if (savedTopics) {
+    //   try {
+    //     const topics = JSON.parse(savedTopics);
+    //     setFinalizedTopics(topics);
+    //   } catch (error) {
+    //     logger.error('Error loading finalized topics:', error);
+    //     // Fallback to high priority topics from default data
+    //     const highPriorityTopics = defaultMaterialTopics.filter(
+    //       topic => topic.businessImpact >= 7.0 && topic.sustainabilityImpact >= 7.0
+    //     );
+    //     setFinalizedTopics(highPriorityTopics);
+    //   }
+    // } else {
+    //   // No finalized topics found, show message to complete materiality assessment
+    //   setFinalizedTopics([]);
+    // }
     getMaterialityData()
   }, []);
 
-   useEffect(() => {
-      const storedUser = localStorage.getItem('fandoro-user');
-      if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        setIsParent(parsedUser.isParent || false);
-        if(!parsedUser.isParent){
-          setActiveTab("data-entry")
-        }
-        // if (parsedUser.assignedSource) {
-        //   setAssignedSources(parsedUser.assignedSource);
-        // }
-      }
-    }, []);
-
+  useEffect(()=>{
+    logger.log("ESGMetricsPage :: selectedMetrics =====> ",customMetrics)
+  },[customMetrics])
 
   return (
     <div className="space-y-6">
-      <div style={{ marginTop: '18px' }}>
+      <div>
         <h1 className="text-2xl font-bold tracking-tight">ESG Metrics Management</h1>
         <p className="text-muted-foreground">
           Configure and manage ESG metrics. You can upload metrics directly or link them to material topics from your materiality assessment
@@ -143,8 +148,8 @@ const ESGMetricsPage: React.FC = () => {
       
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
-          {isParent && <TabsTrigger value="dashboard">Dashboard</TabsTrigger>}
-          {isParent && <TabsTrigger value="configuration">Metrics Configuration</TabsTrigger>}
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="configuration">Metrics Configuration</TabsTrigger>
           <TabsTrigger value="data-entry">Data Entry</TabsTrigger>
         </TabsList>
         

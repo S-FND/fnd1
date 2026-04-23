@@ -1,12 +1,18 @@
 // services/employeeManagementAPI.ts
-import { httpClient } from '@/lib/httpClient';
+import axios from "axios";
+import { ENV } from "@/config/env";
 import { logger } from "@/hooks/logger";
+const API_URL = ENV.API_URL;
 
 // Get Employee Data
 export const fetchEmployeeData = async (userId?: string) => {
   try {
-    const url = `subuser${userId ? `?userid=${userId}` : ''}`;
-    const response = await httpClient.get(url);
+    const url = `${API_URL}/subuser${userId ? `?userid=${userId}` : ''}`;
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("fandoro-token")}`,
+      },
+    });
     return response.data;
   } catch (error) {
     logger.error("Error fetching employee data:", error);
@@ -17,8 +23,14 @@ export const fetchEmployeeData = async (userId?: string) => {
 // Update Employee - uses /subuser/activate endpoint
 export const updateEmployee = async (employeeData: any) => {
   try {
-    const url = `subuser/activate`;
-    const response = await httpClient.post(url, employeeData);
+    const url = `${API_URL}/subuser/activate`;
+    
+    const response = await axios.post(url, employeeData, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("fandoro-token")}`,
+        'Content-Type': 'application/json',
+      },
+    });
     return [response.data, null];
   } catch (error: any) {
     let errorMessage = "An unexpected error occurred";
@@ -26,7 +38,7 @@ export const updateEmployee = async (employeeData: any) => {
     if (error?.response?.data?.message) {
       const raw = error.response.data.message;
       errorMessage = raw.includes(":") ? raw.split(":").pop()?.trim() : raw;
-    } else if (error.message) {
+    } else if (axios.isAxiosError(error)) {
       errorMessage = error.message;
     }
   
@@ -38,10 +50,15 @@ export const updateEmployee = async (employeeData: any) => {
 // Assign URLs to Employee (role endpoint)
 export const assignEmployeeUrls = async (subUserId: string, accessList: string[]) => {
   try {
-    const url = `subuser/role`;
-    const response = await httpClient.post(url, {
+    const url = `${API_URL}/subuser/role`;
+    const response = await axios.post(url, {
       subUserId,
       accessList
+    }, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("fandoro-token")}`,
+        'Content-Type': 'application/json',
+      },
     });
     return [response.data, null];
   } catch (error: any) {
@@ -50,7 +67,7 @@ export const assignEmployeeUrls = async (subUserId: string, accessList: string[]
     if (error?.response?.data?.message) {
       const raw = error.response.data.message;
       errorMessage = raw.includes(":") ? raw.split(":").pop()?.trim() : raw;
-    } else if (error.message) {
+    } else if (axios.isAxiosError(error)) {
       errorMessage = error.message;
     }
   
@@ -62,8 +79,12 @@ export const assignEmployeeUrls = async (subUserId: string, accessList: string[]
 // Get URL List
 export const fetchUrlList = async (entityType?: string) => {
   try {
-    const url = `subuser/urlList${entityType ? `?entityType=${entityType}` : ''}`;
-    const response = await httpClient.get(url);
+    const url = `${API_URL}/subuser/urlList${entityType ? `?entityType=${entityType}` : ''}`;
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("fandoro-token")}`,
+      },
+    });
     return response.data;
   } catch (error) {
     logger.error("Error fetching URL list:", error);
@@ -74,8 +95,12 @@ export const fetchUrlList = async (entityType?: string) => {
 // Get User Access URLs
 export const fetchUserAccess = async (employeeId: string) => {
   try {
-    const url = `subuser/access?id=${employeeId}`;
-    const response = await httpClient.get(url);
+    const url = `${API_URL}/subuser/access?id=${employeeId}`;
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("fandoro-token")}`,
+      },
+    });
     return response.data;
   } catch (error) {
     logger.error("Error fetching user access:", error);
@@ -86,8 +111,12 @@ export const fetchUserAccess = async (employeeId: string) => {
 // Get Location Data
 export const fetchLocationData = async () => {
   try {
-    const url = `company/locations`;
-    const response = await httpClient.get(url);
+    const url = `${API_URL}/company/locations`;
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("fandoro-token")}`,
+      },
+    });
     return response.data;
   } catch (error) {
     logger.error("Error fetching location data:", error);
@@ -98,8 +127,13 @@ export const fetchLocationData = async () => {
 // Create New Employee
 export const createEmployee = async (employeeData: any) => {
   try {
-    const url = `subuser`;
-    const response = await httpClient.post(url, employeeData);
+    const url = `${API_URL}/subuser`;
+    const response = await axios.post(url, employeeData, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("fandoro-token")}`,
+        'Content-Type': 'application/json',
+      },
+    });
     return [response.data, null];
   } catch (error: any) {
     let errorMessage = "An unexpected error occurred";
@@ -107,7 +141,7 @@ export const createEmployee = async (employeeData: any) => {
     if (error?.response?.data?.message) {
       const raw = error.response.data.message;
       errorMessage = raw.includes(":") ? raw.split(":").pop()?.trim() : raw;
-    } else if (error.message) {
+    } else if (axios.isAxiosError(error)) {
       errorMessage = error.message;
     }
   
@@ -116,16 +150,25 @@ export const createEmployee = async (employeeData: any) => {
   }
 };
 
-// Update user access 
+// upadte user access 
 export const updateCompanyFeatures = async (
   entityId: string,
   featurePage: { feature: string; adminEnabled: boolean; url: string }[]
 ) => {
   try {
-    const response: any = await httpClient.post(`auth/feature-access`, {
-      entityId,
-      featurePage,
-    });
+    const response = await axios.post(
+      `${API_URL}/auth/feature-access`,
+      {
+        entityId,
+        featurePage,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("fandoro-token")}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     return {
       _id: response?.data?._id,
@@ -134,25 +177,5 @@ export const updateCompanyFeatures = async (
   } catch (error) {
     logger.error("Error updating company features:", error);
     throw error;
-  }
-};
-
-// Delete Employee
-export const deleteEmployee = async (employeeId: string) => {
-  try {
-    const response = await httpClient.delete(`subuser/${employeeId}`);
-    return [response.data, null];
-  } catch (error: any) {
-    let errorMessage = "An unexpected error occurred";
-    
-    if (error?.response?.data?.message) {
-      const raw = error.response.data.message;
-      errorMessage = raw.includes(":") ? raw.split(":").pop()?.trim() : raw;
-    } else if (error.message) {
-      errorMessage = error.message;
-    }
-    
-    logger.error("Error deleting employee:", errorMessage);
-    return [null, errorMessage];
   }
 };

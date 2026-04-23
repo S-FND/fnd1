@@ -20,7 +20,7 @@ export const getS3FilePath = (file_path: string) => {
   }
 
   const s3Url = `https://${bucketName}.s3.${region}.amazonaws.com/${file_path}`;
-  // console.log("S3 fallback URL:", s3Url);
+  console.log("S3 fallback URL:", s3Url);
 
   return encodeURI(s3Url);
 };

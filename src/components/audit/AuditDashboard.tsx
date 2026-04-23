@@ -89,7 +89,7 @@ const AuditDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div style={{ marginTop: '18px' }}>
+      <div>
         <h1 className="text-2xl font-bold tracking-tight">Supplier Audit Dashboard</h1>
         <p className="text-muted-foreground">
           Manage and track sustainability audits for your suppliers

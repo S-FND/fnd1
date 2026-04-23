@@ -74,23 +74,16 @@ export default function ActionLogPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex flex-col gap-3">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Activity className="h-6 w-6" />
           <h1 className="text-3xl font-bold">Action Log</h1>
         </div>
-      </div>
-
-      {/* Button below header */}
-      <div className="flex justify-end">
         <Button onClick={() => fetchLogs()} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
       </div>
-    </div>
 
       {/* Filters */}
       <Card>

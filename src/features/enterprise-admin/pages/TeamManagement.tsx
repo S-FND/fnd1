@@ -27,7 +27,7 @@ const TeamManagementPage = () => {
   return (
     <UnifiedSidebarLayout>
       <div className="space-y-6">
-        <div style={{ marginTop: '18px' }}>
+        <div>
           <h1 className="text-2xl font-bold tracking-tight">Team Management</h1>
           <p className="text-muted-foreground">
             Manage employees, assign roles, and organize teams across locations and departments.

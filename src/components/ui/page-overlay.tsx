@@ -95,11 +95,7 @@ export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
         // if (location.pathname.split('/').includes(pageAccessData[i]['url'].split('/')[1])) {
         if (currentPart === accessPart) {
           // console.log("Overlay",pageAccessData[i]['adminEnabled'])
-          // setShouldShowOverlay(!pageAccessData[i]['adminEnabled'])
-          const isFeatureDisabled = !pageAccessData[i]['adminEnabled'];
-          const isSidebarHidden = pageAccessData[i]['sidebarHide'] === true;
-          
-          setShouldShowOverlay(isFeatureDisabled || isSidebarHidden);
+          setShouldShowOverlay(!pageAccessData[i]['adminEnabled'])
           break;
         }
         else {

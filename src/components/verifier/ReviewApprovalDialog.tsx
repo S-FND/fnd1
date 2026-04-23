@@ -14,7 +14,6 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, CheckCircle, Building2, Calendar, User, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { GHGScopeItem } from '@/pages/VerifierApprovalsPage';
-import { httpClient } from '@/lib/httpClient';
 
 interface ApprovalItem {
   _id: string;
@@ -36,18 +35,13 @@ interface ApprovalItem {
   assignedVerifierName?: string;
   dataCollectionId?: string;
   activityDataValue?: string;
-  dataType?: string;
-  value?: string[][] | string | number;
-  period?: string;
-  responseType?: string;
-  filename?:string;
 }
 
 interface ReviewApprovalDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   item: ApprovalItem | GHGScopeItem | null;
-  onApprove: (itemId: string, dataCollectionId: string, period: string, comment: string) => Promise<void>;
+  onApprove: (itemId: string, dataCollectionId: string, comment: string) => Promise<void>;
 }
 
 export const ReviewApprovalDialog: React.FC<ReviewApprovalDialogProps> = ({
@@ -61,10 +55,10 @@ export const ReviewApprovalDialog: React.FC<ReviewApprovalDialogProps> = ({
 
   const handleApprove = async () => {
     if (!item) return;
-
+    
     setLoading(true);
     try {
-      await onApprove(item._id, item.dataCollectionId, item.period, comment);
+      await onApprove(item._id, item.dataCollectionId, comment);
       setComment('');
       onOpenChange(false);
     } finally {
@@ -100,26 +94,6 @@ export const ReviewApprovalDialog: React.FC<ReviewApprovalDialogProps> = ({
     };
     return colors[module] || 'bg-gray-100 text-gray-800';
   };
-
-  const handleView = async (item) => {
-    try {
-      const signedUrlResponse = await httpClient.get(
-        `ghg-accounting/item-verify/file-signed-url?document=${item.id}&fileKey=${item.url}`
-      );
-
-      if (
-        signedUrlResponse.status === 200 &&
-        signedUrlResponse.data['signedUrl']
-      ) {
-        const url = signedUrlResponse.data['signedUrl'];
-
-        // open in new tab
-        window.open(url, "_blank", "noopener,noreferrer");
-      }
-    } catch (error) {
-      console.error("Error fetching signed URL:", error);
-    }
-  }
 
   if (!item) return null;
 
@@ -186,61 +160,6 @@ export const ReviewApprovalDialog: React.FC<ReviewApprovalDialogProps> = ({
               <div className="text-sm">
                 <span className="text-muted-foreground">Activity Data Value:</span>{' '}
                 <span className="font-medium">{item['activityDataValue']}</span>
-              </div>
-            )}
-
-            {item.dataType && (
-              <div className="text-sm">
-                <span className="text-muted-foreground">Data Type:</span>{' '}
-                <span className="font-medium">{item.dataType}</span>
-              </div>
-            )}
-            {item.responseType && (
-              <div className="text-sm">
-                <span className="text-muted-foreground">Is Applicable</span>{" "}
-                <span className="font-medium">
-                  {item.responseType === "NOT_APPLICABLE" ? "No" : "Yes"}
-                </span>
-
-                {item.responseType !== "NOT_APPLICABLE" && (
-                  <div className="mt-1">
-                    <button
-                      className="text-primary underline text-sm"
-                      onClick={() => handleView(item)}
-                    >
-                      {item.filename}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-            {/* {item.value && (
-              <div className="text-sm">
-                <span className="text-muted-foreground">Value:</span>{' '}
-                <span className="font-medium">{item.value}</span>
-              </div>
-            )} */}
-            {item.value && (
-              <div className="text-sm mt-2">
-                <span className="text-muted-foreground">Value:</span>
-
-                {Array.isArray(item.value) ? (
-                  <table className="mt-2 border text-sm">
-                    <tbody>
-                      {item.value.map((row: string[], index: number) => (
-                        <tr key={index} className="border">
-                          {row.map((cell: string, i: number) => (
-                            <td key={i} className="px-2 py-1 border">
-                              {cell}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <span className="font-medium ml-1">{item.value}</span>
-                )}
               </div>
             )}
           </div>

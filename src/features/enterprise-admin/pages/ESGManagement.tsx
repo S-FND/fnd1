@@ -439,7 +439,7 @@ const ESGManagementPage = () => {
 
   return (
     <div className="space-y-6">
-      {/* <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">ESG Management</h1>
           <p className="text-muted-foreground">
@@ -455,14 +455,7 @@ const ESGManagementPage = () => {
           <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
           {isRefreshing ? 'Refreshing...' : 'Refresh'}
         </Button>
-      </div> */}
-
-      <div style={{ marginTop: '18px' }}>
-          <h1 className="text-3xl font-bold tracking-tight">ESG Management</h1>
-          <p className="text-muted-foreground mt-2">
-          Comprehensive ESG management system overview and navigation
-          </p>
-        </div>
+      </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* ESMS Card */}
@@ -547,7 +540,12 @@ const ESGManagementPage = () => {
             <div className="flex flex-col items-center justify-center space-y-2 text-center">
               <div className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
-                <CardTitle>ESG Metrics Management</CardTitle>
+                <CardTitle>ESG Metrics</CardTitle>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="h-5 w-5" />
+                <CardTitle>Management</CardTitle>
               </div>
             </div>
             <CardDescription>

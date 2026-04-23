@@ -86,10 +86,10 @@ const AdvancedIRLFacility = () => {
   return (
     <Card>
       <CardHeader>
-        {/* <CardTitle>Advanced IRL - Facility Information</CardTitle>
+        <CardTitle>Advanced IRL - Facility Information</CardTitle>
         <CardDescription>
           Office spaces, facility locations, fire safety infrastructure, warehouse information, and operational information
-        </CardDescription> */}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Question 1: Type of office space & no. of seats */}

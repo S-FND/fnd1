@@ -71,7 +71,7 @@ const InternalAuditsPage = () => {
   return (
     <UnifiedSidebarLayout>
       <div className="space-y-6">
-        <div style={{ marginTop: '18px' }}>
+        <div>
           <h1 className="text-2xl font-bold tracking-tight">Internal Audits</h1>
           <p className="text-muted-foreground">
             Internal ESG and compliance audits across departments and business units

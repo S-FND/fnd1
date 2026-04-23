@@ -446,7 +446,7 @@ const MaterialityPage = () => {
   return (
     <UnifiedSidebarLayout>
       <div className="space-y-6">
-        <div style={{ marginTop: '18px' }}>
+        <div>
           <h1 className="text-2xl font-bold tracking-tight">Materiality Assessment</h1>
           <p className="text-muted-foreground">
             Analyze and prioritize ESG material topics based on business impact and sustainability impact

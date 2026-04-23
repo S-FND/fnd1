@@ -23,7 +23,7 @@ const EHSTrainingsPage = () => {
   return (
     <UnifiedSidebarLayout>
       <div className="space-y-6">
-        <div style={{ marginTop: '18px' }}>
+        <div>
           <h1 className="text-2xl font-bold tracking-tight">EHS Trainings</h1>
           <p className="text-muted-foreground">
             Manage EHS trainings and view scheduled sessions with client companies

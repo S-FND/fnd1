@@ -57,10 +57,10 @@ const AdvancedIRLEnvironment = () => {
   return (
     <Card>
       <CardHeader>
-        {/* <CardTitle>Advanced IRL - Environment</CardTitle>
+        <CardTitle>Advanced IRL - Environment</CardTitle>
         <CardDescription>
           Environmental policies, energy consumption, emissions, and compliance information
-        </CardDescription> */}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Environmental Policies */}
