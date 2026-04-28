@@ -14,6 +14,7 @@ interface ESGCapTableProps {
   requestSort: (key: keyof ESGCapItem) => void;
   onItemUpdate?: (updatedItem: ESGCapItem) => void;
   buttonEnabled?: boolean;
+  setReloadData?: (reload: boolean) => void;
 }
 
 export const ESGCapTable: React.FC<ESGCapTableProps> = ({
@@ -21,7 +22,8 @@ export const ESGCapTable: React.FC<ESGCapTableProps> = ({
   sortConfig,
   requestSort,
   onItemUpdate,
-  buttonEnabled
+  buttonEnabled,
+  setReloadData
 }
 ) => {
 
@@ -282,6 +284,7 @@ ${formattedItems}
                 index={index}
                 onUpdate={onItemUpdate}
                 buttonEnabled={buttonEnabled}
+                setReloadData={setReloadData}
               />
             ))}
 

@@ -1,4 +1,4 @@
-export type FundingStage = 
+export type FundingStage =
   | 'pre_seed'
   | 'seed'
   | 'pre_series_a'
@@ -46,7 +46,7 @@ export type EvidenceType =
   | "certificate"
   | "kpi_metrics";
 
-  
+
 
 export interface AiResponse {
   id: string;
@@ -95,6 +95,37 @@ export interface TemplateStructure {
   [key: string]: any;
 }
 
+export interface AiInsights {
+  id: string;
+  _index: number;
+  userIntent: string;
+
+  evidence: {
+    type: string;
+    normalizedType: string;
+    documentSource: "government" | "internal";
+    isMandatory: boolean;
+    reasoning: string;
+
+    template?: {
+      name: string;
+      format: "document" | "table" | "checklist";
+      outputFileType: "docx" | "pdf" | "excel" | "csv";
+      priority: "high" | "medium" | "low";
+      structure: Record<string, string>;
+    } | null;
+
+    referenceContent?: {
+      title: string;
+      keyClauses: string[];
+      requiredFields: string[];
+    } | null;
+  }[];
+
+  executionSummary: string;
+  confidence: number;
+}
+
 export interface ESGCapItem {
   id: string | number;  // Can be string or number based on your API
   item: string;
@@ -118,12 +149,20 @@ export interface ESGCapItem {
   CS?: string;         // From your payload
   actualDate?: string;
   remarks?: string;
-  theme?:"Policy" | "SOP" | "Metrics" | "Logs";
-  data_type?:string;
+  theme?: "Policy" | "SOP" | "Metrics" | "Logs";
+  data_type?: string;
   documentType?: string;
   sections?: string[];
   sourceType?: string;
-  aiResponseRaw?:AiResponse
+  aiResponseRaw?: AiResponse;
+  manualInsights?: AiResponse;
+  aiInsights?: AiInsights;
+  fileUploadedData: {
+    filename: string;
+    mimetype: string;
+    size: number;
+    s3Link: string;
+  }[]
 }
 
 export interface RegulatoryRequirement {

@@ -29,6 +29,7 @@ import {
 import { logger } from '@/hooks/logger';
 import { PageAccessContext } from '@/context/PageAccessContext';
 import Loader from '@/components/ui/loader';
+import { set } from 'date-fns';
 
 interface PlanHistory {
   updateByUserId: string;
@@ -352,6 +353,7 @@ const ESGCapPage = () => {
   const {checkPageButtonAccess}=useContext(PageAccessContext);
   const [buttonEnabled, setButtonEnabled] = useState(false);
   const [loadingMessage,setLoadingMessage]=useState("Loading ...")
+  const [reloadData, setReloadData] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ESGCapItem | null>(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
 
@@ -553,7 +555,7 @@ const ESGCapPage = () => {
 
   useEffect(() => {
     loadData();
-  }, [entityId]);
+  }, [entityId,reloadData]);
 
   const alerts = useESGCAPAlerts(esgCap?.plan || [], originalPlan, esgCap?.finalPlan || false);
 
@@ -721,28 +723,28 @@ const ESGCapPage = () => {
               </div>
             )}
 
-            {/* Table Section */}
-            <div className="border rounded-lg overflow-hidden">
-              <div className="overflow-x-auto">
-                {showComparisonView ? (
-                  <ComparePlanView
-                    currentPlan={esgCap?.plan || []}
-                    originalPlan={originalPlan}
-                    onRevertItem={handleRevertItem}
-                    onRevertField={handleRevertField}
-                    showComparisonView={showComparisonView}
-                  />
-                ) : (
-                  <ESGCapTable
-                    sortedItems={sortedItems}
-                    sortConfig={sortConfig}
-                    requestSort={requestSort}
-                    onItemUpdate={handleUpdateItem}
-                    buttonEnabled={buttonEnabled}
-                  />
-                )}
+              <div className="border rounded-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  {showComparisonView ? (
+                    <ComparePlanView
+                      currentPlan={esgCap?.plan || []}
+                      originalPlan={originalPlan}
+                      onRevertItem={handleRevertItem}
+                      onRevertField={handleRevertField}
+                      showComparisonView={showComparisonView}
+                    />
+                  ) : (
+                    <ESGCapTable
+                      sortedItems={sortedItems}
+                      sortConfig={sortConfig}
+                      requestSort={requestSort}
+                      onItemUpdate={handleUpdateItem}
+                      buttonEnabled={buttonEnabled}
+                      setReloadData={setReloadData}
+                    />
+                  )}
+                </div>
               </div>
-            </div>
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
