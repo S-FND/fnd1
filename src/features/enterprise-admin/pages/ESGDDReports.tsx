@@ -3,7 +3,7 @@ import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ESGDDReportsList } from '../components/esg-dd/ESGDDReportsList';
@@ -15,8 +15,8 @@ import { logger } from '@/hooks/logger';
 import { getS3FilePath } from "@/utils/fileUrl";
 const ESGDDReportsPage = () => {
   logger.debug('Rendering ESGDDReportsPage component');
-  const { isLoading: authLoading } = useRouteProtection(['admin', 'manager','employee']);
-  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
+  const { isLoading: authLoading } = useRouteProtection(['admin', 'manager', 'employee']);
+  const { user, isAuthenticated, isAuthenticatedStatus } = useAuth();
   const [loading, setLoading] = useState(false);
   const [paths, setPaths] = useState(null);
   const [financialYear, setFinancialYear] = useState("");
@@ -39,7 +39,7 @@ const ESGDDReportsPage = () => {
 
   useEffect(() => {
     if (!entityId) return;
-  
+
     // Calculate financial year
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
@@ -47,20 +47,20 @@ const ESGDDReportsPage = () => {
     const financialYear = currentDate < aprilFirstCurrentYear
       ? `${currentYear - 1}-${currentYear.toString().slice(-2)}`
       : `${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
-    
+
     setFinancialYear(financialYear);
-  
+
     const fetchData = async () => {
       try {
         setLoading(true);
         const { data, error } = await fetchEsgDDReport(entityId);
-        
+
         if (error) {
           logger.error('Failed to fetch ESG report:', error);
           setPaths({}); // Explicitly set empty object on error
           return;
         }
-  
+
         setPaths(data || {}); // Handle empty/undefined data
       } catch (err) {
         logger.error('Unexpected error:', err);
@@ -69,7 +69,7 @@ const ESGDDReportsPage = () => {
         setLoading(false);
       }
     };
-  
+
     fetchData();
   }, [entityId]);
 
@@ -83,11 +83,11 @@ const ESGDDReportsPage = () => {
 
   // Transform the API data to match the expected report format
   const transformReports = (reports) => {
-    logger.log('reports',reports);
+    logger.log('reports', reports);
     if (!reports || (typeof reports === 'object' && Object.keys(reports).length === 0)) {
       return [];
     }
-    
+
     return reports?.map((report, index) => ({
       id: report._id,
       title: report.file_path?.split("/")?.reverse()?.[0] || `Report ${index + 1}`,
@@ -124,13 +124,12 @@ const ESGDDReportsPage = () => {
             </Link>
           </Button>
         </div> */}
-        
+
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileSearch className="h-5 w-5 text-primary" />
-              ESG Due Diligence Reports
-            </CardTitle>
+          <CardHeader className="border-b">
+            <CardDescription className="text-sm">
+              <h1 className="text-3xl font-bold tracking-tight">ESG Due Diligence Reports</h1>
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {allReports.length > 0 ? (
@@ -140,15 +139,15 @@ const ESGDDReportsPage = () => {
                   <TabsTrigger value="manual">Manual ({manualReports.length})</TabsTrigger>
                   <TabsTrigger value="automated">Automated ({automatedReports.length})</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="all">
                   <ESGDDReportsList reports={allReports} />
                 </TabsContent>
-                
+
                 <TabsContent value="manual">
                   <ESGDDReportsList reports={manualReports} />
                 </TabsContent>
-                
+
                 <TabsContent value="automated">
                   <ESGDDReportsList reports={automatedReports} />
                 </TabsContent>

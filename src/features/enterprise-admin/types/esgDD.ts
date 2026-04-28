@@ -36,6 +36,65 @@ export interface ESGDDReport {
   summary?: string;
 }
 
+export type EvidenceType =
+  | "data"
+  | "report"
+  | "training_record"
+  | "audit"
+  | "plan"
+  | "system"
+  | "certificate"
+  | "kpi_metrics";
+
+  
+
+export interface AiResponse {
+  id: string;
+  _index: number;
+
+  // requiredEvidence: {
+  //   types: string[];
+  //   normalizedTypes: string[];
+  //   reasoning: string;
+  //   confidence: number;
+  // };
+
+  requiredEvidence: {
+    types: EvidenceType[];
+    normalizedTypes: EvidenceType[];
+    reasoning: string;
+    confidence: number;
+  };
+
+  documentRequired: boolean;
+  documentType: string | null;
+  sourceType: "internal" | "external" | null;
+
+  sections: string[];
+
+  templates: Template[];
+
+  reasoning: string;
+  confidence: number;
+}
+
+export interface Template {
+  type: "system" | "data" | "report" | string;
+  name: string;
+  format: "checklist" | "table" | "document" | string;
+
+  structure: TemplateStructure;
+}
+
+export interface TemplateStructure {
+  components?: string[];   // system
+  columns?: string[];      // data
+  sections?: string[];     // report
+
+  // future-proof (very important for your AI system)
+  [key: string]: any;
+}
+
 export interface ESGCapItem {
   id: string | number;  // Can be string or number based on your API
   item: string;
@@ -59,6 +118,12 @@ export interface ESGCapItem {
   CS?: string;         // From your payload
   actualDate?: string;
   remarks?: string;
+  theme?:"Policy" | "SOP" | "Metrics" | "Logs";
+  data_type?:string;
+  documentType?: string;
+  sections?: string[];
+  sourceType?: string;
+  aiResponseRaw?:AiResponse
 }
 
 export interface RegulatoryRequirement {

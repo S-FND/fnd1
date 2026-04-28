@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Loader2, UserPlus, Search, Edit, Users, Check, X, Eye } from 'lucide-react';
+import { Loader2, UserPlus, Search, Edit, Users, Check, X, Eye, Trash2 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   updateEmployee,
@@ -16,17 +16,29 @@ import {
   fetchUrlList,
   // fetchUserAccess,
   updateCompanyFeatures,
-  createEmployee
+  createEmployee,
+  deleteEmployee
 } from '../../services/employeeManagementAPI';
 import { useNavigate } from 'react-router-dom';
 import { logger } from '@/hooks/logger';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate } from 'react-router-dom';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // import { UserPlus, Search, Filter, Edit, Users, Eye } from 'lucide-react';
 
-interface Employee {
+export interface Employee {
   _id: string;
   name: string;
   email: string;
@@ -105,12 +117,25 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
   const [filterLocation, setFilterLocation] = useState('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
+  // const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [locationNameMap, setLocationNameMap] = useState<Map<string, string>>(new Map());
   const [isAssignmentDialogOpen, setIsAssignmentDialogOpen] = useState(false);
-  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
-  const { user, isAuthenticated,isAuthenticatedStatus } = useAuth();
+  const { isLoading } = useRouteProtection(['admin', 'manager', 'employee']);
+  const { user, isAuthenticated, isAuthenticatedStatus } = useAuth();
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    employee: Employee | null;
+  }>({
+    open: false,
+    employee: null,
+  });
+  const [confirmText, setConfirmText] = useState("");
+  
+  const handleOpenDelete = (employee) => {
+    setDeleteDialog({ open: true, employee });
+    setConfirmText(""); // reset input
+  };
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -160,7 +185,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
     const fetchUrls = async () => {
       setIsUrlLoading(true);
       try {
-        const urlsData = await fetchUrlList();
+        const urlsData : any = await fetchUrlList();
         if (urlsData?.status && urlsData.data) {
           setUrlList(urlsData.data);
         }
@@ -199,21 +224,21 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
     setIsEditDialogOpen(true);
   };
 
-  const handleAssignEmployee = async (employee: Employee) => {
-    setSelectedEmployee(employee);
+  // const handleAssignEmployee = async (employee: Employee) => {
+  //   setSelectedEmployee(employee);
 
-    // Use the employee's existing accessUrls instead of fetching from another endpoint
-    setSelectedUrls(employee.accessUrls || []);
+  //   // Use the employee's existing accessUrls instead of fetching from another endpoint
+  //   setSelectedUrls(employee.accessUrls || []);
 
-    // Update selectAll based on current accessUrls
-    if (employee.accessUrls && employee.accessUrls.length === urlList.length) {
-      setSelectAll(true);
-    } else {
-      setSelectAll(false);
-    }
+  //   // Update selectAll based on current accessUrls
+  //   if (employee.accessUrls && employee.accessUrls.length === urlList.length) {
+  //     setSelectAll(true);
+  //   } else {
+  //     setSelectAll(false);
+  //   }
 
-    setIsAssignDialogOpen(true);
-  };
+  //   setIsAssignDialogOpen(true);
+  // };
   useEffect(() => {
     // Keep selectAll checkbox in sync with actual selections
     if (selectedUrls.length === urlList.length && urlList.length > 0) {
@@ -243,15 +268,13 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
 
       logger.log('Sending complete payload to /subuser/activate: work', completePayload);
 
-      const [response, error] = await updateEmployee(completePayload);
+      const response :any = await updateEmployee(completePayload);
       logger.log('API Response:', response);
 
       if (response && (response.status === true || response._id)) {
         toast.success('Employee updated successfully');
         refreshData();
         setIsEditDialogOpen(false);
-      } else {
-        toast.error(error || 'Failed to update employee');
       }
     } catch (err) {
       logger.error('Error in handleSaveEdit:', err);
@@ -324,43 +347,43 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
   // };
 
   // Transform URL list into hierarchical structure for display
-  const getUrlHierarchy = () => {
-    const hierarchy: Record<string, string[]> = {};
+  // const getUrlHierarchy = () => {
+  //   const hierarchy: Record<string, string[]> = {};
 
-    urlList.forEach(url => {
-      const parts = url.split('-');
-      const category = parts[0];
-      const subcategory = parts.slice(1).join('-');
+  //   urlList.forEach(url => {
+  //     const parts = url.split('-');
+  //     const category = parts[0];
+  //     const subcategory = parts.slice(1).join('-');
 
-      if (!hierarchy[category]) {
-        hierarchy[category] = [];
-      }
-      hierarchy[category].push(subcategory);
-    });
+  //     if (!hierarchy[category]) {
+  //       hierarchy[category] = [];
+  //     }
+  //     hierarchy[category].push(subcategory);
+  //   });
 
-    return hierarchy;
-  };
+  //   return hierarchy;
+  // };
 
-  const toggleSelectAll = (checked: boolean) => {
-    setSelectAll(checked);
-    if (checked) {
-      setSelectedUrls([...urlList]);
-    } else {
-      setSelectedUrls([]);
-    }
-  };
+  // const toggleSelectAll = (checked: boolean) => {
+  //   setSelectAll(checked);
+  //   if (checked) {
+  //     setSelectedUrls([...urlList]);
+  //   } else {
+  //     setSelectedUrls([]);
+  //   }
+  // };
 
-  const handleUrlSelect = (url: string, checked: boolean) => {
-    if (checked) {
-      setSelectedUrls(prev => [...prev, url]);
-    } else {
-      setSelectedUrls(prev => prev.filter(u => u !== url));
-    }
-  };
+  // const handleUrlSelect = (url: string, checked: boolean) => {
+  //   if (checked) {
+  //     setSelectedUrls(prev => [...prev, url]);
+  //   } else {
+  //     setSelectedUrls(prev => prev.filter(u => u !== url));
+  //   }
+  // };
 
-  const isUrlSelected = (url: string) => {
-    return selectedUrls.includes(url);
-  };
+  // const isUrlSelected = (url: string) => {
+  //   return selectedUrls.includes(url);
+  // };
 
   const filteredEmployees = employees.filter((employee) => {
     const matchesSearch =
@@ -425,20 +448,20 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
   //   navigate(`/team-management/employee/${employee._id}`);
   // }
 
-  const handleNewCompanySetup = async (entityId: string) => {
-    try {
-      const features = await updateCompanyFeatures(entityId, [
-        { feature: "ESG DD", adminEnabled: true, url: "/esg-dd" },
-      ]);
+  // const handleNewCompanySetup = async (entityId: string) => {
+  //   try {
+  //     const features = await updateCompanyFeatures(entityId, [
+  //       { feature: "ESG DD", adminEnabled: true, url: "/esg-dd" },
+  //     ]);
 
-      localStorage.setItem(
-        "fandoro-access",
-        JSON.stringify(features || [])
-      );
-    } catch (err) {
-      logger.error("Failed to set up company features:", err);
-    }
-  };
+  //     localStorage.setItem(
+  //       "fandoro-access",
+  //       JSON.stringify(features || [])
+  //     );
+  //   } catch (err) {
+  //     logger.error("Failed to set up company features:", err);
+  //   }
+  // };
 
   const handleAddEmployee = async () => {
     // Validate
@@ -446,18 +469,16 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
       toast.error("Please fill all fields");
       return;
     }
-  
+
     try {
-      const [result, error] = await createEmployee({
+      const result = await createEmployee({
         employeeList: [newEmployee]
       });
-  
+
       if (result) {
         toast.success("Employee added successfully!");
         setIsAddDialogOpen(false);
         refreshData(); // ✅ Use the prop passed from parent
-      } else {
-        toast.error(error?.replace(/^(Error: |ValidationError: email:)/, "") || "Failed to add employee");
       }
     } catch (err) {
       toast.error("An unexpected error occurred");
@@ -465,8 +486,33 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
     }
   };
 
+  const handleDeleteEmployeeClick = (employee: Employee) => {
+    setDeleteDialog({ open: true, employee });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteDialog.employee) return;
+
+    try {
+      const response: any = await deleteEmployee(deleteDialog.employee._id);
+
+
+      if (response[0]?.status === true) {
+        toast.success('Employee deleted successfully');
+        await refreshData();
+      }
+
+    } catch (err) {
+      toast.error('An error occurred while deleting employee');
+      logger.error(err);
+    } finally {
+      setDeleteDialog({ open: false, employee: null });
+    }
+  };
+
 
   return (
+    <>
     <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
@@ -523,7 +569,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
               <TableHead>Email</TableHead>
               <TableHead>Employee ID</TableHead>
               {/* <TableHead>Role</TableHead> */}
-              <TableHead>Location</TableHead>
+              {/* <TableHead>Location</TableHead> */}
               <TableHead>Status</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -541,19 +587,6 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
                 </TableCell> */}
                 {/* <TableCell>{getLocationName(employee.selectedLocation || employee.location)}</TableCell> */}
                 <TableCell>
-                    {employee.locations && employee.locations.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">
-                            {employee.locations.map(locId => (
-                                <Badge key={locId} variant="outline" className="text-xs">
-                                    {getLocationName(locId)}
-                                </Badge>
-                            ))}
-                        </div>
-                    ) : (
-                        getLocationName(employee.selectedLocation || employee.location) || 'Unassigned'
-                    )}
-                </TableCell>
-                <TableCell>
                   <Badge variant={employee.active ? 'default' : 'destructive'}>
                     {employee.active ? 'Active' : 'Inactive'}
                   </Badge>
@@ -566,7 +599,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
                       onClick={() => handleViewDetails(employee)}
                     >
                       <Eye className="h-3 w-3 mr-1" />
-                      Details
+                      {/* Details */}
                     </Button>
                     <Button
                       size="sm"
@@ -574,7 +607,15 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
                       onClick={() => handleEditEmployee(employee)}
                     >
                       <Edit className="h-3 w-3 mr-1" />
-                      Edit
+                      {/* Edit */}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleDeleteEmployeeClick(employee)}
+                    >
+                      <Trash2 className="h-3 w-3 mr-1" />
+                      {/* Delete */}
                     </Button>
                     {/* <Button
                       size="sm"
@@ -816,74 +857,165 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
         </DialogContent>
       </Dialog>
 
+      <Dialog
+        open={deleteDialog.open}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteDialog({ open: false, employee: null });
+            setConfirmText("");
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <h2 className="text-lg font-semibold text-red-600">
+              Delete Employee
+            </h2>
+          </DialogHeader>
+
+          {/* Confirmation Message */}
+          <div className="py-3 text-sm text-gray-600">
+            <p className="mb-2">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-gray-800">
+                {deleteDialog.employee?.name}
+              </span>
+              ?
+            </p>
+            <p className="text-xs text-gray-500">
+              This action cannot be undone. All associated data, including access permissions,
+              records, and configurations will be permanently removed.
+            </p>
+          </div>
+
+          {/* Input */}
+          <div className="mt-3">
+            <input
+              type="text"
+              placeholder='Type "DELETE" to confirm'
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialog({ open: false, employee: null });
+                setConfirmText("");
+              }}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              variant="destructive"
+              disabled={confirmText !== "DELETE"}
+              onClick={confirmDelete}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Add Employee Dialog (Placeholder) */}
       <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
-          setIsAddDialogOpen(open);
-          if (!open) {
-            // Reset form when closing
-            setNewEmployee({ name: '', email: '', employeeId: '' });
-          }
-        }}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Add New Employee</DialogTitle>
-            </DialogHeader>
+        setIsAddDialogOpen(open);
+        if (!open) {
+          // Reset form when closing
+          setNewEmployee({ name: '', email: '', employeeId: '' });
+        }
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Employee</DialogTitle>
+          </DialogHeader>
 
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              handleAddEmployee(); // Your submit function
-            }}>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="add-name">Full Name</Label>
-                  <Input
-                    id="add-name"
-                    placeholder="Enter full name"
-                    value={newEmployee.name}
-                    onChange={(e) => setNewEmployee(prev => ({ ...prev, name: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="add-email">Email</Label>
-                  <Input
-                    id="add-email"
-                    type="email"
-                    placeholder="Enter email address"
-                    value={newEmployee.email}
-                    onChange={(e) => setNewEmployee(prev => ({ ...prev, email: e.target.value.toLowerCase() }))}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="add-employeeId">Employee ID</Label>
-                  <Input
-                    id="add-employeeId"
-                    placeholder="Enter employee ID"
-                    value={newEmployee.employeeId}
-                    onChange={(e) => setNewEmployee(prev => ({ ...prev, employeeId: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1"
-                    onClick={() => setIsAddDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" className="flex-1">
-                    Add Employee
-                  </Button>
-                </div>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            handleAddEmployee(); // Your submit function
+          }}>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="add-name">Full Name</Label>
+                <Input
+                  id="add-name"
+                  placeholder="Enter full name"
+                  value={newEmployee.name}
+                  onChange={(e) => setNewEmployee(prev => ({ ...prev, name: e.target.value }))}
+                  required
+                />
               </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+              <div>
+                <Label htmlFor="add-email">Email</Label>
+                <Input
+                  id="add-email"
+                  type="email"
+                  placeholder="Enter email address"
+                  value={newEmployee.email}
+                  onChange={(e) => setNewEmployee(prev => ({ ...prev, email: e.target.value.toLowerCase() }))}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="add-employeeId">Employee ID</Label>
+                <Input
+                  id="add-employeeId"
+                  placeholder="Enter employee ID"
+                  value={newEmployee.employeeId}
+                  onChange={(e) => setNewEmployee(prev => ({ ...prev, employeeId: e.target.value }))}
+                  required
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setIsAddDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" className="flex-1">
+                  Add Employee
+                </Button>
+              </div>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Card>
+
+    {/* Delete Confirmation Dialog */}
+{/* <AlertDialog 
+  open={deleteDialog.open} 
+  onOpenChange={(open) => !open && setDeleteDialog({ open: false, employee: null })}
+>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+      <AlertDialogDescription>
+        This action cannot be undone. This will permanently delete{" "}
+        <span className="font-semibold">{deleteDialog.employee?.name}</span>{" "}
+        and remove all associated data from the system.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel>Cancel</AlertDialogCancel>
+      <AlertDialogAction 
+        onClick={confirmDelete}
+        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+      >
+        Delete
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog> */}
+
+</>
   );
 };
 

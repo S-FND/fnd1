@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,17 +8,226 @@ import { CreateEngagementActivityDialog } from './CreateEngagementActivityDialog
 import PriorityStakeholdersView from './PriorityStakeholdersView';
 import { EngagementActivity } from './types';
 import { format } from 'date-fns';
+import { httpClient } from '@/lib/httpClient';
+import { toast } from 'sonner';
+
+// API Interfaces
+interface ApiEngagementActivity {
+  _id: string;
+  title: string;
+  type: string;
+  purpose: string;
+  description: string;
+  targetStakeholders: string[];
+  topics: string[];
+  scheduledDate?: string;
+  frequency?: string;
+  location?: string;
+  meetingLink?: string;
+  duration?: number;
+  status: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ApiResponse<T> {
+  status: boolean;
+  data?: T;
+  message?: string;
+}
+
+interface ApiStakeholder {
+  _id: string;
+  name: string;
+  organization?: string;
+  email: string;
+  phone: string;
+  subcategoryId: string;
+  engagementLevel: 'low' | 'medium' | 'high';
+  influence: 'low' | 'medium' | 'high';
+  interest: 'low' | 'medium' | 'high';
+  lastContact?: string;
+}
+
+// Transform stakeholder to have both id and _id
+interface TransformedStakeholder {
+  id: string;
+  _id: string;
+  name: string;
+  organization?: string;
+  email: string;
+  phone: string;
+  subcategoryId: string;
+  engagementLevel: 'low' | 'medium' | 'high';
+  influence: 'low' | 'medium' | 'high';
+  interest: 'low' | 'medium' | 'high';
+  lastContact?: string;
+}
 
 const EngagementPlan: React.FC = () => {
   const [activities, setActivities] = useState<EngagementActivity[]>([]);
   const [showPriorityView, setShowPriorityView] = useState(false);
-  
-  const highPriorityStakeholders = sampleStakeholders.filter(
-    s => s.engagementLevel === 'high' && s.influence === 'high'
+  const [stakeholders, setStakeholders] = useState<TransformedStakeholder[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch stakeholders and activities on mount
+  useEffect(() => {
+    fetchStakeholders();
+    fetchActivities();
+  }, []);
+
+  const fetchStakeholders = async () => {
+    try {
+      const response = await httpClient.get<ApiStakeholder[]>('stakeholders');
+      if (Array.isArray(response.data)) {
+        // Transform the data to include both id and _id
+        const transformedData: TransformedStakeholder[] = response.data.map(item => ({
+          ...item,
+          id: item._id, // Add id field for the dialog
+        }));
+        setStakeholders(transformedData);
+        console.log('Transformed stakeholders:', transformedData); // Debug log
+      }
+    } catch (error) {
+      console.error('Error fetching stakeholders:', error);
+      // Transform sample data as well
+      const transformedSample: any = sampleStakeholders.map(item => ({
+        ...item,
+        _id: item.id,
+        id: item.id,
+      }));
+      setStakeholders(transformedSample);
+    }
+  };
+
+  const fetchActivities = async () => {
+    try {
+      setIsLoading(true);
+
+      const response = await httpClient.get<ApiResponse<ApiEngagementActivity[]>>(
+        'stakeholder-engagement-group/activities'
+      );
+
+      if (response.data?.status && response.data?.data) {
+        const transformedActivities: EngagementActivity[] =
+          response.data.data.map((item) => {
+            // ✅ handle both populated and non-populated
+            const stakeholderIds = (item.targetStakeholders || []).map((s: any) =>
+              typeof s === 'string' ? s : s?._id
+            );
+
+            return {
+              id: item._id,
+              title: item.title,
+              type: item.type as any,
+              purpose: item.purpose as any,
+              description: item.description,
+
+              targetStakeholders: stakeholderIds,
+              targetStakeholderDetails:
+                typeof item.targetStakeholders?.[0] === 'object'
+                  ? item.targetStakeholders
+                  : [],
+
+              topics: item.topics || [],
+              scheduledDate: item.scheduledDate
+                ? new Date(item.scheduledDate)
+                : undefined,
+              frequency: item.frequency as any,
+              location: item.location,
+              meetingLink: item.meetingLink,
+              duration: item.duration,
+              status: item.status as any,
+              createdBy: item.createdBy,
+              createdAt: new Date(item.createdAt),
+            };
+          });
+
+        setActivities(transformedActivities);
+      }
+    } catch (error) {
+      console.error('Error fetching activities:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Filter high priority stakeholders from API data
+  const highPriorityStakeholders = stakeholders.filter(
+    (s) => s.engagementLevel === 'high' && s.influence === 'high'
   );
 
-  const handleActivityCreated = (activity: EngagementActivity) => {
-    setActivities([...activities, activity]);
+  const handleActivityCreated = async (activity: EngagementActivity) => {
+    try {
+      // Transform to API format
+      const apiActivity = {
+        title: activity.title,
+        type: activity.type,
+        purpose: activity.purpose,
+        description: activity.description,
+        targetStakeholders: activity.targetStakeholders,
+        topics: activity.topics,
+        scheduledDate: activity.scheduledDate?.toISOString(),
+        frequency: activity.frequency,
+        location: activity.location,
+        meetingLink: activity.meetingLink,
+        duration: activity.duration,
+        status: 'scheduled'
+      };
+
+      const response = await httpClient.post<ApiResponse<ApiEngagementActivity>>(
+        'stakeholder-engagement-group',
+        apiActivity
+      );
+
+      if (response.data?.status && response.data?.data) {
+        const newActivity: EngagementActivity = {
+          id: response.data.data._id,
+          ...activity,
+          createdAt: new Date()
+        };
+        setActivities([...activities, newActivity]);
+        toast.success('Activity created successfully');
+      }
+    } catch (error) {
+      console.error('Error creating activity:', error);
+    }
+  };
+
+  const handleUpdateActivityStatus = async (activityId: string, status: string) => {
+    try {
+      const response = await httpClient.patch<ApiResponse<ApiEngagementActivity>>(
+        `stakeholder-engagement-group/${activityId}`,
+        { status }
+      );
+
+      if (response.data?.status) {
+        setActivities(activities.map(act =>
+          act.id === activityId ? { ...act, status: status as any } : act
+        ));
+        toast.success('Activity status updated');
+      }
+    } catch (error) {
+      console.error('Error updating activity:', error);
+    }
+  };
+
+  const handleDeleteActivity = async (activityId: string) => {
+    if (!confirm('Are you sure you want to delete this activity?')) return;
+
+    try {
+      const response = await httpClient.delete<ApiResponse<void>>(
+        `stakeholder-engagement-group/${activityId}`
+      );
+
+      if (response.data?.status) {
+        setActivities(activities.filter(act => act.id !== activityId));
+        toast.success('Activity deleted successfully');
+      }
+    } catch (error) {
+      console.error('Error deleting activity:', error);
+    }
   };
 
   const getActivityTypeIcon = (type: string) => {
@@ -59,12 +268,46 @@ const EngagementPlan: React.FC = () => {
   if (showPriorityView) {
     return <PriorityStakeholdersView onBack={() => setShowPriorityView(false)} />;
   }
-  
+
+  // 🔥 Priority Matrix Logic
+  const manageClosely = stakeholders.filter(
+    (s) => s.influence === 'high' && s.interest === 'high'
+  );
+
+  const keepSatisfied = stakeholders.filter(
+    (s) => s.influence === 'high' && s.interest !== 'high'
+  );
+
+  const keepInformed = stakeholders.filter(
+    (s) => s.influence !== 'high' && s.interest === 'high'
+  );
+
+  const monitor = stakeholders.filter(
+    (s) => s.influence !== 'high' && s.interest !== 'high'
+  );
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Stakeholder Engagement Plan</h1>
-        <CreateEngagementActivityDialog onActivityCreated={handleActivityCreated} />
+      <div className="flex flex-col gap-3">
+        {/* Header (centered) */}
+        <div style={{ marginTop: '18px' }}>
+          <h1 className="text-2xl font-bold">
+            Stakeholder Engagement Plan
+          </h1>
+        </div>
+
+        {/* Actions row */}
+        <div className="flex justify-end gap-2 flex-wrap">
+          <Button variant="outline" onClick={fetchActivities} disabled={isLoading}>
+            <Clock className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+
+          <CreateEngagementActivityDialog
+            onActivityCreated={handleActivityCreated}
+            stakeholders={stakeholders}
+          />
+        </div>
       </div>
 
       {/* Recent Activities */}
@@ -85,7 +328,7 @@ const EngagementPlan: React.FC = () => {
                       <div className="text-sm text-muted-foreground flex items-center gap-4">
                         <span className="flex items-center gap-1">
                           <Users className="h-3 w-3" />
-                          {activity.targetStakeholders.length} stakeholder(s)
+                          {activity.targetStakeholders?.length || 0} stakeholder(s)
                         </span>
                         {activity.scheduledDate && (
                           <span className="flex items-center gap-1">
@@ -127,7 +370,7 @@ const EngagementPlan: React.FC = () => {
           )}
         </Card>
       )}
-      
+
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -135,24 +378,65 @@ const EngagementPlan: React.FC = () => {
             <CardDescription>Organize stakeholders by influence and interest</CardDescription>
           </CardHeader>
           <CardContent className="h-80 relative">
-            <div className="absolute inset-0 p-6">
-              <div className="grid grid-cols-2 grid-rows-2 h-full border">
-                <div className="border-r border-b p-2 bg-amber-50">
-                  <div className="mb-2 font-semibold">Keep Satisfied</div>
-                  <div className="text-xs">(High influence, Low interest)</div>
+            <div className="absolute inset-0 p-4">
+              <div className="grid grid-cols-2 grid-rows-2 h-full border text-xs">
+
+                {/* Keep Satisfied */}
+                <div className="border-r border-b p-2 bg-amber-50 overflow-auto">
+                  <div className="font-semibold mb-1">Keep Satisfied</div>
+                  {keepSatisfied.length === 0 ? (
+                    <p className="text-muted-foreground">No stakeholders</p>
+                  ) : (
+                    keepSatisfied.map(s => (
+                      <div key={s.id} className="truncate">
+                        • {s.name}
+                      </div>
+                    ))
+                  )}
                 </div>
-                <div className="border-b p-2 bg-green-50">
-                  <div className="mb-2 font-semibold">Manage Closely</div>
-                  <div className="text-xs">(High influence, High interest)</div>
+
+                {/* Manage Closely */}
+                <div className="border-b p-2 bg-green-50 overflow-auto">
+                  <div className="font-semibold mb-1">Manage Closely</div>
+                  {manageClosely.length === 0 ? (
+                    <p className="text-muted-foreground">No stakeholders</p>
+                  ) : (
+                    manageClosely.map(s => (
+                      <div key={s.id} className="truncate font-medium">
+                        • {s.name}
+                      </div>
+                    ))
+                  )}
                 </div>
-                <div className="border-r p-2">
-                  <div className="mb-2 font-semibold">Monitor</div>
-                  <div className="text-xs">(Low influence, Low interest)</div>
+
+                {/* Monitor */}
+                <div className="border-r p-2 overflow-auto">
+                  <div className="font-semibold mb-1">Monitor</div>
+                  {monitor.length === 0 ? (
+                    <p className="text-muted-foreground">No stakeholders</p>
+                  ) : (
+                    monitor.map(s => (
+                      <div key={s.id} className="truncate">
+                        • {s.name}
+                      </div>
+                    ))
+                  )}
                 </div>
-                <div className="p-2 bg-blue-50">
-                  <div className="mb-2 font-semibold">Keep Informed</div>
-                  <div className="text-xs">(Low influence, High interest)</div>
+
+                {/* Keep Informed */}
+                <div className="p-2 bg-blue-50 overflow-auto">
+                  <div className="font-semibold mb-1">Keep Informed</div>
+                  {keepInformed.length === 0 ? (
+                    <p className="text-muted-foreground">No stakeholders</p>
+                  ) : (
+                    keepInformed.map(s => (
+                      <div key={s.id} className="truncate">
+                        • {s.name}
+                      </div>
+                    ))
+                  )}
                 </div>
+
               </div>
             </div>
           </CardContent>
@@ -160,7 +444,7 @@ const EngagementPlan: React.FC = () => {
             Based on power/interest grid analysis
           </CardFooter>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>High Priority Stakeholders</CardTitle>
@@ -175,7 +459,7 @@ const EngagementPlan: React.FC = () => {
                   <p className="text-sm">Add stakeholders with high engagement and influence.</p>
                 </div>
               ) : (
-                highPriorityStakeholders.map(stakeholder => {
+                highPriorityStakeholders.slice(0, 5).map((stakeholder) => {
                   const subcategory = defaultStakeholderSubcategories.find(
                     sc => sc.id === stakeholder.subcategoryId
                   );
@@ -195,7 +479,7 @@ const EngagementPlan: React.FC = () => {
                           {subcategory?.category === 'internal' ? 'Internal' : 'External'}
                         </div>
                         <div className="text-xs text-muted-foreground mt-1">
-                          Last contact: {stakeholder.lastContact ? 
+                          Last contact: {stakeholder.lastContact ?
                             new Date(stakeholder.lastContact).toLocaleDateString() : 'Never'}
                         </div>
                       </div>
@@ -203,11 +487,16 @@ const EngagementPlan: React.FC = () => {
                   );
                 })
               )}
+              {highPriorityStakeholders.length > 5 && (
+                <p className="text-xs text-center text-muted-foreground">
+                  +{highPriorityStakeholders.length - 5} more
+                </p>
+              )}
             </div>
           </CardContent>
           <CardFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="w-full"
               onClick={() => setShowPriorityView(true)}
             >
@@ -216,7 +505,7 @@ const EngagementPlan: React.FC = () => {
           </CardFooter>
         </Card>
       </div>
-      
+
       <Card>
         <CardHeader>
           <CardTitle>Engagement Strategy</CardTitle>
@@ -228,17 +517,17 @@ const EngagementPlan: React.FC = () => {
               <h3 className="font-semibold mb-1">Manage Closely (High influence, High interest)</h3>
               <p className="text-sm">These are key stakeholders who should be fully engaged and their support is critical. Regular face-to-face meetings, consistent updates, and integration into decision-making processes.</p>
             </div>
-            
+
             <div className="p-4 rounded-md border-l-4 border-amber-400 bg-amber-50">
               <h3 className="font-semibold mb-1">Keep Satisfied (High influence, Low interest)</h3>
               <p className="text-sm">Keep these stakeholders satisfied but don't overwhelm them with communications. Focus on areas of specific interest, provide targeted updates, and address concerns promptly.</p>
             </div>
-            
+
             <div className="p-4 rounded-md border-l-4 border-blue-400 bg-blue-50">
               <h3 className="font-semibold mb-1">Keep Informed (Low influence, High interest)</h3>
               <p className="text-sm">Keep these stakeholders adequately informed and ensure no major issues are arising. Regular newsletters, website updates, and open channels for questions and feedback.</p>
             </div>
-            
+
             <div className="p-4 rounded-md border-l-4 border-gray-400 bg-gray-50">
               <h3 className="font-semibold mb-1">Monitor (Low influence, Low interest)</h3>
               <p className="text-sm">Monitor these stakeholders but don't overwhelm them with excessive communications. Provide access to general information through websites or annual reports.</p>
