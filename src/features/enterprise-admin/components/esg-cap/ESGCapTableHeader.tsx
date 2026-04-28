@@ -279,7 +279,7 @@ export const ESGCapTableHeader: React.FC<any> = ({
         </TableHead>
 
         {/* Actions */}
-        <TableHead className="text-right !text-black">Actions</TableHead>
+        <TableHead className="text-center !text-black">Actions</TableHead>
       </TableRow>
     </TableHeader>
   );

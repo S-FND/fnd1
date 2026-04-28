@@ -214,13 +214,6 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
       <TableCell className="text-right" style={{ padding: "0.3rem" }}>
         <ESGCapRowActions item={item} onUpdate={onUpdate || (() => { })} buttonEnabled={buttonEnabled} setReloadData={setReloadData} />
       </TableCell>
-      <TableCell className="text-muted-foreground text-sm">
-        {effectiveStatus === 'completed' ? 'Completed on time' :
-          effectiveStatus === 'in_progress' ? 'Implementation ongoing' :
-            effectiveStatus === 'delayed' ? 'Action overdue' :
-              effectiveStatus === 'accepted' ? 'CAP accepted' :
-                effectiveStatus === 'in_review' ? 'Under review' : 'Awaiting action'}
-      </TableCell>
     </TableRow>
   );
 };
