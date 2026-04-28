@@ -133,13 +133,13 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
     }
   };
 
-  useEffect(() => {
-    if (isDownloadOpen && !hasDocument) {
-      toast.error('No document available', {
-        description: `There is no document uploaded for "${item.issue}". Please upload one first.`,
-      });
-    }
-  }, [isDownloadOpen, hasDocument, item.issue]);
+  // useEffect(() => {
+  //   if (isDownloadOpen && !hasDocument) {
+  //     toast.error('No document available', {
+  //       description: `There is no document uploaded for "${item.issue}". Please upload one first.`,
+  //     });
+  //   }
+  // }, [isDownloadOpen, hasDocument, item.issue]);
 
   useEffect(() => {
     if (showTemplateModal && !documentInfo) {
@@ -192,10 +192,10 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
                     <Download className="mr-2 h-4 w-4" />
                     Download Template
                   </DropdownMenuItem>
-                  {item.aiResponseRaw && <DropdownMenuItem onClick={() => { setIsViewAiOpen(true) }}>
+                  {/* {item.aiResponseRaw && <DropdownMenuItem onClick={() => { setIsViewAiOpen(true) }}>
                     <Download className="mr-2 h-4 w-4" />
                     View AI Insights
-                  </DropdownMenuItem>}
+                  </DropdownMenuItem>} */}
                 </DropdownMenuContent>
               </DropdownMenu>
             </TooltipTrigger>

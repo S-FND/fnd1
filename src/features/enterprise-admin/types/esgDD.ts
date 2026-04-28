@@ -162,6 +162,7 @@ export interface ESGCapItem {
     mimetype: string;
     size: number;
     s3Link: string;
+    aiSummary:any;
   }[]
 }
 
