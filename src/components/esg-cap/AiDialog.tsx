@@ -13,7 +13,13 @@ export function AiDialog({ isViewAiOpen, onOpenChange, item }: any) {
   const [editableAi, setEditableAi] = useState<any>(item?.aiResponseRaw);
 
   useEffect(() => {
-    setEditableAi(item?.aiResponseRaw);
+    if(item?.manualInsights){
+      setEditableAi(item?.manualInsights);
+    }
+    else{
+      setEditableAi(item?.aiResponseRaw);
+    }
+    
   }, [item]);
 
   return (

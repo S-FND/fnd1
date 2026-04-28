@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Trash2, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { httpClient } from "@/lib/httpClient";
 // import { AuthModal } from "./AuthModal";
 
 interface DocumentRecord {
@@ -19,6 +20,12 @@ interface DocumentViewerModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   checklistItemId: string | number;
+  uploadedDocuments:{
+    filename: string;
+    mimetype: string;
+    size: number;
+    s3Link: string;
+  }[]
   // onDocumentDeleted: () => void;
 }
 
@@ -27,6 +34,7 @@ export const DocumentViewerModal = ({
   onOpenChange, 
   checklistItemId,
   // onDocumentDeleted 
+  uploadedDocuments
 }: DocumentViewerModalProps) => {
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
   const [loading, setLoading] = useState(false);
@@ -89,16 +97,17 @@ export const DocumentViewerModal = ({
     }
   };
 
-  const handleView = async (doc: DocumentRecord) => {
+  const handleView = async (doc: {filename:string;s3Link:string}) => {
     try {
-      const { data, error } = await supabase.storage
-        .from('compliance-documents')
-        .createSignedUrl(doc.file_path, 60); // 60 seconds expiry
-
-      if (error) throw error;
-      if (data?.signedUrl) {
-        window.open(data.signedUrl, '_blank');
+      const getSignedUrl=await httpClient.get('esgdd/escap/uploaded/evidence-files/signed-urls?key='+doc.filename)
+      console.log('getSignedUrl',getSignedUrl)
+      if(getSignedUrl.status == 200){
+        window.open(getSignedUrl.data['signedUrl'])
       }
+      // if (error) throw error;
+      // if (data?.signedUrl) {
+      //   window.open(data.signedUrl, '_blank');
+      // }
     } catch (error) {
       console.error("View error:", error);
       toast.error("Failed to view document");
@@ -162,20 +171,20 @@ export const DocumentViewerModal = ({
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {loading ? (
             <p className="text-sm text-muted-foreground text-center py-8">Loading documents...</p>
-          ) : documents.length === 0 ? (
+          ) : uploadedDocuments?.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
               No documents uploaded yet
             </p>
           ) : (
-            documents.map((doc) => (
+            uploadedDocuments?.map((doc) => (
               <div 
-                key={doc.id} 
+                key={doc.filename} 
                 className="flex items-center justify-between p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{doc.file_name}</p>
+                  <p className="text-sm font-medium truncate">{doc.filename}</p>
                   <p className="text-xs text-muted-foreground">
-                    {formatFileSize(doc.file_size)} • {formatDate(doc.uploaded_at)}
+                    {formatFileSize(doc.size)} • {`${new Date(Number(doc?.s3Link?.split("/").pop()?.split("_")[0]))}`}
                   </p>
                 </div>
                 <div className="flex gap-2 ml-4">
@@ -187,18 +196,18 @@ export const DocumentViewerModal = ({
                   >
                     <Eye className="w-4 h-4" />
                   </Button>
-                  <Button
+                  {/* <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDownload(doc)}
+                    // onClick={() => handleDownload(doc)}
                     title="Download document"
                   >
                     <Download className="w-4 h-4" />
-                  </Button>
+                  </Button> */}
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDelete(doc)}
+                    // onClick={() => handleDelete(doc)}
                     className="text-destructive hover:text-destructive"
                     title="Delete document"
                   >

@@ -35,7 +35,7 @@ export const Navbar: React.FC<NavbarProps> = ({ hideSidebarTrigger = false }) =>
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-
+    debugger;
     if (token && user) {
       try {
         const socket = socketConnect(JSON.parse(token));
