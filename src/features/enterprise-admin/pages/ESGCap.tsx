@@ -27,6 +27,7 @@ import {
 import { logger } from '@/hooks/logger';
 import { PageAccessContext } from '@/context/PageAccessContext';
 import Loader from '@/components/ui/loader';
+import { set } from 'date-fns';
 
 interface PlanHistory {
   updateByUserId: string;
@@ -350,6 +351,7 @@ const ESGCapPage = () => {
   const {checkPageButtonAccess}=useContext(PageAccessContext);
   const [buttonEnabled, setButtonEnabled] = useState(false);
   const [loadingMessage,setLoadingMessage]=useState("Loading ...")
+  const [reloadData, setReloadData] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('fandoro-user');
@@ -547,7 +549,7 @@ const ESGCapPage = () => {
 
   useEffect(() => {
     loadData();
-  }, [entityId]);
+  }, [entityId,reloadData]);
 
   const filteredItems = esgCap?.plan?.filter(item => {
     const matchesSearch =
@@ -736,6 +738,7 @@ const ESGCapPage = () => {
                       requestSort={requestSort}
                       onItemUpdate={handleUpdateItem}
                       buttonEnabled={buttonEnabled}
+                      setReloadData={setReloadData}
                     />
                   )}
                 </div>

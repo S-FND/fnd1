@@ -25,6 +25,7 @@ interface ESGCapTableRowProps {
   index: number;
   onUpdate?: (updatedItem: ESGCapItem) => void;
   buttonEnabled?: boolean;
+  setReloadData?: (reload: boolean) => void;
 }
 
 const truncateText = (text: string, length = 50) =>
@@ -32,7 +33,7 @@ const truncateText = (text: string, length = 50) =>
 
 
 
-export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onUpdate,buttonEnabled }) => {
+export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onUpdate,buttonEnabled,setReloadData }) => {
   const effectiveStatus = getEffectiveStatus(item);
 
   const [showFullItem, setShowFullItem] = useState(false);
@@ -105,7 +106,7 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
         <StatusBadge status={effectiveStatus} />
       </TableCell>
       <TableCell className="text-right" style={{ padding: "0.3rem" }}>
-        <ESGCapRowActions item={item} onUpdate={onUpdate || (() => { })} buttonEnabled={buttonEnabled}/>
+        <ESGCapRowActions item={item} onUpdate={onUpdate || (() => { })} buttonEnabled={buttonEnabled} setReloadData={setReloadData} />
       </TableCell>
       <TableCell className="text-muted-foreground text-sm">
         {effectiveStatus === 'completed' ? 'Completed on time' :
