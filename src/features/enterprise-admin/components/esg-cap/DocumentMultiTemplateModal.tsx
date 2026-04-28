@@ -122,7 +122,7 @@ ${index + 1}. ${section}
       `.trim();
 
         try {
-            debugger;
+            // debugger;
             const res = await httpClient.post<{
                 refinedContent: string;
                 missingFields: string[];
