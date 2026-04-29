@@ -441,7 +441,7 @@ const VerifierApprovalsPage: React.FC = () => {
       //   }
 
       // }
-      debugger;
+      // debugger;
       const item = ghgApprovalItems.filter(i => i._id === itemId) as GHGScopeItem[];
       //&& i.dataCollectionId === dataCollectionId
       if (!item || item.length == 0) throw new Error('Item not found');

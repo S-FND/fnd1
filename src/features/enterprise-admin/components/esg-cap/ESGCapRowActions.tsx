@@ -35,15 +35,18 @@ import { getSOPTemplate } from '@/data/sopTemplates';
 import { getLogTemplate } from '@/data/logTemplates';
 import { DocumentTemplateModal } from './DocumentTemplateModal';
 import { AiDialog } from '@/components/esg-cap/AiDialog';
+import { AiInsightsDialog } from './AiInsights';
+import { DocumentMultiTemplateModal } from './DocumentMultiTemplateModal';
 // import Loader from '@/components/ui/loader';
 
 interface ESGCapRowActionsProps {
   item: ESGCapItem;
   onUpdate: (updatedItem: ESGCapItem) => void;
   buttonEnabled?: boolean;
+  setReloadData?: (reload: boolean) => void;
 }
 
-export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpdate, buttonEnabled }) => {
+export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpdate, buttonEnabled,setReloadData }) => {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
@@ -211,11 +214,21 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
         onUpdate={onUpdate}
       />
 
-      <DocumentTemplateModal
+      {/* <DocumentTemplateModal
         open={showTemplateModal}
         onOpenChange={setShowTemplateModal}
         document={documentInfo?.template}
         documentType={documentInfo?.type}
+      /> */}
+      {/* <DocumentTemplateModal
+        open={showTemplateModal}
+        onOpenChange={setShowTemplateModal}
+        item={item}
+      /> */}
+      <DocumentMultiTemplateModal 
+        open={showTemplateModal}
+        onOpenChange={setShowTemplateModal}
+        item={item}
       />
 
       <DocumentUploadModal
@@ -229,6 +242,7 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
         itemResource={item.resource}
         itemSourceType={item.sourceType}
         itemTheme={item.theme || "Policy"}
+        setReloadData={setReloadData}
       // onUploadSuccess={() => {
       //   setDocumentCount(prev => prev + 1);
       //   if (onComplete) onComplete();
@@ -238,6 +252,7 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
         open={isDownloadOpen}
         onOpenChange={setIsDownloadOpen}
         checklistItemId={item.id}
+        uploadedDocuments={item.fileUploadedData}
       // onDocumentDeleted={() => {
       //   const newCount = documentCount - 1;
       //   setDocumentCount(Math.max(0, newCount));
@@ -442,7 +457,8 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
           </DialogFooter>
         </DialogContent>
       </Dialog> */}
-      <AiDialog isViewAiOpen={isViewAiOpen} onOpenChange={setIsViewAiOpen} item={item} />
+      {/* <AiDialog isViewAiOpen={isViewAiOpen} onOpenChange={setIsViewAiOpen} item={item} /> */}
+      <AiInsightsDialog open={isViewAiOpen} onOpenChange={setIsViewAiOpen} item={item} />
     </>
   );
 

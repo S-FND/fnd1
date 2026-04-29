@@ -23,12 +23,15 @@ interface ESGCapTableRowProps {
   index: number;
   onUpdate?: (updatedItem: ESGCapItem) => void;
   buttonEnabled?: boolean;
+  setReloadData?: (reload: boolean) => void;
 }
 
 const truncateText = (text: string, length = 50) =>
   text && text.length > length ? text.slice(0, length) + '...' : text || '-';
 
-export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onUpdate, buttonEnabled }) => {
+
+
+export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onUpdate,buttonEnabled,setReloadData }) => {
   const effectiveStatus = getEffectiveStatus(item);
 
   const [showFullItem, setShowFullItem] = useState(false);
@@ -209,7 +212,7 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
       
       {/* Actions */}
       <TableCell className="text-right" style={{ padding: "0.3rem" }}>
-        <ESGCapRowActions item={item} onUpdate={onUpdate || (() => { })} buttonEnabled={buttonEnabled} />
+        <ESGCapRowActions item={item} onUpdate={onUpdate || (() => { })} buttonEnabled={buttonEnabled} setReloadData={setReloadData} />
       </TableCell>
     </TableRow>
   );
