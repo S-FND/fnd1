@@ -6,12 +6,43 @@ import { ArrowDown, ArrowUp } from 'lucide-react';
 interface ESGCapTableHeaderProps {
   sortConfig: { key: keyof ESGCapItem; direction: 'asc' | 'desc' } | null;
   requestSort: (key: keyof ESGCapItem) => void;
+  compact?: boolean;
 }
 
 export const ESGCapTableHeader: React.FC<any> = ({ 
   sortConfig, 
-  requestSort 
+  requestSort ,
+  compact = false
 }) => {
+  const SortableHeader = ({ field, title }: { field: keyof ESGCapItem; title: string }) => (
+    <TableHead 
+      className="cursor-pointer hover:bg-gray-200 !text-black"
+      onClick={() => requestSort(field)}
+    >
+      {title}
+      {sortConfig?.key === field && (
+        sortConfig.direction === 'asc' ? 
+          <ArrowUp className="h-4 w-4 inline ml-1" /> : 
+          <ArrowDown className="h-4 w-4 inline ml-1" />
+      )}
+    </TableHead>
+  );
+
+  if (compact) {
+    return (
+      <TableHeader>
+        <TableRow className="bg-[#f1f5f9]">
+          <TableHead className="w-[60px] text-center !text-black">S. No</TableHead>
+          <SortableHeader field="item" title="Item" />
+          <SortableHeader field="issue" title="Issue" />
+          <SortableHeader field="measures" title="Measures & Corrective Actions" />
+          <TableHead className="!text-black">Progress Percentage</TableHead>
+          <TableHead className="text-center !text-black">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+    );
+  }
+  
   return (
     <TableHeader>
       <TableRow className="bg-[#f1f5f9]">
@@ -200,13 +231,26 @@ export const ESGCapTableHeader: React.FC<any> = ({
           )}
         </TableHead>
 
-        {/* 15. Current Status Update */}
+        {/* 15. Company Current Status Update */}
         <TableHead 
           className="cursor-pointer hover:bg-gray-200 !text-black min-w-[150px]"
           onClick={() => requestSort('statusUpdate')}
         >
-          Current Status Update
+          Company Current Status Update
           {sortConfig?.key === 'statusUpdate' && (
+            sortConfig.direction === 'asc' ? 
+              <ArrowUp className="h-4 w-4 inline ml-1" /> : 
+              <ArrowDown className="h-4 w-4 inline ml-1" />
+          )}
+        </TableHead>
+
+        {/* 15.1 Investor Current Status Update */}
+        <TableHead 
+          className="cursor-pointer hover:bg-gray-200 !text-black min-w-[150px]"
+          onClick={() => requestSort('investorStatusUpdate')}
+        >
+          Investor Current Status Update
+          {sortConfig?.key === 'investorStatusUpdate' && (
             sortConfig.direction === 'asc' ? 
               <ArrowUp className="h-4 w-4 inline ml-1" /> : 
               <ArrowDown className="h-4 w-4 inline ml-1" />

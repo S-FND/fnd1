@@ -15,6 +15,7 @@ interface ESGCapReviewDialogProps {
   onClose: () => void;
   onUpdate: (updatedItem: ESGCapItem) => void;
   buttonEnabled?: boolean;
+  finalPlan?: boolean;
 }
 
 export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
@@ -22,13 +23,14 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
   isOpen,
   onClose,
   onUpdate,
-  buttonEnabled
+  buttonEnabled,
+  finalPlan
 }) => {
   const [formData, setFormData] = useState<any>(item);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const { toast } = useToast();
 
-  const isAccepted = item.status === 'completed';
+  const isAccepted = finalPlan;
 
   const handleInputChange = (field: keyof any, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
