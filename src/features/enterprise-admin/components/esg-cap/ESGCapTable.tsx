@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect,useState } from 'react';
 import { Table, TableBody } from "@/components/ui/table";
 import { ESGCapItem } from '../../types/esgDD';
 import { ESGCapTableHeader } from './ESGCapTableHeader';
@@ -7,7 +7,8 @@ import { ESGCapEmptyState } from './ESGCapEmptyState';
 import { ESGCapScoring } from './ESGCapScoring';
 import { mapESGItems } from './mapESGItems';
 import { httpClient } from '@/lib/httpClient';
-
+import { Button } from "@/components/ui/button";
+import { Columns } from "lucide-react";
 interface ESGCapTableProps {
   sortedItems: ESGCapItem[];
   sortConfig: { key: keyof ESGCapItem; direction: 'asc' | 'desc' } | null;
@@ -15,6 +16,7 @@ interface ESGCapTableProps {
   onItemUpdate?: (updatedItem: ESGCapItem) => void;
   buttonEnabled?: boolean;
   setReloadData?: (reload: boolean) => void;
+  finalPlan?:boolean
 }
 
 export const ESGCapTable: React.FC<ESGCapTableProps> = ({
@@ -23,7 +25,8 @@ export const ESGCapTable: React.FC<ESGCapTableProps> = ({
   requestSort,
   onItemUpdate,
   buttonEnabled,
-  setReloadData
+  setReloadData,
+  finalPlan
 }
 ) => {
 
@@ -268,13 +271,27 @@ ${formattedItems}
     // generate()
   }, [sortedItems])
 
+  const [showFullColumns, setShowFullColumns] = useState(false);
+
   return (
     <div className="space-y-6">
+      {/* Toggle Button */}
+      <div className="flex items-center gap-2 my-1 ml-2">
+          <Button
+            variant={showFullColumns ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowFullColumns(!showFullColumns)}
+          >
+            <Columns className="h-4 w-4 mr-2" />
+            {showFullColumns ? "Show Compact View" : "Show All Columns"}
+          </Button>
+        </div>
       <div className="rounded-md border overflow-hidden">
         <Table>
           <ESGCapTableHeader
             sortConfig={sortConfig}
             requestSort={requestSort}
+            compact={!showFullColumns}
           />
           <TableBody>
             {sortedItems.map((item, index) => (
@@ -285,6 +302,8 @@ ${formattedItems}
                 onUpdate={onItemUpdate}
                 buttonEnabled={buttonEnabled}
                 setReloadData={setReloadData}
+                compact={!showFullColumns}
+                finalPlan
               />
             ))}
 

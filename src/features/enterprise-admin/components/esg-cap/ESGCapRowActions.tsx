@@ -37,6 +37,7 @@ import { DocumentTemplateModal } from './DocumentTemplateModal';
 import { AiDialog } from '@/components/esg-cap/AiDialog';
 import { AiInsightsDialog } from './AiInsights';
 import { DocumentMultiTemplateModal } from './DocumentMultiTemplateModal';
+import DocumentSummaryDialog from './document-summary-review';
 // import Loader from '@/components/ui/loader';
 
 interface ESGCapRowActionsProps {
@@ -44,9 +45,10 @@ interface ESGCapRowActionsProps {
   onUpdate: (updatedItem: ESGCapItem) => void;
   buttonEnabled?: boolean;
   setReloadData?: (reload: boolean) => void;
+  finalPlan?: boolean;
 }
 
-export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpdate, buttonEnabled,setReloadData }) => {
+export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpdate, buttonEnabled,setReloadData,finalPlan }) => {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
@@ -212,6 +214,7 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
         isOpen={isReviewOpen}
         onClose={() => setIsReviewOpen(false)}
         onUpdate={onUpdate}
+        finalPlan
       />
 
       {/* <DocumentTemplateModal
@@ -243,221 +246,18 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
         itemSourceType={item.sourceType}
         itemTheme={item.theme || "Policy"}
         setReloadData={setReloadData}
-      // onUploadSuccess={() => {
-      //   setDocumentCount(prev => prev + 1);
-      //   if (onComplete) onComplete();
-      // }}
       />
-      <DocumentViewerModal
-        open={isDownloadOpen}
-        onOpenChange={setIsDownloadOpen}
-        checklistItemId={item.id}
-        uploadedDocuments={item.fileUploadedData}
-      // onDocumentDeleted={() => {
-      //   const newCount = documentCount - 1;
-      //   setDocumentCount(Math.max(0, newCount));
-
-      //   // If no documents remain, mark item as incomplete
-      //   if (newCount === 0 && onMarkIncomplete) {
-      //     onMarkIncomplete();
-      //   }
-      // }}
-      />
-
-      {/* Upload Document Modal */}
-      {/* <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Upload Document</DialogTitle>
-            <DialogDescription>
-              Attach a document to "{item.issue}"
-            </DialogDescription>
-          </DialogHeader>
-
-          <div
-            className={`mt-2 border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${dragActive
-                ? 'border-primary bg-primary/5'
-                : 'border-muted-foreground/25 hover:border-primary/50'
-              }`}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-            onClick={() => document.getElementById(`file-input-${item.id}`)?.click()}
-          >
-            <input
-              id={`file-input-${item.id}`}
-              type="file"
-              className="hidden"
-              accept=".pdf,.doc,.docx,.xlsx,.xls,.csv,.pptx"
-              onChange={handleFileSelect}
-            />
-            {selectedFile ? (
-              <div className="flex flex-col items-center gap-2">
-                <CheckCircle2 className="h-10 w-10 text-green-600" />
-                <p className="text-sm font-medium">{selectedFile.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {(selectedFile.size / 1024).toFixed(1)} KB
-                </p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedFile(null);
-                  }}
-                >
-                  <X className="h-3 w-3 mr-1" /> Remove
-                </Button>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-2">
-                <Upload className="h-10 w-10 text-muted-foreground" />
-                <p className="text-sm font-medium">
-                  Drag & drop a file here, or click to browse
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Supported: PDF, DOCX, XLSX, CSV, PPTX (max 20MB)
-                </p>
-              </div>
-            )}
-          </div>
-
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => { setIsUploadOpen(false); setSelectedFile(null); }}>
-              Cancel
-            </Button>
-            <Button onClick={handleUploadSubmit} disabled={!selectedFile || uploading}>
-              {uploading ? 'Uploading…' : 'Submit'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog> */}
-
-      {/* No Document Available Modal */}
-      {/* <Dialog open={isDownloadOpen} onOpenChange={setIsDownloadOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>No Document Available</DialogTitle>
-            <DialogDescription>
-              There is no document uploaded for this item yet. You can upload one using the "Upload Document" option.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDownloadOpen(false)}>
-              Close
-            </Button>
-            <Button onClick={() => { setIsDownloadOpen(false); setIsUploadOpen(true); }}>
-              Upload Now
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog> */}
-      {/* <Dialog open={isViewAiOpen} onOpenChange={setIsViewAiOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{item.item}</DialogTitle>
-            <DialogDescription>
-              ESG Action Plan Details
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-6">
-
-            <div>
-              <h3 className="font-semibold mb-2">Basic Information</h3>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <p><b>Category:</b> {item.category}</p>
-                <p><b>Status:</b> {item.status}</p>
-                <p><b>Priority:</b> {item.priority}</p>
-                <p><b>Assigned To:</b> {item.assignedTo}</p>
-                <p><b>Target Date:</b> {item.targetDate}</p>
-                <p><b>Actual Date:</b> {item.actualDate}</p>
-              </div>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-2">AI Insights</h3>
-              <p className="text-sm text-muted-foreground">
-                {item.aiResponseRaw?.reasoning}
-              </p>
-              <p className="text-xs mt-1">
-                Confidence: {(item.aiResponseRaw?.confidence * 100).toFixed(0)}%
-              </p>
-            </div>
-
-            {item.aiResponseRaw?.requiredEvidence && (
-              <div>
-                <h3 className="font-semibold mb-2">Required Evidence</h3>
-                <div className="flex flex-wrap gap-2">
-                  {item.aiResponseRaw.requiredEvidence.types.map((type: string, i: number) => (
-                    <span
-                      key={i}
-                      className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded"
-                    >
-                      {type}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {item.aiResponseRaw?.templates?.length > 0 && (
-              <div>
-                <h3 className="font-semibold mb-2">Suggested Templates</h3>
-
-                <div className="space-y-4">
-                  {item.aiResponseRaw.templates.map((template: any, index: number) => (
-                    <div
-                      key={index}
-                      className="border rounded-lg p-3 bg-muted/20"
-                    >
-                      <p className="font-medium">{template.name}</p>
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Type: {template.type} • Format: {template.format}
-                      </p>
-
-                      {template.structure?.components && (
-                        <ul className="list-disc ml-5 text-sm">
-                          {template.structure.components.map((c: string, i: number) => (
-                            <li key={i}>{c}</li>
-                          ))}
-                        </ul>
-                      )}
-
-                      {template.structure?.columns && (
-                        <div className="flex flex-wrap gap-2 text-xs">
-                          {template.structure.columns.map((col: string, i: number) => (
-                            <span key={i} className="px-2 py-1 bg-gray-200 rounded">
-                              {col}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {template.structure?.sections && (
-                        <ul className="list-disc ml-5 text-sm">
-                          {template.structure.sections.map((sec: string, i: number) => (
-                            <li key={i}>{sec}</li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewAiOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog> */}
-      {/* <AiDialog isViewAiOpen={isViewAiOpen} onOpenChange={setIsViewAiOpen} item={item} /> */}
+      {/* <DocumentSummaryDialog open={isDownloadOpen} files={item.fileUploadedData} onClose={() => setIsDownloadOpen(false)}/> */}
+      <DocumentSummaryDialog 
+  open={isDownloadOpen} 
+  files={item.fileUploadedData} 
+  onClose={() => {
+    console.log('🟢 Parent onClose called. Current isDownloadOpen:', isDownloadOpen);
+    setIsDownloadOpen(false);
+    console.log('🟢 State set to false. Check effect above.');
+  }} 
+/>
+      
       <AiInsightsDialog open={isViewAiOpen} onOpenChange={setIsViewAiOpen} item={item} />
     </>
   );
