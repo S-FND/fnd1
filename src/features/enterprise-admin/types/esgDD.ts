@@ -1,3 +1,5 @@
+import { IDocumentValidation } from "../components/esg-cap/document-summary-review";
+
 export type FundingStage =
   | 'pre_seed'
   | 'seed'
@@ -162,6 +164,8 @@ export interface ESGCapItem {
     mimetype: string;
     size: number;
     s3Link: string;
+    status: 'Accepted' | 'Rejected' | 'Pending';
+    aiSummary: IDocumentValidation;
   }[]
 }
 
