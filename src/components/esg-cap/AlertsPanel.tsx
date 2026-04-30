@@ -18,7 +18,6 @@ export const AlertsPanel = ({
   finalPlan 
 }: AlertsPanelProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  console.log('overdueItems------>', overdueItems);
   const totalAlerts = overdueItems.length + approachingDeadlines.length;
 
   if (totalAlerts === 0) {

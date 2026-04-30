@@ -291,8 +291,6 @@ export const DocumentUploadModal = ({
       formData.append("itemSourceType", itemSourceType || '');
       let uploadRes = await httpClient.post<ValidationResult>('esgdd/escap/upload-file/esgcap', formData);
 
-      console.log("Upload response =>", uploadRes.status);
-
       if (uploadRes.status !== 201) {
         throw new Error("Upload failed");
       }
