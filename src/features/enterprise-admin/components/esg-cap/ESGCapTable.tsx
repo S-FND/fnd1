@@ -296,7 +296,7 @@ ${formattedItems}
           <TableBody>
             {sortedItems.map((item, index) => (
               <ESGCapTableRow
-                key={item.id}
+                key={item.id ?? `row-${index}`}
                 item={item}
                 index={index}
                 onUpdate={onItemUpdate}

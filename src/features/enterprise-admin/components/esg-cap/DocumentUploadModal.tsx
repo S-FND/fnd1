@@ -291,12 +291,10 @@ export const DocumentUploadModal = ({
       formData.append("itemSourceType", itemSourceType || '');
       let uploadRes = await httpClient.post<ValidationResult>('esgdd/escap/upload-file/esgcap', formData);
 
-      console.log("Upload response =>", uploadRes);
-
       if (uploadRes.status !== 201) {
         throw new Error("Upload failed");
       }
-      setReloadData(true)
+      toast.success("Document uploaded successfully");
       // Save document record to database
       // const { error: dbError } = await supabase
       //   .from('compliance_documents')
@@ -314,8 +312,11 @@ export const DocumentUploadModal = ({
       toast.success("Document uploaded successfully");
       setSelectedFile(null);
       setValidationResult(null);
+      setReloadData?.(true);
       // onUploadSuccess();
-      onOpenChange(false);
+      setTimeout(() => {
+        onOpenChange(false);
+      }, 300);
     } catch (error) {
       console.error("Upload error:", error);
       toast.error("Failed to upload document");
@@ -354,7 +355,7 @@ export const DocumentUploadModal = ({
                   Click to select a file or drag and drop
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  PDF, DOC, DOCX, JPG, PNG (max 10MB)
+                  PDF, DOC, DOCX (max 10MB)
                 </p>
               </label>
             </div>

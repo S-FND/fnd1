@@ -48,7 +48,7 @@ interface ESGCapRowActionsProps {
   finalPlan?: boolean;
 }
 
-export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpdate, buttonEnabled,setReloadData,finalPlan }) => {
+export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpdate, buttonEnabled, setReloadData, finalPlan }) => {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
@@ -158,7 +158,6 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
 
   return (
     <>
-      
       <div className="flex items-center gap-1.5">
         {hasDocument && (
           <Badge variant="outline" className="text-xs gap-1 text-green-700 border-green-300 bg-green-50">
@@ -194,10 +193,10 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
                     <Download className="mr-2 h-4 w-4" />
                     Download Template
                   </DropdownMenuItem>
-                  {item.aiResponseRaw && <DropdownMenuItem onClick={() => { setIsViewAiOpen(true) }}>
+                  {/* {item.aiResponseRaw && <DropdownMenuItem onClick={() => { setIsViewAiOpen(true) }}>
                     <Download className="mr-2 h-4 w-4" />
                     View AI Insights
-                  </DropdownMenuItem>}
+                  </DropdownMenuItem>} */}
                 </DropdownMenuContent>
               </DropdownMenu>
             </TooltipTrigger>
@@ -214,6 +213,7 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
         isOpen={isReviewOpen}
         onClose={() => setIsReviewOpen(false)}
         onUpdate={onUpdate}
+        buttonEnabled
         finalPlan
       />
 
@@ -228,7 +228,7 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
         onOpenChange={setShowTemplateModal}
         item={item}
       /> */}
-      <DocumentMultiTemplateModal 
+      <DocumentMultiTemplateModal
         open={showTemplateModal}
         onOpenChange={setShowTemplateModal}
         item={item}
@@ -247,17 +247,14 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
         itemTheme={item.theme || "Policy"}
         setReloadData={setReloadData}
       />
-      {/* <DocumentSummaryDialog open={isDownloadOpen} files={item.fileUploadedData} onClose={() => setIsDownloadOpen(false)}/> */}
-      <DocumentSummaryDialog 
-  open={isDownloadOpen} 
-  files={item.fileUploadedData} 
-  onClose={() => {
-    console.log('🟢 Parent onClose called. Current isDownloadOpen:', isDownloadOpen);
-    setIsDownloadOpen(false);
-    console.log('🟢 State set to false. Check effect above.');
-  }} 
-/>
-      
+      <DocumentSummaryDialog
+        open={isDownloadOpen}
+        files={item.fileUploadedData}
+        onClose={() => {
+          setIsDownloadOpen(false);
+        }}
+      />
+
       <AiInsightsDialog open={isViewAiOpen} onOpenChange={setIsViewAiOpen} item={item} />
     </>
   );
