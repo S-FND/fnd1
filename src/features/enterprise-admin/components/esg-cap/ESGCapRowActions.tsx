@@ -133,13 +133,13 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
     }
   };
 
-  useEffect(() => {
-    if (isDownloadOpen && !hasDocument) {
-      toast.error('No document available', {
-        description: `There is no document uploaded for "${item.issue}". Please upload one first.`,
-      });
-    }
-  }, [isDownloadOpen, hasDocument, item.issue]);
+  // useEffect(() => {
+  //   if (isDownloadOpen && !hasDocument) {
+  //     toast.error('No document available', {
+  //       description: `There is no document uploaded for "${item.issue}". Please upload one first.`,
+  //     });
+  //   }
+  // }, [isDownloadOpen, hasDocument, item.issue]);
 
   useEffect(() => {
     if (showTemplateModal && !documentInfo) {

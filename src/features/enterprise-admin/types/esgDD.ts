@@ -162,7 +162,8 @@ export interface ESGCapItem {
     mimetype: string;
     size: number;
     s3Link: string;
-  }[]
+  }[];
+  investmentDate?:Date;
 }
 
 export interface RegulatoryRequirement {
