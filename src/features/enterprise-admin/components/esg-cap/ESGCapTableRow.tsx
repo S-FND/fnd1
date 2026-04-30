@@ -53,10 +53,10 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
   if (compact) {
     return (
       <TableRow>
-        <TableCell className="text-center font-medium">{index + 1}</TableCell>
+        <TableCell className="text-center font-medium" style={{ padding: "0.3rem" }}>{index + 1}</TableCell>
         
         {/* Item column with expand/collapse */}
-        <TableCell className="font-medium">
+        <TableCell className="font-medium" style={{ padding: "0.3rem" }}>
           {showFullItem ? item.item : truncateText(item.item, 50)}
           {item.item && item.item.length > 50 && (
             <button onClick={() => setShowFullItem(!showFullItem)} className="ml-2 text-blue-600 underline text-xs">
@@ -66,7 +66,7 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
         </TableCell>
         
         {/* Issue column with expand/collapse */}
-        <TableCell>
+        <TableCell className="font-medium" style={{ padding: "0.3rem" }}>
           {showFullIssue ? item.issue : truncateText(item.issue, 50)}
           {item.issue && item.issue.length > 50 && (
             <button onClick={() => setShowFullIssue(!showFullIssue)} className="ml-2 text-blue-600 underline text-xs">
@@ -75,7 +75,7 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
           )}
         </TableCell>
         
-        {/* Measures column with expand/collapse */}
+        {/* Measures column with expand/collapse
         <TableCell>
           {showFullMeasures ? item.measures : truncateText(item.measures, 50)}
           {item.measures && item.measures.length > 50 && (
@@ -83,13 +83,23 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
               {showFullMeasures ? "View less" : "View full"}
             </button>
           )}
+        </TableCell> */}
+
+        {/* Measures column with expand/collapse */}
+        <TableCell className="font-medium" style={{ padding: "0.3rem" }}>
+          {showFullDeliverable ? item.deliverable : truncateText(item.deliverable, 50)}
+          {item.deliverable && item.deliverable.length > 50 && (
+            <button onClick={() => setShowFullDeliverable(!showFullMeasures)} className="ml-2 text-blue-600 underline text-xs">
+              {showFullMeasures ? "View less" : "View full"}
+            </button>
+          )}
         </TableCell>
         
         {/* Progress Percentage */}
-        <TableCell>{item.progressPercentage ? `${item.progressPercentage}%` : '-'}</TableCell>
+        <TableCell className="font-medium" style={{ padding: "0.3rem" }}>{item.progressPercentage ? `${item.progressPercentage}%` : '-'}</TableCell>
         
         {/* Actions */}
-        <TableCell className="text-right">
+        <TableCell className="text-right" style={{ padding: "0.3rem" }}>
           <ESGCapRowActions item={item} onUpdate={onUpdate || (() => {})} buttonEnabled={buttonEnabled} />
         </TableCell>
       </TableRow>
@@ -185,6 +195,9 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
       
       {/* 11. Target Date */}
       <TableCell style={{ padding: "0.3rem" }}>{item.targetDate ? new Date(item.targetDate).toLocaleDateString() : '-'}</TableCell>
+
+      {/* 11.1 Progress Percentage */}
+      <TableCell style={{ padding: "0.3rem" }}>{item.progressPercentage ? `${item.progressPercentage}%` : '-'}</TableCell>
       
       {/* 12. Actual Date */}
       <TableCell style={{ padding: "0.3rem" }}>{item.actualDate ? new Date(item.actualDate).toLocaleDateString() : '-'}</TableCell>

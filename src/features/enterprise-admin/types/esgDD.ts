@@ -141,6 +141,7 @@ export interface ESGCapItem {
   status: ESGCapStatus;
   deadline?: string;    // This might be your targetDate
   targetDate?: string;  // Alternative to deadline
+  progressPercentage?: string;
   assignedTo?: string;
   dealCondition: ESGCapDealCondition;
   createdAt: string;

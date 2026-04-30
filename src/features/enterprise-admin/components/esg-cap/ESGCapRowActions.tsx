@@ -25,7 +25,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { MoreVertical, Upload, Download, FileText, CheckCircle2, X } from 'lucide-react';
+import { MoreVertical, Upload, Download, FileText, CheckCircle2, X, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { DocumentUploadModal } from './DocumentUploadModal';
@@ -137,7 +137,7 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
 
   useEffect(() => {
     if (isDownloadOpen && !hasDocument) {
-      toast.error('No document available', {
+      console.log('No document available', {
         description: `There is no document uploaded for "${item.issue}". Please upload one first.`,
       });
     }
@@ -185,7 +185,7 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleDownload}>
-                    <Download className="mr-2 h-4 w-4" />
+                    <Eye className="mr-2 h-4 w-4" />
                     View Document
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

@@ -295,6 +295,7 @@ export const DocumentUploadModal = ({
         throw new Error("Upload failed");
       }
       toast.success("Document uploaded successfully");
+      window.location.reload();
       // Save document record to database
       // const { error: dbError } = await supabase
       //   .from('compliance_documents')
