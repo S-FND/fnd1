@@ -332,37 +332,6 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
             </div>
           </div>
 
-          {/* Proof of Completion */}
-          <div>
-            <Label>Proof of Completion</Label>
-            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
-              <div className="text-center">
-                <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-                <div className="mt-4">
-                  <label htmlFor="proof-upload" className="cursor-pointer">
-                    <span className="mt-2 block text-sm font-medium text-muted-foreground">
-                      Upload proof of completion
-                    </span>
-                    <input
-                      id="proof-upload"
-                      type="file"
-                      className="hidden"
-                      onChange={handleFileUpload}
-                    />
-                  </label>
-                </div>
-                {proofFile && (
-                  <div className="mt-4 p-3 bg-muted rounded-md">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      <span className="text-sm">{proofFile.name}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={onClose} disabled={!buttonEnabled}>

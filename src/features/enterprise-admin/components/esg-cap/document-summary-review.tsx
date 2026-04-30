@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Eye } from "lucide-react";
+import { Eye, X } from "lucide-react";
 import { toast } from "sonner";
 import { httpClient } from "@/lib/httpClient";
 
@@ -114,29 +114,71 @@ export default function DocumentSummaryDialog({
     }
   };
 
+  if (!files || files.length === 0) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        <div className="relative bg-white w-full max-w-md p-6 rounded-2xl shadow-xl text-center">
+          
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100"
+          >
+            <X className="h-5 w-5" />
+          </button>
+  
+          <p className="text-lg font-semibold">No Documents Found</p>
+          <p className="text-sm text-gray-500 mt-2">
+            There are no uploaded documents for this item.
+          </p>
+  
+          <button
+            onClick={onClose}
+            className="mt-4 px-4 py-2 border rounded-lg"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl flex">
+         {/* ❌ CLOSE BUTTON */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100"
+          >
+            <X className="h-5 w-5" />
+          </button>
         {/* LEFT PANEL (FILES) */}
-        <div className="w-1/3 border-r p-4 overflow-y-auto">
-          <p className="font-semibold mb-3" style={{ textAlign: "left" }}>
+        <div className="w-1/3 border-r p-4 overflow-y-auto" style={{ textAlign: "left" }}>
+          <p className="font-semibold mb-3">
             Documents
           </p>
 
           {files.map((file, idx) => (
             <div
               key={idx}
-              className={`flex items-center justify-between p-3 rounded-lg cursor-pointer border ${
-                idx === selectedIndex
+              className={`flex items-center justify-between p-3 rounded-lg cursor-pointer border ${idx === selectedIndex
                   ? "bg-blue-50 border-blue-400"
                   : "hover:bg-gray-50"
-              }`}
+                }`}
             >
               <div
                 onClick={() => setSelectedIndex(idx)} // ✅ no reset here – useEffect handles it
                 className="flex-1"
               >
-                <p className="text-sm font-medium">{file.filename}</p>
+                <div className="relative group max-w-[250px]">
+                  <p className="text-sm font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+                    {file.filename}
+                  </p>
+
+                  <div className="absolute left-0 top-full mt-1 hidden group-hover:block bg-black text-white text-xs px-2 py-1 rounded z-50 whitespace-nowrap">
+                    {file.filename}
+                  </div>
+                </div>
                 <p className="text-xs text-gray-500">{file.status || "Pending"}</p>
                 {/* Show reason if exists */}
                 {file.reason && (
@@ -240,31 +282,33 @@ export default function DocumentSummaryDialog({
 
           {/* ✅ ACTION SECTION – now shows existing status & reason */}
           <div className="mt-6 border-t pt-4">
-            <p className="font-semibold mb-2">Select Status</p>
+            <p className="font-semibold mb-2">Status</p>
 
             <div className="flex gap-4">
-              <label>
-                <input
-                  type="radio"
-                  checked={status === "Accepted"}
-                  onChange={() => setStatus("Accepted")}
-                />{" "}
-                Accept
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  checked={status === "Rejected"}
-                  onChange={() => setStatus("Rejected")}
-                />{" "}
-                Reject
-              </label>
+              <span
+                className={`px-3 py-1 rounded-full text-sm ${status === "Accepted"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-gray-100 text-gray-500"
+                  }`}
+              >
+                Accepted
+              </span>
+
+              <span
+                className={`px-3 py-1 rounded-full text-sm ${status === "Rejected"
+                    ? "bg-red-100 text-red-700"
+                    : "bg-gray-100 text-gray-500"
+                  }`}
+              >
+                Rejected
+              </span>
             </div>
 
             {status === "Rejected" && (
               <textarea
                 className="w-full mt-3 border rounded-lg p-2"
                 placeholder="Enter reason..."
+                disabled
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               />
