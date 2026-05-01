@@ -176,7 +176,7 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
               />
             </div>
             <div>
-              <Label htmlFor="deliverable">Expected Deliverable</Label>
+              <Label htmlFor="deliverable">Completion Indicator</Label>
               <Textarea
                 id="deliverable"
                 value={formData.deliverable || ''}
@@ -223,10 +223,10 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
             </div>
           </div>
 
-          {/* 13. CP/CS & 14. Status */}
+          {/* 13. CP/CS/ESG & 14. Status */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="CS">CP/CS</Label>
+              <Label htmlFor="CS">CP/CS/ESG Forward areas</Label>
               <Select
                 value={formData.CS}
                 onValueChange={(value: ESGCapDealCondition) => handleInputChange('CS', value)}
@@ -236,6 +236,7 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
                 <SelectContent>
                   <SelectItem value="CP">CP</SelectItem>
                   <SelectItem value="CS">CS</SelectItem>
+                  <SelectItem value="ESG Forward areas">ESG Forward areas</SelectItem>
                   <SelectItem value="none">None</SelectItem>
                 </SelectContent>
               </Select>

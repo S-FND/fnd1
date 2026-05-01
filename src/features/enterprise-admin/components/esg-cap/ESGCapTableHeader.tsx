@@ -35,8 +35,9 @@ export const ESGCapTableHeader: React.FC<any> = ({
           <TableHead className="w-[60px] text-center !text-black">S. No</TableHead>
           <SortableHeader field="item" title="Item" />
           <SortableHeader field="issue" title="Issue" />
-          <SortableHeader field="measures" title="Measures & Corrective Actions" />
-          <TableHead className="!text-black">Progress Percentage</TableHead>
+          <SortableHeader field="deliverable" title="Completion Indicator" />
+          {/* <SortableHeader field="measures" title="Measures & Corrective Actions" /> */}
+          <SortableHeader field="progressPercentage" title="Progress Percentage" />
           <TableHead className="text-center !text-black">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -153,12 +154,12 @@ export const ESGCapTableHeader: React.FC<any> = ({
           )}
         </TableHead>
 
-        {/* 9. Expected Deliverable */}
+        {/* 9. Completion Indicator */}
         <TableHead 
           className="cursor-pointer hover:bg-gray-200 !text-black min-w-[150px]"
           onClick={() => requestSort('deliverable')}
         >
-          Expected Deliverable
+          Completion Indicator
           {sortConfig?.key === 'deliverable' && (
             sortConfig.direction === 'asc' ? 
               <ArrowUp className="h-4 w-4 inline ml-1" /> : 
@@ -192,6 +193,19 @@ export const ESGCapTableHeader: React.FC<any> = ({
           )}
         </TableHead>
 
+        {/* 11.1 progressPercentage */}
+        <TableHead 
+          className="cursor-pointer hover:bg-gray-200 !text-black"
+          onClick={() => requestSort('progressPercentage')}
+        >
+          Progress Percentage
+          {sortConfig?.key === 'progressPercentage' && (
+            sortConfig.direction === 'asc' ? 
+              <ArrowUp className="h-4 w-4 inline ml-1" /> : 
+              <ArrowDown className="h-4 w-4 inline ml-1" />
+          )}
+        </TableHead>
+
         {/* 12. Actual Date */}
         <TableHead 
           className="cursor-pointer hover:bg-gray-200 !text-black"
@@ -210,7 +224,7 @@ export const ESGCapTableHeader: React.FC<any> = ({
           className="cursor-pointer hover:bg-gray-200 !text-black"
           onClick={() => requestSort('CS')}
         >
-          CP/CS
+          CP/CS/ESG Forward areas
           {sortConfig?.key === 'CS' && (
             sortConfig.direction === 'asc' ? 
               <ArrowUp className="h-4 w-4 inline ml-1" /> : 
