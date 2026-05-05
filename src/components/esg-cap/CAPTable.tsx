@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Clock, Eye, ArrowLeft, ArrowRight, Undo } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-export type CAPStatus = "Pending" | "In Progress" | "Completed" | "Delayed" | "Rejected";
+export type CAPStatus = "Pending" | "In Progress" | "Completed" | "Overdue" | "Rejected";
 export type CAPType = "CP" | "CS";
 export type CAPPriority = "High" | "Medium" | "Low";
 
@@ -46,8 +46,8 @@ const getStatusBadge = (status: CAPStatus) => {
       return <Badge variant="secondary">In Progress</Badge>;
     case "Completed":
       return <Badge variant="default" className="bg-green-500 hover:bg-green-600">Completed</Badge>;
-    case "Delayed":
-      return <Badge variant="destructive">Delayed</Badge>;
+    case "Overdue":
+      return <Badge variant="destructive">Overdue</Badge>;
     case "Rejected":
       return <Badge variant="destructive">Rejected</Badge>;
     default:
