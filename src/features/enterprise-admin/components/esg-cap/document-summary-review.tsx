@@ -319,12 +319,12 @@ export default function DocumentSummaryDialog({
                 <span className={`px-3 py-1 rounded-full text-sm ${
                   status === "Accepted" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
                 }`}>
-                  Accepted
+                  ✅ Accepted
                 </span>
                 <span className={`px-3 py-1 rounded-full text-sm ${
                   status === "Rejected" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-500"
                 }`}>
-                  Rejected
+                  🔄 Re-Submit 
                 </span>
               </div>
               {status === "Rejected" && (

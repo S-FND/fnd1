@@ -165,9 +165,38 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
             Doc
           </Badge>
         )}
-        <Button variant="outline" size="sm" onClick={() => setIsReviewOpen(true)}>
-          Review
-        </Button>
+        <TooltipProvider delayDuration={300}>
+          <div className="flex gap-1.5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsUploadOpen(true)}
+                >
+                  <Upload className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Upload</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsReviewOpen(true)}
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Review</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </TooltipProvider>
         {(import.meta.env.VITE_AI_ESGCAP_ENABLED || import.meta.env.VITE_AI_ESGCAP_ENABLED == 'true') && <TooltipProvider delayDuration={300}>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -179,10 +208,10 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => setIsUploadOpen(true)}>
+                  {/* <DropdownMenuItem onClick={() => setIsUploadOpen(true)}>
                     <Upload className="mr-2 h-4 w-4" />
                     Upload Document
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleDownload}>
                     <Eye className="mr-2 h-4 w-4" />
@@ -249,7 +278,7 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
       />
       <DocumentSummaryDialog
         open={isDownloadOpen}
-        files={item.fileUploadedData}
+        files={item.fileUploadedData ?? []}
         onClose={() => {
           setIsDownloadOpen(false);
         }}
