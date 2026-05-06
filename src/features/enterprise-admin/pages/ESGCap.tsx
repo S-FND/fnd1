@@ -741,6 +741,7 @@ const ESGCapPage = () => {
                       onItemUpdate={handleUpdateItem}
                       buttonEnabled={buttonEnabled}
                       setReloadData={setReloadData}
+                      finalPlan={isPlanFinalized}
                     />
                   )}
                 </div>

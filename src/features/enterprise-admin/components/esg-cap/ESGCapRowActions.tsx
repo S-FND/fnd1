@@ -243,7 +243,7 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
         onClose={() => setIsReviewOpen(false)}
         onUpdate={onUpdate}
         buttonEnabled
-        finalPlan
+        finalPlan={finalPlan}
       />
 
       {/* <DocumentTemplateModal

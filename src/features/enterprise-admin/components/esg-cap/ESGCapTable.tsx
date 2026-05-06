@@ -303,7 +303,7 @@ ${formattedItems}
                 buttonEnabled={buttonEnabled}
                 setReloadData={setReloadData}
                 compact={!showFullColumns}
-                finalPlan
+                finalPlan={finalPlan}
               />
             ))}
 
