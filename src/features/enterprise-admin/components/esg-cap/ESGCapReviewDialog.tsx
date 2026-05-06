@@ -30,8 +30,8 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
   const [proofFile, setProofFile] = useState<File | null>(null);
   const { toast } = useToast();
 
-  const isAccepted = finalPlan;
-console.log('isAccepted',isAccepted);
+  const isAccepted = finalPlan ?? false;
+
   const handleInputChange = (field: keyof any, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
