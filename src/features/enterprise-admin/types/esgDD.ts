@@ -167,7 +167,8 @@ export interface ESGCapItem {
     s3Link: string;
     status: 'Accepted' | 'Rejected' | 'Pending';
     aiSummary: IDocumentValidation;
-  }[]
+  }[];
+  investmentDate?:Date;
 }
 
 export interface RegulatoryRequirement {
