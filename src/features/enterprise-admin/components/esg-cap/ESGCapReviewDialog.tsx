@@ -28,6 +28,7 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
 }) => {
   const [formData, setFormData] = useState<any>(item);
   const [proofFile, setProofFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   const isAccepted = finalPlan ?? false;
@@ -47,13 +48,52 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
     }
   };
 
-  const handleSave = () => {
-    onUpdate(formData);
-    toast({
-      title: "Changes saved",
-      description: "The CAP item has been updated successfully.",
-    });
-    onClose();
+  const handleSave = async () => {
+    if (isAccepted) {
+      setIsSubmitting(true);
+      try {
+        // Build the payload exactly as your backend expects
+        const payload = {
+          entityId: formData.entityId,        // ensure formData has entityId
+          updatedPlan: [formData],            // backend expects an array of plan items
+          reason: "Edited via review dialog"  // provide a reason (or add a text field for user input)
+        };
+  
+        const response = await fetch('/esgdd/escap/edit-finalized-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+  
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`API error: ${response.status} - ${errorText}`);
+        }
+  
+        onUpdate(formData);
+        toast({
+          title: "Finalized plan saved",
+          description: "The CAP item has been finalized successfully.",
+        });
+        onClose();
+      } catch (error) {
+        console.error('Failed to finalize plan:', error);
+        toast({
+          title: "Error",
+          description: "Failed to save finalized plan. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      onUpdate(formData);
+      toast({
+        title: "Changes saved",
+        description: "The CAP item has been updated successfully.",
+      });
+      onClose();
+    }
   };
 
   return (
@@ -351,11 +391,11 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
 
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={onClose} disabled={!buttonEnabled}>
+            <Button variant="outline" onClick={onClose} disabled={!buttonEnabled || isSubmitting}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={!buttonEnabled}>
-              Save Changes
+            <Button onClick={handleSave} disabled={!buttonEnabled || isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </div>

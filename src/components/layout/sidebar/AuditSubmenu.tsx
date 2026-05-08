@@ -8,19 +8,34 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 interface AuditSubmenuProps {
   isExpanded: boolean;
   onToggle: () => void;
+  submenu?: any[];
 }
 
 export const AuditSubmenu: React.FC<AuditSubmenuProps> = ({
   isExpanded,
-  onToggle
+  onToggle,
+  submenu = []
 }) => {
   const location = useLocation();
 
-  const submenuItems = [
+  const defaultSubmenuItems = [
     { name: "Supplier Audits", href: "/audit/supplier", icon: Users },
     { name: "EHS Audits", href: "/audit/ehs", icon: Shield },
     { name: "Internal Audits", href: "/audit/internal", icon: Building }
   ];
+  
+  const submenuItems =
+    submenu.length > 0
+      ? submenu.map((item) => ({
+          ...item,
+          icon:
+            item.href === "/audit/supplier"
+              ? Users
+              : item.href === "/audit/ehs"
+              ? Shield
+              : Building
+        }))
+      : defaultSubmenuItems;
 
   return (
     <SidebarMenuItem>

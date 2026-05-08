@@ -65,7 +65,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   const shouldShowMenuItem = (featureName: string): boolean => {
     return sidebarHideMap[featureName] !== true;
   };
-
+console.log('shouldShowMenuItem',shouldShowMenuItem);
   useEffect(() => {
     // ✅ NEW: Load sidebarHide settings
     const hideSettings = getSidebarHideSettings();
@@ -82,15 +82,44 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
       
       // ✅ CHANGED: Filter admin menus by sidebarHide
       const allMenus = getNavigationItems('admin');
-      const filteredMenus = allMenus.filter(menu => {
-        const shouldHide = hideSettings[menu.name] === true;
-        if (shouldHide) {
-          logger.debug(`Hiding ${menu.name} - sidebarHide is true`);
-        }
-        return !shouldHide;
-      });
+      console.log('allMenus------>',allMenus);
+      const filteredMenus = allMenus
+        .map((menu) => {
+          const shouldHideMenu = hideSettings[menu.name] === true;
+          if (shouldHideMenu) {
+            return null;
+          }
+
+          // SUBMENU FILTER
+          let filteredSubmenu = [];
+          if (menu.submenu?.length > 0) {
+            filteredSubmenu = menu.submenu
+              .map((sub) => {
+                if (hideSettings[sub.name] === true) {
+                  return null;
+                }
+                let filteredNestedSubmenu = [];
+
+                if (sub.submenu?.length > 0) {
+                  filteredNestedSubmenu = sub.submenu.filter((nestedSub) => {
+                    return hideSettings[nestedSub.name] !== true;
+                  });
+                }
+                return {
+                  ...sub,
+                  submenu: filteredNestedSubmenu
+                };
+              })
+              .filter(Boolean);
+          }
+          return {
+            ...menu,
+            submenu: filteredSubmenu
+          };
+        })
+        .filter(Boolean);
       setVisibleItems(filteredMenus);
-      
+      console.log('filteredMenus=======',filteredMenus);
     } else {
       // Filter based on permissions
       const allowedUrls = pageAccessList
@@ -101,6 +130,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
       
       const filtered = getNavigationItems("all-access")
         .map((menu) => {
+          console.log('sssmenu------',menu);
           // ✅ CHANGED: Check sidebarHide first
           if (hideSettings[menu.name] === true) {
             logger.debug(`Excluding ${menu.name} - sidebarHide is true`);
@@ -113,11 +143,30 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
           // Filter submenus that have permission AND not hidden by sidebarHide
           let allowedSubmenus = [];
           if (menu.submenu && menu.submenu.length > 0) {
-            allowedSubmenus = menu.submenu.filter((sub) => {
-              const subAllowed = allowedUrls.includes(sub.href);
-              const subNotHidden = hideSettings[sub.name] !== true;
-              return subAllowed && subNotHidden;
-            });
+            allowedSubmenus = menu.submenu
+              .map((sub) => {
+                const subAllowed =
+                  sub.href === "#" || allowedUrls.includes(sub.href);
+                const subNotHidden =
+                  hideSettings[sub.name] !== true;
+                if (!subAllowed || !subNotHidden) {
+                  return null;
+                }
+                let filteredNestedSubmenu = [];
+                if (sub.submenu?.length > 0) {
+                  filteredNestedSubmenu = sub.submenu.filter((nestedSub) => {
+                    const nestedAllowed = allowedUrls.includes(nestedSub.href);
+                    const nestedNotHidden =
+                      hideSettings[nestedSub.name] !== true;
+                    return nestedAllowed && nestedNotHidden;
+                  });
+                }
+                return {
+                  ...sub,
+                  submenu: filteredNestedSubmenu
+                };
+              })
+              .filter(Boolean);
           }
 
           // Include menu if parent is allowed OR has allowed submenus
@@ -138,7 +187,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   }, [expandedMenus]);
   
   const safeVisibleItems = Array.isArray(visibleItems) ? visibleItems : [];
-
+console.log('safeVisibleItems',safeVisibleItems);
   return (
     <SidebarGroup>
       <SidebarGroupContent>
@@ -163,6 +212,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             else if (item.name === 'ESG DD') {
               // ✅ CHANGED: Filter submenu items
               const filteredSubmenu = item.submenu?.filter((sub: any) => shouldShowMenuItem(sub.name)) || [];
+              console.log('filteredSubmenu', filteredSubmenu);
               return (
                 <ESGDDSubmenu
                   key={item.name}
@@ -173,9 +223,12 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
               );
             }
             else if (item.name === 'Audit') {
+              const filteredSubmenu =
+                item.submenu?.filter((sub: any) => shouldShowMenuItem(sub.name)) || [];
               return (
                 <AuditSubmenu
                   key={item.name}
+                  submenu={filteredSubmenu}
                   isExpanded={expandedMenus.audit}
                   onToggle={() => toggleMenu('audit')}
                 />
@@ -199,6 +252,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
               return (
                 <StakeholdersSubmenu
                   key={item.name}
+                  submenu={item.submenu || []}
                   isExpanded={expandedMenus.stakeholders}
                   onToggle={() => toggleMenu('stakeholders')}
                   role={role}
@@ -206,9 +260,13 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
               );
             }
             else if (item.name === 'SDG') {
+              const filteredSubmenu =
+                item.submenu?.filter((sub: any) => shouldShowMenuItem(sub.name)) || [];
+
               return (
                 <SDGSubmenu
                   key={item.name}
+                  submenu={filteredSubmenu}
                   isExpanded={expandedMenus.sdg}
                   onToggle={() => toggleMenu('sdg')}
                 />

@@ -49,6 +49,20 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
           { name: "Strategy Setting", href: "/sdg/strategy", icon: FileText }
         ]
       },
+      // {
+      //   name: "ESG DD",
+      //   href: "/esg-dd",
+      //   icon: FileSearch,
+      //   featureId: 'esg-dd',
+      //   submenu: [
+      //     { name: "Overview", href: "/esg-dd", icon: FileSearch },
+      //     { name: "Manual Assessment", href: "/esg-dd/manual", icon: FileText },
+      //     { name: "Automated Assessment", href: "/esg-dd/automated", icon: FileText },
+      //     { name: "ESG CAP", href: "/esg-dd/cap", icon: FileText },
+      //     // { name: "IRL Assessment", href: "/esg-dd/irl", icon: FileText },
+      //     { name: "ESG DD Reports", href: "/esg-dd/reports", icon: FileText }
+      //   ]
+      // },
       {
         name: "ESG DD",
         href: "/esg-dd",
@@ -56,10 +70,19 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
         featureId: 'esg-dd',
         submenu: [
           { name: "Overview", href: "/esg-dd", icon: FileSearch },
-          { name: "Manual Assessment", href: "/esg-dd/manual", icon: FileText },
+      
+          {
+            name: "Manual Assessment",
+            href: "#",
+            icon: FileText,
+            submenu: [
+              { name: "IRL Assessment", href: "/esg-dd/irl", icon: FileText },
+              { name: "Advanced IRL", href: "/esg-dd/advanced", icon: FileText }
+            ]
+          },
+      
           { name: "Automated Assessment", href: "/esg-dd/automated", icon: FileText },
           { name: "ESG CAP", href: "/esg-dd/cap", icon: FileText },
-          // { name: "IRL Assessment", href: "/esg-dd/irl", icon: FileText },
           { name: "ESG DD Reports", href: "/esg-dd/reports", icon: FileText }
         ]
       },
