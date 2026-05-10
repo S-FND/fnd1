@@ -35,7 +35,6 @@ const truncateText = (text: string, length = 50) =>
 
 export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onUpdate,buttonEnabled,setReloadData, compact = false, finalPlan }) => {
   const effectiveStatus = getEffectiveStatus(item);
-
   const [showFullItem, setShowFullItem] = useState(false);
   const [showFullIssue, setShowFullIssue] = useState(false);
   const [showFullRelatedFinding, setShowFullRelatedFinding] = useState(false);
@@ -100,7 +99,7 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
         
         {/* Actions */}
         <TableCell className="text-right" style={{ padding: "0.3rem" }}>
-          <ESGCapRowActions item={item} onUpdate={onUpdate || (() => {})} buttonEnabled={buttonEnabled} />
+          <ESGCapRowActions item={item} onUpdate={onUpdate || (() => {})} buttonEnabled={buttonEnabled} finalPlan={finalPlan}/>
         </TableCell>
       </TableRow>
     );

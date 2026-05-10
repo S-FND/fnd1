@@ -11,11 +11,11 @@ interface AlertsPanelProps {
   finalPlan?: boolean;
 }
 
-export const AlertsPanel = ({ 
-  overdueItems, 
-  approachingDeadlines, 
+export const AlertsPanel = ({
+  overdueItems,
+  approachingDeadlines,
   onItemClick,
-  finalPlan 
+  finalPlan
 }: AlertsPanelProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const totalAlerts = overdueItems.length + approachingDeadlines.length;
@@ -74,10 +74,10 @@ export const AlertsPanel = ({
                 {overdueItems.map((item) => {
                   const priorityColor =
                     {
-                      High: "bg-red-100 text-red-800",
-                      Medium: "bg-yellow-100 text-yellow-800",
-                      Low: "bg-green-100 text-green-800",
-                    }[item.priority] || "bg-gray-100";
+                      High: "bg-red-600 text-white",
+                      Medium: "bg-amber-600 text-white",
+                      Low: "bg-emerald-600 text-white",
+                    }[item.priority] || "bg-gray-600 text-white";
                   return (
                     <div
                       key={item.id}
@@ -119,10 +119,10 @@ export const AlertsPanel = ({
                 {approachingDeadlines.map((item) => {
                   const priorityColor =
                     {
-                      High: "bg-red-100 text-red-800",
-                      Medium: "bg-yellow-100 text-yellow-800",
-                      Low: "bg-green-100 text-green-800",
-                    }[item.priority] || "bg-gray-100";
+                      High: "bg-red-600 text-white",
+                      Medium: "bg-amber-600 text-white",
+                      Low: "bg-emerald-600 text-white",
+                    }[item.priority] || "bg-gray-600 text-white";
                   return (
                     <div
                       key={item.id}

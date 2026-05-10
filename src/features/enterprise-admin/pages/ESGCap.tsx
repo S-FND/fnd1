@@ -751,28 +751,30 @@ const ESGCapPage = () => {
               </div>
             )}
 
-            <div className="border rounded-lg overflow-hidden">
-              <div className="overflow-x-auto">
-                {showComparisonView ? (
-                  <ComparePlanView
-                    currentPlan={esgCap?.plan || []}
-                    originalPlan={originalPlan}
-                    onRevertItem={handleRevertItem}
-                    onRevertField={handleRevertField}
-                    showComparisonView={showComparisonView}
-                  />
-                ) : (
-                  <ESGCapTable
-                    sortedItems={sortedItems}
-                    sortConfig={sortConfig}
-                    requestSort={requestSort}
-                    onItemUpdate={handleUpdateItem}
-                    buttonEnabled={buttonEnabled}
-                    setReloadData={setReloadData}
-                  />
-                )}
+              <div className="border rounded-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                  {showComparisonView ? (
+                    <ComparePlanView
+                      currentPlan={esgCap?.plan || []}
+                      originalPlan={originalPlan}
+                      onRevertItem={handleRevertItem}
+                      onRevertField={handleRevertField}
+                      showComparisonView={showComparisonView}
+                    />
+                  ) : (
+                    <ESGCapTable
+                      sortedItems={sortedItems}
+                      sortConfig={sortConfig}
+                      requestSort={requestSort}
+                      onItemUpdate={handleUpdateItem}
+                      buttonEnabled={buttonEnabled}
+                      setReloadData={setReloadData}
+                      finalPlan={isPlanFinalized}
+                    />
+                  )}
+                </div>
               </div>
-            </div>
+            
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
