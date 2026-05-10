@@ -19,6 +19,7 @@ import { ESGCapPriority } from '../types/esgDD';
 import { cn } from '@/lib/utils';
 import { AlertsPanel } from '@/components/esg-cap/AlertsPanel';
 import { useESGCAPAlerts } from '@/hooks/useESGCAPAlerts';
+import { History } from "lucide-react";
 
 import {
   fetchEsgCap,
@@ -30,6 +31,8 @@ import { logger } from '@/hooks/logger';
 import { PageAccessContext } from '@/context/PageAccessContext';
 import Loader from '@/components/ui/loader';
 import { set } from 'date-fns';
+import AuditDrawer, { AuditLog } from '../components/esg-cap/AuditDrawer';
+import { httpClient } from '@/lib/httpClient';
 
 interface PlanHistory {
   updateByUserId: string;
@@ -142,7 +145,7 @@ const ComparePlanView = ({
       return dateString;
     }
   };
-  
+
   const ExpandableText = ({ text, length = 50 }: { text: string; length?: number }) => {
     const [expanded, setExpanded] = useState(false);
 
@@ -338,7 +341,7 @@ const ComparePlanView = ({
 };
 
 const ESGCapPage = () => {
-  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
+  const { isLoading } = useRouteProtection(['admin', 'manager', 'employee']);
   const { user, isAuthenticated, isAuthenticatedStatus } = useAuth();
   const [loading, setLoading] = useState(false);
   const [esgCap, setEsgCap] = useState<ESGCapData | null>(null);
@@ -350,12 +353,15 @@ const ESGCapPage = () => {
   );
   const [showComparisonView, setShowComparisonView] = useState(false);
   const [originalPlan, setOriginalPlan] = useState<ESGCapItem[]>([]);
-  const {checkPageButtonAccess}=useContext(PageAccessContext);
+  const { checkPageButtonAccess } = useContext(PageAccessContext);
   const [buttonEnabled, setButtonEnabled] = useState(false);
-  const [loadingMessage,setLoadingMessage]=useState("Loading ...")
+  const [loadingMessage, setLoadingMessage] = useState("Loading ...")
   const [reloadData, setReloadData] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ESGCapItem | null>(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [auditOpen, setAuditOpen] = useState(false);
+  const [selectedLog, setSelectedLog] = useState(null);
+  const [logs, setLogs] = useState<AuditLog[]>([]);
 
   useEffect(() => {
     const userData = localStorage.getItem('fandoro-user');
@@ -555,7 +561,7 @@ const ESGCapPage = () => {
 
   useEffect(() => {
     loadData();
-  }, [entityId,reloadData]);
+  }, [entityId, reloadData]);
 
   const alerts = useESGCAPAlerts(esgCap?.plan || [], originalPlan, esgCap?.finalPlan || false);
 
@@ -683,6 +689,18 @@ const ESGCapPage = () => {
     setReviewDialogOpen(true);
   };
 
+  const getAuditLogs = async () => {
+    let logs = await httpClient.get('audit');
+    console.log("audit logs ", logs);
+    if (logs?.status == 200) {
+      setLogs(logs.data['data']);
+    }
+  }
+
+  useEffect(() => {
+    getAuditLogs();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <Loader show={loading} text={loadingMessage} />
@@ -697,6 +715,16 @@ const ESGCapPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-6">
+            <div className="flex justify-end mb-4">
+              <Button
+                variant="outline"
+                onClick={() => setAuditOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <History className="w-4 h-4" />
+                Audit Logs
+              </Button>
+            </div>
             {/* Filters Section */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <div className="w-full sm:w-auto">
@@ -723,35 +751,35 @@ const ESGCapPage = () => {
               </div>
             )}
 
-              <div className="border rounded-lg overflow-hidden">
-                <div className="overflow-x-auto">
-                  {showComparisonView ? (
-                    <ComparePlanView
-                      currentPlan={esgCap?.plan || []}
-                      originalPlan={originalPlan}
-                      onRevertItem={handleRevertItem}
-                      onRevertField={handleRevertField}
-                      showComparisonView={showComparisonView}
-                    />
-                  ) : (
-                    <ESGCapTable
-                      sortedItems={sortedItems}
-                      sortConfig={sortConfig}
-                      requestSort={requestSort}
-                      onItemUpdate={handleUpdateItem}
-                      buttonEnabled={buttonEnabled}
-                      setReloadData={setReloadData}
-                    />
-                  )}
-                </div>
+            <div className="border rounded-lg overflow-hidden">
+              <div className="overflow-x-auto">
+                {showComparisonView ? (
+                  <ComparePlanView
+                    currentPlan={esgCap?.plan || []}
+                    originalPlan={originalPlan}
+                    onRevertItem={handleRevertItem}
+                    onRevertField={handleRevertField}
+                    showComparisonView={showComparisonView}
+                  />
+                ) : (
+                  <ESGCapTable
+                    sortedItems={sortedItems}
+                    sortConfig={sortConfig}
+                    requestSort={requestSort}
+                    onItemUpdate={handleUpdateItem}
+                    buttonEnabled={buttonEnabled}
+                    setReloadData={setReloadData}
+                  />
+                )}
               </div>
+            </div>
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
               <Button
                 variant="outline"
                 onClick={() => handleAction('requestChange')}
-                disabled={shouldDisableRequestButton()} 
+                disabled={shouldDisableRequestButton()}
                 className="hover:bg-amber-50"
               >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
@@ -769,6 +797,8 @@ const ESGCapPage = () => {
           </CardContent>
         </Card>
       </UnifiedSidebarLayout>
+      <AuditDrawer open={auditOpen} onClose={() => setAuditOpen(false)} logs={logs} />
+
     </div>
   );
 };
