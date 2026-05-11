@@ -25,7 +25,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { MoreVertical, Upload, Download, FileText, CheckCircle2, X, Eye } from 'lucide-react';
+import { MoreVertical, Upload, Download, FileText, CheckCircle2, X, Eye, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { DocumentUploadModal } from './DocumentUploadModal';
@@ -38,6 +38,7 @@ import { AiDialog } from '@/components/esg-cap/AiDialog';
 import { AiInsightsDialog } from './AiInsights';
 import { DocumentMultiTemplateModal } from './DocumentMultiTemplateModal';
 import DocumentSummaryDialog from './document-summary-review';
+import { Link } from 'react-router-dom';
 // import Loader from '@/components/ui/loader';
 
 interface ESGCapRowActionsProps {
@@ -49,6 +50,7 @@ interface ESGCapRowActionsProps {
 }
 
 export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpdate, buttonEnabled, setReloadData, finalPlan }) => {
+  console.log("Rendering ESGCapRowActions for item", item);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isDownloadOpen, setIsDownloadOpen] = useState(false);
@@ -165,6 +167,12 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
             Doc
           </Badge>
         )}
+        <Button asChild variant="default" size="sm">
+          <Link to={`/esg-dd/cap/${item?.reportId}`} state={{ item }} className="flex items-center gap-1">
+            <Pencil className="h-3.5 w-3.5" />
+            Update
+          </Link>
+        </Button>
         <TooltipProvider delayDuration={300}>
           <div className="flex gap-1.5">
             <Tooltip>
