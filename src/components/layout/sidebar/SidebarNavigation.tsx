@@ -17,6 +17,7 @@ import { FileSearch } from 'lucide-react';
 import { useAuthProvider } from '@/hooks/useAuthProvider';
 import { log } from 'console';
 import { useVerifierStatus } from '@/hooks/useVerifierStatus';
+import { MISSubmenu } from './MISSubmenu';
 
 interface SidebarNavigationProps {
   role: string;
@@ -214,6 +215,16 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 />
               );
             }
+            else if(item.name === 'MIS') {
+              return (
+                <MISSubmenu
+                  key={item.name}
+                  isExpanded={expandedMenus.mis}
+                  onToggle={() => toggleMenu('mis')}
+                />
+              )
+            }
+
             // Regular menu items
             else {
               return (

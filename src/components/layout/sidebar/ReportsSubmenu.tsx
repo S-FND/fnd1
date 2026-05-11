@@ -8,6 +8,7 @@ import { SidebarSubmenu } from './SidebarSubmenu';
 interface ReportsSubmenuProps {
   isExpanded: boolean;
   onToggle: () => void;
+  submenu:[]
 }
 
 export const ReportsSubmenu: React.FC<ReportsSubmenuProps> = ({

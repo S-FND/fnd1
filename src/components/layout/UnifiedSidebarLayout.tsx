@@ -13,6 +13,7 @@ import { logger } from '@/hooks/logger';
 interface UnifiedSidebarLayoutProps {
   children: React.ReactNode;
   hideSidebar?: boolean;
+  fixedHeight?: boolean; // New prop to control fixed height
 }
 
 export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({
@@ -91,7 +92,7 @@ const UnifiedSidebar: React.FC = () => {
   }, [expandedMenus]);
 
   return (
-    <Sidebar className="border-r border-border bg-sidebar">
+    <Sidebar className="border-r border-border bg-sidebar w-80 shrink-0">
       <SidebarHeaderComponent user={user} />
       
       <SidebarContent ref={sidebarContentRef} className="px-2">

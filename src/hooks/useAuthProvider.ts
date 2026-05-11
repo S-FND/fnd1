@@ -12,6 +12,11 @@ export const useAuthProvider = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [permissions, setPermissions] = useState<Permissions>({});
   const [token, setToken] = useState<string | null>(null);
+  const [companyName, setCompanyName] = useState<string>('');
+  const [effectiveCompanyId, setEffectiveCompanyId] = useState<string>('');
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isFandoro, setIsFandoro] = useState<boolean>(false);
+  const [isCompanyReadOnly, setIsCompanyReadOnly] = useState<boolean>(false);
   // const [isAuthenticated,setIsAuthenticated]=useState(false)
   const navigate = useNavigate();
   const location = useLocation();
@@ -221,6 +226,7 @@ export const useAuthProvider = () => {
     isEnterpriseAdmin,
     hasReadAccess,
     hasWriteAccess,
-    isAuthenticatedStatus
+    isAuthenticatedStatus,
+    companyName, effectiveCompanyId, isAdmin, isFandoro, isCompanyReadOnly
   };
 };

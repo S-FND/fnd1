@@ -85,7 +85,7 @@ export const PageOverlay: React.FC<PageOverlayProps> = ({ children }) => {
     let accessData=localStorage.getItem('fandoro-access')
     let pageAccessData: { feature: string; url: string; adminEnabled: boolean }[] = accessData && accessData !== 'undefined' && accessData !== 'null' ? (JSON.parse(localStorage.getItem('fandoro-access') || '{}'))['companyFeaturePageAccess'] : [];
     // console.log("pageAccessData", pageAccessData)
-    if (['/company', '/settings'].includes(location.pathname)) {
+    if (['/company', '/settings','/mis/dashboard'].includes(location.pathname) || location.pathname.includes("mis")) {
       setShouldShowOverlay(false)
     }
     else {
