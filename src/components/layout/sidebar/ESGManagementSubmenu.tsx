@@ -23,11 +23,24 @@ export const ESGManagementSubmenu: React.FC<ESGManagementSubmenuProps> = ({
 }) => {
   const location = useLocation();
   logger.log("Allowed URLs in ESGManagementSubmenu:", allowedUrls);
-  const submenuItems = [
+  const defaultSubmenuItems = [
     { name: "Overview", href: "/esg", icon: BarChart3 },
     { name: "ESMS", href: "/esg/esms", icon: FileText },
     { name: "ESG Metrics", href: "/esg/metrics", icon: LineChart }
   ];
+  
+  const submenuItems =
+    submenu && submenu.length > 0
+      ? submenu.map((item) => ({
+          ...item,
+          icon:
+            item.href === "/esg"
+              ? BarChart3
+              : item.href === "/esg/esms"
+              ? FileText
+              : LineChart
+        }))
+      : defaultSubmenuItems;
 
   return (
     <SidebarMenuItem>
@@ -49,7 +62,7 @@ export const ESGManagementSubmenu: React.FC<ESGManagementSubmenuProps> = ({
           <SidebarMenuSub>
             
             {/* .filter((item) => allowedUrls.includes(item.href)) */}
-            {submenu.map((item) => {
+            {submenuItems.map((item) => {
               const isActive = location.pathname === item.href;
               return (
                 <SidebarMenuSubItem key={item.name}>

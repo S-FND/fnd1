@@ -1,3 +1,5 @@
+import { IDocumentValidation } from "../components/esg-cap/document-summary-review";
+
 export type FundingStage =
   | 'pre_seed'
   | 'seed'
@@ -139,6 +141,7 @@ export interface ESGCapItem {
   status: ESGCapStatus;
   deadline?: string;    // This might be your targetDate
   targetDate?: string;  // Alternative to deadline
+  progressPercentage?: string;
   assignedTo?: string;
   dealCondition: ESGCapDealCondition;
   createdAt: string;
@@ -162,6 +165,8 @@ export interface ESGCapItem {
     mimetype: string;
     size: number;
     s3Link: string;
+    status: 'Accepted' | 'Rejected' | 'Pending';
+    aiSummary: IDocumentValidation;
   }[]
 }
 
