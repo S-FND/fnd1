@@ -81,7 +81,7 @@ import VerifierApprovalsPage from './pages/VerifierApprovalsPage';
 import Scope3DataCollectionForm from './features/enterprise-admin/components/ghg/scope3/DataCollectionForm';
 import Scope4DataCollectionForm from './features/enterprise-admin/components/ghg/scope4/DataCollectionForm';
 import VerifierApprovalDetailPage from './pages/VerifierApprovalDetailPage';
-
+import ESGCapDetailsPage from './features/enterprise-admin/pages/ESGCapDetails';
 
 function App() {
   return (
@@ -105,6 +105,7 @@ function App() {
         <Route path="/materiality" element={<MaterialityPage />} />
         <Route path="/esg/*" element={<ESGPage />} />
         <Route path="/esg-dd" element={<ESGDDPage />} />
+        <Route path="/esg-dd/cap/:id" element={<ESGCapDetailsPage />} />
         <Route path="/esg-dd/reports" element={<ESGDDReportsPage />} />
         <Route path="/esg-dd/manual" element={<ManualESGDDPage />} />
         <Route path="/esg-dd/automated" element={<AutomatedESGDDPage />} />

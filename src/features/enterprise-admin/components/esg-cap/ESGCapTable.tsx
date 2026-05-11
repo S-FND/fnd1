@@ -312,7 +312,7 @@ ${formattedItems}
         </Table>
       </div>
 
-      {sortedItems.length > 0 && <ESGCapScoring items={sortedItems} />}
+      {/* {sortedItems.length > 0 && <ESGCapScoring items={sortedItems} />} */}
     </div>
   );
 };
