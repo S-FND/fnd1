@@ -21,6 +21,7 @@ import {
     X,
     UserPlus,
     ClipboardCheck,
+    Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -58,7 +59,8 @@ import { toast } from 'sonner';
 import UnifiedSidebarLayout from '@/components/layout/UnifiedSidebarLayout';
 import { logger } from '@/hooks/logger';
 import Loader from '@/components/ui/loader';
-import { fetchEsgCap } from '../services/esgdd';
+import { fetchEsgCap, updatePlan, esgddChangePlan, editFinalizedPlan } from '../services/esgdd';
+import { DocumentUploadModal } from '../components/esg-cap/DocumentUploadModal';
 const SectionCard: React.FC<{
     title: string;
     subtitle?: string;
@@ -128,7 +130,7 @@ const ESGCapDetailsPage: React.FC = () => {
 
     const itemName = searchParams.get('itemName');
 
-    const { isAuthenticated } = useAuth();
+    // const { isAuthenticated } = useAuth();
     //   all.find((i) => i.id === id);
     const [loading, setLoading] = useState(true);
     const [capItem, setCapItem] = useState<any>(null);
@@ -169,8 +171,9 @@ const ESGCapDetailsPage: React.FC = () => {
                             ?.trim()
                             ?.toLowerCase()
                 );
-
+                setFullPlan(data.plan || []);
                 setCapItem(matchedItem || null);
+                setAssigneeText(matchedItem?.assignedTo || '');
             } else {
                 toast.error("Failed to load ESG CAP data");
             }
@@ -186,25 +189,15 @@ const ESGCapDetailsPage: React.FC = () => {
         loadData();
     }, [id, itemName]);
 
-    const initialAssignees = ['Anita Shah'];
+    const initialAssignees = capItem?.assignedTo || [];
     const [updateText, setUpdateText] = useState('');
     const [showUpdateNotes, setShowUpdateNotes] = useState(false);
     const [requestChange, setRequestChange] = useState(false);
     const [changeNote, setChangeNote] = useState('');
-    const [assigneeOpen, setAssigneeOpen] = useState(false);
-    const [assigneeQuery, setAssigneeQuery] = useState('');
-    const [assignees, setAssignees] = useState<string[]>(initialAssignees);
-    const peopleDirectory = [
-        { name: 'Anita Shah', role: 'Compliance Analyst' },
-        { name: 'Manoj Kapoor', role: 'Plant Operations Lead' },
-        { name: 'Priya Menon', role: 'Compliance Lead' },
-        { name: 'Rahul Iyer', role: 'Governance Reviewer' },
-        { name: 'Sneha Rao', role: 'HR Manager' },
-        { name: 'Vikram Joshi', role: 'EHS Officer' },
-    ];
-    const toggleAssignee = (name: string) =>
-        setAssignees((prev) => (prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name]));
-    const initialsOf = (name: string) => name.split(' ').map((n) => n[0]).join('').slice(0, 2);
+    const [assigneeText, setAssigneeText] = useState<string>('');
+    const [uploadModalOpen, setUploadModalOpen] = useState(false);
+    const [fullPlan, setFullPlan] = useState<any[]>([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [completion, setCompletion] = useState<Record<string, boolean>>({
         'Consolidated Annual Return Copy': true,
         'Factory License': true,
@@ -219,46 +212,6 @@ const ESGCapDetailsPage: React.FC = () => {
         setAttachmentsOpen(true);
     };
 
-    if (!isAuthenticated) return <Navigate to="/login" />;
-    //   if (!item) {
-    //     return (
-    //       <div className="mx-auto max-w-3xl py-16 text-center">
-    //         <h1 className="text-2xl font-semibold">CAP item not found</h1>
-    //         <Link to="/esg-dd/cap" className="mt-4 inline-flex items-center text-primary hover:underline">
-    //           <ArrowLeft className="mr-1 h-4 w-4" /> Back to CAP List
-    //         </Link>
-    //       </div>
-    //     );
-    //   }
-
-    const completionPct = Math.round(
-        (Object.values(completion).filter(Boolean).length / Object.keys(completion).length) * 100
-    );
-
-    const priorityTone =
-        capItem?.priority?.toLowerCase() === 'high'
-            ? 'red'
-            : capItem?.priority?.toLowerCase() === 'medium'
-                ? 'amber'
-                : 'green';
-
-    const statusToneMap: Record<string, 'amber' | 'blue' | 'green' | 'red' | 'slate'> = {
-        pending: 'amber',
-        in_review: 'blue',
-        in_progress: 'blue',
-        accepted: 'green',
-        completed: 'green',
-        delayed: 'red',
-    };
-
-    const workflowSteps = [
-        { label: 'Draft', status: 'done' },
-        { label: 'Submitted', status: 'done' },
-        { label: 'Compliance Review', status: 'current' },
-        { label: 'Governance Approval', status: 'pending' },
-        { label: 'Closed', status: 'pending' },
-    ];
-
     const firesideSteps = [
         { label: 'Submitted', date: 'Jul 12, 2026', done: true },
         { label: 'Under Review', date: 'Jul 14, 2026', done: true },
@@ -272,23 +225,100 @@ const ESGCapDetailsPage: React.FC = () => {
         { name: 'Rahul Iyer', role: 'Governance Reviewer', time: '5 hours ago', text: 'Looks aligned. Awaiting Labour Welfare filing proof.' },
     ];
 
-    const attachments = [
-        { name: 'Annual_Return_FY25.pdf', user: 'Anita Shah', date: 'Aug 02, 2026', size: '1.4 MB', verified: true },
-        { name: 'Factory_License_Renewal.pdf', user: 'Manoj Kapoor', date: 'Jul 28, 2026', size: '820 KB', verified: true },
-        { name: 'Gratuity_Workings.xlsx', user: 'Anita Shah', date: 'Aug 04, 2026', size: '210 KB', verified: false },
-    ];
+    const getLoggedInUser = () => {
+        const userStr = localStorage.getItem('fandoro-user');
+        if (!userStr) return null;
+        try {
+            return JSON.parse(userStr);
+        } catch {
+            return null;
+        }
+    };
 
-    const activity = [
-        { icon: Upload, color: 'text-blue-600', user: 'Anita Shah', text: 'uploaded Annual_Return_FY25.pdf', time: 'Aug 02, 2026 · 10:14' },
-        { icon: MessageSquare, color: 'text-slate-600', user: 'Priya Menon', text: 'commented on the CAP', time: 'Aug 03, 2026 · 09:00' },
-        { icon: Activity, color: 'text-amber-600', user: 'System', text: 'status changed to Under Review', time: 'Aug 03, 2026 · 09:02' },
-        { icon: CheckCircle2, color: 'text-emerald-600', user: 'Rahul Iyer', text: 'approved the compliance section', time: 'Aug 05, 2026 · 16:40' },
-    ];
+    const loggedInUser = getLoggedInUser();
+    const isFiresideEmail = loggedInUser?.email?.endsWith('@fireside.com') ?? false;
+
+    
+
+    const handleSubmit = async () => {
+        setIsSubmitting(true);
+    
+        try {
+            if (requestChange) {
+    
+                const updatedPlan = fullPlan.map((item) => {
+                    if (
+                        item.reportId === capItem.reportId &&
+                        item.item === capItem.item
+                    ) {
+                        return {
+                            ...item,
+                            assignedTo: assigneeText?.trim(),
+                            investorStatusUpdate: updateText?.trim(),
+                            changeNote: changeNote?.trim(),
+                            comment: 'Change-Request',
+                        };
+                    }
+    
+                    return item;
+                });
+    
+                const changePayload = {
+                    entityId,
+                    changeRequest: {
+                        plan: updatedPlan,
+                        comment: 'Change-Request',
+                    },
+                };
+    
+                await esgddChangePlan(changePayload);
+    
+                toast.success('Change request submitted', {
+                    description: changeNote,
+                });
+    
+            } else {
+    
+                const updatedFullPlan = fullPlan.map((item) =>
+                    item.reportId === capItem.reportId &&
+                    item.item === capItem.item
+                        ? {
+                            ...item,
+                            assignedTo: assigneeText?.trim(),
+                            investorStatusUpdate: updateText?.trim(),
+                        }
+                        : item
+                );
+    
+                const payload = {
+                    entityId,
+                    updatedPlan: updatedFullPlan,
+                    reason: 'Investor edited the finalized plan',
+                };
+    
+                await editFinalizedPlan(payload);
+    
+                toast.success('Plan updated successfully');
+            }
+    
+            setUpdateText('');
+            setShowUpdateNotes(false);
+            setRequestChange(false);
+            setChangeNote('');
+    
+            await loadData();
+    
+        } catch (error) {
+            console.error(error);
+            toast.error('Submission failed. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     if (loading) {
-        return <Loader show={undefined} />;
+        return <UnifiedSidebarLayout><Loader2 /> </UnifiedSidebarLayout>;
     }
-    console.log('cap----------Item',capItem);
     return (
         <UnifiedSidebarLayout>
             <div className="min-h-screen bg-[hsl(220_25%_97%)] dark:bg-background">
@@ -402,103 +432,12 @@ const ESGCapDetailsPage: React.FC = () => {
                                     </div>
                                     <div>
                                         <div className="flex min-h-[48px] flex-wrap items-center gap-2 rounded-lg border bg-card p-2">
-                                            {assignees.length === 0 && (
-                                                <span className="px-2 text-sm text-muted-foreground">No assignees yet</span>
-                                            )}
-                                            {assignees.map((name) => {
-                                                const person = peopleDirectory.find((p) => p.name === name);
-                                                return (
-                                                    <span
-                                                        key={name}
-                                                        className="inline-flex items-center gap-2 rounded-full border bg-background py-1 pl-1 pr-2 text-xs"
-                                                    >
-                                                        <Avatar className="h-6 w-6">
-                                                            <AvatarFallback className="bg-[#1E3A8A] text-[10px] text-white">
-                                                                {initialsOf(name)}
-                                                            </AvatarFallback>
-                                                        </Avatar>
-                                                        <span className="font-medium">{name}</span>
-                                                        {person && <span className="text-muted-foreground">· {person.role}</span>}
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => toggleAssignee(name)}
-                                                            className="rounded-full p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
-                                                            aria-label={`Remove ${name}`}
-                                                        >
-                                                            <X className="h-3 w-3" />
-                                                        </button>
-                                                    </span>
-                                                );
-                                            })}
-                                            <Popover open={assigneeOpen} onOpenChange={setAssigneeOpen}>
-                                                <PopoverTrigger asChild>
-                                                    <Button variant="ghost" size="sm" className="h-7 gap-1 rounded-full text-xs">
-                                                        <Plus className="h-3.5 w-3.5" /> Add names or operational roles
-                                                    </Button>
-                                                </PopoverTrigger>
-                                                <PopoverContent className="w-[320px] p-0" align="start">
-                                                    <Command shouldFilter={true}>
-                                                        <CommandInput
-                                                            placeholder="Type a name or search directory…"
-                                                            value={assigneeQuery}
-                                                            onValueChange={setAssigneeQuery}
-                                                        />
-                                                        <CommandList>
-                                                            {assigneeQuery.trim() &&
-                                                                !peopleDirectory.some(
-                                                                    (p) => p.name.toLowerCase() === assigneeQuery.trim().toLowerCase()
-                                                                ) &&
-                                                                !assignees.some(
-                                                                    (n) => n.toLowerCase() === assigneeQuery.trim().toLowerCase()
-                                                                ) && (
-                                                                    <CommandGroup heading="Add new">
-                                                                        <CommandItem
-                                                                            value={`__add__${assigneeQuery}`}
-                                                                            onSelect={() => {
-                                                                                const name = assigneeQuery.trim();
-                                                                                if (name) {
-                                                                                    setAssignees((prev) => [...prev, name]);
-                                                                                    setAssigneeQuery('');
-                                                                                }
-                                                                            }}
-                                                                            className="flex items-center gap-2"
-                                                                        >
-                                                                            <Plus className="h-4 w-4 text-[#1E3A8A]" />
-                                                                            <span className="text-sm">
-                                                                                Add <span className="font-medium">"{assigneeQuery.trim()}"</span>
-                                                                            </span>
-                                                                        </CommandItem>
-                                                                    </CommandGroup>
-                                                                )}
-                                                            <CommandEmpty>No users found. Type a name to add.</CommandEmpty>
-                                                            <CommandGroup heading="Directory">
-                                                                {peopleDirectory.map((p) => {
-                                                                    const selected = assignees.includes(p.name);
-                                                                    return (
-                                                                        <CommandItem
-                                                                            key={p.name}
-                                                                            value={p.name}
-                                                                            onSelect={() => toggleAssignee(p.name)}
-                                                                            className="flex items-center gap-2"
-                                                                        >
-                                                                            <Avatar className="h-6 w-6">
-                                                                                <AvatarFallback className="bg-muted text-[10px]">
-                                                                                    {initialsOf(p.name)}
-                                                                                </AvatarFallback>
-                                                                            </Avatar>
-                                                                            <div className="flex-1">
-                                                                                <div className="text-sm font-medium">{p.name}</div>
-                                                                                <div className="text-[11px] text-muted-foreground">{p.role}</div>
-                                                                            </div>
-                                                                            {selected && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
-                                                                        </CommandItem>
-                                                                    );
-                                                                })}
-                                                            </CommandGroup>
-                                                        </CommandList>
-                                                    </Command>
-                                                </PopoverContent>
-                                            </Popover>
+                                            <Input
+                                                placeholder="Assigned To"
+                                                value={assigneeText}
+                                                onChange={(e) => setAssigneeText(e.target.value)}
+                                                className="h-9"
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -534,30 +473,31 @@ const ESGCapDetailsPage: React.FC = () => {
 
                             {/* Submit (visible only on changes) */}
                             {(() => {
-                                const assigneesChanged =
-                                    assignees.length !== initialAssignees.length ||
-                                    assignees.some((a) => !initialAssignees.includes(a));
+                                const initialAssignee = capItem?.assignedTo || '';
+
+                                const assigneeChanged = assigneeText.trim() !== initialAssignee.trim();
+
                                 const hasChanges =
                                     updateText.trim().length > 0 ||
                                     (requestChange && changeNote.trim().length > 0) ||
-                                    assigneesChanged;
+                                    assigneeChanged;
+
                                 if (!hasChanges) return null;
+
                                 return (
                                     <div className="flex items-center justify-between gap-3 rounded-xl border border-[#1E3A8A]/20 bg-[#1E3A8A]/5 p-4">
                                         <div className="text-xs text-muted-foreground">
                                             You have unsaved changes. Review before submitting.
                                         </div>
+
                                         <Button
                                             size="lg"
-                                            onClick={() =>
-                                                toast.success('Submitted for review', {
-                                                    description: `${assignees.length} assignee(s)${requestChange ? ' · change requested' : ''
-                                                        }`,
-                                                })
-                                            }
+                                            onClick={handleSubmit}
+                                            disabled={isSubmitting}
                                             className="h-11 rounded-xl bg-[#1E3A8A] text-white hover:bg-[#1E3A8A]/90"
                                         >
-                                            <Send className="h-4 w-4" /> Submit for Review
+                                            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                                            Submit for Review
                                         </Button>
                                     </div>
                                 );
@@ -565,16 +505,16 @@ const ESGCapDetailsPage: React.FC = () => {
                         </div>
                     </SectionCard>
 
-                    {/* Fireside Actions */}
+                    {/* Investor Actions */}
                     <SectionCard
-                        title="Fireside Actions"
+                        title={!isFiresideEmail ? "Investor Action" : "Fireside Action"}
                         subtitle="Internal review and reviewer thread"
                         icon={<MessageSquare className="h-4 w-4" />}
                         variant="muted"
                     >
                         <div className="grid gap-8 lg:grid-cols-2">
                             <div>
-                                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Fireside Status</div>
+                                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{!isFiresideEmail ? "Investor Status" : "Fireside Status"}</div>
                                 {(() => {
                                     const current = firesideSteps.filter((s) => s.done).slice(-1)[0] ?? firesideSteps[0];
                                     return (
@@ -618,7 +558,7 @@ const ESGCapDetailsPage: React.FC = () => {
                     {/* Reference Details */}
                     <SectionCard title="Reference Details" subtitle="Finding context and corrective measures" icon={<Info className="h-4 w-4" />}>
                         <div className="space-y-6">
-                            <Field label="Issue & Related Finding" value={capItem?.relatedFinding || capItem?.issue} />
+                            <Field label="Issue & Related Finding" value={capItem?.issue} />
                             <Field label="Measures & Corrective Actions" value={capItem.measures} />
                         </div>
                     </SectionCard>
@@ -629,41 +569,45 @@ const ESGCapDetailsPage: React.FC = () => {
                             <div>
                                 <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Completion Indicators</div>
                                 <ul className="mt-4 space-y-3">
-                                    {capItem.deliverable.split("##").filter(Boolean).map((label) => (
-                                        <li key={label} className="flex items-center justify-between rounded-lg border bg-card p-3">
-                                            <label className="flex items-center gap-3 text-sm">
-                                                <Checkbox
-                                                    checked={completion[label]}
-                                                    onCheckedChange={(v) => setCompletion((prev) => ({ ...prev, [label]: !!v }))}
-                                                />
-                                                {label}
-                                            </label>
-                                            <Badge
-                                                variant="outline"
-                                                className={completion[label] ? 'border-emerald-300 text-emerald-700 bg-emerald-50' : 'border-amber-300 text-amber-700 bg-amber-50'}
-                                            >
-                                                {completion[label] ? 'Complete' : 'Pending'}
-                                            </Badge>
-                                        </li>
-                                    ))}
+                                    <ul className="mt-4 space-y-3">
+                                        {(capItem?.deliverable
+                                            ? capItem.deliverable.includes("##")
+                                                ? capItem.deliverable.split("##")
+                                                : [capItem.deliverable]
+                                            : []
+                                        )
+                                            .filter(Boolean)
+                                            .map((label: string) => (
+                                                <li
+                                                    key={label}
+                                                    className="flex items-center justify-between rounded-lg border bg-card p-3"
+                                                >
+                                                    <span className="text-sm">{label}</span>
+                                                </li>
+                                            ))}
+                                    </ul>
                                 </ul>
                             </div>
                             <div>
-                                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Guidance & Resources</div>
+                                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Guidance & Resources
+                                </div>
+
                                 <ul className="mt-4 space-y-3">
-                                    {[
-                                        'Annual Return Filing Guide',
-                                        'Factories Act Compliance Checklist',
-                                        'Labour Welfare Filing SOP',
-                                        'Gratuity Computation Template',
-                                    ].map((r) => (
-                                        <li key={r} className="flex items-center justify-between rounded-lg border bg-card p-3">
+                                    {(capItem?.resource
+                                        ? capItem.resource.includes("##")
+                                            ? capItem.resource.split("##")
+                                            : [capItem.resource]
+                                        : []
+                                    ).filter(Boolean).map((r: string) => (
+                                        <div
+                                            key={r}
+                                            className="flex items-center justify-between rounded-lg border bg-card p-3"
+                                        >
                                             <div className="flex items-center gap-3 text-sm">
-                                                <Paperclip className="h-4 w-4 text-muted-foreground" />
-                                                <a href="#" className="text-primary hover:underline">{r}</a>
+                                                <span>{r}</span>
                                             </div>
-                                            <Badge variant="outline" className="text-xs">Reference</Badge>
-                                        </li>
+                                        </div>
                                     ))}
                                 </ul>
                             </div>
@@ -682,18 +626,16 @@ const ESGCapDetailsPage: React.FC = () => {
                     <Dialog open={attachmentsOpen} onOpenChange={setAttachmentsOpen}>
                         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
                             <DialogHeader>
-                                <DialogTitle className="flex items-center gap-2">
-                                    <FileText className="h-5 w-5" />
-                                    {attachmentsMode === 'upload' ? 'Upload Document' : 'View Documents'}
-                                </DialogTitle>
-                                <DialogDescription>
-                                    {attachmentsMode === 'upload'
-                                        ? 'Attach evidence files supporting this CAP item.'
-                                        : 'All documents attached to this CAP item.'}
-                                </DialogDescription>
+                                <Button
+                                    size="lg"
+                                    onClick={() => setUploadModalOpen(true)}
+                                    className="h-11 rounded-xl bg-emerald-600 text-white ..."
+                                >
+                                    <Upload className="h-4 w-4" /> Upload Document
+                                </Button>
                             </DialogHeader>
 
-                            {attachmentsMode === 'upload' && (
+                            {/* {attachmentsMode === 'upload' && (
                                 <div className="rounded-xl border-2 border-dashed bg-muted/30 p-8 text-center">
                                     <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
                                     <p className="mt-2 text-sm font-medium">Drag & drop files to upload</p>
@@ -702,7 +644,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                         Browse Files
                                     </Button>
                                 </div>
-                            )}
+                            )} */}
 
                             <div className="overflow-hidden rounded-lg border">
                                 <table className="w-full text-sm">
@@ -717,38 +659,55 @@ const ESGCapDetailsPage: React.FC = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {attachments.map((a) => (
-                                            <tr key={a.name} className="border-t hover:bg-muted/20">
-                                                <td className="px-4 py-3">
-                                                    <div className="flex items-center gap-2">
-                                                        <FileText className="h-4 w-4 text-blue-600" />
-                                                        <span className="font-medium">{a.name}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="px-4 py-3 text-muted-foreground">{a.user}</td>
-                                                <td className="px-4 py-3 text-muted-foreground">{a.date}</td>
-                                                <td className="px-4 py-3 text-muted-foreground">{a.size}</td>
-                                                <td className="px-4 py-3">
-                                                    {a.verified ? (
-                                                        <Badge variant="outline" className="border-emerald-300 bg-emerald-50 text-emerald-700">
-                                                            <CheckCircle2 className="mr-1 h-3 w-3" /> Verified
-                                                        </Badge>
-                                                    ) : (
-                                                        <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-700">
-                                                            <AlertCircle className="mr-1 h-3 w-3" /> Pending
-                                                        </Badge>
-                                                    )}
-                                                </td>
-                                                <td className="px-4 py-3 text-right">
-                                                    <Button variant="ghost" size="sm" onClick={() => toast.success(`Viewing ${a.name}`)}>
-                                                        <Eye className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button variant="ghost" size="sm" onClick={() => toast.success(`Downloading ${a.name}`)}>
-                                                        <Download className="h-4 w-4" />
-                                                    </Button>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                        {capItem.fileUploadedData?.map((file, idx) => {
+                                            const fileSize = file.size ? (file.size / 1024).toFixed(1) + ' KB' : '—';
+                                            const uploadDate = file.aiSummary?.createdAt
+                                                ? new Date(file.aiSummary.createdAt).toLocaleDateString()
+                                                : '—';
+                                            const isVerified = file.status === 'Verified' || file.aiSummary?.status === 'final';
+                                            return (
+                                                <tr key={idx}>
+                                                    <td className="px-4 py-3 max-w-[220px]">
+                                                        <div className="flex items-center gap-2">
+                                                            <FileText className="h-4 w-4 text-blue-600 shrink-0" />
+                                                            <span
+                                                                className="font-medium truncate block max-w-[180px] cursor-pointer"
+                                                                title={file.filename || "Unnamed"}
+                                                            >
+                                                                {file.filename || "Unnamed"}
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 py-3 text-muted-foreground">—</td>   {/* Uploaded By – no field yet */}
+                                                    <td className="px-4 py-3 text-muted-foreground">{uploadDate}</td>
+                                                    <td className="px-4 py-3 text-muted-foreground">{fileSize}</td>
+                                                    <td className="px-4 py-3">
+                                                        {isVerified ? (
+                                                            <Badge variant="outline" className="border-emerald-300 bg-emerald-50 text-emerald-700">
+                                                                <CheckCircle2 className="mr-1 h-3 w-3" /> Verified
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-700">
+                                                                <AlertCircle className="mr-1 h-3 w-3" /> Pending
+                                                            </Badge>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-4 py-3 text-right">
+                                                        <Button variant="ghost" size="sm" onClick={() => window.open(file.s3Link, '_blank')}>
+                                                            <Eye className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button variant="ghost" size="sm" onClick={() => {
+                                                            const link = document.createElement('a');
+                                                            link.href = file.s3Link;
+                                                            link.download = file.filename;
+                                                            link.click();
+                                                        }}>
+                                                            <Download className="h-4 w-4" />
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>
@@ -780,6 +739,19 @@ const ESGCapDetailsPage: React.FC = () => {
         </SectionCard> */}
                 </div>
             </div>
+            <DocumentUploadModal
+                open={uploadModalOpen}
+                onOpenChange={setUploadModalOpen}
+                checklistItemId={capItem._id}
+                itemTitle={capItem.item || capItem.issue}
+                itemDescription={capItem.measures || ""}
+                itemTheme="Policy"
+                itemCategory={capItem.category}
+                itemPolicy={capItem.deliverable || ""}
+                itemResource={capItem.resource}
+                itemSourceType={capItem.sourceType || ""}
+                setReloadData={(reload) => reload && loadData()}
+            />
         </UnifiedSidebarLayout>
     );
 };
