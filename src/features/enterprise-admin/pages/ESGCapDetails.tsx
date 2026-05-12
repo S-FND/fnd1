@@ -61,6 +61,7 @@ import { logger } from '@/hooks/logger';
 import Loader from '@/components/ui/loader';
 import { fetchEsgCap, updatePlan, esgddChangePlan, editFinalizedPlan } from '../services/esgdd';
 import { DocumentUploadModal } from '../components/esg-cap/DocumentUploadModal';
+import { httpClient } from "@/lib/httpClient";
 const SectionCard: React.FC<{
     title: string;
     subtitle?: string;
@@ -75,6 +76,8 @@ const SectionCard: React.FC<{
             : variant === 'muted'
                 ? 'bg-slate-700 text-white'
                 : 'bg-card text-foreground border-b';
+
+               
     return (
         <section className="rounded-2xl border bg-card shadow-sm overflow-hidden">
             <header className={cn('flex items-center justify-between px-6 py-4', headerClass)}>
@@ -238,14 +241,27 @@ const ESGCapDetailsPage: React.FC = () => {
     const loggedInUser = getLoggedInUser();
     const isFiresideEmail = loggedInUser?.email?.endsWith('@fireside.com') ?? false;
 
+    const handleViewDocument = async (file: any) => {
+        try {
+            const getSignedUrl: any = await httpClient.get(
+                `esgdd/escap/uploaded/evidence-files/signed-urls?key=${file.filename}`
+            );
     
+            if (getSignedUrl.status === 200) {
+                window.open(getSignedUrl.data.signedUrl, '_blank');
+            }
+        } catch (error) {
+            console.error("View error:", error);
+            toast.error("Failed to view document");
+        }
+    };
 
     const handleSubmit = async () => {
         setIsSubmitting(true);
-    
+
         try {
             if (requestChange) {
-    
+
                 const updatedPlan = fullPlan.map((item) => {
                     if (
                         item.reportId === capItem.reportId &&
@@ -259,10 +275,10 @@ const ESGCapDetailsPage: React.FC = () => {
                             comment: 'Change-Request',
                         };
                     }
-    
+
                     return item;
                 });
-    
+
                 const changePayload = {
                     entityId,
                     changeRequest: {
@@ -270,18 +286,18 @@ const ESGCapDetailsPage: React.FC = () => {
                         comment: 'Change-Request',
                     },
                 };
-    
+
                 await esgddChangePlan(changePayload);
-    
+
                 toast.success('Change request submitted', {
                     description: changeNote,
                 });
-    
+
             } else {
-    
+
                 const updatedFullPlan = fullPlan.map((item) =>
                     item.reportId === capItem.reportId &&
-                    item.item === capItem.item
+                        item.item === capItem.item
                         ? {
                             ...item,
                             assignedTo: assigneeText?.trim(),
@@ -289,25 +305,25 @@ const ESGCapDetailsPage: React.FC = () => {
                         }
                         : item
                 );
-    
+
                 const payload = {
                     entityId,
                     updatedPlan: updatedFullPlan,
                     reason: 'Investor edited the finalized plan',
                 };
-    
+
                 await editFinalizedPlan(payload);
-    
+
                 toast.success('Plan updated successfully');
             }
-    
+
             setUpdateText('');
             setShowUpdateNotes(false);
             setRequestChange(false);
             setChangeNote('');
-    
+
             await loadData();
-    
+
         } catch (error) {
             console.error(error);
             toast.error('Submission failed. Please try again.');
@@ -315,6 +331,8 @@ const ESGCapDetailsPage: React.FC = () => {
             setIsSubmitting(false);
         }
     };
+
+
 
     if (loading) {
         return <UnifiedSidebarLayout><Loader2 /> </UnifiedSidebarLayout>;
@@ -330,7 +348,7 @@ const ESGCapDetailsPage: React.FC = () => {
                         </Link>
                         <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
                             <div>
-                                <h1 className="text-3xl font-bold tracking-tight">{capItem?.issue}</h1>
+                                <h5 className="text-3xl font-bold tracking-tight">{capItem?.item}</h5>
                                 {/* <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{capItem?.description}</p> */}
                                 <div className="mt-4 flex flex-wrap items-center gap-2">
                                     <MetaPill label={capItem.dealCondition} tone="slate" />
@@ -523,7 +541,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                                 <CheckCircle2 className="h-4 w-4" />
                                             </span>
                                             <div>
-                                                <div className="text-sm font-semibold">{current.label}</div>
+                                                <div className="text-sm font-semibold">Under Review</div>
                                                 <div className="text-xs text-muted-foreground">{current.date}</div>
                                             </div>
                                         </div>
@@ -614,10 +632,22 @@ const ESGCapDetailsPage: React.FC = () => {
                         </div>
                         <Separator className="my-6" />
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                            <Field label="Submission Date" value="Jul 12, 2026" />
-                            <Field label="Target Date" value={capItem?.targetDate ? new Date(capItem.targetDate).toLocaleDateString() : 'Pending'} />
-                            <Field label="Actual Completion" value={capItem?.actualDate ? new Date(capItem.actualDate).toLocaleDateString() : 'Pending'} />
-                            <Field label="Last Review Date" value={capItem?.lastReviewDate ? new Date(capItem.lastReviewDate).toLocaleDateString() : 'Pending'} />
+                            <Field label="Submission Date" value="12 Jul 2026" />
+                            <Field label="Target Date" value={capItem?.targetDate ? new Date(capItem.targetDate).toLocaleDateString('en-GB', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                            }) : 'Pending'} />
+                            <Field label="Actual Completion" value={capItem?.actualDate ? new Date(capItem.targetDate).toLocaleDateString('en-GB', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                            }) : 'Pending'} />
+                            <Field label="Last Review Date" value={capItem?.lastReviewDate ? new Date(capItem.targetDate).toLocaleDateString('en-GB', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                            }) : 'Pending'} />
                             <Field label="Closure Verified By" value={capItem?.closureVerifiedBy || 'Pending'} />
                         </div>
                     </SectionCard>
@@ -693,9 +723,16 @@ const ESGCapDetailsPage: React.FC = () => {
                                                         )}
                                                     </td>
                                                     <td className="px-4 py-3 text-right">
-                                                        <Button variant="ghost" size="sm" onClick={() => window.open(file.s3Link, '_blank')}>
+                                                        {/* <Button variant="ghost" size="sm" onClick={() => window.open(file.s3Link, '_blank')}>
                                                             <Eye className="h-4 w-4" />
-                                                        </Button>
+                                                        </Button> */}
+                                                        <Button
+    variant="ghost"
+    size="sm"
+    onClick={() => handleViewDocument(file)}
+>
+    <Eye className="h-4 w-4" />
+</Button>
                                                         <Button variant="ghost" size="sm" onClick={() => {
                                                             const link = document.createElement('a');
                                                             link.href = file.s3Link;

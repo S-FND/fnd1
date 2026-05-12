@@ -94,7 +94,12 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
           <PriorityBadge priority={item.priority} />
         </TableCell>
 
-        <TableCell style={{ padding: "0.3rem" }}>{item.targetDate ? new Date(item.targetDate).toLocaleDateString() : '-'}</TableCell>
+        <TableCell style={{ padding: "0.3rem" }}>{item.targetDate ? new Date(item.actualDate).toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        })
+          : '-'}</TableCell>
 
         {/* Issue column with expand/collapse */}
         {/* <TableCell className="font-medium" style={{ padding: "0.3rem" }}>
@@ -135,7 +140,12 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
           <StatusBadge status={effectiveStatus} />
         </TableCell>
 
-        <TableCell style={{ padding: "0.3rem" }}>{item.actualDate ? new Date(item.actualDate).toLocaleDateString() : '-'}</TableCell>
+        <TableCell style={{ padding: "0.3rem" }}>{item.actualDate ? new Date(item.actualDate).toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        })
+          : '-'}</TableCell>
 
         {/* Progress Percentage */}
         {/* <TableCell className="font-medium" style={{ padding: "0.3rem" }}>{item.progressPercentage ? `${item.progressPercentage}%` : '-'}</TableCell> */}
@@ -236,13 +246,23 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
       <TableCell style={{ padding: "0.3rem" }}>{item.timelineMonth || '-'}</TableCell>
 
       {/* 11. Target Date */}
-      <TableCell style={{ padding: "0.3rem" }}>{item.targetDate ? new Date(item.targetDate).toLocaleDateString() : '-'}</TableCell>
+      <TableCell style={{ padding: "0.3rem" }}>{item.targetDate ? new Date(item.actualDate).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })
+        : '-'}</TableCell>
 
       {/* 11.1 Progress Percentage */}
       <TableCell style={{ padding: "0.3rem" }}>{item.progressPercentage ? `${item.progressPercentage}%` : '-'}</TableCell>
 
       {/* 12. Actual Date */}
-      <TableCell style={{ padding: "0.3rem" }}>{item.actualDate ? new Date(item.actualDate).toLocaleDateString() : '-'}</TableCell>
+      <TableCell style={{ padding: "0.3rem" }}>{item.actualDate ? new Date(item.actualDate).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })
+        : '-'}</TableCell>
 
       {/* 13. CP/CS */}
       <TableCell style={{ padding: "0.3rem" }}>
@@ -289,7 +309,12 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
       </TableCell>
 
       {/* 17. Last Review Date */}
-      <TableCell style={{ padding: "0.3rem" }}>{item.lastReviewDate ? new Date(item.lastReviewDate).toLocaleDateString() : '-'}</TableCell>
+      <TableCell style={{ padding: "0.3rem" }}>{item.lastReviewDate ? new Date(item.actualDate).toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })
+        : '-'}</TableCell>
 
       {/* 18. Implementation Support Needed */}
       <TableCell style={{ padding: "0.3rem" }}>
