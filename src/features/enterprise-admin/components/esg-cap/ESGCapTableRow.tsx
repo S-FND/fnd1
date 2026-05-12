@@ -33,7 +33,7 @@ const truncateText = (text: string, length = 50) =>
 
 
 
-export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onUpdate,buttonEnabled,setReloadData, compact = false, finalPlan }) => {
+export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onUpdate, buttonEnabled, setReloadData, compact = false, finalPlan }) => {
   const effectiveStatus = getEffectiveStatus(item);
   const [showFullItem, setShowFullItem] = useState(false);
   const [showFullIssue, setShowFullIssue] = useState(false);
@@ -49,11 +49,37 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
   const [showFullClosureVerified, setShowFullClosureVerified] = useState(false);
   const [showFullRemarks, setShowFullRemarks] = useState(false);
 
+  // Helper function
+  const isOverdue = (item: ESGCapItem) => {
+    if (!item.targetDate) return false;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const targetDate = new Date(item.targetDate);
+    targetDate.setHours(0, 0, 0, 0);
+
+    return (
+      targetDate < today &&
+      item.status !== "completed" &&
+      !item.actualDate
+    );
+  };
+
+  const rowClassName = `
+  transition-colors
+  ${effectiveStatus === "completed"
+      ? "bg-gray-300 text-gray-500"
+      : isOverdue(item)
+        ? "text-red-700"
+        : ""
+    }
+`;
   if (compact) {
     return (
-      <TableRow>
+      <TableRow className={rowClassName}>
         <TableCell className="text-center font-medium" style={{ padding: "0.3rem" }}>{index + 1}</TableCell>
-        
+
         {/* Item column with expand/collapse */}
         <TableCell className="font-medium" style={{ padding: "0.3rem" }}>
           {showFullItem ? item.item : truncateText(item.item, 50)}
@@ -63,17 +89,23 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
             </button>
           )}
         </TableCell>
-        
+
+        <TableCell style={{ padding: "0.3rem" }}>
+          <PriorityBadge priority={item.priority} />
+        </TableCell>
+
+        <TableCell style={{ padding: "0.3rem" }}>{item.targetDate ? new Date(item.targetDate).toLocaleDateString() : '-'}</TableCell>
+
         {/* Issue column with expand/collapse */}
-        <TableCell className="font-medium" style={{ padding: "0.3rem" }}>
+        {/* <TableCell className="font-medium" style={{ padding: "0.3rem" }}>
           {showFullIssue ? item.issue : truncateText(item.issue, 50)}
           {item.issue && item.issue.length > 50 && (
             <button onClick={() => setShowFullIssue(!showFullIssue)} className="ml-2 text-blue-600 underline text-xs">
               {showFullIssue ? "View less" : "View full"}
             </button>
           )}
-        </TableCell>
-        
+        </TableCell> */}
+
         {/* Measures column with expand/collapse
         <TableCell>
           {showFullMeasures ? item.measures : truncateText(item.measures, 50)}
@@ -85,21 +117,32 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
         </TableCell> */}
 
         {/* Measures column with expand/collapse */}
-        <TableCell className="font-medium" style={{ padding: "0.3rem" }}>
+        {/* <TableCell className="font-medium" style={{ padding: "0.3rem" }}>
           {showFullDeliverable ? item.deliverable : truncateText(item.deliverable, 50)}
           {item.deliverable && item.deliverable.length > 50 && (
             <button onClick={() => setShowFullDeliverable(!showFullMeasures)} className="ml-2 text-blue-600 underline text-xs">
               {showFullMeasures ? "View less" : "View full"}
             </button>
           )}
+        </TableCell> */}
+
+        {/*  Status */}
+        <TableCell style={{ padding: "0.3rem" }}>
+          <StatusBadge status={effectiveStatus} />
         </TableCell>
-        
+        {/* Investor  Status */}
+        <TableCell style={{ padding: "0.3rem" }}>
+          <StatusBadge status={effectiveStatus} />
+        </TableCell>
+
+        <TableCell style={{ padding: "0.3rem" }}>{item.actualDate ? new Date(item.actualDate).toLocaleDateString() : '-'}</TableCell>
+
         {/* Progress Percentage */}
-        <TableCell className="font-medium" style={{ padding: "0.3rem" }}>{item.progressPercentage ? `${item.progressPercentage}%` : '-'}</TableCell>
-        
+        {/* <TableCell className="font-medium" style={{ padding: "0.3rem" }}>{item.progressPercentage ? `${item.progressPercentage}%` : '-'}</TableCell> */}
+
         {/* Actions */}
         <TableCell className="text-right" style={{ padding: "0.3rem" }}>
-          <ESGCapRowActions item={item} onUpdate={onUpdate || (() => {})} buttonEnabled={buttonEnabled} finalPlan={finalPlan}/>
+          <ESGCapRowActions item={item} onUpdate={onUpdate || (() => { })} buttonEnabled={buttonEnabled} finalPlan={finalPlan} />
         </TableCell>
       </TableRow>
     );
@@ -108,7 +151,7 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
   return (
     <TableRow>
       <TableCell className="text-center font-medium">{index + 1}</TableCell>
-      
+
       {/* 1. Item */}
       <TableCell className="font-medium" style={{ padding: "0.3rem" }}>
         {showFullItem ? item.item : truncateText(item.item, 50)}
@@ -118,17 +161,17 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
           </button>
         )}
       </TableCell>
-      
+
       {/* 2. Category */}
       <TableCell style={{ padding: "0.3rem" }}>
         <CategoryBadge category={item.category} />
       </TableCell>
-      
+
       {/* 3. Priority */}
       <TableCell style={{ padding: "0.3rem" }}>
         <PriorityBadge priority={item.priority} />
       </TableCell>
-      
+
       {/* 4. Issue */}
       <TableCell style={{ padding: "0.3rem" }}>
         {showFullIssue ? item.issue : truncateText(item.issue, 50)}
@@ -138,7 +181,7 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
           </button>
         )}
       </TableCell>
-      
+
       {/* 5. Related Finding */}
       <TableCell style={{ padding: "0.3rem" }}>
         {showFullRelatedFinding ? item.relatedFinding : truncateText(item.relatedFinding, 50)}
@@ -148,7 +191,7 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
           </button>
         )}
       </TableCell>
-      
+
       {/* 6. ESG Lever */}
       {/* <TableCell style={{ padding: "0.3rem" }}>
         {showFullEsgLever ? item.esgLever : truncateText(item.esgLever, 50)}
@@ -158,7 +201,7 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
           </button>
         )}
       </TableCell> */}
-      
+
       {/* 7. Measures */}
       <TableCell style={{ padding: "0.3rem" }}>
         {showFullMeasures ? item.measures : truncateText(item.measures, 50)}
@@ -168,7 +211,7 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
           </button>
         )}
       </TableCell>
-      
+
       {/* 8. Resource */}
       <TableCell style={{ padding: "0.3rem" }}>
         {showFullResource ? item.resource : truncateText(item.resource, 50)}
@@ -178,7 +221,7 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
           </button>
         )}
       </TableCell>
-      
+
       {/* 9. Deliverable */}
       <TableCell style={{ padding: "0.3rem" }}>
         {showFullDeliverable ? item.deliverable : truncateText(item.deliverable, 50)}
@@ -188,19 +231,19 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
           </button>
         )}
       </TableCell>
-      
+
       {/* 10. Timeline Month */}
       <TableCell style={{ padding: "0.3rem" }}>{item.timelineMonth || '-'}</TableCell>
-      
+
       {/* 11. Target Date */}
       <TableCell style={{ padding: "0.3rem" }}>{item.targetDate ? new Date(item.targetDate).toLocaleDateString() : '-'}</TableCell>
 
       {/* 11.1 Progress Percentage */}
       <TableCell style={{ padding: "0.3rem" }}>{item.progressPercentage ? `${item.progressPercentage}%` : '-'}</TableCell>
-      
+
       {/* 12. Actual Date */}
       <TableCell style={{ padding: "0.3rem" }}>{item.actualDate ? new Date(item.actualDate).toLocaleDateString() : '-'}</TableCell>
-      
+
       {/* 13. CP/CS */}
       <TableCell style={{ padding: "0.3rem" }}>
         {item.CS && item.CS !== 'none' && (
@@ -209,12 +252,12 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
           </Badge>
         )}
       </TableCell>
-      
+
       {/* 14. Status */}
       <TableCell style={{ padding: "0.3rem" }}>
         <StatusBadge status={effectiveStatus} />
       </TableCell>
-      
+
       {/* 15. Current Status Update */}
       <TableCell style={{ padding: "0.3rem" }}>
         {showFullStatusUpdate ? item.statusUpdate : truncateText(item.statusUpdate, 50)}
@@ -234,7 +277,7 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
           </button>
         )}
       </TableCell>
-      
+
       {/* 16. Review Remarks */}
       <TableCell style={{ padding: "0.3rem" }}>
         {showFullReviewRemarks ? item.reviewRemarks : truncateText(item.reviewRemarks, 50)}
@@ -244,10 +287,10 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
           </button>
         )}
       </TableCell>
-      
+
       {/* 17. Last Review Date */}
       <TableCell style={{ padding: "0.3rem" }}>{item.lastReviewDate ? new Date(item.lastReviewDate).toLocaleDateString() : '-'}</TableCell>
-      
+
       {/* 18. Implementation Support Needed */}
       <TableCell style={{ padding: "0.3rem" }}>
         {showFullImplementationSupport ? item.implementationSupportNeeded : truncateText(item.implementationSupportNeeded, 50)}
@@ -257,7 +300,7 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
           </button>
         )}
       </TableCell>
-      
+
       {/* 19. Closure Verified By */}
       <TableCell style={{ padding: "0.3rem" }}>
         {showFullClosureVerified ? item.closureVerifiedBy : truncateText(item.closureVerifiedBy, 50)}
@@ -267,10 +310,10 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
           </button>
         )}
       </TableCell>
-      
+
       {/* 20. Assigned To */}
       <TableCell style={{ padding: "0.3rem" }}>{item.assignedTo || '-'}</TableCell>
-      
+
       {/* 21. Remarks
       <TableCell style={{ padding: "0.3rem" }}>
         {showFullRemarks ? item.remarks : truncateText(item.remarks, 50)}
@@ -280,10 +323,10 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
           </button>
         )}
       </TableCell> */}
-      
+
       {/* Actions */}
       <TableCell className="text-right" style={{ padding: "0.3rem" }}>
-        <ESGCapRowActions item={item} onUpdate={onUpdate || (() => { })} buttonEnabled={buttonEnabled} setReloadData={setReloadData} finalPlan={finalPlan}/>
+        <ESGCapRowActions item={item} onUpdate={onUpdate || (() => { })} buttonEnabled={buttonEnabled} setReloadData={setReloadData} finalPlan={finalPlan} />
       </TableCell>
     </TableRow>
   );

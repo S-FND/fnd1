@@ -25,7 +25,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { MoreVertical, Upload, Download, FileText, CheckCircle2, X, Eye } from 'lucide-react';
+import { MoreVertical, Upload, Download, FileText, CheckCircle2, X, Eye,Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { DocumentUploadModal } from './DocumentUploadModal';
@@ -38,6 +38,7 @@ import { AiDialog } from '@/components/esg-cap/AiDialog';
 import { AiInsightsDialog } from './AiInsights';
 import { DocumentMultiTemplateModal } from './DocumentMultiTemplateModal';
 import DocumentSummaryDialog from './document-summary-review';
+import { Link } from 'react-router-dom';
 // import Loader from '@/components/ui/loader';
 
 interface ESGCapRowActionsProps {
@@ -165,7 +166,13 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
             Doc
           </Badge>
         )}
-        <TooltipProvider delayDuration={300}>
+        <Button asChild variant="default" size="sm">
+          <Link to={`/esg-dd/cap/${item?.reportId}?itemName=${encodeURIComponent(item?.item || "")}`} className="flex items-center gap-1">
+            <Pencil className="h-3.5 w-3.5" />
+            Update
+          </Link>
+        </Button>
+        {/* <TooltipProvider delayDuration={300}>
           <div className="flex gap-1.5">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -196,8 +203,8 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
               </TooltipContent>
             </Tooltip>
           </div>
-        </TooltipProvider>
-        {(import.meta.env.VITE_AI_ESGCAP_ENABLED || import.meta.env.VITE_AI_ESGCAP_ENABLED == 'true') && <TooltipProvider delayDuration={300}>
+        </TooltipProvider> */}
+        {/* {(import.meta.env.VITE_AI_ESGCAP_ENABLED || import.meta.env.VITE_AI_ESGCAP_ENABLED == 'true') && <TooltipProvider delayDuration={300}>
           <Tooltip>
             <TooltipTrigger asChild>
               <DropdownMenu>
@@ -208,10 +215,10 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  {/* <DropdownMenuItem onClick={() => setIsUploadOpen(true)}>
+                  <DropdownMenuItem onClick={() => setIsUploadOpen(true)}>
                     <Upload className="mr-2 h-4 w-4" />
                     Upload Document
-                  </DropdownMenuItem> */}
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleDownload}>
                     <Eye className="mr-2 h-4 w-4" />
@@ -222,10 +229,10 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
                     <Download className="mr-2 h-4 w-4" />
                     Download Template
                   </DropdownMenuItem>
-                  {/* {item.aiResponseRaw && <DropdownMenuItem onClick={() => { setIsViewAiOpen(true) }}>
+                  {item.aiResponseRaw && <DropdownMenuItem onClick={() => { setIsViewAiOpen(true) }}>
                     <Download className="mr-2 h-4 w-4" />
                     View AI Insights
-                  </DropdownMenuItem>} */}
+                  </DropdownMenuItem>}
                 </DropdownMenuContent>
               </DropdownMenu>
             </TooltipTrigger>
@@ -233,7 +240,7 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
               <p>More actions</p>
             </TooltipContent>
           </Tooltip>
-        </TooltipProvider>}
+        </TooltipProvider>} */}
       </div>
 
       {/* Review Dialog */}

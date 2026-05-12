@@ -30,10 +30,15 @@ export const ESGCapTableHeader: React.FC<any> = ({
       <TableHeader>
         <TableRow className="bg-[#f1f5f9]">
           <TableHead className="w-[60px] text-center !text-black">S. No</TableHead>
-          <TableHead className=" text-center !text-black">Item</TableHead>
-          <TableHead className=" text-center !text-black">Issue</TableHead>
-          <TableHead className=" text-center !text-black">Completion Indicator</TableHead>
-          <TableHead className=" text-center !text-black">Progress Percentage</TableHead>
+          <TableHead className=" text-center !text-black">Cap Item</TableHead>
+          <SortableHeader field="priority" title="Priority" />
+          <SortableHeader field="targetDate" title="Target Date" />
+          {/* <TableHead className=" text-center !text-black">Issue</TableHead> */}
+          {/* <TableHead className=" text-center !text-black">Completion Indicator</TableHead> */}
+          <TableHead className=" text-center !text-black">Company Status</TableHead>
+          <TableHead className=" text-center !text-black">Investor Status</TableHead>
+          <TableHead className=" text-center !text-black">Completed On</TableHead>
+          {/* <TableHead className=" text-center !text-black">Progress Percentage</TableHead> */}
           <TableHead className="text-center !text-black">Actions</TableHead>
           {/* <SortableHeader field="item" title="Item" />
           <SortableHeader field="issue" title="Issue" />
@@ -52,7 +57,7 @@ export const ESGCapTableHeader: React.FC<any> = ({
         <TableHead className="w-[60px] text-center !text-black">S. No</TableHead>
 
         {/* 1. Item */}
-        <TableHead className="cursor-pointer hover:bg-gray-200 !text-black min-w-[200px]">Item</TableHead>
+        <TableHead className="cursor-pointer hover:bg-gray-200 !text-black min-w-[200px]">Cap Item</TableHead>
 
         {/* 2. Category */}
         <TableHead className="cursor-pointer hover:bg-gray-200 !text-black">Category</TableHead>

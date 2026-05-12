@@ -30,6 +30,7 @@ import { logger } from '@/hooks/logger';
 import { PageAccessContext } from '@/context/PageAccessContext';
 import Loader from '@/components/ui/loader';
 import { set } from 'date-fns';
+import { ESGCapScoring } from '../components/esg-cap/ESGCapScoring';
 
 interface PlanHistory {
   updateByUserId: string;
@@ -142,7 +143,7 @@ const ComparePlanView = ({
       return dateString;
     }
   };
-  
+
   const ExpandableText = ({ text, length = 50 }: { text: string; length?: number }) => {
     const [expanded, setExpanded] = useState(false);
 
@@ -338,7 +339,7 @@ const ComparePlanView = ({
 };
 
 const ESGCapPage = () => {
-  const { isLoading } = useRouteProtection(['admin', 'manager','employee']);
+  const { isLoading } = useRouteProtection(['admin', 'manager', 'employee']);
   const { user, isAuthenticated, isAuthenticatedStatus } = useAuth();
   const [loading, setLoading] = useState(false);
   const [esgCap, setEsgCap] = useState<ESGCapData | null>(null);
@@ -350,9 +351,9 @@ const ESGCapPage = () => {
   );
   const [showComparisonView, setShowComparisonView] = useState(false);
   const [originalPlan, setOriginalPlan] = useState<ESGCapItem[]>([]);
-  const {checkPageButtonAccess}=useContext(PageAccessContext);
+  const { checkPageButtonAccess } = useContext(PageAccessContext);
   const [buttonEnabled, setButtonEnabled] = useState(false);
-  const [loadingMessage,setLoadingMessage]=useState("Loading ...")
+  const [loadingMessage, setLoadingMessage] = useState("Loading ...")
   const [reloadData, setReloadData] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ESGCapItem | null>(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
@@ -555,7 +556,7 @@ const ESGCapPage = () => {
 
   useEffect(() => {
     loadData();
-  }, [entityId,reloadData]);
+  }, [entityId, reloadData]);
 
   const alerts = useESGCAPAlerts(esgCap?.plan || [], originalPlan, esgCap?.finalPlan || false);
 
@@ -569,21 +570,62 @@ const ESGCapPage = () => {
     return matchesSearch && matchesStatus && matchesCategory;
   }) || [];
 
+  const isOverdue = (item: ESGCapItem) => {
+    if (!item.targetDate) return false;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const targetDate = new Date(item.targetDate);
+    targetDate.setHours(0, 0, 0, 0);
+
+    return (
+      targetDate < today &&
+      item.status !== "completed" &&
+      !item.actualDate
+    );
+  };
+  ;
+
   const sortedItems = [...filteredItems].sort((a, b) => {
+    // 1. overdue items on top
+    const aOverdue = isOverdue(a);
+    const bOverdue = isOverdue(b);
+
+    if (aOverdue && !bOverdue) return -1;
+    if (!aOverdue && bOverdue) return 1;
+
+    // 2. completed items at bottom
+    const aCompleted = a.status === "completed";
+    const bCompleted = b.status === "completed";
+
+    if (aCompleted && !bCompleted) return 1;
+    if (!aCompleted && bCompleted) return -1;
+
+    // 3. normal sorting
     if (!sortConfig) return 0;
 
-    if (sortConfig.key === 'targetDate' || sortConfig.key === 'createdAt' || sortConfig.key === 'actualDate') {
+    if (
+      sortConfig.key === "targetDate" ||
+      sortConfig.key === "createdAt" ||
+      sortConfig.key === "actualDate"
+    ) {
       const dateA = new Date(a[sortConfig.key] || 0).getTime();
       const dateB = new Date(b[sortConfig.key] || 0).getTime();
-      return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
+
+      return sortConfig.direction === "asc"
+        ? dateA - dateB
+        : dateB - dateA;
     }
 
     if (a[sortConfig.key] < b[sortConfig.key]) {
-      return sortConfig.direction === 'asc' ? -1 : 1;
+      return sortConfig.direction === "asc" ? -1 : 1;
     }
+
     if (a[sortConfig.key] > b[sortConfig.key]) {
-      return sortConfig.direction === 'asc' ? 1 : -1;
+      return sortConfig.direction === "asc" ? 1 : -1;
     }
+
     return 0;
   });
 
@@ -669,11 +711,25 @@ const ESGCapPage = () => {
   const handleUpdateItem = (updatedItem: ESGCapItem) => {
     setEsgCap(prev => {
       if (!prev) return prev;
+  
       return {
         ...prev,
-        plan: prev.plan.map(item =>
-          String(item.id) === String(updatedItem.id) ? updatedItem : item
-        )
+        plan: prev.plan.map((item, index) => {
+          // use id when available
+          if (item.id && updatedItem.id) {
+            return String(item.id) === String(updatedItem.id)
+              ? updatedItem
+              : item;
+          }
+  
+          // fallback unique comparison for items without id
+          const isSameItem =
+            item.item === updatedItem.item &&
+            item.CS === updatedItem.CS &&
+            item.measures === updatedItem.measures;
+  
+          return isSameItem ? updatedItem : item;
+        })
       };
     });
   };
@@ -696,20 +752,48 @@ const ESGCapPage = () => {
   const loggedInUser = getLoggedInUser();
   const isFiresideEmail = loggedInUser?.email?.endsWith('@fireside.com') ?? false;
 
+  const groupedItems = sortedItems.reduce(
+    (acc: Record<string, ESGCapItem[]>, item) => {
+      let groupKey = "Other Items";
+
+      if (item.CS === "CP") {
+        groupKey = "CP – Conditions Precedent";
+      } else if (item.CS === "CS") {
+        groupKey = "CS – Conditions Subsequent";
+      } else if (item.CS === "ESG_FORWARD_AREAS") {
+        groupKey = "ESG Forward Areas";
+      }
+
+      if (!acc[groupKey]) {
+        acc[groupKey] = [];
+      }
+
+      acc[groupKey].push(item);
+
+      return acc;
+    },
+    {
+      "CP – Conditions Precedent": [],
+      "CS – Conditions Subsequent": [],
+      "ESG Forward Areas": [],
+      "Other Items": [],
+    }
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <Loader show={loading} text={loadingMessage} />
       <UnifiedSidebarLayout>
         <Card className="shadow-lg border-0">
-        {!isFiresideEmail && (
-          <CardHeader className="border-b">
-            <CardDescription className="text-sm">
-              <h1 className="text-3xl font-bold tracking-tight">ESG Corrective Action Plan</h1>
-              <p className="mt-1">
-                Track and manage corrective actions from ESG due diligence assessments.
-              </p>
-            </CardDescription>
-          </CardHeader>
+          {!isFiresideEmail && (
+            <CardHeader className="border-b">
+              <CardDescription className="text-sm">
+                <h1 className="text-3xl font-bold tracking-tight">ESG Corrective Action Plan</h1>
+                <p className="mt-1">
+                  Track and manage corrective actions from ESG due diligence assessments.
+                </p>
+              </CardDescription>
+            </CardHeader>
           )}
           <CardContent className="p-6">
             {/* Filters Section */}
@@ -738,36 +822,74 @@ const ESGCapPage = () => {
               </div>
             )}
 
-              <div className="border rounded-lg overflow-hidden">
-                <div className="overflow-x-auto">
-                  {showComparisonView ? (
-                    <ComparePlanView
-                      currentPlan={esgCap?.plan || []}
-                      originalPlan={originalPlan}
-                      onRevertItem={handleRevertItem}
-                      onRevertField={handleRevertField}
-                      showComparisonView={showComparisonView}
-                    />
-                  ) : (
-                    <ESGCapTable
-                      sortedItems={sortedItems}
-                      sortConfig={sortConfig}
-                      requestSort={requestSort}
-                      onItemUpdate={handleUpdateItem}
-                      buttonEnabled={buttonEnabled}
-                      setReloadData={setReloadData}
-                      finalPlan={isPlanFinalized}
-                    />
-                  )}
-                </div>
+            {sortedItems.length > 0 && (
+              <div className="mt-6">
+                <ESGCapScoring items={sortedItems} />
               </div>
+            )}
+            <div className="space-y-6">
+              {Object.entries(groupedItems)
+                .filter(([_, items]) => items.length > 0)
+                .map(([groupName, items]) => (
+                  <div
+                    key={groupName}
+                    className="border rounded-lg overflow-hidden bg-white"
+                  >
+                    <div className="px-4 py-3 border-b bg-slate-50">
+                      <h2 className="text-lg font-semibold text-slate-800">
+                        {groupName}
+                      </h2>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      {showComparisonView ? (
+                        <ComparePlanView
+                          currentPlan={items}
+                          originalPlan={originalPlan.filter(original => {
+                            if (groupName === "CP – Conditions Precedent") {
+                              return original.CS === "CP";
+                            }
+
+                            if (groupName === "CS – Conditions Subsequent") {
+                              return original.CS === "CS";
+                            }
+
+                            if (groupName === "Roadmap Items") {
+                              return original.CS === "Roadmap";
+                            }
+
+                            return (
+                              original.CS !== "CP" &&
+                              original.CS !== "CS" &&
+                              original.CS !== "Roadmap"
+                            );
+                          })}
+                          onRevertItem={handleRevertItem}
+                          onRevertField={handleRevertField}
+                          showComparisonView={showComparisonView}
+                        />
+                      ) : (
+                        <ESGCapTable
+                          sortedItems={items}
+                          sortConfig={sortConfig}
+                          requestSort={requestSort}
+                          onItemUpdate={handleUpdateItem}
+                          buttonEnabled={buttonEnabled}
+                          // setReloadKey={setReloadKey}
+                          finalPlan={isPlanFinalized}
+                        />
+                      )}
+                    </div>
+                  </div>
+                ))}
+            </div>
 
             {/* Action Buttons */}
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
               <Button
                 variant="outline"
                 onClick={() => handleAction('requestChange')}
-                disabled={shouldDisableRequestButton()} 
+                disabled={shouldDisableRequestButton()}
                 className="hover:bg-amber-50"
               >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}

@@ -19,7 +19,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items }) => {
   // Calculate total weightage
   const totalItems = items.length;
   const baseWeight = totalItems > 0 ? 100 / totalItems : 0;
-  
+
   const totalWeightage = items.reduce((sum, item) => {
     // Handle case sensitivity - convert to proper case
     const priority = item.priority || 'Medium'; // Default to Medium if undefined
@@ -46,6 +46,39 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items }) => {
     return acc;
   }, {} as Record<string, number>);
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const oneMonthLater = new Date();
+  oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+  oneMonthLater.setHours(0, 0, 0, 0);
+
+  const completedCount = items.filter(
+    (item) => item.status === "completed"
+  ).length;
+
+  const overdueCount = items.filter((item) => {
+    if (!item.targetDate || item.status === "completed") return false;
+
+    const targetDate = new Date(item.targetDate);
+    targetDate.setHours(0, 0, 0, 0);
+
+    return targetDate < today;
+  }).length;
+
+  const dueSoonCount = items.filter((item) => {
+    if (!item.targetDate || item.status === "completed") return false;
+
+    const targetDate = new Date(item.targetDate);
+    targetDate.setHours(0, 0, 0, 0);
+
+    return targetDate >= today && targetDate <= oneMonthLater;
+  }).length;
+
+  const pendingCount = items.filter(
+    (item) => item.status === "pending"
+  ).length;
+
   return (
     <Card className="mt-6">
       <CardContent className="pt-6">
@@ -56,31 +89,44 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items }) => {
               {progressPercentage.toFixed(1)}%
             </div>
           </div>
-          
+
           <Progress value={progressPercentage} className="w-full h-3" />
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
             <div className="text-center p-3 bg-muted/50 rounded-lg">
               <div className="font-semibold text-lg">{totalItems}</div>
-              <div className="text-muted-foreground">Total Items</div>
+              <div className="text-muted-foreground">Total</div>
             </div>
-            
+
             <div className="text-center p-3 bg-green-50 rounded-lg">
-              <div className="font-semibold text-lg text-green-700">{statusCounts.completed || 0}</div>
+              <div className="font-semibold text-lg text-green-700">
+                {completedCount}
+              </div>
               <div className="text-green-600">Completed</div>
             </div>
-            
+
             <div className="text-center p-3 bg-blue-50 rounded-lg">
-              <div className="font-semibold text-lg text-blue-700">{statusCounts.in_progress || 0}</div>
-              <div className="text-blue-600">In Progress</div>
+              <div className="font-semibold text-lg text-blue-700">
+                {dueSoonCount}
+              </div>
+              <div className="text-blue-600">Due in &lt; 1 Month</div>
             </div>
-            
+
+            <div className="text-center p-3 bg-red-50 rounded-lg">
+              <div className="font-semibold text-lg text-red-700">
+                {overdueCount}
+              </div>
+              <div className="text-red-600">Overdue</div>
+            </div>
+
             <div className="text-center p-3 bg-amber-50 rounded-lg">
-              <div className="font-semibold text-lg text-amber-700">{statusCounts.pending || 0}</div>
+              <div className="font-semibold text-lg text-amber-700">
+                {pendingCount}
+              </div>
               <div className="text-amber-600">Pending</div>
             </div>
           </div>
-          
+
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>Weighted Score: {completedWeightage.toFixed(1)} / {totalWeightage.toFixed(1)}</span>
             <span>Progress: {progressPercentage.toFixed(1)}% Complete</span>

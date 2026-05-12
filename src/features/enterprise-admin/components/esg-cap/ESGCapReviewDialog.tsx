@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,10 +26,14 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
   buttonEnabled,
   finalPlan
 }) => {
-  const [formData, setFormData] = useState<any>(item);
+  const [formData, setFormData] = useState<any>({ ...item });
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setFormData(JSON.parse(JSON.stringify(item)));
+  }, [item, isOpen]);
 
   const isAccepted = finalPlan ?? false;
 
@@ -286,7 +290,7 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
                   <SelectContent>
                     <SelectItem value="CP">CP</SelectItem>
                     <SelectItem value="CS">CS</SelectItem>
-                    <SelectItem value="ESG Forward areas">ESG Forward areas</SelectItem>
+                    <SelectItem value="ESG_FORWARD_AREAS">ESG Forward areas</SelectItem>
                     <SelectItem value="none">None</SelectItem>
                   </SelectContent>
                 </Select>
