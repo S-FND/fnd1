@@ -22,6 +22,7 @@ import {
     UserPlus,
     ClipboardCheck,
     Loader2,
+    Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -77,7 +78,7 @@ const SectionCard: React.FC<{
                 ? 'bg-slate-700 text-white'
                 : 'bg-card text-foreground border-b';
 
-               
+
     return (
         <section className="rounded-2xl border bg-card shadow-sm overflow-hidden">
             <header className={cn('flex items-center justify-between px-6 py-4', headerClass)}>
@@ -177,6 +178,8 @@ const ESGCapDetailsPage: React.FC = () => {
                 setFullPlan(data.plan || []);
                 setCapItem(matchedItem || null);
                 setAssigneeText(matchedItem?.assignedTo || '');
+                setChangeNote(matchedItem?.changeNote || '');
+                setUpdateText(matchedItem?.UpdateNote || '');
             } else {
                 toast.error("Failed to load ESG CAP data");
             }
@@ -187,7 +190,7 @@ const ESGCapDetailsPage: React.FC = () => {
             setLoading(false);
         }
     };
-
+    console.log('setCapItem===========>', capItem);
     useEffect(() => {
         loadData();
     }, [id, itemName]);
@@ -201,6 +204,12 @@ const ESGCapDetailsPage: React.FC = () => {
     const [uploadModalOpen, setUploadModalOpen] = useState(false);
     const [fullPlan, setFullPlan] = useState<any[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [deleting, setDeleting] = useState<string | null>(null);
+    const [uploadDocumentType, setUploadDocumentType] = useState<string | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<{
+        file: any;
+        idx: number;
+    } | null>(null);
     const [completion, setCompletion] = useState<Record<string, boolean>>({
         'Consolidated Annual Return Copy': true,
         'Factory License': true,
@@ -246,7 +255,7 @@ const ESGCapDetailsPage: React.FC = () => {
             const getSignedUrl: any = await httpClient.get(
                 `esgdd/escap/uploaded/evidence-files/signed-urls?key=${file.filename}`
             );
-    
+
             if (getSignedUrl.status === 200) {
                 window.open(getSignedUrl.data.signedUrl, '_blank');
             }
@@ -270,7 +279,7 @@ const ESGCapDetailsPage: React.FC = () => {
                         return {
                             ...item,
                             assignedTo: assigneeText?.trim(),
-                            investorStatusUpdate: updateText?.trim(),
+                            UpdateNote: updateText?.trim(),
                             changeNote: changeNote?.trim(),
                             comment: 'Change-Request',
                         };
@@ -301,7 +310,8 @@ const ESGCapDetailsPage: React.FC = () => {
                         ? {
                             ...item,
                             assignedTo: assigneeText?.trim(),
-                            investorStatusUpdate: updateText?.trim(),
+                            UpdateNote: updateText?.trim(),
+                            comment: 'Plan-Update',
                         }
                         : item
                 );
@@ -332,7 +342,50 @@ const ESGCapDetailsPage: React.FC = () => {
         }
     };
 
+    const handleDeleteDocument = (file: any, idx: number) => {
+        setConfirmDelete({
+            file,
+            idx,
+        });
+    };
 
+    const handleDeleteConfirmed = async () => {
+        if (!confirmDelete) return;
+
+        const { file } = confirmDelete;
+
+        try {
+            setDeleting(file.filename);
+
+            const queryParams = new URLSearchParams({
+                fileName: file.filename,
+                actionItemId: file.aiSummary?.actionItemId || '',
+                validationDocId: file.aiSummary?._id || '',
+            }).toString();
+
+            await httpClient.delete(
+                `esgdd/escap/delete-file-esgcap?${queryParams}`
+            );
+
+            toast.success('Document deleted');
+
+            setCapItem((prev: any) => ({
+                ...prev,
+                fileUploadedData:
+                    prev?.fileUploadedData?.filter(
+                        (f: any) => f.filename !== file.filename
+                    ) || [],
+            }));
+
+            setConfirmDelete(null);
+
+        } catch (error: any) {
+            console.error(error);
+            toast.error('Failed to delete document');
+        } finally {
+            setDeleting(null);
+        }
+    };
 
     if (loading) {
         return <UnifiedSidebarLayout><Loader2 /> </UnifiedSidebarLayout>;
@@ -437,6 +490,34 @@ const ESGCapDetailsPage: React.FC = () => {
                                 </div>
                             </div>
 
+                            {/* Update Notes (only if exists) */}
+                            {capItem?.UpdateNote && capItem?.comment === 'Plan-Update' && (
+                                <div className="rounded-xl border bg-muted/30 p-5">
+                                    <div className="grid gap-5 lg:grid-cols-[260px_1fr] lg:items-start">
+                                        <div>
+                                            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                                <FileText className="h-4 w-4 text-[#1E3A8A]" /> Update Notes
+                                            </div>
+                                            <p className="mt-1 text-xs text-muted-foreground">
+                                                Operational updates recorded for this CAP item
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <div className="flex min-h-[48px] flex-wrap items-center gap-2 rounded-lg border bg-card p-2">
+                                                <Textarea
+                                                    disabled
+                                                    value={updateText}
+                                                    onChange={(e) => setUpdateText(e.target.value)}
+                                                    className="min-h-[100px] bg-transparent border-0 focus-visible:ring-0"
+                                                    placeholder="Update notes..."
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* Assigned To */}
                             <div className="rounded-xl border bg-muted/30 p-5">
                                 <div className="grid gap-5 lg:grid-cols-[260px_1fr] lg:items-start">
@@ -466,9 +547,22 @@ const ESGCapDetailsPage: React.FC = () => {
                                 <div className="flex items-start justify-between gap-4">
                                     <div>
                                         <div className="text-sm font-semibold text-foreground">Request Change</div>
-                                        <p className="mt-1 text-xs text-muted-foreground">
-                                            Triggers reviewer feedback workflow without modifying structured CAP fields
-                                        </p>
+                                        {capItem?.comment === 'Change-Request' && (
+                                            <div className="mt-2 space-y-2">
+                                                <Badge
+                                                    variant="outline"
+                                                    className="border-amber-300 bg-amber-50 text-amber-700"
+                                                >
+                                                    Change Requested
+                                                </Badge>
+
+                                                <p className="text-xs text-muted-foreground">
+                                                    {capItem?.changeNote ||
+                                                        'Triggers reviewer feedback workflow without modifying structured CAP fields'}
+                                                </p>
+                                            </div>
+                                        )}
+
                                     </div>
                                     <Switch checked={requestChange} onCheckedChange={(v) => setRequestChange(!!v)} />
                                 </div>
@@ -500,7 +594,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                     (requestChange && changeNote.trim().length > 0) ||
                                     assigneeChanged;
 
-                                if (!hasChanges) return null;
+                                // if (!hasChanges) return null;
 
                                 return (
                                     <div className="flex items-center justify-between gap-3 rounded-xl border border-[#1E3A8A]/20 bg-[#1E3A8A]/5 p-4">
@@ -648,14 +742,15 @@ const ESGCapDetailsPage: React.FC = () => {
                                 month: 'short',
                                 year: 'numeric',
                             }) : 'Pending'} />
-                            <Field label="Closure Verified By" value={capItem?.closureVerifiedBy || 'Pending'} />
+                            <Field label="Closure Verified By" value={capItem?.closureVerifiedBy || 'Upcoming'} />
                         </div>
                     </SectionCard>
 
                     {/* Attachments & Evidence (Modal) */}
                     <Dialog open={attachmentsOpen} onOpenChange={setAttachmentsOpen}>
-                        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
-                            <DialogHeader>
+                        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
+                            <DialogHeader className="flex justify-center items-center">
+                            <div className="w-fit">
                                 <Button
                                     size="lg"
                                     onClick={() => setUploadModalOpen(true)}
@@ -663,6 +758,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                 >
                                     <Upload className="h-4 w-4" /> Upload Document
                                 </Button>
+                                </div>
                             </DialogHeader>
 
                             {/* {attachmentsMode === 'upload' && (
@@ -685,7 +781,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                             <th className="px-4 py-3 text-left font-medium">Date</th>
                                             <th className="px-4 py-3 text-left font-medium">Size</th>
                                             <th className="px-4 py-3 text-left font-medium">Status</th>
-                                            <th className="px-4 py-3 text-right font-medium">Actions</th>
+                                            <th className="px-4 py-3 text-center font-medium">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -727,12 +823,12 @@ const ESGCapDetailsPage: React.FC = () => {
                                                             <Eye className="h-4 w-4" />
                                                         </Button> */}
                                                         <Button
-    variant="ghost"
-    size="sm"
-    onClick={() => handleViewDocument(file)}
->
-    <Eye className="h-4 w-4" />
-</Button>
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => handleViewDocument(file)}
+                                                        >
+                                                            <Eye className="h-4 w-4" />
+                                                        </Button>
                                                         <Button variant="ghost" size="sm" onClick={() => {
                                                             const link = document.createElement('a');
                                                             link.href = file.s3Link;
@@ -740,6 +836,19 @@ const ESGCapDetailsPage: React.FC = () => {
                                                             link.click();
                                                         }}>
                                                             <Download className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="text-red-600 hover:text-red-700"
+                                                            disabled={deleting === file.filename}
+                                                            onClick={() => handleDeleteDocument(file, idx)}
+                                                        >
+                                                            {deleting === file.filename ? (
+                                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                            ) : (
+                                                                <Trash2 className="h-4 w-4" />
+                                                            )}
                                                         </Button>
                                                     </td>
                                                 </tr>
@@ -789,6 +898,35 @@ const ESGCapDetailsPage: React.FC = () => {
                 itemSourceType={capItem.sourceType || ""}
                 setReloadData={(reload) => reload && loadData()}
             />
+
+            {/* Custom Delete Confirmation Modal */}
+            {confirmDelete && (
+                <Dialog open={!!confirmDelete} onOpenChange={(open) => !open && setConfirmDelete(null)}>
+                    <DialogContent className="max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Confirm Delete</DialogTitle>
+                        </DialogHeader>
+
+                        <p className="text-sm text-gray-600">
+                            Are you sure you want to delete{" "}
+                            <strong>{confirmDelete?.file.filename}</strong>?
+                        </p>
+
+                        <div className="flex justify-end gap-3 mt-4">
+                            <Button variant="outline" onClick={() => setConfirmDelete(null)}>
+                                Cancel
+                            </Button>
+
+                            <Button
+                                variant="destructive"
+                                onClick={handleDeleteConfirmed}
+                            >
+                                Delete Permanently
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+            )}
         </UnifiedSidebarLayout>
     );
 };

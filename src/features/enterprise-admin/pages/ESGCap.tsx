@@ -357,6 +357,18 @@ const ESGCapPage = () => {
   const [reloadData, setReloadData] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ESGCapItem | null>(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
+    new Set(["CP – Conditions Precedent", "CS – Conditions Subsequent", "ESG Roadmap", "Other Items"])
+  );
+
+  const toggleGroup = (groupName: string) => {
+    setCollapsedGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupName)) newSet.delete(groupName);
+      else newSet.add(groupName);
+      return newSet;
+    });
+  };
 
   useEffect(() => {
     const userData = localStorage.getItem('fandoro-user');
@@ -711,7 +723,7 @@ const ESGCapPage = () => {
   const handleUpdateItem = (updatedItem: ESGCapItem) => {
     setEsgCap(prev => {
       if (!prev) return prev;
-  
+
       return {
         ...prev,
         plan: prev.plan.map((item, index) => {
@@ -721,13 +733,13 @@ const ESGCapPage = () => {
               ? updatedItem
               : item;
           }
-  
+
           // fallback unique comparison for items without id
           const isSameItem =
             item.item === updatedItem.item &&
             item.CS === updatedItem.CS &&
             item.measures === updatedItem.measures;
-  
+
           return isSameItem ? updatedItem : item;
         })
       };
@@ -761,7 +773,7 @@ const ESGCapPage = () => {
       } else if (item.CS === "CS") {
         groupKey = "CS – Conditions Subsequent";
       } else if (item.CS === "ESG_FORWARD_AREAS") {
-        groupKey = "ESG Forward Areas";
+        groupKey = "ESG Roadmap";
       }
 
       if (!acc[groupKey]) {
@@ -775,7 +787,7 @@ const ESGCapPage = () => {
     {
       "CP – Conditions Precedent": [],
       "CS – Conditions Subsequent": [],
-      "ESG Forward Areas": [],
+      "ESG Roadmap": [],
       "Other Items": [],
     }
   );
@@ -823,65 +835,55 @@ const ESGCapPage = () => {
             )}
 
             {sortedItems.length > 0 && (
-              <div className="mt-6">
+              <div className="mt-6 py-4">
                 <ESGCapScoring items={sortedItems} />
               </div>
             )}
             <div className="space-y-6">
               {Object.entries(groupedItems)
                 .filter(([_, items]) => items.length > 0)
-                .map(([groupName, items]) => (
-                  <div
-                    key={groupName}
-                    className="border rounded-lg overflow-hidden bg-white"
-                  >
-                    <div className="px-4 py-3 border-b bg-slate-50">
-                      <h2 className="text-lg font-semibold text-slate-800">
-                        {groupName}
-                      </h2>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                      {showComparisonView ? (
-                        <ComparePlanView
-                          currentPlan={items}
-                          originalPlan={originalPlan.filter(original => {
-                            if (groupName === "CP – Conditions Precedent") {
-                              return original.CS === "CP";
-                            }
-
-                            if (groupName === "CS – Conditions Subsequent") {
-                              return original.CS === "CS";
-                            }
-
-                            if (groupName === "Roadmap Items") {
-                              return original.CS === "Roadmap";
-                            }
-
-                            return (
-                              original.CS !== "CP" &&
-                              original.CS !== "CS" &&
-                              original.CS !== "Roadmap"
-                            );
-                          })}
-                          onRevertItem={handleRevertItem}
-                          onRevertField={handleRevertField}
-                          showComparisonView={showComparisonView}
-                        />
-                      ) : (
-                        <ESGCapTable
-                          sortedItems={items}
-                          sortConfig={sortConfig}
-                          requestSort={requestSort}
-                          onItemUpdate={handleUpdateItem}
-                          buttonEnabled={buttonEnabled}
-                          // setReloadKey={setReloadKey}
-                          finalPlan={isPlanFinalized}
-                        />
+                .map(([groupName, items]) => {
+                  const isCollapsed = collapsedGroups.has(groupName);
+                  return (
+                    <div key={groupName} className="border rounded-lg overflow-hidden bg-white">
+                      <div
+                        className="px-4 py-3 border-b bg-slate-50 cursor-pointer flex justify-between items-center hover:bg-slate-100"
+                        onClick={() => toggleGroup(groupName)}
+                      >
+                        <h2 className="text-lg font-semibold text-slate-800">{groupName}</h2>
+                        <span className="text-slate-500">{isCollapsed ? '▼' : '▶'}</span>
+                      </div>
+                      {/* Content - only shown when expanded */}
+                      {!isCollapsed && (
+                        <div className="overflow-x-auto">
+                          {showComparisonView ? (
+                            <ComparePlanView
+                              currentPlan={items}
+                              originalPlan={originalPlan.filter(original => {
+                                if (groupName === "CP – Conditions Precedent") return original.CS === "CP";
+                                if (groupName === "CS – Conditions Subsequent") return original.CS === "CS";
+                                if (groupName === "ESG Roadmap") return original.CS === "ESG_FORWARD_AREAS";
+                                return original.CS !== "CP" && original.CS !== "CS" && original.CS !== "Roadmap";
+                              })}
+                              onRevertItem={handleRevertItem}
+                              onRevertField={handleRevertField}
+                              showComparisonView={showComparisonView}
+                            />
+                          ) : (
+                            <ESGCapTable
+                              sortedItems={items}
+                              sortConfig={sortConfig}
+                              requestSort={requestSort}
+                              onItemUpdate={handleUpdateItem}
+                              buttonEnabled={buttonEnabled}
+                              finalPlan={isPlanFinalized}
+                            />
+                          )}
+                        </div>
                       )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
             </div>
 
             {/* Action Buttons */}

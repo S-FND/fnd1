@@ -24,7 +24,7 @@ interface DocumentUploadModalProps {
   itemResource?: string;
   itemSourceType?: string;
   setReloadData?: (reload: boolean) => void;
-
+  documentType?: string; 
   // onUploadSuccess: () => void;
 }
 
@@ -100,7 +100,8 @@ export const DocumentUploadModal = ({
   itemPolicy,
   itemResource,
   itemSourceType,
-  setReloadData
+  setReloadData,
+  documentType
   // onUploadSuccess 
 }: DocumentUploadModalProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -245,10 +246,10 @@ export const DocumentUploadModal = ({
     }
 
     // Validate document first
-    // if (!validationResult) {
-    //   await validateDocument(selectedFile);
-    //   return;
-    // }
+    if (!validationResult) {
+      await validateDocument(selectedFile);
+      return;
+    }
 
     // Show warning if validation failed but allow upload
     // if (!validationResult.valid || validationResult.confidence < 70) {
@@ -289,6 +290,7 @@ export const DocumentUploadModal = ({
       formData.append("itemPolicy", itemPolicy);
       formData.append("itemResource", itemResource || '');
       formData.append("itemSourceType", itemSourceType || '');
+      if (documentType) formData.append("documentType", documentType);
       let uploadRes = await httpClient.post<ValidationResult>('esgdd/escap/upload-file/esgcap', formData);
 
       if (uploadRes.status !== 201) {
@@ -379,13 +381,13 @@ export const DocumentUploadModal = ({
             )}
 
             {/* ✅ VALIDATION RESULT */}
-            {/* {validationResult && (
-              <div className="space-y-4"> */}
+            {validationResult && (
+              <div className="space-y-4">
 
                 {/* STATUS */}
-                {/* <div className={`p-4 rounded-md border ${validationResult.valid
-                  ? "bg-green-50 border-green-200"
-                  : "bg-red-50 border-red-200"
+                <div className={`p-4 rounded-md border ${validationResult.valid
+                    ? "bg-green-50 border-green-200"
+                    : "bg-red-50 border-red-200"
                   }`}>
                   <div className="flex items-center gap-2 mb-2">
                     {validationResult.valid ? (
@@ -403,10 +405,10 @@ export const DocumentUploadModal = ({
                     <p><strong>Improvement Needed:</strong> {validationResult.improvementPercentage}%</p>
                     <p><strong>Confidence:</strong> {validationResult.confidence}%</p>
                   </div>
-                </div> */}
+                </div>
 
                 {/* SCORE */}
-                {/* <div className="p-3 border rounded-md">
+                <div className="p-3 border rounded-md">
                   <p className="text-sm font-medium mb-2">Score Breakdown</p>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     {Object.entries(validationResult.scores).map(([key, value]) => (
@@ -416,10 +418,10 @@ export const DocumentUploadModal = ({
                       </div>
                     ))}
                   </div>
-                </div> */}
+                </div>
 
                 {/* MISSING */}
-                {/* {validationResult.missingSections?.length > 0 && (
+                {validationResult.missingSections?.length > 0 && (
                   <div>
                     <p className="text-sm font-medium mb-2 text-red-600">
                       Missing Sections
@@ -432,10 +434,10 @@ export const DocumentUploadModal = ({
                       ))}
                     </div>
                   </div>
-                )} */}
+                )}
 
                 {/* ISSUES */}
-                {/* {validationResult.issues?.length > 0 && (
+                {validationResult.issues?.length > 0 && (
                   <div>
                     <p className="text-sm font-medium mb-2">Issues</p>
                     <ul className="text-xs list-disc pl-5 space-y-1">
@@ -444,10 +446,10 @@ export const DocumentUploadModal = ({
                       ))}
                     </ul>
                   </div>
-                )} */}
+                )}
 
                 {/* IMPROVEMENTS */}
-                {/* {validationResult.suggestedImprovements?.length > 0 && (
+                {validationResult.suggestedImprovements?.length > 0 && (
                   <div>
                     <p className="text-sm font-medium mb-2">Suggested Improvements</p>
                     <div className="space-y-2">
@@ -458,10 +460,10 @@ export const DocumentUploadModal = ({
                               {item.section.replace(/_/g, " ")}
                             </span>
                             <span className={`text-[10px] px-2 py-0.5 rounded ${item.priority === "high"
-                              ? "bg-red-100 text-red-700"
-                              : item.priority === "medium"
-                                ? "bg-yellow-100 text-yellow-700"
-                                : "bg-gray-100 text-gray-700"
+                                ? "bg-red-100 text-red-700"
+                                : item.priority === "medium"
+                                  ? "bg-yellow-100 text-yellow-700"
+                                  : "bg-gray-100 text-gray-700"
                               }`}>
                               {item.priority}
                             </span>
@@ -473,16 +475,16 @@ export const DocumentUploadModal = ({
                       ))}
                     </div>
                   </div>
-                )} */}
+                )}
 
                 {/* SUMMARY */}
-                {/* {validationResult.summary && (
+                {validationResult.summary && (
                   <div className="p-3 bg-muted rounded-md text-xs">
                     <strong>Summary:</strong> {validationResult.summary}
                   </div>
                 )}
               </div>
-            )} */}
+            )}
 
           </div>
 
@@ -500,7 +502,7 @@ export const DocumentUploadModal = ({
               Cancel
             </Button>
 
-            {/* {validationResult && (
+            {validationResult && (
               <Button
                 variant="outline"
                 onClick={() => {
@@ -514,9 +516,9 @@ export const DocumentUploadModal = ({
               >
                 Re-validate
               </Button>
-            )} */}
+            )}
 
-            {/* <Button
+            <Button
               onClick={handleUpload}
               disabled={!selectedFile || uploading || validating}
               className="flex-1"
@@ -528,14 +530,6 @@ export const DocumentUploadModal = ({
                   : validationResult
                     ? "Upload Document"
                     : "Validate Document"}
-            </Button> */}
-
-            <Button
-              onClick={handleUpload}
-              disabled={!selectedFile || uploading}
-              className="flex-1"
-            >
-              {uploading ? "Uploading..." : "Upload Document"}
             </Button>
           </div>
 

@@ -30,7 +30,7 @@ export const ESGCapTableHeader: React.FC<any> = ({
       <TableHeader>
         <TableRow className="bg-[#f1f5f9]">
           <TableHead className="w-[60px] text-center !text-black">S. No</TableHead>
-          <TableHead className=" text-center !text-black">Cap Item</TableHead>
+          <TableHead className=" text-center !text-black">CAP Item</TableHead>
           <SortableHeader field="priority" title="Priority" />
           <SortableHeader field="targetDate" title="Target Date" />
           {/* <TableHead className=" text-center !text-black">Issue</TableHead> */}
