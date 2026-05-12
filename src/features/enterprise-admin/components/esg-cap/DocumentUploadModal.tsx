@@ -110,7 +110,7 @@ export const DocumentUploadModal = ({
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [needsAuth, setNeedsAuth] = useState(false);
-
+console.log('documentType---------->',documentType);
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -291,13 +291,14 @@ export const DocumentUploadModal = ({
       formData.append("itemResource", itemResource || '');
       formData.append("itemSourceType", itemSourceType || '');
       if (documentType) formData.append("documentType", documentType);
+      console.log('formData------->',formData);
       let uploadRes = await httpClient.post<ValidationResult>('esgdd/escap/upload-file/esgcap', formData);
 
       if (uploadRes.status !== 201) {
         throw new Error("Upload failed");
       }
       toast.success("Document uploaded successfully");
-      window.location.reload();
+      // window.location.reload();
       // Save document record to database
       // const { error: dbError } = await supabase
       //   .from('compliance_documents')

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useParams, Navigate, useSearchParams } from 'react-router-dom';
 import {
     ArrowLeft,
@@ -206,6 +206,7 @@ const ESGCapDetailsPage: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [deleting, setDeleting] = useState<string | null>(null);
     const [uploadDocumentType, setUploadDocumentType] = useState<string | null>(null);
+    const selectedIndicatorRef = useRef<string | null>(null);
     const [confirmDelete, setConfirmDelete] = useState<{
         file: any;
         idx: number;
@@ -386,6 +387,12 @@ const ESGCapDetailsPage: React.FC = () => {
             setDeleting(null);
         }
     };
+
+    const hasDocumentForIndicator = (indicatorLabel: string) => {
+        return capItem?.fileUploadedData?.some(
+          (file: any) => file.documentType === indicatorLabel
+        );
+      };
 
     if (loading) {
         return <UnifiedSidebarLayout><Loader2 /> </UnifiedSidebarLayout>;
@@ -681,23 +688,46 @@ const ESGCapDetailsPage: React.FC = () => {
                             <div>
                                 <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Completion Indicators</div>
                                 <ul className="mt-4 space-y-3">
-                                    <ul className="mt-4 space-y-3">
-                                        {(capItem?.deliverable
-                                            ? capItem.deliverable.includes("##")
-                                                ? capItem.deliverable.split("##")
-                                                : [capItem.deliverable]
-                                            : []
-                                        )
-                                            .filter(Boolean)
-                                            .map((label: string) => (
-                                                <li
-                                                    key={label}
-                                                    className="flex items-center justify-between rounded-lg border bg-card p-3"
-                                                >
-                                                    <span className="text-sm">{label}</span>
-                                                </li>
-                                            ))}
-                                    </ul>
+                                <ul className="mt-4 space-y-3">
+  {(capItem?.deliverable
+    ? capItem.deliverable.includes("##")
+      ? capItem.deliverable.split("##").filter(Boolean)
+      : [capItem.deliverable].filter(Boolean)
+    : []
+  ).map((label: string) => {
+    const hasDoc = hasDocumentForIndicator(label);
+    return (
+      <li
+        key={label}
+        className="flex items-center justify-between rounded-lg border bg-card p-3"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-sm">{label}</span>
+          {hasDoc && (
+            <Badge variant="outline" className="border-emerald-500 bg-emerald-50 text-emerald-700">
+              <CheckCircle2 className="h-3 w-3 mr-1" /> Document Uploaded
+            </Badge>
+          )}
+        </div>
+        {/* Optional: add a "View" button that opens the document */}
+        {hasDoc && (
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              const file = capItem.fileUploadedData.find(
+                (f: any) => f.documentType === label
+              );
+              if (file) handleViewDocument(file);
+            }}
+          >
+            <Eye className="h-3 w-3" />
+          </Button>
+        )}
+      </li>
+    );
+  })}
+</ul>
                                 </ul>
                             </div>
                             <div>
@@ -749,29 +779,40 @@ const ESGCapDetailsPage: React.FC = () => {
                     {/* Attachments & Evidence (Modal) */}
                     <Dialog open={attachmentsOpen} onOpenChange={setAttachmentsOpen}>
                         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
-                            <DialogHeader className="flex justify-center items-center">
-                            <div className="w-fit">
-                                <Button
-                                    size="lg"
-                                    onClick={() => setUploadModalOpen(true)}
-                                    className="h-11 rounded-xl bg-emerald-600 text-white ..."
-                                >
-                                    <Upload className="h-4 w-4" /> Upload Document
-                                </Button>
-                                </div>
+                            <DialogHeader>
+                                <DialogTitle>Attachments & Evidence</DialogTitle>
                             </DialogHeader>
 
-                            {/* {attachmentsMode === 'upload' && (
-                                <div className="rounded-xl border-2 border-dashed bg-muted/30 p-8 text-center">
-                                    <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-                                    <p className="mt-2 text-sm font-medium">Drag & drop files to upload</p>
-                                    <p className="text-xs text-muted-foreground">PDF, DOCX, XLSX up to 20MB</p>
-                                    <Button className="mt-4" variant="outline" onClick={() => toast.success('File picker opened')}>
-                                        Browse Files
-                                    </Button>
+                            {/* Completion Indicators list with per‑indicator Upload button */}
+                            <div className="mb-6">
+                                <h3 className="text-sm font-semibold mb-2">Completion Indicators</h3>
+                                <div className="space-y-2">
+                                    {(capItem?.deliverable
+                                        ? capItem.deliverable.includes("##")
+                                            ? capItem.deliverable.split("##").filter(Boolean)
+                                            : [capItem.deliverable].filter(Boolean)
+                                        : []
+                                    ).map((label: string) => (
+                                        <div key={label} className="flex items-center justify-between rounded-lg border p-3">
+                                            <span className="text-sm">{label}</span>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => {
+                                                    selectedIndicatorRef.current = label;
+                                                    setUploadModalOpen(true);
+                                                }}
+                                            >
+                                                <Upload className="h-3 w-3 mr-1" /> Upload
+                                            </Button>
+                                        </div>
+                                    ))}
                                 </div>
-                            )} */}
+                            </div>
 
+                            <Separator className="my-4" />
+
+                            {/* Uploaded files table (existing code, unchanged) */}
                             <div className="overflow-hidden rounded-lg border">
                                 <table className="w-full text-sm">
                                     <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
@@ -887,7 +928,10 @@ const ESGCapDetailsPage: React.FC = () => {
             </div>
             <DocumentUploadModal
                 open={uploadModalOpen}
-                onOpenChange={setUploadModalOpen}
+                onOpenChange={(open) => {
+                    setUploadModalOpen(open);
+                    if (!open) setUploadDocumentType(null);
+                }}
                 checklistItemId={capItem._id}
                 itemTitle={capItem.item || capItem.issue}
                 itemDescription={capItem.measures || ""}
@@ -897,6 +941,7 @@ const ESGCapDetailsPage: React.FC = () => {
                 itemResource={capItem.resource}
                 itemSourceType={capItem.sourceType || ""}
                 setReloadData={(reload) => reload && loadData()}
+                documentType={selectedIndicatorRef.current}
             />
 
             {/* Custom Delete Confirmation Modal */}
