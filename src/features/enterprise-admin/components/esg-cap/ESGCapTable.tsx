@@ -276,7 +276,7 @@ ${formattedItems}
   return (
     <div className="space-y-6">
       {/* Toggle Button */}
-      <div className="flex items-center gap-2 my-1 ml-2">
+      {/* <div className="flex items-center gap-2 my-1 ml-2">
           <Button
             variant={showFullColumns ? "default" : "outline"}
             size="sm"
@@ -285,7 +285,7 @@ ${formattedItems}
             <Columns className="h-4 w-4 mr-2" />
             {showFullColumns ? "Show Compact View" : "Show All Columns"}
           </Button>
-        </div>
+        </div> */}
       <div className="rounded-md border overflow-hidden">
         <Table>
           <ESGCapTableHeader
