@@ -390,10 +390,10 @@ const ESGCapDetailsPage: React.FC = () => {
 
     const hasDocumentForIndicator = (indicatorLabel: string) => {
         return capItem?.fileUploadedData?.some(
-          (file: any) => file.documentType === indicatorLabel
+            (file: any) => file.documentType === indicatorLabel
         );
-      };
-
+    };
+    console.log('capItem___________', capItem);
     if (loading) {
         return <UnifiedSidebarLayout><Loader2 /> </UnifiedSidebarLayout>;
     }
@@ -642,33 +642,47 @@ const ESGCapDetailsPage: React.FC = () => {
                                                 <CheckCircle2 className="h-4 w-4" />
                                             </span>
                                             <div>
-                                                <div className="text-sm font-semibold">Under Review</div>
-                                                <div className="text-xs text-muted-foreground">{current.date}</div>
+                                                <div className="text-sm font-semibold">{capItem?.investorStatus}</div>
+                                                {/* <div className="text-xs text-muted-foreground">{capItem?.lastReviewDate}</div> */}
                                             </div>
                                         </div>
                                     );
                                 })()}
                             </div>
                             <div>
-                                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Review Comment</div>
+                                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Review Comment
+                                </div>
+
                                 <div className="mt-4">
-                                    {(() => {
-                                        const c = comments[comments.length - 1];
-                                        return (
-                                            <div className="flex gap-3">
-                                                <Avatar className="h-9 w-9">
-                                                    <AvatarFallback>{c.name.split(' ').map((n) => n[0]).join('')}</AvatarFallback>
-                                                </Avatar>
-                                                <div className="flex-1 rounded-lg border bg-muted/30 p-3">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="text-sm font-medium">{c.name} <span className="text-xs font-normal text-muted-foreground">· {c.role}</span></div>
-                                                        <div className="text-xs text-muted-foreground">{c.time}</div>
-                                                    </div>
-                                                    <p className="mt-1 text-sm text-foreground/90">{c.text}</p>
+                                    <div className="flex gap-3">
+                                        <Avatar className="h-9 w-9">
+                                            <AvatarFallback>
+                                                {(capItem?.assignedTo || "NA")
+                                                    .split(" ")
+                                                    .map((n) => n[0])
+                                                    .join("")}
+                                            </AvatarFallback>
+                                        </Avatar>
+
+                                        <div className="flex-1 rounded-lg border bg-muted/30 p-3">
+                                            <div className="flex items-center justify-between">
+                                                <div className="text-sm font-medium">
+                                                    {capItem?.assignedTo || "N/A"}
+                                                </div>
+
+                                                <div className="text-xs text-muted-foreground">
+                                                    {capItem?.lastReviewDate
+                                                        ? new Date(capItem.lastReviewDate).toLocaleDateString()
+                                                        : "-"}
                                                 </div>
                                             </div>
-                                        );
-                                    })()}
+
+                                            <p className="mt-1 text-sm text-foreground/90">
+                                                {capItem?.reviewRemarks || "No review remarks available"}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -688,46 +702,46 @@ const ESGCapDetailsPage: React.FC = () => {
                             <div>
                                 <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Completion Indicators</div>
                                 <ul className="mt-4 space-y-3">
-                                <ul className="mt-4 space-y-3">
-  {(capItem?.deliverable
-    ? capItem.deliverable.includes("##")
-      ? capItem.deliverable.split("##").filter(Boolean)
-      : [capItem.deliverable].filter(Boolean)
-    : []
-  ).map((label: string) => {
-    const hasDoc = hasDocumentForIndicator(label);
-    return (
-      <li
-        key={label}
-        className="flex items-center justify-between rounded-lg border bg-card p-3"
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-sm">{label}</span>
-          {hasDoc && (
-            <Badge variant="outline" className="border-emerald-500 bg-emerald-50 text-emerald-700">
-              <CheckCircle2 className="h-3 w-3 mr-1" /> Document Uploaded
-            </Badge>
-          )}
-        </div>
-        {/* Optional: add a "View" button that opens the document */}
-        {hasDoc && (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              const file = capItem.fileUploadedData.find(
-                (f: any) => f.documentType === label
-              );
-              if (file) handleViewDocument(file);
-            }}
-          >
-            <Eye className="h-3 w-3" />
-          </Button>
-        )}
-      </li>
-    );
-  })}
-</ul>
+                                    <ul className="mt-4 space-y-3">
+                                        {(capItem?.deliverable
+                                            ? capItem.deliverable.includes("##")
+                                                ? capItem.deliverable.split("##").filter(Boolean)
+                                                : [capItem.deliverable].filter(Boolean)
+                                            : []
+                                        ).map((label: string) => {
+                                            const hasDoc = hasDocumentForIndicator(label);
+                                            return (
+                                                <li
+                                                    key={label}
+                                                    className="flex items-center justify-between rounded-lg border bg-card p-3"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm">{label}</span>
+                                                        {hasDoc && (
+                                                            <Badge variant="outline" className="border-emerald-500 bg-emerald-50 text-emerald-700">
+                                                                <CheckCircle2 className="h-3 w-3 mr-1" /> Document Uploaded
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                    {/* Optional: add a "View" button that opens the document */}
+                                                    {hasDoc && (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            onClick={() => {
+                                                                const file = capItem.fileUploadedData.find(
+                                                                    (f: any) => f.documentType === label
+                                                                );
+                                                                if (file) handleViewDocument(file);
+                                                            }}
+                                                        >
+                                                            <Eye className="h-3 w-3" />
+                                                        </Button>
+                                                    )}
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
                                 </ul>
                             </div>
                             <div>

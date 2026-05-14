@@ -9,74 +9,62 @@ interface ESGCapScoringProps {
 
 export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items }) => {
 
-  // Priority weightages - adjusted for actual priority values (capitalized)
+  // Priority weightages
   const priorityWeights = {
     High: 2,
     Medium: 1,
     Low: 0.5
   };
 
-  // Calculate total weightage
   const totalItems = items.length;
   const baseWeight = totalItems > 0 ? 100 / totalItems : 0;
 
   const totalWeightage = items.reduce((sum, item) => {
-    // Handle case sensitivity - convert to proper case
-    const priority = item.priority || 'Medium'; // Default to Medium if undefined
+    const priority = item.priority || 'Medium';
     const weight = priorityWeights[priority] || priorityWeights.Medium;
     return sum + (baseWeight * weight);
   }, 0);
 
-  // Calculate completed weightage
+  // ✅ Use investorStatus "Closed" for completed items
   const completedWeightage = items
-    .filter(item => item.status === 'completed')
+    .filter(item => item.investorStatus === 'Closed')
     .reduce((sum, item) => {
-      // Handle case sensitivity - convert to proper case
-      const priority = item.priority || 'Medium'; // Default to Medium if undefined
+      const priority = item.priority || 'Medium';
       const weight = priorityWeights[priority] || priorityWeights.Medium;
       return sum + (baseWeight * weight);
     }, 0);
 
-  // Calculate progress percentage
   const progressPercentage = totalWeightage > 0 ? (completedWeightage / totalWeightage) * 100 : 0;
 
-  // Status breakdown
+  // ✅ Status breakdown using new company statuses
   const statusCounts = items.reduce((acc, item) => {
     acc[item.status] = (acc[item.status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const oneMonthLater = new Date();
-  oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
-  oneMonthLater.setHours(0, 0, 0, 0);
-
+  // ✅ Count by new statuses
   const completedCount = items.filter(
-    (item) => item.status === "completed"
+    (item) => item.investorStatus === "Closed"
   ).length;
 
-  const overdueCount = items.filter((item) => {
-    if (!item.targetDate || item.status === "completed") return false;
+  const overdueCount = items.filter(
+    (item) => item.status === "overdue"
+  ).length;
 
-    const targetDate = new Date(item.targetDate);
-    targetDate.setHours(0, 0, 0, 0);
+  const dueSoonCount = items.filter(
+    (item) => item.status === "due in <1 month"
+  ).length;
 
-    return targetDate < today;
-  }).length;
+  const upcomingCount = items.filter(
+    (item) => item.status === "upcoming"
+  ).length;
 
-  const dueSoonCount = items.filter((item) => {
-    if (!item.targetDate || item.status === "completed") return false;
+  const submittedCount = items.filter(
+    (item) => item.status === "submitted"
+  ).length;
 
-    const targetDate = new Date(item.targetDate);
-    targetDate.setHours(0, 0, 0, 0);
-
-    return targetDate >= today && targetDate <= oneMonthLater;
-  }).length;
-
-  const pendingCount = items.filter(
-    (item) => item.status === "pending"
+  const resubmitCount = items.filter(
+    (item) => item.status === "request to re-submit"
   ).length;
 
   return (
@@ -92,7 +80,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items }) => {
 
           <Progress value={progressPercentage} className="w-full h-3" />
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-sm">
             <div className="text-center p-3 bg-muted/50 rounded-lg">
               <div className="font-semibold text-lg">{totalItems}</div>
               <div className="text-muted-foreground">Total</div>
@@ -102,14 +90,14 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items }) => {
               <div className="font-semibold text-lg text-green-700">
                 {completedCount}
               </div>
-              <div className="text-green-600">Completed</div>
+              <div className="text-green-600">Closed</div>
             </div>
 
-            <div className="text-center p-3 bg-blue-50 rounded-lg">
-              <div className="font-semibold text-lg text-blue-700">
+            <div className="text-center p-3 bg-orange-50 rounded-lg">
+              <div className="font-semibold text-lg text-orange-700">
                 {dueSoonCount}
               </div>
-              <div className="text-blue-600">Due in &lt; 1 Month</div>
+              <div className="text-orange-600">Due &lt;1 Month</div>
             </div>
 
             <div className="text-center p-3 bg-red-50 rounded-lg">
@@ -119,11 +107,18 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items }) => {
               <div className="text-red-600">Overdue</div>
             </div>
 
-            <div className="text-center p-3 bg-amber-50 rounded-lg">
-              <div className="font-semibold text-lg text-amber-700">
-                {pendingCount}
+            <div className="text-center p-3 bg-blue-50 rounded-lg">
+              <div className="font-semibold text-lg text-blue-700">
+                {submittedCount}
               </div>
-              <div className="text-amber-600">Pending</div>
+              <div className="text-blue-600">Submitted</div>
+            </div>
+
+            <div className="text-center p-3 bg-slate-50 rounded-lg">
+              <div className="font-semibold text-lg text-slate-700">
+                {upcomingCount}
+              </div>
+              <div className="text-slate-600">Upcoming</div>
             </div>
           </div>
 

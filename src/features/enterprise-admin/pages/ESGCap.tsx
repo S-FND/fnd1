@@ -424,7 +424,7 @@ const ESGCapPage = () => {
         toast.error("Failed to load ESG CAP data");
       }
     } catch (error) {
-      toast.error("Error loading CAP data");
+      // toast.error("Error loading CAP data");
       logger.error(error);
     } finally {
       setLoading(false);
@@ -593,7 +593,7 @@ const ESGCapPage = () => {
 
     return (
       targetDate < today &&
-      item.status !== "completed" &&
+      item.investorStatus !== "closed" &&
       !item.actualDate
     );
   };
@@ -608,8 +608,8 @@ const ESGCapPage = () => {
     if (!aOverdue && bOverdue) return 1;
 
     // 2. completed items at bottom
-    const aCompleted = a.status === "completed";
-    const bCompleted = b.status === "completed";
+    const aCompleted = a.investorStatus === "closed";
+    const bCompleted = b.investorStatus === "closed";
 
     if (aCompleted && !bCompleted) return 1;
     if (!aCompleted && bCompleted) return -1;
@@ -768,11 +768,11 @@ const ESGCapPage = () => {
     (acc: Record<string, ESGCapItem[]>, item) => {
       let groupKey = "Other Items";
 
-      if (item.CS === "CP") {
+      if (item.dealCondition === "CP") {
         groupKey = "CP – Conditions Precedent";
-      } else if (item.CS === "CS") {
+      } else if (item.dealCondition === "CS") {
         groupKey = "CS – Conditions Subsequent";
-      } else if (item.CS === "ESG_FORWARD_AREAS") {
+      } else if (item.dealCondition === "ESG_Roadmap") {
         groupKey = "ESG Roadmap";
       }
 
@@ -860,10 +860,10 @@ const ESGCapPage = () => {
                             <ComparePlanView
                               currentPlan={items}
                               originalPlan={originalPlan.filter(original => {
-                                if (groupName === "CP – Conditions Precedent") return original.CS === "CP";
-                                if (groupName === "CS – Conditions Subsequent") return original.CS === "CS";
-                                if (groupName === "ESG Roadmap") return original.CS === "ESG_FORWARD_AREAS";
-                                return original.CS !== "CP" && original.CS !== "CS" && original.CS !== "Roadmap";
+                                if (groupName === "CP – Conditions Precedent") return original.dealCondition === "CP";
+                                if (groupName === "CS – Conditions Subsequent") return original.dealCondition === "CS";
+                                if (groupName === "ESG Roadmap") return original.dealCondition === "ESG_Roadmap";
+                                return original.dealCondition !== "CP" && original.dealCondition !== "CS" && original.dealCondition !== "ESG_Roadmap";
                               })}
                               onRevertItem={handleRevertItem}
                               onRevertField={handleRevertField}
