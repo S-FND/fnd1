@@ -7,14 +7,30 @@ import { PriorityBadge } from './PriorityBadge';
 import { Badge } from '@/components/ui/badge';
 import { ESGCapRowActions } from './ESGCapRowActions';
 
-// Helper function to determine the effective status
+// ✅ Updated helper — returns proper status values
 const getEffectiveStatus = (item: ESGCapItem): ESGCapItem['status'] => {
-  const today = new Date();
-  const targetDate = new Date(item.targetDate);
+  if (!item.targetDate) return item.status;
 
-  if (targetDate < today && item.status !== 'completed' && !item.actualDate) {
-    return 'delayed';
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const targetDate = new Date(item.targetDate);
+  targetDate.setHours(0, 0, 0, 0);
+
+  // If past due and not closed by investor → overdue
+  if (targetDate < today && item.investorStatus !== 'Closed' && !item.actualDate) {
+    return 'overdue';
   }
+  
+  // If due within 1 month and not closed → due in <1 month
+  const oneMonthLater = new Date();
+  oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+  oneMonthLater.setHours(0, 0, 0, 0);
+  
+  if (targetDate >= today && targetDate <= oneMonthLater && item.investorStatus !== 'Closed' && !item.actualDate) {
+    return 'due in <1 month';
+  }
+
   return item.status;
 };
 
@@ -61,20 +77,62 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
 
     return (
       targetDate < today &&
-      item.status !== "completed" &&
+      item.investorStatus !== "Closed" &&  // ✅ Capital C
       !item.actualDate
     );
   };
 
   const rowClassName = `
   transition-colors
-  ${effectiveStatus === "completed"
+  ${item.investorStatus === "Closed"
       ? "bg-gray-300 text-gray-500"
       : isOverdue(item)
         ? "text-red-700"
         : ""
     }
 `;
+
+const parseDisplayDate = (dateStr: string | undefined): string => {
+  if (!dateStr || dateStr === '—' || dateStr === '-') return '-';
+  
+  // Already ISO format YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      const date = new Date(dateStr);
+      if (!isNaN(date.getTime())) {
+          return date.toLocaleDateString('en-GB', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+          });
+      }
+  }
+  
+  // DD-MMM-YY format (e.g., "30-Dec-23")
+  const months: Record<string, string> = {
+      'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04', 'may': '05', 'jun': '06',
+      'jul': '07', 'aug': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12'
+  };
+  const match = dateStr.match(/^(\d{1,2})-([a-zA-Z]{3})-(\d{2,4})$/);
+  if (match) {
+      const day = match[1].padStart(2, '0');
+      const month = months[match[2].toLowerCase()] || '01';
+      const year = match[3].length === 2 
+          ? (parseInt(match[3]) > 50 ? `19${match[3]}` : `20${match[3]}`) 
+          : match[3];
+      const isoDate = new Date(`${year}-${month}-${day}`);
+      if (!isNaN(isoDate.getTime())) {
+          return isoDate.toLocaleDateString('en-GB', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+          });
+      }
+  }
+  
+  return '-';
+};
+
+
   if (compact) {
     return (
       <TableRow className={rowClassName}>
@@ -94,13 +152,9 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
           <PriorityBadge priority={item.priority} />
         </TableCell>
 
-        <TableCell style={{ padding: "0.3rem" }}>{item.targetDate ? new Date(item.actualDate).toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        })
-          : '-'}</TableCell>
-
+        <TableCell style={{ padding: "0.3rem" }}>
+          {parseDisplayDate(item.targetDate)}
+        </TableCell>
         {/* Issue column with expand/collapse */}
         {/* <TableCell className="font-medium" style={{ padding: "0.3rem" }}>
           {showFullIssue ? item.issue : truncateText(item.issue, 50)}
@@ -132,12 +186,12 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
         </TableCell> */}
 
         {/*  Status */}
-        <TableCell style={{ padding: "0.3rem" }}>
-          <StatusBadge status={effectiveStatus} />
+        <TableCell>
+            {item.status ? <StatusBadge status={item.status} /> : '—'}
         </TableCell>
         {/* Investor  Status */}
         <TableCell style={{ padding: "0.3rem" }}>
-          <StatusBadge status={effectiveStatus} />
+            {item.investorStatus || '-'}
         </TableCell>
 
         <TableCell style={{ padding: "0.3rem" }}>{item.actualDate ? new Date(item.actualDate).toLocaleDateString('en-GB', {
