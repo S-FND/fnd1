@@ -61,6 +61,18 @@ const UnifiedSidebar: React.FC = () => {
     sdg: location.pathname.startsWith('/sdg'),
     audit: location.pathname.startsWith('/audit')
   });
+
+  useEffect(() => {
+    const path = location.pathname;
+    setExpandedMenus({
+        esgManagement: path === '/esg' || path.startsWith('/esg/'),
+        esgdd: path === '/esg-dd' || path.startsWith('/esg-dd/'),
+        reports: path.startsWith('/reports'),
+        stakeholders: path.startsWith('/stakeholders'),
+        sdg: path.startsWith('/sdg'),
+        audit: path.startsWith('/audit')
+    });
+}, [location.pathname]);
   
   // Save scroll position before menu toggle
   const toggleMenu = (menuKey: string) => {
