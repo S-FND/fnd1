@@ -887,7 +887,7 @@ const ESGCapPage = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+            {/* <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
               <Button
                 variant="outline"
                 onClick={() => handleAction('requestChange')}
@@ -905,7 +905,7 @@ const ESGCapPage = () => {
                 {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                 Accept CAP
               </Button>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
       </UnifiedSidebarLayout>

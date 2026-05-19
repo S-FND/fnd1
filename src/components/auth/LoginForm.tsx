@@ -54,8 +54,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword }) => {
       </div>
         <Input
           id="email"
-          type="email"
-          placeholder="example@company.com"
+          type="text"
+          placeholder="Enter email or company ID"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required

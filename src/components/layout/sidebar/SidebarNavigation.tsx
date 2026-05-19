@@ -35,7 +35,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
   const [visibleItems, setVisibleItems] = useState<any[]>([]);
   const [allowedUrlsList, setAllowedUrlsList] = useState<string[]>([]);
-  
+
   // ✅ NEW: Add state for sidebarHide settings
   const [sidebarHideMap, setSidebarHideMap] = useState<Record<string, boolean>>({});
 
@@ -65,24 +65,23 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   const shouldShowMenuItem = (featureName: string): boolean => {
     return sidebarHideMap[featureName] !== true;
   };
-console.log('shouldShowMenuItem',shouldShowMenuItem);
+  console.log('shouldShowMenuItem', shouldShowMenuItem);
   useEffect(() => {
     // ✅ NEW: Load sidebarHide settings
     const hideSettings = getSidebarHideSettings();
     setSidebarHideMap(hideSettings);
-    
+
     logger.debug("User role in SidebarNavigation:", userRole);
     let loggedInUser = localStorage.getItem('fandoro-user');
     let loggedInUserRole = loggedInUser ? JSON.parse(loggedInUser).role : null;
     logger.debug("🔵 SidebarNavigation: Logged in user role:", loggedInUserRole);
     logger.debug("🔵 SidebarNavigation: Page access list:", pageAccessList);
-    
+
     if (loggedInUserRole === 'admin') {
       logger.debug("🔵 SidebarNavigation: Admin user - filtering with sidebarHide");
-      
+
       // ✅ CHANGED: Filter admin menus by sidebarHide
       const allMenus = getNavigationItems('admin');
-      console.log('allMenus------>',allMenus);
       const filteredMenus = allMenus
         .map((menu) => {
           const shouldHideMenu = hideSettings[menu.name] === true;
@@ -95,16 +94,27 @@ console.log('shouldShowMenuItem',shouldShowMenuItem);
           if (menu.submenu?.length > 0) {
             filteredSubmenu = menu.submenu
               .map((sub) => {
-                if (hideSettings[sub.name] === true) {
+                // hide sidebar hidden items
+                if (
+                  hideSettings[sub.name] === true ||
+                  !sub.href ||
+                  sub.href === "#"
+                ) {
                   return null;
                 }
+
                 let filteredNestedSubmenu = [];
 
                 if (sub.submenu?.length > 0) {
                   filteredNestedSubmenu = sub.submenu.filter((nestedSub) => {
-                    return hideSettings[nestedSub.name] !== true;
+                    return (
+                      hideSettings[nestedSub.name] !== true &&
+                      nestedSub.href &&
+                      nestedSub.href !== "#"
+                    );
                   });
                 }
+
                 return {
                   ...sub,
                   submenu: filteredNestedSubmenu
@@ -119,7 +129,7 @@ console.log('shouldShowMenuItem',shouldShowMenuItem);
         })
         .filter(Boolean);
       setVisibleItems(filteredMenus);
-      console.log('filteredMenus=======',filteredMenus);
+      console.log('filteredMenus=======', filteredMenus);
     } else {
       // Filter based on permissions
       const allowedUrls = pageAccessList
@@ -127,16 +137,16 @@ console.log('shouldShowMenuItem',shouldShowMenuItem);
         .map((p: PageAccessItem) => p.url);
       logger.debug("🔵 SidebarNavigation: Allowed URLs from pageAccessList:", allowedUrls);
       setAllowedUrlsList(allowedUrls);
-      
+
       const filtered = getNavigationItems("all-access")
         .map((menu) => {
-          console.log('sssmenu------',menu);
+          console.log('sssmenu------', menu);
           // ✅ CHANGED: Check sidebarHide first
           if (hideSettings[menu.name] === true) {
             logger.debug(`Excluding ${menu.name} - sidebarHide is true`);
             return null;
           }
-          
+
           // Check if parent menu itself has permission
           const menuAllowed = allowedUrls.includes(menu.href);
 
@@ -185,9 +195,9 @@ console.log('shouldShowMenuItem',shouldShowMenuItem);
   useEffect(() => {
     logger.debug("🔵 SidebarNavigation: Expanded menus state changed:", expandedMenus);
   }, [expandedMenus]);
-  
+
   const safeVisibleItems = Array.isArray(visibleItems) ? visibleItems : [];
-console.log('safeVisibleItems',safeVisibleItems);
+  console.log('safeVisibleItems', safeVisibleItems);
   return (
     <SidebarGroup>
       <SidebarGroupContent>
@@ -195,7 +205,7 @@ console.log('safeVisibleItems',safeVisibleItems);
           {safeVisibleItems.map((item) => {
             const isActive = location.pathname === item.href ||
               (item.href !== '/' && location.pathname.startsWith(item.href));
-            
+
             // Handle special menu items with submenus
             if (item.name === 'ESG Management') {
               // ✅ CHANGED: Filter submenu items

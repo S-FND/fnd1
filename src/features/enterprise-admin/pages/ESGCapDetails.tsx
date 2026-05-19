@@ -657,30 +657,22 @@ const ESGCapDetailsPage: React.FC = () => {
                                 <div className="mt-4">
                                     <div className="flex gap-3">
                                         <Avatar className="h-9 w-9">
-                                            <AvatarFallback>
+                                            {/* <AvatarFallback>
                                                 {(capItem?.assignedTo || "NA")
                                                     .split(" ")
                                                     .map((n) => n[0])
                                                     .join("")}
-                                            </AvatarFallback>
+                                            </AvatarFallback> */}
                                         </Avatar>
 
                                         <div className="flex-1 rounded-lg border bg-muted/30 p-3">
                                             <div className="flex items-center justify-between">
-                                                <div className="text-sm font-medium">
-                                                    {capItem?.assignedTo || "N/A"}
-                                                </div>
-
                                                 <div className="text-xs text-muted-foreground">
-                                                    {capItem?.lastReviewDate
-                                                        ? new Date(capItem.lastReviewDate).toLocaleDateString()
-                                                        : "-"}
+                                                    <p className="mt-1 text-sm text-foreground/90">
+                                                        {capItem?.reviewRemarks || "No review remarks available"}
+                                                    </p>
                                                 </div>
                                             </div>
-
-                                            <p className="mt-1 text-sm text-foreground/90">
-                                                {capItem?.reviewRemarks || "No review remarks available"}
-                                            </p>
                                         </div>
                                     </div>
                                 </div>
