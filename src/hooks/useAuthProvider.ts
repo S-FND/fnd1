@@ -108,13 +108,29 @@ export const useAuthProvider = () => {
         }
       }
     }
+
+    const getLoggedInUser = () => {
+      const userStr = localStorage.getItem('fandoro-user');
+      if (!userStr) return null;
+      try {
+        return JSON.parse(userStr);
+      } catch {
+        return null;
+      }
+    };
+  
+    const loggedInUser = getLoggedInUser();
+    const isFiresideEmail = loggedInUser?.email?.endsWith('@fireside.com') ?? false;
     
     switch(role) {
       case "fandoro_admin":
         navigate("/fandoro-admin/dashboard");
         break;
       case "admin":
-        navigate(from || "/company"); 
+        navigate(
+          isFiresideEmail ? "/esg-dd/cap" : "/company",
+          { replace: true }
+        );
         break;
       case "manager":
         // Redirect admin and manager to settings by default

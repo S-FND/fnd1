@@ -65,7 +65,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   const shouldShowMenuItem = (featureName: string): boolean => {
     return sidebarHideMap[featureName] !== true;
   };
-  console.log('shouldShowMenuItem', shouldShowMenuItem);
+
   useEffect(() => {
     // ✅ NEW: Load sidebarHide settings
     const hideSettings = getSidebarHideSettings();
@@ -129,7 +129,6 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         })
         .filter(Boolean);
       setVisibleItems(filteredMenus);
-      console.log('filteredMenus=======', filteredMenus);
     } else {
       // Filter based on permissions
       const allowedUrls = pageAccessList
@@ -140,7 +139,6 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
       const filtered = getNavigationItems("all-access")
         .map((menu) => {
-          console.log('sssmenu------', menu);
           // ✅ CHANGED: Check sidebarHide first
           if (hideSettings[menu.name] === true) {
             logger.debug(`Excluding ${menu.name} - sidebarHide is true`);
@@ -197,7 +195,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   }, [expandedMenus]);
 
   const safeVisibleItems = Array.isArray(visibleItems) ? visibleItems : [];
-  console.log('safeVisibleItems', safeVisibleItems);
+  
   return (
     <SidebarGroup>
       <SidebarGroupContent>
@@ -222,7 +220,6 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             else if (item.name === 'ESG DD') {
               // ✅ CHANGED: Filter submenu items
               const filteredSubmenu = item.submenu?.filter((sub: any) => shouldShowMenuItem(sub.name)) || [];
-              console.log('filteredSubmenu', filteredSubmenu);
               return (
                 <ESGDDSubmenu
                   key={item.name}

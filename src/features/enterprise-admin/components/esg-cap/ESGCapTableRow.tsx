@@ -132,6 +132,18 @@ const parseDisplayDate = (dateStr: string | undefined): string => {
   return '-';
 };
 
+// Add this helper function inside the component or outside
+const getInvestorStatusBadge = (status: string) => {
+  const statusMap: Record<string, { label: string; variant: "outline" | "default" | "secondary" | "destructive"; className?: string }> = {
+    "under review": { label: "Under Review", variant: "secondary", className: "bg-yellow-100 text-yellow-800 border-yellow-300" },
+    "reviewed with comments": { label: "Reviewed with Comments", variant: "outline", className: "bg-blue-100 text-blue-800 border-blue-300" },
+    "closed": { label: "Closed", variant: "default", className: "bg-green-600 text-white" },
+    "deferred": { label: "Deferred", variant: "secondary", className: "bg-gray-200 text-gray-700 border-gray-300" }
+  };
+  const config = statusMap[status?.toLowerCase()] || { label: status || '-', variant: "outline", className: "bg-gray-100 text-gray-600" };
+  return <Badge variant={config.variant} className={config.className}>{config.label}</Badge>;
+};
+
 
   if (compact) {
     return (
@@ -139,7 +151,7 @@ const parseDisplayDate = (dateStr: string | undefined): string => {
         <TableCell className="text-center font-medium" style={{ padding: "0.3rem" }}>{index + 1}</TableCell>
 
         {/* Item column with expand/collapse */}
-        <TableCell className="font-medium" style={{ padding: "0.3rem" }}>
+        <TableCell className="font-medium text-left" style={{ padding: "0.3rem" }}>
           {showFullItem ? item.item : truncateText(item.item, 50)}
           {item.item && item.item.length > 50 && (
             <button onClick={() => setShowFullItem(!showFullItem)} className="ml-2 text-blue-600 underline text-xs">
@@ -191,7 +203,7 @@ const parseDisplayDate = (dateStr: string | undefined): string => {
         </TableCell>
         {/* Investor  Status */}
         <TableCell style={{ padding: "0.3rem" }}>
-            {item.investorStatus || '-'}
+          {item.investorStatus ? getInvestorStatusBadge(item.investorStatus) : '-'}
         </TableCell>
 
         <TableCell style={{ padding: "0.3rem" }}>{item.actualDate ? new Date(item.actualDate).toLocaleDateString('en-GB', {
