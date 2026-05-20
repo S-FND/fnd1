@@ -682,7 +682,7 @@ const ESGCapDetailsPage: React.FC = () => {
 
                     {/* Reference Details */}
                     <SectionCard title="Reference Details" subtitle="Finding context and corrective measures" icon={<Info className="h-4 w-4" />}>
-                        <div className="space-y-6">
+                        <div className="space-y-6 text-left">
                             <Field label="Issue & Related Finding" value={capItem?.issue} />
                             <Field label="Measures & Corrective Actions" value={capItem.measures} />
                         </div>
