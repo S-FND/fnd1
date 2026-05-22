@@ -280,8 +280,8 @@ const ESGCapDetailsPage: React.FC = () => {
 
                 const updatedPlan = fullPlan.map((item) => {
                     if (
-                        item.reportId === capItem.reportId &&
-                        item.item === capItem.item
+                        item.reportId === capItem?.reportId &&
+                        item.item === capItem?.item
                     ) {
                         return {
                             ...item,
@@ -312,8 +312,8 @@ const ESGCapDetailsPage: React.FC = () => {
             } else {
 
                 const updatedFullPlan = fullPlan.map((item) =>
-                    item.reportId === capItem.reportId &&
-                        item.item === capItem.item
+                    item.reportId === capItem?.reportId &&
+                        item.item === capItem?.item
                         ? {
                             ...item,
                             assignedTo: assigneeText?.trim(),
@@ -415,7 +415,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                 <h5 className="text-3xl font-bold tracking-tight">{capItem?.item}</h5>
                                 {/* <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{capItem?.description}</p> */}
                                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                                    <MetaPill label={capItem.dealCondition} tone="slate" />
+                                    <MetaPill label={capItem?.dealCondition} tone="slate" />
                                     <MetaPill label={`${capItem?.priority?.charAt(0)?.toUpperCase() + capItem?.priority?.slice(1)} Priority`} />
                                     <MetaPill label={`Due ${new Date(capItem?.targetDate).toLocaleDateString()}`} tone="blue" />
                                     <MetaPill label={capItem?.category?.charAt(0)?.toUpperCase() + capItem?.category?.slice(1)} />
@@ -695,7 +695,7 @@ const ESGCapDetailsPage: React.FC = () => {
                     <SectionCard title="Reference Details" subtitle="Finding context and corrective measures" icon={<Info className="h-4 w-4" />}>
                         <div className="space-y-6 text-left">
                             <Field label="Issue & Related Finding" value={capItem?.issue} />
-                            <Field label="Measures & Corrective Actions" value={capItem.measures} />
+                            <Field label="Measures & Corrective Actions" value={capItem?.measures} />
                         </div>
                     </SectionCard>
 
@@ -707,9 +707,9 @@ const ESGCapDetailsPage: React.FC = () => {
                                 <ul className="mt-4 space-y-3">
                                     <ul className="mt-4 space-y-3">
                                         {(capItem?.deliverable
-                                            ? capItem.deliverable.includes("##")
-                                                ? capItem.deliverable.split("##").filter(Boolean)
-                                                : [capItem.deliverable].filter(Boolean)
+                                            ? capItem?.deliverable.includes("##")
+                                                ? capItem?.deliverable.split("##").filter(Boolean)
+                                                : [capItem?.deliverable].filter(Boolean)
                                             : []
                                         ).map((label: string) => {
                                             const hasDoc = hasDocumentForIndicator(label);
@@ -732,7 +732,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                                             size="sm"
                                                             variant="ghost"
                                                             onClick={() => {
-                                                                const file = capItem.fileUploadedData.find(
+                                                                const file = capItem?.fileUploadedData.find(
                                                                     (f: any) => f.documentType === label
                                                                 );
                                                                 if (file) handleViewDocument(file);
@@ -754,9 +754,9 @@ const ESGCapDetailsPage: React.FC = () => {
 
                                 <ul className="mt-4 space-y-3">
                                     {(capItem?.resource
-                                        ? capItem.resource.includes("##")
-                                            ? capItem.resource.split("##")
-                                            : [capItem.resource]
+                                        ? capItem?.resource.includes("##")
+                                            ? capItem?.resource.split("##")
+                                            : [capItem?.resource]
                                         : []
                                     ).filter(Boolean).map((r: string) => (
                                         <div
@@ -774,17 +774,17 @@ const ESGCapDetailsPage: React.FC = () => {
                         <Separator className="my-6" />
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
                             <Field label="Submission Date" value="12 Jul 2026" />
-                            <Field label="Target Date" value={capItem?.targetDate ? new Date(capItem.targetDate).toLocaleDateString('en-GB', {
+                            <Field label="Target Date" value={capItem?.targetDate ? new Date(capItem?.targetDate).toLocaleDateString('en-GB', {
                                 day: '2-digit',
                                 month: 'short',
                                 year: 'numeric',
                             }) : 'Pending'} />
-                            <Field label="Actual Completion" value={capItem?.actualDate ? new Date(capItem.targetDate).toLocaleDateString('en-GB', {
+                            <Field label="Actual Completion" value={capItem?.actualDate ? new Date(capItem?.targetDate).toLocaleDateString('en-GB', {
                                 day: '2-digit',
                                 month: 'short',
                                 year: 'numeric',
                             }) : 'Pending'} />
-                            <Field label="Last Review Date" value={capItem?.lastReviewDate ? new Date(capItem.targetDate).toLocaleDateString('en-GB', {
+                            <Field label="Last Review Date" value={capItem?.lastReviewDate ? new Date(capItem?.targetDate).toLocaleDateString('en-GB', {
                                 day: '2-digit',
                                 month: 'short',
                                 year: 'numeric',
@@ -805,9 +805,9 @@ const ESGCapDetailsPage: React.FC = () => {
                                 <h3 className="text-sm font-semibold mb-2">Completion Indicators</h3>
                                 <div className="space-y-2">
                                     {(capItem?.deliverable
-                                        ? capItem.deliverable.includes("##")
-                                            ? capItem.deliverable.split("##").filter(Boolean)
-                                            : [capItem.deliverable].filter(Boolean)
+                                        ? capItem?.deliverable.includes("##")
+                                            ? capItem?.deliverable.split("##").filter(Boolean)
+                                            : [capItem?.deliverable].filter(Boolean)
                                         : []
                                     ).map((label: string) => {
                                         const response = indicatorResponse[label];
@@ -875,7 +875,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                                         {response === 'no' && (
                                                             <div className="flex flex-col gap-2">
                                                                 <Textarea
-                                                                    placeholder="Provide reason..."
+                                                                    placeholder="Provide Details..."
                                                                     value={indicatorNotes[label] || ''}
                                                                     onChange={(e) =>
                                                                         setIndicatorNotes((prev) => ({ ...prev, [label]: e.target.value }))
@@ -889,13 +889,13 @@ const ESGCapDetailsPage: React.FC = () => {
                                                                         try {
                                                                             // Build FormData without a file
                                                                             const formData = new FormData();
-                                                                            formData.append("itemTitle", capItem.item || capItem.issue);
-                                                                            formData.append("itemDescription", capItem.measures || "");
+                                                                            formData.append("itemTitle", capItem?.item || capItem?.issue);
+                                                                            formData.append("itemDescription", capItem?.measures || "");
                                                                             formData.append("itemTheme", "Policy");
-                                                                            formData.append("itemCategory", capItem.category);
-                                                                            formData.append("itemPolicy", capItem.deliverable || "");
-                                                                            formData.append("itemResource", capItem.resource || "");
-                                                                            formData.append("itemSourceType", capItem.sourceType || "");
+                                                                            formData.append("itemCategory", capItem?.category);
+                                                                            formData.append("itemPolicy", capItem?.deliverable || "");
+                                                                            formData.append("itemResource", capItem?.resource || "");
+                                                                            formData.append("itemSourceType", capItem?.sourceType || "");
                                                                             formData.append("indicatorLabel", label); // indicator label
                                                                             formData.append("indicatorResponse", "no");
                                                                             formData.append("indicatorNote", indicatorNotes[label] || "");
@@ -997,7 +997,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                                                     // Remember to reopen it later
                                                                     setReopenAttachments(true);
                                                                     // Prepare files and open summary dialog
-                                                                    const docsForSameIndicator = capItem.fileUploadedData.filter(
+                                                                    const docsForSameIndicator = capItem?.fileUploadedData.filter(
                                                                         (f: any) => f.indicatorLabel === file.indicatorLabel
                                                                     );
                                                                     setSelectedFiles(docsForSameIndicator.length ? docsForSameIndicator : [file]);
@@ -1080,14 +1080,14 @@ const ESGCapDetailsPage: React.FC = () => {
                         setCurrentIndicatorNote('');
                     }
                 }}
-                checklistItemId={capItem._id}
-                itemTitle={capItem.item || capItem.issue}
-                itemDescription={capItem.measures || ""}
+                checklistItemId={capItem?._id}
+                itemTitle={capItem?.item || capItem?.issue}
+                itemDescription={capItem?.measures || ""}
                 itemTheme="Policy"
-                itemCategory={capItem.category}
-                itemPolicy={capItem.deliverable || ""}
-                itemResource={capItem.resource}
-                itemSourceType={capItem.sourceType || ""}
+                itemCategory={capItem?.category}
+                itemPolicy={capItem?.deliverable || ""}
+                itemResource={capItem?.resource}
+                itemSourceType={capItem?.sourceType || ""}
                 setReloadData={(reload) => reload && loadData()}
                 indicatorLabel={selectedIndicatorRef.current}
             />

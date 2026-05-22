@@ -70,7 +70,6 @@ export default function DocumentSummaryDialog({
     file: typeof files[0];
     idx: number;
   } | null>(null);
-console.log('files--------->',files);
   useEffect(() => {
     if (open && files.length > 0) {
       const file = files[selectedIndex];
