@@ -104,7 +104,7 @@ function App() {
         <Route path="/company" element={<CompanyProfilePage />} />
         <Route path="/materiality" element={<MaterialityPage />} />
         <Route path="/esg/*" element={<ESGPage />} />
-        <Route path="/esg-dd" element={<ESGDDPage />} />
+        <Route path="/esg-dd/overview" element={<ESGDDPage />} />
         <Route path="/esg-dd/cap/:id" element={<ESGCapDetailsPage />} />
         <Route path="/esg-dd/reports" element={<ESGDDReportsPage />} />
         <Route path="/esg-dd/manual" element={<ManualESGDDPage />} />

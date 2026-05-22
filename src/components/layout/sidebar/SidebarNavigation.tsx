@@ -91,37 +91,30 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
           // SUBMENU FILTER
           let filteredSubmenu = [];
-          if (menu.submenu?.length > 0) {
-            filteredSubmenu = menu.submenu
-              .map((sub) => {
-                // hide sidebar hidden items
-                if (
-                  hideSettings[sub.name] === true ||
-                  !sub.href ||
-                  sub.href === "#"
-                ) {
-                  return null;
-                }
+if (menu.submenu?.length > 0) {
+  filteredSubmenu = menu.submenu
+    .map((sub) => {
+      // Skip if sidebarHide is true
+      if (hideSettings[sub.name] === true) return null;
 
-                let filteredNestedSubmenu = [];
+      // For items with real URLs, keep them
+      if (sub.href && sub.href !== "#") {
+        return sub;
+      }
 
-                if (sub.submenu?.length > 0) {
-                  filteredNestedSubmenu = sub.submenu.filter((nestedSub) => {
-                    return (
-                      hideSettings[nestedSub.name] !== true &&
-                      nestedSub.href &&
-                      nestedSub.href !== "#"
-                    );
-                  });
-                }
-
-                return {
-                  ...sub,
-                  submenu: filteredNestedSubmenu
-                };
-              })
-              .filter(Boolean);
-          }
+      // For items with href === "#", keep them only if they have visible nested submenus
+      if (sub.submenu?.length > 0) {
+        const visibleNested = sub.submenu.filter(
+          (nested) => hideSettings[nested.name] !== true && nested.href && nested.href !== "#"
+        );
+        if (visibleNested.length > 0) {
+          return { ...sub, submenu: visibleNested };
+        }
+      }
+      return null;
+    })
+    .filter(Boolean);
+}
           return {
             ...menu,
             submenu: filteredSubmenu

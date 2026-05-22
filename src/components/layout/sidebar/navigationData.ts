@@ -69,7 +69,7 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
         icon: FileSearch,
         featureId: 'esg-dd',
         submenu: [
-          { name: "Overview", href: "/esg-dd", icon: FileSearch },
+          { name: "Overview", href: "/esg-dd/overview", icon: FileSearch },
       
           {
             name: "Manual Assessment",
