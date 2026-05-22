@@ -62,7 +62,16 @@ import { logger } from '@/hooks/logger';
 import Loader from '@/components/ui/loader';
 import { fetchEsgCap, updatePlan, esgddChangePlan, editFinalizedPlan } from '../services/esgdd';
 import { DocumentUploadModal } from '../components/esg-cap/DocumentUploadModal';
+import DocumentSummaryDialog from '../components/esg-cap/document-summary-review';
+
 import { httpClient } from "@/lib/httpClient";
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 const SectionCard: React.FC<{
     title: string;
     subtitle?: string;
@@ -190,7 +199,7 @@ const ESGCapDetailsPage: React.FC = () => {
             setLoading(false);
         }
     };
-    console.log('setCapItem===========>', capItem);
+
     useEffect(() => {
         loadData();
     }, [id, itemName]);
@@ -219,6 +228,13 @@ const ESGCapDetailsPage: React.FC = () => {
     });
     const [attachmentsOpen, setAttachmentsOpen] = useState(false);
     const [attachmentsMode, setAttachmentsMode] = useState<'upload' | 'view'>('upload');
+    const [indicatorResponse, setIndicatorResponse] = useState<Record<string, 'yes' | 'no' | null>>({});
+    const [indicatorNotes, setIndicatorNotes] = useState<Record<string, string>>({});
+    const [currentIndicatorResponse, setCurrentIndicatorResponse] = useState<'yes' | 'no' | null>(null);
+    const [currentIndicatorNote, setCurrentIndicatorNote] = useState<string>('');
+    const [isDownloadOpen, setIsDownloadOpen] = useState(false);
+    const [selectedFiles, setSelectedFiles] = useState<any[]>([]);
+    const [reopenAttachments, setReopenAttachments] = useState(false);
 
     const openAttachments = (mode: 'upload' | 'view') => {
         setAttachmentsMode(mode);
@@ -238,18 +254,8 @@ const ESGCapDetailsPage: React.FC = () => {
         { name: 'Rahul Iyer', role: 'Governance Reviewer', time: '5 hours ago', text: 'Looks aligned. Awaiting Labour Welfare filing proof.' },
     ];
 
-    const getLoggedInUser = () => {
-        const userStr = localStorage.getItem('fandoro-user');
-        if (!userStr) return null;
-        try {
-            return JSON.parse(userStr);
-        } catch {
-            return null;
-        }
-    };
-
-    const loggedInUser = getLoggedInUser();
-    const isFiresideEmail = loggedInUser?.email?.endsWith('@fireside.com') ?? false;
+    const investorEmailStored = localStorage.getItem("fandoro-admin");
+    const isInvestorEmailExists = !!investorEmailStored;
 
     const handleViewDocument = async (file: any) => {
         try {
@@ -351,13 +357,14 @@ const ESGCapDetailsPage: React.FC = () => {
     };
 
     const handleDeleteConfirmed = async () => {
+        console.log('this is hit ');
         if (!confirmDelete) return;
 
         const { file } = confirmDelete;
 
         try {
             setDeleting(file.filename);
-
+            console.log('file___________', file);
             const queryParams = new URLSearchParams({
                 fileName: file.filename,
                 actionItemId: file.aiSummary?.actionItemId || '',
@@ -390,10 +397,9 @@ const ESGCapDetailsPage: React.FC = () => {
 
     const hasDocumentForIndicator = (indicatorLabel: string) => {
         return capItem?.fileUploadedData?.some(
-            (file: any) => file.documentType === indicatorLabel
+            (file: any) => file.indicatorLabel === indicatorLabel
         );
     };
-    console.log('capItem___________', capItem);
     if (loading) {
         return <UnifiedSidebarLayout><Loader2 /> </UnifiedSidebarLayout>;
     }
@@ -403,10 +409,8 @@ const ESGCapDetailsPage: React.FC = () => {
                 <div className="mx-auto max-w-[1440px] px-6 py-8 space-y-6">
                     {/* Header */}
                     <div>
-                        <Link to="/esg-dd/cap" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
-                            <ArrowLeft className="mr-1 h-4 w-4" /> Back to CAP List
-                        </Link>
-                        <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
+
+                        <div className="mt-3 flex flex-wrap items-start justify-between gap-4 item">
                             <div>
                                 <h5 className="text-3xl font-bold tracking-tight">{capItem?.item}</h5>
                                 {/* <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{capItem?.description}</p> */}
@@ -433,9 +437,16 @@ const ESGCapDetailsPage: React.FC = () => {
                                 </div>
                             </div>
                             <div className="flex gap-2">
-                                <Button variant="outline">
+                                {/* <Button variant="outline">
                                     <Download className="h-4 w-4" /> Export
-                                </Button>
+                                </Button> */}
+                                <Link
+                                    to="/esg-dd/cap"
+                                    className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+                                >
+                                    <ArrowLeft className="mr-1 h-4 w-4" />
+                                    Back
+                                </Link>
                             </div>
                         </div>
                     </div>
@@ -626,14 +637,14 @@ const ESGCapDetailsPage: React.FC = () => {
 
                     {/* Investor Actions */}
                     <SectionCard
-                        title={!isFiresideEmail ? "Investor Action" : "Fireside Action"}
+                        title={!isInvestorEmailExists ? "Investor Action" : "Fireside Action"}
                         subtitle="Internal review and reviewer thread"
                         icon={<MessageSquare className="h-4 w-4" />}
                         variant="muted"
                     >
                         <div className="grid gap-8 lg:grid-cols-2">
                             <div>
-                                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{!isFiresideEmail ? "Investor Status" : "Fireside Status"}</div>
+                                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{!isInvestorEmailExists ? "Investor Status" : "Fireside Status"}</div>
                                 {(() => {
                                     const current = firesideSteps.filter((s) => s.done).slice(-1)[0] ?? firesideSteps[0];
                                     return (
@@ -716,7 +727,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                                         )}
                                                     </div>
                                                     {/* Optional: add a "View" button that opens the document */}
-                                                    {hasDoc && (
+                                                    {/* {hasDoc && (
                                                         <Button
                                                             size="sm"
                                                             variant="ghost"
@@ -729,7 +740,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                                         >
                                                             <Eye className="h-3 w-3" />
                                                         </Button>
-                                                    )}
+                                                    )} */}
                                                 </li>
                                             );
                                         })}
@@ -798,21 +809,116 @@ const ESGCapDetailsPage: React.FC = () => {
                                             ? capItem.deliverable.split("##").filter(Boolean)
                                             : [capItem.deliverable].filter(Boolean)
                                         : []
-                                    ).map((label: string) => (
-                                        <div key={label} className="flex items-center justify-between rounded-lg border p-3">
-                                            <span className="text-sm">{label}</span>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => {
-                                                    selectedIndicatorRef.current = label;
-                                                    setUploadModalOpen(true);
-                                                }}
-                                            >
-                                                <Upload className="h-3 w-3 mr-1" /> Upload
-                                            </Button>
-                                        </div>
-                                    ))}
+                                    ).map((label: string) => {
+                                        const response = indicatorResponse[label];
+
+                                        return (
+                                            <div key={label} className="rounded-lg border p-3">
+                                                <div className="text-sm font-medium mb-3">{label}</div>
+
+                                                {/* 2-column layout */}
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+
+                                                    {/* LEFT: YES / NO */}
+                                                    <div className="flex gap-4 items-center">
+                                                        <label className="flex items-center gap-2 text-sm">
+                                                            <input
+                                                                type="radio"
+                                                                name={`indicator-${label}`}
+                                                                checked={response === 'yes'}
+                                                                onChange={() =>
+                                                                    setIndicatorResponse((prev) => ({
+                                                                        ...prev,
+                                                                        [label]: 'yes',
+                                                                    }))
+                                                                }
+                                                            />
+                                                            Yes
+                                                        </label>
+
+                                                        <label className="flex items-center gap-2 text-sm">
+                                                            <input
+                                                                type="radio"
+                                                                name={`indicator-${label}`}
+                                                                checked={response === 'no'}
+                                                                onChange={() =>
+                                                                    setIndicatorResponse((prev) => ({
+                                                                        ...prev,
+                                                                        [label]: 'no',
+                                                                    }))
+                                                                }
+                                                            />
+                                                            No
+                                                        </label>
+                                                    </div>
+
+                                                    {/* RIGHT: CONDITIONAL UI */}
+                                                    <div className="flex flex-col gap-2">
+
+                                                        {response === 'yes' && (
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                onClick={() => {
+                                                                    selectedIndicatorRef.current = label;
+                                                                    setCurrentIndicatorResponse(indicatorResponse[label] || 'yes');
+                                                                    setCurrentIndicatorNote(indicatorNotes[label] || '');
+                                                                    setUploadModalOpen(true);
+                                                                }}
+                                                                className="w-fit"
+                                                            >
+                                                                <Upload className="h-3 w-3 mr-1" />
+                                                                Upload Document
+                                                            </Button>
+                                                        )}
+
+                                                        {response === 'no' && (
+                                                            <div className="flex flex-col gap-2">
+                                                                <Textarea
+                                                                    placeholder="Provide reason..."
+                                                                    value={indicatorNotes[label] || ''}
+                                                                    onChange={(e) =>
+                                                                        setIndicatorNotes((prev) => ({ ...prev, [label]: e.target.value }))
+                                                                    }
+                                                                    className="min-h-[80px]"
+                                                                />
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    onClick={async () => {
+                                                                        try {
+                                                                            // Build FormData without a file
+                                                                            const formData = new FormData();
+                                                                            formData.append("itemTitle", capItem.item || capItem.issue);
+                                                                            formData.append("itemDescription", capItem.measures || "");
+                                                                            formData.append("itemTheme", "Policy");
+                                                                            formData.append("itemCategory", capItem.category);
+                                                                            formData.append("itemPolicy", capItem.deliverable || "");
+                                                                            formData.append("itemResource", capItem.resource || "");
+                                                                            formData.append("itemSourceType", capItem.sourceType || "");
+                                                                            formData.append("indicatorLabel", label); // indicator label
+                                                                            formData.append("indicatorResponse", "no");
+                                                                            formData.append("indicatorNote", indicatorNotes[label] || "");
+
+                                                                            await httpClient.post("esgdd/escap/upload-file/esgcap", formData);
+                                                                            toast.success("Indicator response saved");
+                                                                            await loadData(); // refresh to show saved status
+                                                                        } catch (error) {
+                                                                            console.error(error);
+                                                                            toast.error("Failed to save response");
+                                                                        }
+                                                                    }}
+                                                                    className="w-fit"
+                                                                >
+                                                                    Save Response
+                                                                </Button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
 
@@ -823,26 +929,52 @@ const ESGCapDetailsPage: React.FC = () => {
                                 <table className="w-full text-sm">
                                     <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
                                         <tr>
-                                            <th className="px-4 py-3 text-left font-medium">File</th>
-                                            <th className="px-4 py-3 text-left font-medium">Uploaded By</th>
-                                            <th className="px-4 py-3 text-left font-medium">Date</th>
-                                            <th className="px-4 py-3 text-left font-medium">Size</th>
-                                            <th className="px-4 py-3 text-left font-medium">Status</th>
+                                            <th className="px-4 py-3 text-left font-medium">Indicator</th>
+                                            <th className="px-4 py-3 text-left font-medium">File / Note</th>
                                             <th className="px-4 py-3 text-center font-medium">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {capItem.fileUploadedData?.map((file, idx) => {
-                                            const fileSize = file.size ? (file.size / 1024).toFixed(1) + ' KB' : '—';
-                                            const uploadDate = file.aiSummary?.createdAt
-                                                ? new Date(file.aiSummary.createdAt).toLocaleDateString()
-                                                : '—';
-                                            const isVerified = file.status === 'Verified' || file.aiSummary?.status === 'final';
+                                        {capItem?.fileUploadedData?.map((file: any, idx: number) => {
+
+                                            // NO response row
+                                            if (file?.indicatorResponse === "no") {
+                                                return (
+                                                    <tr key={`note-${idx}`}>
+
+                                                        {/* Indicator */}
+                                                        <td className="px-4 py-3">
+                                                            <div className="text-sm font-medium">
+                                                                {file?.indicatorLabel || '—'}
+                                                            </div>
+                                                        </td>
+
+                                                        {/* Note */}
+                                                        <td
+                                                            colSpan={3}
+                                                            className="px-4 py-3 text-sm text-muted-foreground"
+                                                        >
+                                                            {file?.indicatorNote || 'No reason provided'}
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            }
+
                                             return (
-                                                <tr key={idx}>
+                                                <tr key={`file-${idx}`}>
+
+                                                    {/* Indicator */}
+                                                    <td className="px-4 py-3">
+                                                        <div className="text-sm font-medium">
+                                                            {file?.indicatorLabel || '—'}
+                                                        </div>
+                                                    </td>
+
+                                                    {/* File */}
                                                     <td className="px-4 py-3 max-w-[220px]">
                                                         <div className="flex items-center gap-2">
                                                             <FileText className="h-4 w-4 text-blue-600 shrink-0" />
+
                                                             <span
                                                                 className="font-medium truncate block max-w-[180px] cursor-pointer"
                                                                 title={file.filename || "Unnamed"}
@@ -851,52 +983,58 @@ const ESGCapDetailsPage: React.FC = () => {
                                                             </span>
                                                         </div>
                                                     </td>
-                                                    <td className="px-4 py-3 text-muted-foreground">—</td>   {/* Uploaded By – no field yet */}
-                                                    <td className="px-4 py-3 text-muted-foreground">{uploadDate}</td>
-                                                    <td className="px-4 py-3 text-muted-foreground">{fileSize}</td>
-                                                    <td className="px-4 py-3">
-                                                        {isVerified ? (
-                                                            <Badge variant="outline" className="border-emerald-300 bg-emerald-50 text-emerald-700">
-                                                                <CheckCircle2 className="mr-1 h-3 w-3" /> Verified
-                                                            </Badge>
-                                                        ) : (
-                                                            <Badge variant="outline" className="border-amber-300 bg-amber-50 text-amber-700">
-                                                                <AlertCircle className="mr-1 h-3 w-3" /> Pending
-                                                            </Badge>
-                                                        )}
-                                                    </td>
+
+                                                    {/* Actions */}
                                                     <td className="px-4 py-3 text-right">
-                                                        {/* <Button variant="ghost" size="sm" onClick={() => window.open(file.s3Link, '_blank')}>
-                                                            <Eye className="h-4 w-4" />
-                                                        </Button> */}
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => handleViewDocument(file)}
-                                                        >
-                                                            <Eye className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button variant="ghost" size="sm" onClick={() => {
-                                                            const link = document.createElement('a');
-                                                            link.href = file.s3Link;
-                                                            link.download = file.filename;
-                                                            link.click();
-                                                        }}>
-                                                            <Download className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="text-red-600 hover:text-red-700"
-                                                            disabled={deleting === file.filename}
-                                                            onClick={() => handleDeleteDocument(file, idx)}
-                                                        >
-                                                            {deleting === file.filename ? (
-                                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                                            ) : (
-                                                                <Trash2 className="h-4 w-4" />
-                                                            )}
-                                                        </Button>
+                                                        <div className="flex justify-end gap-2">
+
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => {
+                                                                    // Close the attachments modal first
+                                                                    setAttachmentsOpen(false);
+                                                                    // Remember to reopen it later
+                                                                    setReopenAttachments(true);
+                                                                    // Prepare files and open summary dialog
+                                                                    const docsForSameIndicator = capItem.fileUploadedData.filter(
+                                                                        (f: any) => f.indicatorLabel === file.indicatorLabel
+                                                                    );
+                                                                    setSelectedFiles(docsForSameIndicator.length ? docsForSameIndicator : [file]);
+                                                                    setIsDownloadOpen(true);
+                                                                }}
+                                                            >
+                                                                <Eye className="h-4 w-4" />
+                                                            </Button>
+
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => {
+                                                                    const link = document.createElement('a');
+                                                                    link.href = file.s3Link;
+                                                                    link.download = file.filename;
+                                                                    link.click();
+                                                                }}
+                                                            >
+                                                                <Download className="h-4 w-4" />
+                                                            </Button>
+
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="text-red-600 hover:text-red-700"
+                                                                disabled={deleting === file.filename}
+                                                                onClick={() => handleDeleteDocument(file, idx)}
+                                                            >
+                                                                {deleting === file.filename ? (
+                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                ) : (
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                )}
+                                                            </Button>
+
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             );
@@ -936,7 +1074,11 @@ const ESGCapDetailsPage: React.FC = () => {
                 open={uploadModalOpen}
                 onOpenChange={(open) => {
                     setUploadModalOpen(open);
-                    if (!open) setUploadDocumentType(null);
+                    if (!open) {
+                        setUploadDocumentType(null);
+                        setCurrentIndicatorResponse(null);
+                        setCurrentIndicatorNote('');
+                    }
                 }}
                 checklistItemId={capItem._id}
                 itemTitle={capItem.item || capItem.issue}
@@ -947,7 +1089,20 @@ const ESGCapDetailsPage: React.FC = () => {
                 itemResource={capItem.resource}
                 itemSourceType={capItem.sourceType || ""}
                 setReloadData={(reload) => reload && loadData()}
-                documentType={selectedIndicatorRef.current}
+                indicatorLabel={selectedIndicatorRef.current}
+            />
+
+            <DocumentSummaryDialog
+                open={isDownloadOpen}
+                files={selectedFiles}
+                onClose={() => {
+                    setIsDownloadOpen(false);
+                    setSelectedFiles([]);
+                    if (reopenAttachments) {
+                        setAttachmentsOpen(true);
+                        setReopenAttachments(false);
+                    }
+                }}
             />
 
             {/* Custom Delete Confirmation Modal */}
@@ -959,8 +1114,20 @@ const ESGCapDetailsPage: React.FC = () => {
                         </DialogHeader>
 
                         <p className="text-sm text-gray-600">
-                            Are you sure you want to delete{" "}
-                            <strong>{confirmDelete?.file.filename}</strong>?
+                            Are you sure you want to delete{" "}?
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <strong className="inline-block max-w-[400px] truncate cursor-pointer">
+                                            {confirmDelete?.file.filename}
+                                        </strong>
+                                    </TooltipTrigger>
+
+                                    <TooltipContent className="max-w-sm break-all">
+                                        {confirmDelete?.file.filename}
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
                         </p>
 
                         <div className="flex justify-end gap-3 mt-4">

@@ -751,18 +751,8 @@ const ESGCapPage = () => {
     setReviewDialogOpen(true);
   };
 
-  const getLoggedInUser = () => {
-    const userStr = localStorage.getItem('fandoro-user');
-    if (!userStr) return null;
-    try {
-      return JSON.parse(userStr);
-    } catch {
-      return null;
-    }
-  };
-
-  const loggedInUser = getLoggedInUser();
-  const isFiresideEmail = loggedInUser?.email?.endsWith('@fireside.com') ?? false;
+  const investorEmailStored = localStorage.getItem("fandoro-admin");
+  const isInvestorEmailExists = !!investorEmailStored;
 
   const groupedItems = sortedItems.reduce(
     (acc: Record<string, ESGCapItem[]>, item) => {
@@ -797,16 +787,14 @@ const ESGCapPage = () => {
       <Loader show={loading} text={loadingMessage} />
       <UnifiedSidebarLayout>
         <Card className="shadow-lg border-0">
-          {!isFiresideEmail && (
-            <CardHeader className="border-b">
+            {/* <CardHeader className="border-b">
               <CardDescription className="text-sm">
                 <h1 className="text-3xl font-bold tracking-tight">ESG Corrective Action Plan</h1>
                 <p className="mt-1">
                   Track and manage corrective actions from ESG due diligence assessments.
                 </p>
               </CardDescription>
-            </CardHeader>
-          )}
+            </CardHeader> */}
           <CardContent className="p-6">
             {/* Filters Section */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -823,7 +811,7 @@ const ESGCapPage = () => {
             </div>
 
             {/* Alerts Panel - MOVED OUTSIDE the filters container */}
-            {!isFiresideEmail && esgCap?.plan && esgCap.plan.length > 0 && (
+            {!isInvestorEmailExists && esgCap?.plan && esgCap.plan.length > 0 && (
               <div className="mb-6">
                 <AlertsPanel
                   overdueItems={alerts.overdueItems}

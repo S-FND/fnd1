@@ -68,6 +68,12 @@ export const useAuthProvider = () => {
         user.companyId = user._id;
       }
 
+      const investorCheck = await fetch(`${import.meta.env.VITE_API_URL}/auth/investor-by-email?email=${encodeURIComponent(user.email)}`);
+      const investorData = await investorCheck.json();
+      if (investorData.exists) {
+        localStorage.setItem("fandoro-admin", investorData.investor.investorEmail);
+      }
+
       const rolePermissions = defaultPermissions[user.role] || {};
       setUser(user);
       setToken(token);
@@ -109,28 +115,19 @@ export const useAuthProvider = () => {
       }
     }
 
-    const getLoggedInUser = () => {
-      const userStr = localStorage.getItem('fandoro-user');
-      if (!userStr) return null;
-      try {
-        return JSON.parse(userStr);
-      } catch {
-        return null;
-      }
-    };
-  
-    const loggedInUser = getLoggedInUser();
-    const isFiresideEmail = loggedInUser?.email?.endsWith('@fireside.com') ?? false;
+      const investorEmailStored = localStorage.getItem("fandoro-admin");
+      const isInvestorEmailExists = !!investorEmailStored;
     
     switch(role) {
       case "fandoro_admin":
         navigate("/fandoro-admin/dashboard");
         break;
       case "admin":
-        navigate(
-          isFiresideEmail ? "/esg-dd/cap" : "/company",
-          { replace: true }
-        );
+        if (isInvestorEmailExists) {
+          navigate("/esg-dd/cap");
+        } else {
+          navigate("/company");
+        }
         break;
       case "manager":
         // Redirect admin and manager to settings by default

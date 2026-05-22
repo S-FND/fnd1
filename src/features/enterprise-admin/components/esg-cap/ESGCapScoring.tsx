@@ -73,9 +73,9 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items }) => {
         <div className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">ESG CAP Progress</h3>
-            <div className="text-2xl font-bold text-primary">
+            {/* <div className="text-2xl font-bold text-primary">
               {progressPercentage.toFixed(1)}%
-            </div>
+            </div> */}
           </div>
 
           <Progress value={progressPercentage} className="w-full h-3" />
@@ -122,10 +122,10 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items }) => {
             </div>
           </div>
 
-          <div className="flex justify-between text-sm text-muted-foreground">
+          {/* <div className="flex justify-between text-sm text-muted-foreground">
             <span>Weighted Score: {completedWeightage.toFixed(1)} / {totalWeightage.toFixed(1)}</span>
             <span>Progress: {progressPercentage.toFixed(1)}% Complete</span>
-          </div>
+          </div> */}
         </div>
       </CardContent>
     </Card>

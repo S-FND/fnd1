@@ -21,7 +21,7 @@ export const ESGDDSubmenu: React.FC<ESGDDSubmenuProps> = ({
   allowedUrls = [],
   onToggle
 }) => {
-  console.log('submenu------->', submenu);
+  // console.log('submenu------->', submenu);
   const location = useLocation();
   const { user } = useAuth();
   const [isIRLExpanded, setIsIRLExpanded] = useState(

@@ -24,7 +24,7 @@ interface DocumentUploadModalProps {
   itemResource?: string;
   itemSourceType?: string;
   setReloadData?: (reload: boolean) => void;
-  documentType?: string; 
+  indicatorLabel?: string; 
   // onUploadSuccess: () => void;
 }
 
@@ -101,7 +101,7 @@ export const DocumentUploadModal = ({
   itemResource,
   itemSourceType,
   setReloadData,
-  documentType
+  indicatorLabel
   // onUploadSuccess 
 }: DocumentUploadModalProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -110,7 +110,6 @@ export const DocumentUploadModal = ({
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [needsAuth, setNeedsAuth] = useState(false);
-console.log('documentType---------->',documentType);
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -182,6 +181,7 @@ console.log('documentType---------->',documentType);
       formData.append("itemPolicy", itemPolicy);
       formData.append("itemResource", itemResource || '');
       formData.append("itemSourceType", itemSourceType || '');
+      formData.append("indicatorLabel", indicatorLabel);
       let validate = await httpClient.post<ValidationResult>('esgdd/escap/validate-document', formData);
       console.log("Validation response =>", validate);
       if (validate.status == 201) {
@@ -290,8 +290,7 @@ console.log('documentType---------->',documentType);
       formData.append("itemPolicy", itemPolicy);
       formData.append("itemResource", itemResource || '');
       formData.append("itemSourceType", itemSourceType || '');
-      if (documentType) formData.append("documentType", documentType);
-      console.log('formData------->',formData);
+      formData.append("indicatorLabel", indicatorLabel);
       let uploadRes = await httpClient.post<ValidationResult>('esgdd/escap/upload-file/esgcap', formData);
 
       if (uploadRes.status !== 201) {
