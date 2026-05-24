@@ -62,7 +62,7 @@ export const OverlayProvider: React.FC<OverlayProviderProps> = ({ children }) =>
 
   const checkPageOverlayAccess = (page: string) => {
     let filtered = (localStorage.getItem('fandoro-access')? JSON.parse(localStorage.getItem('fandoro-access') || '')['companyFeaturePageAccess']: [])
-    .find((p: any) => p.url === page && p.adminEnabled);
+    .find((p: any) => p.url === page && p.adminEnabled && p.sidebarHide !== true);
     console.log('filtered',filtered)
     if (filtered) {
       return true;

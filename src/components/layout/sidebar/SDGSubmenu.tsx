@@ -7,19 +7,29 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 interface SDGSubmenuProps {
   isExpanded: boolean;
   onToggle: () => void;
+  submenu?: any[];
 }
 
 export const SDGSubmenu: React.FC<SDGSubmenuProps> = ({
   isExpanded,
-  onToggle
+  onToggle,
+  submenu = []
 }) => {
   const location = useLocation();
 
-  const submenuItems = [
+  const defaultSubmenuItems = [
     { name: "Overview", href: "/sdg", icon: Target },
     { name: "Strategy Setting", href: "/sdg/strategy", icon: FileText },
     { name: "SDG Outcome Mapping", href: "/sdg/outcome-mapping", icon: FileText }
   ];
+  
+  const submenuItems =
+    submenu.length > 0
+      ? submenu.map((item) => ({
+          ...item,
+          icon: FileText
+        }))
+      : defaultSubmenuItems;
 
   return (
     <SidebarMenuItem>

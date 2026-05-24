@@ -1,4 +1,6 @@
-export type FundingStage = 
+import { IDocumentValidation } from "../components/esg-cap/document-summary-review";
+
+export type FundingStage =
   | 'pre_seed'
   | 'seed'
   | 'pre_series_a'
@@ -19,9 +21,16 @@ export type ESGDDReportType = 'manual' | 'automated' | 'uploaded';
 
 export type ESGCapStatus = 'in_review' | 'accepted' | 'pending' | 'in_progress' | 'completed' | 'delayed';
 
+type CAPStatus = 
+  | "upcoming"
+  | "due in <1 month"
+  | "overdue"
+  | "submitted"
+  | "request to re-submit";
+
 export type ESGCapPriority = 'high' | 'medium' | 'low';
 
-export type ESGCapDealCondition = 'CP' | 'CS' | 'none';
+export type ESGCapDealCondition = 'CP' | 'CS' | 'ESG_Roadmap' | 'none';
 
 export interface ESGDDReport {
   id: string;
@@ -36,6 +45,96 @@ export interface ESGDDReport {
   summary?: string;
 }
 
+export type EvidenceType =
+  | "data"
+  | "report"
+  | "training_record"
+  | "audit"
+  | "plan"
+  | "system"
+  | "certificate"
+  | "kpi_metrics";
+
+
+
+export interface AiResponse {
+  id: string;
+  _index: number;
+
+  // requiredEvidence: {
+  //   types: string[];
+  //   normalizedTypes: string[];
+  //   reasoning: string;
+  //   confidence: number;
+  // };
+
+  requiredEvidence: {
+    types: EvidenceType[];
+    normalizedTypes: EvidenceType[];
+    reasoning: string;
+    confidence: number;
+  };
+
+  documentRequired: boolean;
+  documentType: string | null;
+  sourceType: "internal" | "external" | null;
+
+  sections: string[];
+
+  templates: Template[];
+
+  reasoning: string;
+  confidence: number;
+}
+
+export interface Template {
+  type: "system" | "data" | "report" | string;
+  name: string;
+  format: "checklist" | "table" | "document" | string;
+
+  structure: TemplateStructure;
+}
+
+export interface TemplateStructure {
+  components?: string[];   // system
+  columns?: string[];      // data
+  sections?: string[];     // report
+
+  // future-proof (very important for your AI system)
+  [key: string]: any;
+}
+
+export interface AiInsights {
+  id: string;
+  _index: number;
+  userIntent: string;
+
+  evidence: {
+    type: string;
+    normalizedType: string;
+    documentSource: "government" | "internal";
+    isMandatory: boolean;
+    reasoning: string;
+
+    template?: {
+      name: string;
+      format: "document" | "table" | "checklist";
+      outputFileType: "docx" | "pdf" | "excel" | "csv";
+      priority: "high" | "medium" | "low";
+      structure: Record<string, string>;
+    } | null;
+
+    referenceContent?: {
+      title: string;
+      keyClauses: string[];
+      requiredFields: string[];
+    } | null;
+  }[];
+
+  executionSummary: string;
+  confidence: number;
+}
+
 export interface ESGCapItem {
   id: string | number;  // Can be string or number based on your API
   item: string;
@@ -46,9 +145,11 @@ export interface ESGCapItem {
   category: ESGCategory;
   recommendation?: string;
   priority: ESGCapPriority;
-  status: ESGCapStatus;
+  status: CAPStatus;
+  investorStatus: string;
   deadline?: string;    // This might be your targetDate
   targetDate?: string;  // Alternative to deadline
+  progressPercentage?: string;
   assignedTo?: string;
   dealCondition: ESGCapDealCondition;
   createdAt: string;
@@ -59,6 +160,22 @@ export interface ESGCapItem {
   CS?: string;         // From your payload
   actualDate?: string;
   remarks?: string;
+  theme?: "Policy" | "SOP" | "Metrics" | "Logs";
+  data_type?: string;
+  documentType?: string;
+  sections?: string[];
+  sourceType?: string;
+  aiResponseRaw?: AiResponse;
+  manualInsights?: AiResponse;
+  aiInsights?: AiInsights;
+  fileUploadedData: {
+    filename: string;
+    mimetype: string;
+    size: number;
+    s3Link: string;
+    status: 'Accepted' | 'Rejected' | 'Pending';
+    aiSummary: IDocumentValidation;
+  }[]
 }
 
 export interface RegulatoryRequirement {

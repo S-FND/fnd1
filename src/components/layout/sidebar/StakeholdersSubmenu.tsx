@@ -9,12 +9,14 @@ interface StakeholdersSubmenuProps {
   isExpanded: boolean;
   onToggle: () => void;
   role: string;
+  submenu?: any[];
 }
 
 export const StakeholdersSubmenu: React.FC<StakeholdersSubmenuProps> = ({
   isExpanded,
   onToggle,
-  role
+  role,
+  submenu= []
 }) => {
   const location = useLocation();
   const isStakeholdersPath = location.pathname.startsWith('/stakeholders');

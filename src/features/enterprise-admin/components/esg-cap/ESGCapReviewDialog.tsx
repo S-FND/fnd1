@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,11 +10,12 @@ import { Upload, FileText, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ESGCapReviewDialogProps {
-  item: ESGCapItem;
+  item: any;
   isOpen: boolean;
   onClose: () => void;
   onUpdate: (updatedItem: ESGCapItem) => void;
   buttonEnabled?: boolean;
+  finalPlan?: boolean;
 }
 
 export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
@@ -22,18 +23,21 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
   isOpen,
   onClose,
   onUpdate,
-  buttonEnabled
+  buttonEnabled,
+  finalPlan
 }) => {
-  const [formData, setFormData] = useState<ESGCapItem>(item);
+  const [formData, setFormData] = useState<any>({ ...item });
   const [proofFile, setProofFile] = useState<File | null>(null);
-  const [actualCompletionDate, setActualCompletionDate] = useState<string>(
-    item.status === 'completed' ? new Date().toISOString().split('T')[0] : ''
-  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const isAccepted = item.status === 'completed';
+  useEffect(() => {
+    setFormData(JSON.parse(JSON.stringify(item)));
+  }, [item, isOpen]);
 
-  const handleInputChange = (field: keyof ESGCapItem, value: any) => {
+  const isAccepted = finalPlan ?? false;
+
+  const handleInputChange = (field: keyof any, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -48,144 +52,219 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
     }
   };
 
-  const handleSave = () => {
-    onUpdate(formData);
-    toast({
-      title: "Changes saved",
-      description: "The CAP item has been updated successfully.",
-    });
-    onClose();
+  const handleSave = async () => {
+    if (isAccepted) {
+      setIsSubmitting(true);
+      try {
+        // Build the payload exactly as your backend expects
+        const payload = {
+          entityId: formData.entityId,        // ensure formData has entityId
+          updatedPlan: [formData],            // backend expects an array of plan items
+          reason: "Edited via review dialog"  // provide a reason (or add a text field for user input)
+        };
+  
+        const response = await fetch('/esgdd/escap/edit-finalized-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+  
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`API error: ${response.status} - ${errorText}`);
+        }
+  
+        onUpdate(formData);
+        toast({
+          title: "Finalized plan saved",
+          description: "The CAP item has been finalized successfully.",
+        });
+        onClose();
+      } catch (error) {
+        console.error('Failed to finalize plan:', error);
+        toast({
+          title: "Error",
+          description: "Failed to save finalized plan. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      onUpdate(formData);
+      toast({
+        title: "Changes saved",
+        description: "The CAP item has been updated successfully.",
+      });
+      onClose();
+    }
   };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Review CAP Item</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          <div>
-            <Label htmlFor="item">Item *</Label>
-            <Textarea
-              id="item"
-              value={formData.item}
-              onChange={(e) => handleInputChange('item', e.target.value)}
-              disabled={isAccepted}
-              rows={3}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="measures">Measures *</Label>
-            <Textarea
-              id="measures"
-              value={formData.measures}
-              onChange={(e) => handleInputChange('measures', e.target.value)}
-              disabled={isAccepted}
-              rows={3}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="deliverable">Expected Deliverable *</Label>
-            <Textarea
-              id="deliverable"
-              value={formData.deliverable}
-              onChange={(e) => handleInputChange('deliverable', e.target.value)}
-              disabled={isAccepted}
-              rows={3}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          {/* 1. Item */}
+          {!isAccepted && (
             <div>
-              <Label htmlFor="resource">Resource</Label>
+              <Label htmlFor="item">Item *</Label>
               <Textarea
-                id="resource"
-                value={formData.resource}
-                onChange={(e) => handleInputChange('resource', e.target.value)}
+                id="item"
+                value={formData.item}
+                onChange={(e) => handleInputChange('item', e.target.value)}
                 disabled={isAccepted}
                 rows={3}
+                placeholder="Enter CAP item description"
               />
             </div>
+          )}
+          {/* 2. Category & 3. Priority */}
+          {!isAccepted && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="category">Category</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value: ESGCategory) => handleInputChange('category', value)}
+                  disabled={isAccepted}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="environmental">Environmental</SelectItem>
+                    <SelectItem value="social">Social</SelectItem>
+                    <SelectItem value="governance">Governance</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="priority">Priority</Label>
+                <Select
+                  value={formData.priority}
+                  onValueChange={(value: ESGCapPriority) => handleInputChange('priority', value)}
+                  disabled={isAccepted}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="High">High</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="Low">Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          {/* 4. Issue & 5. Related Finding */}
+          {!isAccepted && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="issue">Issue</Label>
+                <Textarea
+                  id="issue"
+                  value={formData.issue || ''}
+                  onChange={(e) => handleInputChange('issue', e.target.value)}
+                  disabled={isAccepted}
+                  rows={3}
+                  placeholder="Describe the issue"
+                />
+              </div>
+              <div>
+                <Label htmlFor="relatedFinding">Related Finding</Label>
+                <Textarea
+                  id="relatedFinding"
+                  value={formData.relatedFinding || ''}
+                  onChange={(e) => handleInputChange('relatedFinding', e.target.value)}
+                  disabled={isAccepted}
+                  rows={3}
+                  placeholder="Related audit findings"
+                />
+              </div>
+            </div>
+          )}
+          {/* 6. ESG Lever */}
+          {/* <div>
+            <Label htmlFor="esgLever">ESG Lever</Label>
+            <Input
+              id="esgLever"
+              value={formData.esgLever || ''}
+              onChange={(e) => handleInputChange('esgLever', e.target.value)}
+              disabled={isAccepted}
+              placeholder="e.g., Policy, Training, Technology"
+            />
+          </div> */}
+
+          {/* 7. Measures */}
+          {!isAccepted && (
             <div>
-              <Label htmlFor="assignedTo">Assigned To</Label>
+              <Label htmlFor="measures">Measures & Corrective Actions *</Label>
               <Textarea
-                id="assignedTo"
-                value={formData.assignedTo}
-                onChange={(e) => handleInputChange('assignedTo', e.target.value)}
+                id="measures"
+                value={formData.measures}
+                onChange={(e) => handleInputChange('measures', e.target.value)}
                 disabled={isAccepted}
                 rows={3}
+                placeholder="Describe the corrective actions to be taken"
               />
             </div>
-
-          </div>
+          )}
+          {/* 8. Resource & 9. Deliverable */}
+          {!isAccepted && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="resource">Resource & Responsibility</Label>
+                <Textarea
+                  id="resource"
+                  value={formData.resource || ''}
+                  onChange={(e) => handleInputChange('resource', e.target.value)}
+                  disabled={isAccepted}
+                  rows={2}
+                  placeholder="Who is responsible?"
+                />
+              </div>
+              <div>
+                <Label htmlFor="deliverable">Completion Indicator</Label>
+                <Textarea
+                  id="deliverable"
+                  value={formData.deliverable || ''}
+                  onChange={(e) => handleInputChange('deliverable', e.target.value)}
+                  disabled={isAccepted}
+                  rows={2}
+                  placeholder="What will be delivered?"
+                />
+              </div>
+            </div>
+          )}
+          {/* 10. Timeline Month & 11. Target Date & 12. Actual Date */}
           <div className="grid grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="category">Category</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(value: ESGCategory) => handleInputChange('category', value)}
-                disabled={isAccepted}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="environmental">Environmental</SelectItem>
-                  <SelectItem value="social">Social</SelectItem>
-                  <SelectItem value="governance">Governance</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="CS">CP/CS</Label>
-              <Select
-                value={formData.CS}
-                onValueChange={(value: ESGCapDealCondition) => handleInputChange('CS', value)}
-                disabled={isAccepted}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="CP">Condition Precedent (CP)</SelectItem>
-                  <SelectItem value="CS">Condition Subsequent (CS)</SelectItem>
-                  <SelectItem value="none">None</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="priority">Priority</Label>
-              <Select
-                value={formData.priority}
-                onValueChange={(value: ESGCapPriority) => handleInputChange('priority', value)}
-                disabled={isAccepted}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="High">High</SelectItem>
-                  <SelectItem value="Medium">Medium</SelectItem>
-                  <SelectItem value="Low">Low</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="targetDate">Target Date</Label>
-              <Input
-                id="targetDate"
-                type="date"
-                value={formData.targetDate}
-                onChange={(e) => handleInputChange('targetDate', e.target.value)}
-                disabled={isAccepted}
-              />
-            </div>
+            {!isAccepted && (
+              <div>
+                <Label htmlFor="timelineMonth">Timeline (Months)</Label>
+                <Input
+                  id="timelineMonth"
+                  type="number"
+                  min="0"
+                  value={formData.timelineMonth || ''}
+                  onChange={(e) => handleInputChange('timelineMonth', e.target.value ? Number(e.target.value) : undefined)}
+                  disabled={isAccepted}
+                  placeholder="e.g., 3"
+                />
+              </div>
+            )}
+            {!isAccepted && (
+              <div>
+                <Label htmlFor="targetDate">Target Date</Label>
+                <Input
+                  id="targetDate"
+                  type="date"
+                  value={formData.targetDate || ''}
+                  onChange={(e) => handleInputChange('targetDate', e.target.value)}
+                  disabled={isAccepted}
+                />
+              </div>
+            )}
             <div>
               <Label htmlFor="actualDate">Actual Date</Label>
               <Input
@@ -196,64 +275,131 @@ export const ESGCapReviewDialog: React.FC<ESGCapReviewDialogProps> = ({
               />
             </div>
           </div>
-          <div>
-            <Label htmlFor="status">Status *</Label>
-            <Select
-              value={formData.status}
-              onValueChange={(value: ESGCapStatus) => handleInputChange('status', value)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="in_review">In Review</SelectItem>
-                <SelectItem value="accepted">Accepted</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="delayed">Delayed</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
 
-          <div>
-            <Label>Proof of Completion</Label>
-            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
-              <div className="text-center">
-                <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
-                <div className="mt-4">
-                  <label htmlFor="proof-upload" className="cursor-pointer">
-                    <span className="mt-2 block text-sm font-medium text-muted-foreground">
-                      Upload proof of completion
-                    </span>
-                    <input
-                      id="proof-upload"
-                      type="file"
-                      className="hidden"
-                      onChange={handleFileUpload}
-                      // accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                    />
-                  </label>
-                </div>
-                {proofFile && (
-                  <div className="mt-4 p-3 bg-muted rounded-md">
-                    <div className="flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      <span className="text-sm">{proofFile.name}</span>
-                    </div>
-                  </div>
-                )}
+          {/* 13. CP/CS/ESG & 14. Status */}
+          {!isAccepted && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="CS">CP/CS/ESG Forward areas</Label>
+                <Select
+                  value={formData.CS}
+                  onValueChange={(value: ESGCapDealCondition) => handleInputChange('CS', value)}
+                  disabled={isAccepted}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CP">CP</SelectItem>
+                    <SelectItem value="CS">CS</SelectItem>
+                    <SelectItem value="ESG_FORWARD_AREAS">ESG Forward areas</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value: ESGCapStatus) => handleInputChange('status', value)}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="in_review">In Review</SelectItem>
+                    <SelectItem value="accepted">Accepted</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="delayed">Delayed</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
+          )}
+
+          {/* 15. Current Status Update */}
+          <div>
+            <Label htmlFor="statusUpdate">Company Current Status Update</Label>
+            <Textarea
+              id="statusUpdate"
+              value={formData.statusUpdate || ''}
+              onChange={(e) => handleInputChange('statusUpdate', e.target.value)}
+              rows={2}
+              placeholder="Latest update on this action item"
+            />
           </div>
 
+          {/* 16. Review Remarks & 17. Last Review Date */}
+          {!isAccepted && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="reviewRemarks">Review Remarks</Label>
+                <Textarea
+                  id="reviewRemarks"
+                  value={formData.reviewRemarks || ''}
+                  onChange={(e) => handleInputChange('reviewRemarks', e.target.value)}
+                  rows={2}
+                  placeholder="Reviewer comments"
+                />
+              </div>
+              <div>
+                <Label htmlFor="lastReviewDate">Last Review Date</Label>
+                <Input
+                  id="lastReviewDate"
+                  type="date"
+                  value={formData.lastReviewDate || ''}
+                  onChange={(e) => handleInputChange('lastReviewDate', e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+          {/* 18. Implementation Support & 19. Closure Verified */}
+          {!isAccepted && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="implementationSupportNeeded">Implementation Support Needed</Label>
+                <Textarea
+                  id="implementationSupportNeeded"
+                  value={formData.implementationSupportNeeded || ''}
+                  onChange={(e) => handleInputChange('implementationSupportNeeded', e.target.value)}
+                  rows={2}
+                  placeholder="What support is required?"
+                />
+              </div>
+              <div>
+                <Label htmlFor="closureVerifiedBy">Closure Verified By</Label>
+                <Input
+                  id="closureVerifiedBy"
+                  value={formData.closureVerifiedBy || ''}
+                  onChange={(e) => handleInputChange('closureVerifiedBy', e.target.value)}
+                  placeholder="Name of verifier"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* 20. Assigned To & 21. Remarks */}
+          {!isAccepted && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="assignedTo">Assigned To</Label>
+                <Input
+                  id="assignedTo"
+                  value={formData.assignedTo || ''}
+                  onChange={(e) => handleInputChange('assignedTo', e.target.value)}
+                  disabled={isAccepted}
+                  placeholder="Person responsible"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Actions */}
           <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={onClose} disabled={!buttonEnabled}>
+            <Button variant="outline" onClick={onClose} disabled={!buttonEnabled || isSubmitting}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={!buttonEnabled}>
-              Save Changes
+            <Button onClick={handleSave} disabled={!buttonEnabled || isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </div>

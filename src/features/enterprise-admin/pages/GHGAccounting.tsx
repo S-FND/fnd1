@@ -144,7 +144,7 @@ const GHGAccountingPage = () => {
   return (
     <UnifiedSidebarLayout>
       <div className="space-y-6">
-        <div>
+        <div style={{ marginTop: '18px' }}>
           <h1 className="text-2xl font-bold tracking-tight">GHG Accounting</h1>
           <p className="text-muted-foreground">
             {isUnitAdmin
