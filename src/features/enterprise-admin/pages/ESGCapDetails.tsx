@@ -189,6 +189,14 @@ const ESGCapDetailsPage: React.FC = () => {
                 setAssigneeText(matchedItem?.assignedTo || '');
                 setChangeNote(matchedItem?.changeNote || '');
                 setUpdateText(matchedItem?.UpdateNote || '');
+
+                if (
+                    matchedItem &&
+                    !matchedItem.aiInsights &&
+                    !matchedItem.aiProcessed
+                ) {
+                    await generateAiInsights();
+                }
             } else {
                 toast.error("Failed to load ESG CAP data");
             }
@@ -203,6 +211,19 @@ const ESGCapDetailsPage: React.FC = () => {
     useEffect(() => {
         loadData();
     }, [id, itemName]);
+
+    const generateAiInsights = async () => {
+        try {
+            await httpClient.post('esgdd/escap/generate-ai-insight', {
+                entityId,
+                itemName: decodeURIComponent(itemName || ''),
+            });
+    
+            await loadData();
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     const initialAssignees = capItem?.assignedTo || [];
     const [updateText, setUpdateText] = useState('');
