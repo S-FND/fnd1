@@ -422,7 +422,17 @@ const ESGCapDetailsPage: React.FC = () => {
         );
     };
     if (loading) {
-        return <UnifiedSidebarLayout><Loader2 /> </UnifiedSidebarLayout>;
+        return (
+            <UnifiedSidebarLayout>
+                <div className="min-h-[60vh] flex items-center justify-center">
+                    <div className="text-center">
+                        <p className="text-lg font-medium text-muted-foreground animate-pulse">
+                            Please wait...
+                        </p>
+                    </div>
+                </div>
+            </UnifiedSidebarLayout>
+        );
     }
     return (
         <UnifiedSidebarLayout>
