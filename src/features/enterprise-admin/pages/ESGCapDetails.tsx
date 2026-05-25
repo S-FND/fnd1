@@ -347,7 +347,7 @@ const ESGCapDetailsPage: React.FC = () => {
                 const payload = {
                     entityId,
                     updatedPlan: updatedFullPlan,
-                    reason: 'Investor edited the finalized plan',
+                    reason: 'Founder edited the finalized plan',
                 };
 
                 await editFinalizedPlan(payload);
@@ -385,7 +385,7 @@ const ESGCapDetailsPage: React.FC = () => {
 
         try {
             setDeleting(file.filename);
-            console.log('file___________', file);
+            
             const queryParams = new URLSearchParams({
                 fileName: file.filename,
                 actionItemId: file.aiSummary?.actionItemId || '',
