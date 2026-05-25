@@ -7,7 +7,7 @@ import { logger } from './logger';
 import { PageAccessContext } from '@/context/PageAccessContext';
 
 export const useAuthProvider = () => {
-  const {setPageAccessList,setUserRole,pageAccessList}=useContext(PageAccessContext)
+  const { setPageAccessList, setUserRole, pageAccessList } = useContext(PageAccessContext)
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [permissions, setPermissions] = useState<Permissions>({});
@@ -27,24 +27,24 @@ export const useAuthProvider = () => {
       const storedUser = localStorage.getItem("fandoro-user");
       const storedPermissions = localStorage.getItem("fandoro-permissions");
       const storedToken = localStorage.getItem("fandoro-token");
-  
+
       if (storedUser && storedUser !== "undefined") {
         setUser(JSON.parse(storedUser));
         setEffectiveCompanyId(JSON.parse(storedUser).company_id || '');
       }
-  
+
       if (storedPermissions && storedPermissions !== "undefined") {
         setPermissions(JSON.parse(storedPermissions));
       }
-  
+
       if (storedToken) setToken(storedToken);
     } catch (e) {
       console.error("Error parsing user data", e);
     }
-  
+
     setIsLoading(false);
   }, []);
-  
+
   // useEffect(()=>{
   //   console.log("User is here not null",user)
   // },[user])
@@ -52,19 +52,19 @@ export const useAuthProvider = () => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const res = await fetch(import.meta.env.VITE_API_URL+"/auth/login", {
+      const res = await fetch(import.meta.env.VITE_API_URL + "/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      
+
       const data = await res.json();
       if (!res.ok || !data.status || !data.user) {
         toast.error(data.message || "Invalid credentials");
         setIsLoading(false);
         return;
       }
-      const { user, token,access,roleMenu=[] } = data;
+      const { user, token, access, roleMenu = [] } = data;
 
       // 👇 Assign _id to companyId if role is company-type and companyId is missing
       if (
@@ -91,14 +91,14 @@ export const useAuthProvider = () => {
       localStorage.setItem("fandoro-access", JSON.stringify(access));
       logger.debug("Login successful, user:", user);
       setUserRole(user.role);
-      if(!user.isParent) {
+      if (!user.isParent) {
         logger.debug("Individual user detected, setting roleMenu:", roleMenu);
         localStorage.setItem("fandoro-team-access", JSON.stringify(roleMenu));
         setPageAccessList(roleMenu);
       }
-      
+
       toast.success("Login successful!");
-      redirectBasedOnRole(user.role);
+      redirectBasedOnRole(user.role,user && user.misCompanyId ? true : false);
     } catch (error) {
       logger.error("Login error:", error);
       toast.error("Login failed. Please try again.");
@@ -107,31 +107,35 @@ export const useAuthProvider = () => {
     }
   };
 
-  const redirectBasedOnRole = (role: string) => {
+  const redirectBasedOnRole = (role: string, isFireside: boolean) => {
     // Check if there's a redirect from location state
     const from = location.state?.from;
     let employeeNavigateUrl = "/employee/dashboard"; // Default for employee
-    if(role == 'employee'){
+    if (role == 'employee') {
       let teamAccess = localStorage.getItem("fandoro-team-access");
-      if(teamAccess){
+      if (teamAccess) {
         let teamAccessList = JSON.parse(teamAccess);
         let dashboardAccess = teamAccessList.find((item) => item.accessLevel !== 'no_access' && item.url && item.url !== 'N/A');
-        if(dashboardAccess && dashboardAccess.url){
+        if (dashboardAccess && dashboardAccess.url) {
           employeeNavigateUrl = dashboardAccess.url;
         }
       }
     }
 
-      const investorEmailStored = localStorage.getItem("fandoro-admin");
-      const isInvestorEmailExists = !!investorEmailStored;
-    
-    switch(role) {
+    const investorEmailStored = localStorage.getItem("fandoro-admin");
+    const isInvestorEmailExists = !!investorEmailStored;
+
+    switch (role) {
       case "fandoro_admin":
         navigate("/fandoro-admin/dashboard");
         break;
       case "admin":
         if (isInvestorEmailExists) {
-          navigate("/esg-dd/cap");
+          if (isFireside) {
+            navigate("/esg-dd/cap?dialog=assessment");
+          } else {
+            navigate("/esg-dd/cap");
+          }
         } else {
           navigate("/company");
         }
@@ -195,23 +199,23 @@ export const useAuthProvider = () => {
 
   const isAuthenticatedStatus = (roles: string[]) => {
     let storedUser: User | null = null;
-  
+
     try {
       const data = localStorage.getItem("fandoro-user");
       if (data && data !== "undefined") {
         storedUser = JSON.parse(data);
       }
-    } catch {}
-  
+    } catch { }
+
     const storedToken = localStorage.getItem("fandoro-token");
-  
+
     if (storedUser && storedToken) {
       if (roles?.length > 0) {
         return roles.includes(storedUser.role);
       }
       return true;
     }
-  
+
     return false;
   };
 
@@ -221,8 +225,8 @@ export const useAuthProvider = () => {
       if (data && data !== "undefined") {
         setUser(JSON.parse(data));
       }
-    } catch {}
-  
+    } catch { }
+
     setIsLoading(false);
   }, []);
 

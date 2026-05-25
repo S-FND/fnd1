@@ -34,6 +34,7 @@ import { set } from 'date-fns';
 import { ESGCapScoring } from '../components/esg-cap/ESGCapScoring';
 import AuditDrawer, { AuditLog } from '../components/esg-cap/AuditDrawer';
 import { httpClient } from '@/lib/httpClient';
+import AssessmentTypeDialog from '@/features/mis/company/Assessmenttypedialog';
 
 interface PlanHistory {
   updateByUserId: string;
@@ -363,6 +364,7 @@ const ESGCapPage = () => {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
     new Set(["CP – Conditions Precedent", "CS – Conditions Subsequent", "ESG Roadmap", "Other Items"])
   );
+  const [assesmentTypeOpen, setAssessmentTypeOpen] = useState(false);
 
   const toggleGroup = (groupName: string) => {
     setCollapsedGroups(prev => {
@@ -603,7 +605,7 @@ const ESGCapPage = () => {
       !item.actualDate
     );
   };
-  ;
+  
 
   const sortedItems = [...filteredItems].sort((a, b) => {
     // 1. overdue items on top
@@ -713,7 +715,11 @@ const ESGCapPage = () => {
     return loading || !buttonEnabled || isPlanFinalized;
   };
 
-  logger.log('shouldDisableAcceptButton', shouldDisableAcceptButton());
+  // useEffect(() => {
+  //   if(user && user.misCompanyId) {
+  //     setAssessmentTypeOpen(true);
+  //   }
+  // }, [user]);
 
   if (isLoading) {
     return (
@@ -804,7 +810,7 @@ const ESGCapPage = () => {
       <Loader show={loading} text={loadingMessage} />
       <UnifiedSidebarLayout>
         <Card className="shadow-lg border-0">
-            {/* <CardHeader className="border-b">
+          {/* <CardHeader className="border-b">
               <CardDescription className="text-sm">
                 <h1 className="text-3xl font-bold tracking-tight">ESG Corrective Action Plan</h1>
                 <p className="mt-1">
@@ -925,9 +931,17 @@ const ESGCapPage = () => {
         </Card>
       </UnifiedSidebarLayout>
       <AuditDrawer open={auditOpen} onClose={() => setAuditOpen(false)} logs={logs} />
+      <AssessmentTypeDialog />
 
     </div>
   );
 };
 
 export default ESGCapPage;
+
+// isOpenStatus={assesmentTypeOpen}
+//         onClose={() => setAssessmentTypeOpen(false)}
+//         onProceed={(type: "mis" | "escap") => {
+//           console.log("Selected:", type);
+//           setAssessmentTypeOpen(false);
+//         }}
