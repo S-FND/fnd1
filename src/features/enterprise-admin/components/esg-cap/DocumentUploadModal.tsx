@@ -24,7 +24,7 @@ interface DocumentUploadModalProps {
   itemResource?: string;
   itemSourceType?: string;
   setReloadData?: (reload: boolean) => void;
-
+  indicatorLabel?: string; 
   // onUploadSuccess: () => void;
 }
 
@@ -100,7 +100,8 @@ export const DocumentUploadModal = ({
   itemPolicy,
   itemResource,
   itemSourceType,
-  setReloadData
+  setReloadData,
+  indicatorLabel
   // onUploadSuccess 
 }: DocumentUploadModalProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -109,7 +110,6 @@ export const DocumentUploadModal = ({
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [needsAuth, setNeedsAuth] = useState(false);
-
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -181,6 +181,7 @@ export const DocumentUploadModal = ({
       formData.append("itemPolicy", itemPolicy);
       formData.append("itemResource", itemResource || '');
       formData.append("itemSourceType", itemSourceType || '');
+      formData.append("indicatorLabel", indicatorLabel);
       let validate = await httpClient.post<ValidationResult>('esgdd/escap/validate-document', formData);
       console.log("Validation response =>", validate);
       if (validate.status == 201) {
@@ -289,13 +290,14 @@ export const DocumentUploadModal = ({
       formData.append("itemPolicy", itemPolicy);
       formData.append("itemResource", itemResource || '');
       formData.append("itemSourceType", itemSourceType || '');
+      formData.append("indicatorLabel", indicatorLabel);
       let uploadRes = await httpClient.post<ValidationResult>('esgdd/escap/upload-file/esgcap', formData);
 
       if (uploadRes.status !== 201) {
         throw new Error("Upload failed");
       }
       toast.success("Document uploaded successfully");
-      window.location.reload();
+      // window.location.reload();
       // Save document record to database
       // const { error: dbError } = await supabase
       //   .from('compliance_documents')

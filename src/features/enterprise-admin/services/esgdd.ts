@@ -110,3 +110,14 @@ export const updatePlan = async (
     throw error;
     }
 };
+export const editFinalizedPlan = async (payload: any) => {
+  const token = localStorage.getItem("fandoro-token");
+
+  const response = await axios.post(`${API_URL}/esgdd/escap/edit-finalized-plan`, payload, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      },
+  });
+  return response.data;
+};

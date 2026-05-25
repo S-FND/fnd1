@@ -8,12 +8,13 @@ import { SidebarSubmenu } from './SidebarSubmenu';
 interface ReportsSubmenuProps {
   isExpanded: boolean;
   onToggle: () => void;
-  submenu:[]
+  submenu?: any[];
 }
 
 export const ReportsSubmenu: React.FC<ReportsSubmenuProps> = ({
   isExpanded,
-  onToggle
+  onToggle,
+  submenu= []
 }) => {
   const location = useLocation();
   const isReportsPath = location.pathname.startsWith('/reports');

@@ -10,11 +10,11 @@ export const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority = 'low' }
   const getPriorityStyles = (priority: ESGCapPriority) => {
     switch (priority.toLowerCase()) {
       case 'high':
-        return 'bg-red-500 text-white';      // destructive
+        return 'bg-red-200 text-red-500';      // destructive
       case 'medium':
-        return 'bg-yellow-400 text-black';   // warning
+        return 'bg-yellow-200 text-yellow-700';   // warning
       case 'low':
-        return 'bg-gray-300 text-black';     // muted
+        return 'bg-blue-200 text-blue-700';     // muted
       default:
         return 'bg-gray-300 text-black';
     }
