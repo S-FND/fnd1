@@ -110,7 +110,7 @@ function App() {
         <Route path="/mis/kpi-entry" element={
           <FeatureKPIEntry />
         } />
-        <Route path="/company/preview" element={
+        <Route path="/mis/preview-submit" element={
           <PreviewSubmission />
         } />
         <Route path="/enhanced-dashboard" element={<EnhancedDashboard />} />

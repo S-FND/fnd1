@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { httpClient } from '@/lib/httpClient';
 
 interface QuarterDataStatus {
   hasData: boolean;
@@ -39,21 +40,22 @@ export const useQuarterlyDataStatus = (companyId: string, year: number): Quarter
 
     try {
       // Fetch entries for all quarters in this year
-      const { data, error } = await supabase
-        .from('kpi_entries')
-        .select('quarter, kpi_id, value')
-        .eq('company_id', companyId)
-        .eq('year', year)
-        .in('quarter', ['Q1', 'Q2', 'Q3', 'Q4']);
+      // const { data, error } = await supabase
+      //   .from('kpi_entries')
+      //   .select('quarter, kpi_id, value')
+      //   .eq('company_id', companyId)
+      //   .eq('year', year)
+      //   .in('quarter', ['Q1', 'Q2', 'Q3', 'Q4']);
+      const data=await httpClient.get<{ quarter: string; kpi_id: string; value: string }[]>(`mis/kpi-entries/status?companyId=${companyId}&year=${year}&quarters=Q1,Q2,Q3,Q4`);
 
-      if (error) throw error;
+      // if (error) throw error;
       
       if (!isMounted.current) return;
 
       // Count non-empty entries per quarter
       const quarterCounts: Record<string, number> = { Q1: 0, Q2: 0, Q3: 0, Q4: 0 };
       
-      data?.forEach(entry => {
+      data.data?.forEach(entry => {
         // Only count entries with actual values
         if (entry.value && entry.value.trim() !== '') {
           quarterCounts[entry.quarter] = (quarterCounts[entry.quarter] || 0) + 1;

@@ -55,6 +55,7 @@ import { cn } from '@/lib/utils';
 import { httpClient } from '@/lib/httpClient';
 import { useAuth } from '@/context/AuthContext';
 import UnifiedSidebarLayout from '@/components/layout/UnifiedSidebarLayout';
+import { all } from 'axios';
 
 // Feature icon mapping
 const FEATURE_ICONS: Record<string, React.ElementType> = {
@@ -109,7 +110,11 @@ const PreviewSubmission = () => {
   const { user, companyName, effectiveCompanyId } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const companyId = effectiveCompanyId || user?.companyId || 'company-1';
+  const companyId = effectiveCompanyId || user?.company_id || 'company-1';
+
+  useEffect(() => {
+    console.log('Auth context values in PreviewSubmission:', { user, effectiveCompanyId, companyId });
+  }, [effectiveCompanyId, user]);
 
   // Period selection from URL params — default to the open period (Q1 2026)
   const selectedQuarter = searchParams.get('quarter') || 'Q1';
@@ -154,7 +159,7 @@ const PreviewSubmission = () => {
         //   .select('industry')
         //   .eq('company_id', companyId)
         //   .maybeSingle();
-        const  data:{data: { industry: string | null }}  = await httpClient.get(`/company/${companyId}/profile`); // Updated to use httpClient
+        const  data:{data: { industry: string | null }}  = await httpClient.get(`mis/company-profiles?companyId=${companyId}`); // Updated to use httpClient
 
         if (data) {
           setCompanyIndustry(data.data.industry);
@@ -235,8 +240,10 @@ const PreviewSubmission = () => {
         //   .eq('year', selectedYear)
         //   .not('value', 'is', null)
         //   .neq('value', '');
-        const quarterdata:{ data: KPIEntry[] } = await httpClient.get(`/company/${companyId}/kpi-entries?quarter=${selectedQuarter}&year=${selectedYear}`); // Updated to use httpClient
-        const quarterlyData = quarterdata.data;
+        const quarterdata:{ data: KPIEntry[] } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&year=${selectedYear}`); // Updated to use httpClient
+        // quarter=${selectedQuarter}
+        const allEntries = quarterdata.data || [];
+        const quarterlyData = allEntries.filter(e => e.quarter === selectedQuarter);
 
         // if (quarterlyError) throw quarterlyError;
 
@@ -250,8 +257,10 @@ const PreviewSubmission = () => {
         //   .not('value', 'is', null)
         //   .neq('value', '');
 
-        const data:{ data: KPIEntry[] } = await httpClient.get(`/company/${companyId}/kpi-entries?quarter=FY&year=${currentFY}`); // Updated to use httpClient
-        const annualData = data.data;
+        // const data:{ data: KPIEntry[] } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&year=${currentFY}`); // Updated to use httpClient
+        // &quarter=FY
+        const annualData = allEntries.filter(e => e.quarter === 'FY' && e.year === currentFY);
+        // data.data;
 
         const combined = [...(quarterlyData || []), ...(annualData || [])];
         setAllEntries(combined);
@@ -767,11 +776,11 @@ const PreviewSubmission = () => {
             </p>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" onClick={() => navigate('/company/data-entry')}>
+            <Button variant="outline" onClick={() => navigate('/mis/data-entry')}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to KPI Entry
             </Button>
-            <Button onClick={() => navigate('/company/dashboard')}>
+            <Button onClick={() => navigate('/mis/dashboard')}>
               Go to Dashboard
             </Button>
           </div>
@@ -794,7 +803,7 @@ const PreviewSubmission = () => {
               onYearChange={handleYearChange}
               includeAnnual
             />
-            <Button variant="ghost" onClick={() => navigate('/company/data-entry')}>
+            <Button variant="ghost" onClick={() => navigate('/mis/data-entry')}>
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to KPI Entry
             </Button>

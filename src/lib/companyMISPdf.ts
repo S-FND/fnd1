@@ -9,7 +9,7 @@ const getOrdinalSuffix = (n: number): string => {
   const v = n % 100;
   return s[(v - 20) % 10] || s[v] || s[0];
 };
-import { CompanyRawMetrics } from '@/hooks/useAnalyticsDashboardData';
+import { CompanyRawMetrics } from '@/hooks/useAnalyticsDashboardDataOld';
 import { CompanyRanking } from '@/hooks/usePortfolioRankings';
 import {
   applyEnvironmentPercentileNormalization,

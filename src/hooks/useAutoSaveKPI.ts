@@ -1,6 +1,7 @@
 import { useCallback, useRef, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { httpClient } from '@/lib/httpClient';
 
 interface AutoSaveOptions {
   companyId: string;
@@ -46,13 +47,16 @@ export const useAutoSaveKPI = (options: AutoSaveOptions) => {
         year: year,
       }));
 
-      const { error } = await supabase
-        .from('kpi_entries')
-        .upsert(entries, {
-          onConflict: 'company_id,kpi_id,quarter,year'
-        });
+      // const { error } = await supabase
+      //   .from('kpi_entries')
+      //   .upsert(entries, {
+      //     onConflict: 'company_id,kpi_id,quarter,year'
+      //   });
 
-      if (error) throw error;
+      const data=await httpClient.post(`mis/kpi-entries/upsert`, { entries });
+       let result=data ? { data: data, error: null } : { data: null, error: new Error('Failed to save KPI entries') };
+
+      // if (result.error) throw result.error;
       
       // For Sourcing & Fulfillment feature, also save to all other quarters in the same FY
       if (featureKey === 'sourcingFulfillment' && !isAnnual) {
@@ -71,25 +75,25 @@ export const useAutoSaveKPI = (options: AutoSaveOptions) => {
             
             // Use upsert to avoid overwriting manually entered data
             // Only insert if no value exists for that quarter
-            for (const entry of otherQuarterEntries) {
-              const { data: existing } = await supabase
-                .from('kpi_entries')
-                .select('value')
-                .eq('company_id', entry.company_id)
-                .eq('kpi_id', entry.kpi_id)
-                .eq('quarter', entry.quarter)
-                .eq('year', entry.year)
-                .maybeSingle();
+            // for (const entry of otherQuarterEntries) {
+            //   const { data: existing } = await supabase
+            //     .from('kpi_entries')
+            //     .select('value')
+            //     .eq('company_id', entry.company_id)
+            //     .eq('kpi_id', entry.kpi_id)
+            //     .eq('quarter', entry.quarter)
+            //     .eq('year', entry.year)
+            //     .maybeSingle();
               
-              // Only insert if no existing value or existing value is empty
-              if (!existing || !existing.value || existing.value.trim() === '') {
-                await supabase
-                  .from('kpi_entries')
-                  .upsert([entry], {
-                    onConflict: 'company_id,kpi_id,quarter,year'
-                  });
-              }
-            }
+            //   // Only insert if no existing value or existing value is empty
+            //   if (!existing || !existing.value || existing.value.trim() === '') {
+            //     await supabase
+            //       .from('kpi_entries')
+            //       .upsert([entry], {
+            //         onConflict: 'company_id,kpi_id,quarter,year'
+            //       });
+            //   }
+            // }
           }
         }
       }

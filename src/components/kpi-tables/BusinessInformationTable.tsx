@@ -47,6 +47,8 @@ const BUSINESS_KPIS = [
 ];
 
 export const BusinessInformationTable = ({ formData, onInputChange, historicalData = {} }: BusinessInformationTableProps) => {
+  console.log('Rendering BusinessInformationTable with formData:', formData);
+  console.log('Historical data:', historicalData);
   const handleCopyHistoricalValue = (kpiKey: string, value: string) => {
     onInputChange(kpiKey, value);
     toast.success('Value copied from previous period');

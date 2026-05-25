@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { EDIT_RIGHTS_PAUSED } from '@/lib/companyAccessControl';
+import { httpClient } from '@/lib/httpClient';
 
 // Feature modules configuration
 export const QUARTERLY_FEATURES = [
@@ -56,26 +57,28 @@ export const useCompanyFeatures = (companyId?: string) => {
 
     try {
       setLoading(true);
-      const { data, error: fetchError } = await supabase
-        .from('company_feature_settings')
-        .select('*')
-        .eq('company_id', companyId);
+      // const { data, error: fetchError } = await supabase
+      //   .from('company_feature_settings')
+      //   .select('*')
+      //   .eq('company_id', companyId);
 
-      if (fetchError) throw fetchError;
+      const data=await httpClient.get(`mis/company-feature-settings?companyId=${companyId}`) as { data: CompanyFeatureSetting[]; error?: any };
+
+      if (data.error) throw data.error;
 
       // Get the set of current feature keys
       const currentFeatureKeys = new Set(ALL_FEATURES.map(f => f.key));
       
       // Check if we have all the current feature keys in the database
-      const existingKeys = new Set((data || []).map(d => d.feature_key));
+      const existingKeys = new Set((data.data || []).map(d => d.feature_key));
       const missingKeys = ALL_FEATURES.filter(f => !existingKeys.has(f.key));
 
       // If no features exist or there are missing keys, upsert the features
-      if (!data || data.length === 0 || missingKeys.length > 0) {
+      if (!data.data || data.data.length === 0 || missingKeys.length > 0) {
         // Create default features for all keys (will upsert)
         const defaultFeatures = ALL_FEATURES.map((f) => {
           // Check if this feature already exists (for existing keys, preserve their settings)
-          const existing = (data || []).find(d => d.feature_key === f.key);
+          const existing = (data.data || []).find(d => d.feature_key === f.key);
           return {
             company_id: companyId,
             feature_key: f.key,

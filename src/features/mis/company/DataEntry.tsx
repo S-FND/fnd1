@@ -154,9 +154,13 @@ const DataEntry = () => {
   const { user, companyName, effectiveCompanyId, isAdmin, isFandoro, isCompanyReadOnly } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const companyId = effectiveCompanyId || user?.companyId || 'company-1';
+  const companyId = effectiveCompanyId || user?.company_id || 'company-1';
   // Get company's default values
   const company = mockCompanies.find(c => c.id === companyId);
+
+  useEffect(() => {
+    console.log('Auth context values in DataEntry:', { user, effectiveCompanyId, companyId });
+  }, [effectiveCompanyId, user]);
 
   // Get enabled features for this company
   const { isFeatureEnabled, loading: loadingFeatures, getEnabledFeatures } = useCompanyFeatures(companyId);
@@ -180,11 +184,11 @@ const DataEntry = () => {
 
   // Handle quarter/year change - update URL params
   const handleQuarterChange = (newQuarter: string) => {
-    navigate(`/company/data-entry?quarter=${newQuarter}&year=${selectedYear}`, { replace: true });
+    navigate(`/mis/data-entry?quarter=${newQuarter}&year=${selectedYear}`, { replace: true });
   };
 
   const handleYearChange = (newYear: number) => {
-    navigate(`/company/data-entry?quarter=${selectedQuarter}&year=${newYear}`, { replace: true });
+    navigate(`/mis/data-entry?quarter=${selectedQuarter}&year=${newYear}`, { replace: true });
   };
 
   // Loading states
@@ -225,13 +229,13 @@ const DataEntry = () => {
         //   .from('kpi_master')
         //   .select('*')
         //   .order('created_at', { ascending: true });
-        const data = await httpClient.get('/kpi_master');
+        const data = await httpClient.get('mis/kpi-masters');
 
         if (!data.status || data.status !== 200) throw new Error('Failed to load KPIs');
 
-        if (data) {
-          // const mappedKPIs = (data as DBKPIMaster[]).map(dbToKPI);
-          // setAllKPIs(mappedKPIs);
+        if (data.data) {
+          const mappedKPIs = (data.data as DBKPIMaster[]).map(dbToKPI);
+          setAllKPIs(mappedKPIs);
         }
       } catch (error) {
         console.error('Error loading KPIs:', error);
@@ -259,11 +263,11 @@ const DataEntry = () => {
           },
           status: number;
 
-        } = await httpClient.get(`/company_profiles?company_id=${companyId}`)
+        } = await httpClient.get(`mis/company-profiles?companyId=${companyId}`)
 
         if (!data.status || data.status !== 200) throw new Error('Failed to load company profile');
 
-        if (data) {
+        if (data.data) {
           const revenueStage = data.data.revenue_stage as RevenueStage;
           const industry = data.data.industry as Industry;
           setSelectedRevenueStage(revenueStage);
@@ -296,29 +300,73 @@ const DataEntry = () => {
   }, [companyId]);
 
   // Load filled KPI entries to track completion
+  // useEffect(() => {
+  //   const loadEntries = async () => {
+  //     if (allKPIs.length === 0) return;
+
+  //     try {
+  //       // Load quarterly entries
+  //       // const { data: quarterlyData } = await supabase
+  //       //   .from('kpi_entries')
+  //       //   .select('kpi_id, submitted_at')
+  //       //   .eq('company_id', companyId)
+  //       //   .eq('quarter', selectedQuarter)
+  //       //   .eq('year', selectedYear);
+
+  //       // Load annual entries
+  //       // const { data: annualData } = await supabase
+  //       //   .from('kpi_entries')
+  //       //   .select('kpi_id, submitted_at')
+  //       //   .eq('company_id', companyId)
+  //       //   .eq('quarter', 'FY')
+  //       //   .eq('year', currentFY);
+
+  //       const data = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=${selectedQuarter}&year=${selectedYear}`);
+  //       const annualDataResponse = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=FY&year=${currentFY}`)
+  //       const quarterlyData = data.data as { kpi_id: string; submitted_at: string }[];
+  //       const annualData = annualDataResponse.data as { kpi_id: string; submitted_at: string }[];
+  //       const filledIds = new Set<string>();
+  //       let latestQuarterlySubmit: string | null = null;
+  //       let latestAnnualSubmit: string | null = null;
+
+  //       quarterlyData?.forEach(entry => {
+  //         filledIds.add(entry.kpi_id);
+  //         if (entry.submitted_at && (!latestQuarterlySubmit || entry.submitted_at > latestQuarterlySubmit)) {
+  //           latestQuarterlySubmit = entry.submitted_at;
+  //         }
+  //       });
+
+  //       annualData?.forEach(entry => {
+  //         filledIds.add(entry.kpi_id);
+  //         if (entry.submitted_at && (!latestAnnualSubmit || entry.submitted_at > latestAnnualSubmit)) {
+  //           latestAnnualSubmit = entry.submitted_at;
+  //         }
+  //       });
+
+  //       setFilledKPIIds(filledIds);
+  //       setQuarterlySubmittedAt(latestQuarterlySubmit);
+  //       setAnnualSubmittedAt(latestAnnualSubmit);
+  //     } catch (error) {
+  //       console.error('Error loading entries:', error);
+  //     } finally {
+  //       setIsLoadingEntries(false);
+  //     }
+  //   };
+
+  //   loadEntries();
+  // }, [companyId, allKPIs, selectedQuarter, selectedYear, currentFY]);
+
+  // Load filled KPI entries to track completion
   useEffect(() => {
     const loadEntries = async () => {
-      if (allKPIs.length === 0) return;
+      if (allKPIs.length === 0) {
+        setIsLoadingEntries(false); // FIX: was never reaching finally block due to early return, causing stuck loader
+        return;
+      }
 
       try {
-        // Load quarterly entries
-        // const { data: quarterlyData } = await supabase
-        //   .from('kpi_entries')
-        //   .select('kpi_id, submitted_at')
-        //   .eq('company_id', companyId)
-        //   .eq('quarter', selectedQuarter)
-        //   .eq('year', selectedYear);
-
-        // Load annual entries
-        // const { data: annualData } = await supabase
-        //   .from('kpi_entries')
-        //   .select('kpi_id, submitted_at')
-        //   .eq('company_id', companyId)
-        //   .eq('quarter', 'FY')
-        //   .eq('year', currentFY);
-
-        const data = await httpClient.get(`/kpi_entries?company_id=${companyId}&quarter=${selectedQuarter}&year=${selectedYear}`);
-        const annualDataResponse = await httpClient.get(`/kpi_entries?company_id=${companyId}&quarter=FY&year=${currentFY}`)
+        const data = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=${selectedQuarter}&year=${selectedYear}`);
+        const annualDataResponse = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=FY&year=${currentFY}`)
         const quarterlyData = data.data as { kpi_id: string; submitted_at: string }[];
         const annualData = annualDataResponse.data as { kpi_id: string; submitted_at: string }[];
         const filledIds = new Set<string>();
@@ -480,8 +528,8 @@ const DataEntry = () => {
       //   .eq('year', currentFY)
       //   .not('value', 'is', null);
 
-      const data = await httpClient.get(`/kpi_entries?company_id=${companyId}&year=${selectedYear}&quarter=in.(Q1,Q2,Q3,Q4)`);
-      const annualDataResponse = await httpClient.get(`/kpi_entries?company_id=${companyId}&quarter=FY&year=${currentFY}`)
+      const data = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&year=${selectedYear}&quarter=in.(Q1,Q2,Q3,Q4)`);
+      const annualDataResponse = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=FY&year=${currentFY}`)
       const allQuarterlyData = data.data as { kpi_id: string; quarter: string }[];
       const annualData = annualDataResponse.data as { kpi_id: string }[];
 
@@ -755,7 +803,7 @@ const DataEntry = () => {
               <Card
                 key={feature.key}
                 className="cursor-pointer hover:shadow-md transition-shadow group"
-                onClick={() => navigate(`/company/kpi-entry?tab=quarterly&feature=${feature.key}&quarter=${selectedQuarter}&year=${selectedYear}`)}
+                onClick={() => navigate(`/mis/kpi-entry?tab=quarterly&feature=${feature.key}&quarter=${selectedQuarter}&year=${selectedYear}`)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
@@ -794,7 +842,7 @@ const DataEntry = () => {
               <Card
                 key={feature.key}
                 className="cursor-pointer hover:shadow-md transition-shadow group"
-                onClick={() => navigate(`/company/kpi-entry?tab=annual&feature=${feature.key}&quarter=Q4&year=${selectedYear}`)}
+                onClick={() => navigate(`/mis/kpi-entry?tab=annual&feature=${feature.key}&quarter=Q4&year=${selectedYear}`)}
               >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">

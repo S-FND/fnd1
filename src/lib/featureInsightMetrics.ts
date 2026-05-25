@@ -2,7 +2,7 @@
  * Shared mapping of feature keys to their derived insight metrics.
  * Used by FeatureAnalyticsView for rendering and by export builders for CSV/PDF generation.
  */
-import type { InsightMetrics } from '@/hooks/useAnalyticsDashboardData';
+import type { InsightMetrics } from '@/hooks/useAnalyticsDashboardDataOld';
 
 export interface FeatureInsightMetric {
   label: string;

@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Leaf, UsersRound, Shield, Trophy, BarChart3 } from 'lucide-react';
-import { CompanyRawMetrics } from '@/hooks/useAnalyticsDashboardData';
+import { CompanyRawMetrics } from '@/hooks/useAnalyticsDashboardDataOld';
 import { CompanyRanking } from '@/hooks/usePortfolioRankings';
 import {
   extractNonFashionRawComponents,
@@ -379,12 +379,18 @@ export const ESGRecommendationsPanel = ({
   rankings,
   year,
 }: ESGRecommendationsPanelProps) => {
+//   console.log("companyId in ESGRecommendationsPanel:", companyId);
+//   console.log("allCompaniesRaw in ESGRecommendationsPanel:", allCompaniesRaw);
+//   console
+// .log("rankings in ESGRecommendationsPanel:", rankings);
+// console.log("year in ESGRecommendationsPanel:", year);
   const [benchmark, setBenchmark] = useState<BenchmarkMode>('portfolio');
 
   // Derive sourcingEnabledIds from the social percentile data already computed
   const sourcingEnabledIds = useMemo(() => {
     const ids = new Set<string>();
     allCompaniesRaw.forEach(c => {
+      // console.log('Checking sourcing for company:', c.companyId, (c.insights as any)?._socialPercentiles);
       const sp = (c.insights as any)?._socialPercentiles;
       if (sp?.hasSourcing) ids.add(c.companyId);
     });

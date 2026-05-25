@@ -143,7 +143,11 @@ const FeatureKPIEntry = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   
-  const companyId = effectiveCompanyId || user?.companyId || 'company-1';
+  const companyId = effectiveCompanyId || user?.company_id ;
+
+  useEffect(() => {
+    console.log('Auth context values in FeatureKPIEntry:', { user, effectiveCompanyId, companyId });
+  }, [effectiveCompanyId, user]);
   const featureKey = searchParams.get('feature') || '';
   const tabType = searchParams.get('tab') as 'quarterly' | 'annual' || 'quarterly';
   const isAnnual = tabType === 'annual';
@@ -179,16 +183,16 @@ const FeatureKPIEntry = () => {
     // If we're on an annual feature and switching away from Q4, redirect to data-entry page
     if (isAnnual && newQuarter !== 'Q4') {
       // Annual features are only available in Q4 - redirect to data entry
-      navigate(`/company/data-entry?quarter=${newQuarter}&year=${selectedYear}`);
+      navigate(`/mis/data-entry?quarter=${newQuarter}&year=${selectedYear}`);
       return;
     }
     // Update URL with new quarter, keeping the rest of the params
-    navigate(`/company/kpi-entry?tab=${tabType}&feature=${featureKey}&quarter=${newQuarter}&year=${selectedYear}`);
+    navigate(`/mis/kpi-entry?tab=${tabType}&feature=${featureKey}&quarter=${newQuarter}&year=${selectedYear}`);
   }, [isAnnual, navigate, tabType, featureKey, selectedYear]);
   
   // Handle year change - update URL
   const handleYearChange = useCallback((newYear: number) => {
-    navigate(`/company/kpi-entry?tab=${tabType}&feature=${featureKey}&quarter=${selectedQuarter}&year=${newYear}`);
+    navigate(`/mis/kpi-entry?tab=${tabType}&feature=${featureKey}&quarter=${selectedQuarter}&year=${newYear}`);
   }, [navigate, tabType, featureKey, selectedQuarter]);
 
   // Find feature info
@@ -288,6 +292,7 @@ const FeatureKPIEntry = () => {
       //   .select('revenue_stage, industry')
       //   .eq('company_id', companyId)
       //   .maybeSingle();
+      // debugger;
       const data: {
           data: {
             revenue_stage: RevenueStage;
@@ -295,7 +300,7 @@ const FeatureKPIEntry = () => {
           },
           status: number;
 
-        } = await httpClient.get(`/company_profiles?company_id=${companyId}`)
+        } = await httpClient.get(`mis/company-profiles?companyId=${companyId}`)
 
         if (!data.status || data.status !== 200) throw new Error('Failed to load company profile');
 
@@ -317,7 +322,9 @@ const FeatureKPIEntry = () => {
         }
       }
     };
-    loadProfile();
+    if(companyId) {
+      loadProfile();
+    }
   }, [companyId]);
 
   // Load KPIs from database
@@ -328,8 +335,8 @@ const FeatureKPIEntry = () => {
         //   .from('kpi_master')
         //   .select('*')
         //   .order('created_at', { ascending: true });
-        const  data: { data: DBKPIMaster[];  } = await httpClient.get('/kpi_master');
-
+        const  data: { data: DBKPIMaster[];  } = await httpClient.get('mis/kpi-masters');
+        // debugger;
         if (data) {
           const mappedKPIs = (data.data as DBKPIMaster[]).map(dbToKPI);
           setAllKPIs(mappedKPIs);
@@ -363,7 +370,7 @@ const FeatureKPIEntry = () => {
         //   .eq('company_id', companyId)
         //   .eq('quarter', targetQuarter)
         //   .eq('year', targetYear);
-        const data: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`/kpi_entries?company_id=${companyId}&quarter=${targetQuarter}&year=${targetYear}`);
+        const data: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=${targetQuarter}&year=${targetYear}`);
 
         // if (error) throw error;
 
@@ -390,7 +397,7 @@ const FeatureKPIEntry = () => {
           //   .eq('company_id', companyId)
           //   .eq('quarter', 'FY')
           //   .eq('year', lastYear);
-          const lastYearData: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`/kpi_entries?company_id=${companyId}&quarter=FY&year=${lastYear}`);
+          const lastYearData: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=FY&year=${lastYear}`);
 
           if ( lastYearData && lastYearData.data.length > 0) {
             const entries: Record<string, string | number | boolean> = {};
@@ -423,7 +430,7 @@ const FeatureKPIEntry = () => {
             //   .eq('company_id', companyId)
             //   .eq('quarter', 'Q4')
             //   .eq('year', 2025);
-            const prevQData: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`/kpi_entries?company_id=${companyId}&quarter=Q4&year=2025`);
+            const prevQData: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=Q4&year=2025`);
 
           if ( prevQData && prevQData.data.length > 0) {
             const entries: Record<string, string | number | boolean> = {};
@@ -461,10 +468,10 @@ const FeatureKPIEntry = () => {
             //   .eq('year', currentYear)
             //   .like('kpi_id', '%vendor_%')
             //   .or('kpi_id.like.%msme_%,kpi_id.like.%logistics_%,kpi_id.like.%sourcing_%');
-              const prevData: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`/kpi_entries?company_id=${companyId}&quarter=${prevQuarter}&year=${currentYear}&kpi_id=vendor_%25&or=kpi_id.like.%25msme_%25,kpi_id.like.%25logistics_%25,kpi_id.like.%25sourcing_%25`);
+              const prevData: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=${prevQuarter}&year=${currentYear}&kpi_id=vendor_%25&or=kpi_id.like.%25msme_%25,kpi_id.like.%25logistics_%25,kpi_id.like.%25sourcing_%25`);
 
             if ( prevData && prevData.data.length > 0) {
-              prevData.data .forEach(entry => {
+              prevData.data.forEach(entry => {
                 if (entry.value !== null && !preFillData[entry.kpi_id]) {
                   if (entry.value === 'true') {
                     preFillData[entry.kpi_id] = true;
@@ -517,7 +524,7 @@ const FeatureKPIEntry = () => {
         //   .eq('company_id', companyId)
         //   .not('matched_kpi_id', 'is', null)
         //   .order('quarter', { ascending: false });
-        const historicalData: { data: { matched_kpi_id: string; original_value: string | null; quarter: string; match_confidence: number | null }[]; error?: any } = await httpClient.get(`/historical_kpi_entries?company_id=${companyId}&matched_kpi_id=not.is.null&order=quarter.desc`);
+        const historicalData: { data: { matched_kpi_id: string; original_value: string | null; quarter: string; match_confidence: number | null }[]; error?: any } = await httpClient.get(`mis/historical-kpi-entries?companyId=${companyId}&matched_kpi_id=not.is.null&order=quarter.desc`);
 
 
         // if (historicalError) throw historicalError;
@@ -539,7 +546,7 @@ const FeatureKPIEntry = () => {
         
         // 2. Also load from kpi_entries for previous quarters (uploaded template data)
         // Get previous quarter entries (not the current one being edited)
-        const previousEntries: { data: { kpi_id: string; value: string | null; quarter: string; year: number }[]; error?: any } = await httpClient.get(`/kpi_entries?company_id=${companyId}&value=not.is.null&order=year.desc`);
+        const previousEntries: { data: { kpi_id: string; value: string | null; quarter: string; year: number }[]; error?: any } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&value=not.is.null&order=year.desc`);
         // const { data: previousEntries, error: previousError } = await supabase
         //   .from('kpi_entries')
         //   .select('kpi_id, value, quarter, year')
@@ -639,6 +646,7 @@ const FeatureKPIEntry = () => {
       governancePolicies: { featureModule: 'governancePolicies' },
       sri: { featureModule: 'sri' },
     };
+    console.log('Feature filter for', feature, ':', featureMap[feature]);
     return featureMap[feature] || {};
   };
 
@@ -672,7 +680,9 @@ const FeatureKPIEntry = () => {
     ];
     
     return allKPIs.filter(kpi => {
-      
+      if(!Array.isArray(kpi.industries)) {
+        kpi.industries=JSON.parse(kpi.industries as unknown as string) as KPIIndustry[];
+      }
       // Check revenue stage and industry
       const matchesProfile = kpi.revenueStages.includes(companyProfile.revenueStage) && 
         kpi.industries.some(ind => kpiIndustries.includes(ind));
@@ -762,7 +772,7 @@ const FeatureKPIEntry = () => {
         // const { error } = await supabase
         //   .from('kpi_entries')
         //   .upsert(entries, { onConflict: 'company_id,kpi_id,quarter,year' });
-        const data= await httpClient.post('/kpi_entries/upsert', { entries, onConflict: 'company_id,kpi_id,quarter,year' });
+        const data= await httpClient.post('mis/kpi-entries/upsert', { entries, onConflict: 'company_id,kpi_id,quarter,year' });
 
         // if (error) throw error;
       }
@@ -795,7 +805,7 @@ const FeatureKPIEntry = () => {
       }));
 
       if (entries.length > 0) {
-        const dataCreate = await httpClient.post('/kpi_entries/upsert', { entries, onConflict: 'company_id,kpi_id,quarter,year' });
+        const dataCreate = await httpClient.post('msi/kpi-entries/upsert', { entries, onConflict: 'company_id,kpi_id,quarter,year' });
 
         // if (error) throw error;
       }
@@ -805,7 +815,7 @@ const FeatureKPIEntry = () => {
       toast.success('Data saved! Redirecting to preview...');
       
       // Navigate to preview page with current period params
-      navigate(`/company/preview?quarter=${currentQuarter}&year=${currentYear}`);
+      navigate(`/mis/preview-submit?quarter=${currentQuarter}&year=${currentYear}`);
     } catch (error) {
       console.error('Submit error:', error);
       toast.error('Failed to save data');
@@ -875,7 +885,7 @@ const FeatureKPIEntry = () => {
       //   .eq('company_id', companyId)
       //   .eq('quarter', isAnnual ? 'FY' : currentQuarter)
       //   .eq('year', isAnnual ? currentFY : currentYear);
-        const data: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`/kpi_entries?company_id=${companyId}&quarter=${isAnnual ? 'FY' : currentQuarter}&year=${isAnnual ? currentFY : currentYear}`);
+        const data: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`msi/kpi-entries?companyId=${companyId}&quarter=${isAnnual ? 'FY' : currentQuarter}&year=${isAnnual ? currentFY : currentYear}`);
 
       if ( data) {
         const entries: Record<string, string | number | boolean> = {};
@@ -1333,6 +1343,10 @@ const FeatureKPIEntry = () => {
     );
   };
 
+  useEffect(() => {
+    console.log('Recalculating values with groupedKPIs:', groupedKPIs);
+  }, [groupedKPIs]);
+
   return (
     <UnifiedSidebarLayout fixedHeight={isAnnual}>
       <PageHeader
@@ -1382,7 +1396,7 @@ const FeatureKPIEntry = () => {
                     value={currentFY}
                     onChange={(e) => {
                       const newYear = parseInt(e.target.value);
-                      navigate(`/company/kpi-entry?tab=annual&feature=${featureKey}&quarter=Q4&year=${newYear}`);
+                      navigate(`/mis/kpi-entry?tab=annual&feature=${featureKey}&quarter=Q4&year=${newYear}`);
                     }}
                     className="h-9 px-3 rounded-md border border-input bg-background text-sm"
                   >
@@ -1429,7 +1443,7 @@ const FeatureKPIEntry = () => {
                 </div>
               )}
               
-              <Button variant="outline" size="sm" onClick={() => navigate('/company/data-entry')}>
+              <Button variant="outline" size="sm" onClick={() => navigate('/mis/data-entry')}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
               </Button>

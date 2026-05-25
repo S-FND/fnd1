@@ -10,10 +10,10 @@ interface FeatureProgressBarProps {
   optional?: { total: number; filled: number };
 }
 
-export const FeatureProgressBar = ({ 
-  totalKPIs, 
-  filledKPIs, 
-  className 
+export const FeatureProgressBar = ({
+  totalKPIs,
+  filledKPIs,
+  className
 }: FeatureProgressBarProps) => {
   const percentage = useMemo(() => {
     if (totalKPIs === 0) return 0;
@@ -22,11 +22,19 @@ export const FeatureProgressBar = ({
 
   // Color gradient: Red (0-25) → Orange (26-50) → Yellow (51-75) → Green (76-100)
   const getProgressColor = () => {
+    
     if (percentage >= 76) return 'bg-status-success';
     if (percentage >= 51) return 'bg-yellow-500';
     if (percentage >= 26) return 'bg-orange-500';
     return 'bg-status-error';
   };
+
+  // const getProgressColor = () => {
+  //   if (percentage >= 76) return '#16a34a'; // green
+  //   if (percentage >= 51) return '#eab308'; // yellow
+  //   if (percentage >= 26) return '#f97316'; // orange
+  //   return '#dc2626'; // red
+  // };
 
   const getTextColor = () => {
     if (percentage >= 76) return 'text-status-success';
@@ -53,7 +61,7 @@ export const FeatureProgressBar = ({
           style={{ width: `${percentage}%` }}
         />
       </div>
-      
+
       {/* Legend */}
       <div className="flex justify-between items-center text-[10px] text-muted-foreground">
         <span>0%</span>

@@ -31,13 +31,16 @@ import {
   Lock
 } from 'lucide-react';
 import { isPeriodEditable } from '@/lib/companyAccessControl';
-import { useAnalyticsDashboardData } from '@/hooks/useAnalyticsDashboardData';
+// import { useAnalyticsDashboardData } from '@/hooks/useAnalyticsDashboardDataOld';
 import { usePortfolioRankings } from '@/hooks/usePortfolioRankings';
 import { ESGScoreDetailDialog } from '@/components/company-dashboard/ESGScoreDetailDialog';
 import { generateCompanyMISPdf } from '@/lib/companyMISPdf';
 import { ESGRecommendationsPanel } from '@/components/company-dashboard/ESGRecommendationsPanel';
 import UnifiedSidebarLayout from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
+import { useAnalyticsDashboardData } from '@/hooks/useAnalyticsDashboardData';
+import { useAdminSettings } from '@/hooks/useAdminSettings';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const QUARTERS_INFO = [
   { key: 'Q1', label: 'Q1', months: 'JFM', description: 'Jan-Mar' },
@@ -47,11 +50,14 @@ const QUARTERS_INFO = [
 ];
 
 const CompanyDashboard = () => {
-  const { user } = useAuth();
-  const companyName = 'Company Test';
-  const effectiveCompanyId = "comapnyId";
+  const { user,effectiveCompanyId } = useAuth();
+  const companyName = user?.name;
+  // const effectiveCompanyId = "company-4";
   const navigate = useNavigate();
-  const companyId = effectiveCompanyId || user?.companyId || 'company-1';
+  const companyId = effectiveCompanyId || user?.company_id ;
+  useEffect(() => {
+    console.log('Auth context values in CompanyDashboard:', { user, effectiveCompanyId, companyId });
+  }, [effectiveCompanyId,user]);
 
   // State for selected quarter view — defaults to the open period (Q1 2026).
   // Year can flip between 2025 (historical, view-only) and 2026 (current) via arrows.
@@ -63,28 +69,65 @@ const CompanyDashboard = () => {
   const [scoreDetailOpen, setScoreDetailOpen] = useState(false);
   const [scoreDetailType, setScoreDetailType] = useState<'environment' | 'social' | 'governance' | 'composite'>('environment');
   const [envNADialogOpen, setEnvNADialogOpen] = useState(false);
+
+  // TO
+  // ─── Published score period ───
+  // Grades, percentile cards, rankings and recommendations are *locked* to the
+  // last period Fireside published (default Q4/FY 2025). The data-entry table
+  // below continues to follow selectedYear/selectedQuarter so users can enter
+  // fresh numbers, but the score widgets do NOT recompute live every quarter.
+  const { getPublishedPeriod, loading: settingsLoading } = useAdminSettings();
+  const published = getPublishedPeriod();
+  const publishedYear = published.year;
+  const publishedQuarter = published.quarter;
+
+  const isLockedToPublished =
+    selectedYear !== publishedYear ||
+    selectedQuarter !== publishedQuarter;
   // Use all quarters progress data from the database (respect company-specific period exclusions)
   const allQuartersProgress = useAllQuartersProgress(companyId, selectedYear, 0, true);
 
   // Use real peer comparison data
-  const peerComparison = usePeerComparison(companyId, selectedQuarter, selectedYear);
+  // const peerComparison = usePeerComparison(companyId, selectedQuarter, selectedYear);
+  const peerComparison = usePeerComparison(
+    companyId,
+    publishedQuarter,
+    publishedYear
+  );
 
   // Fetch ESG scores for this company
+  // const analyticsData = useAnalyticsDashboardData({
+  //   period: 'quarterly',
+  //   quarter: selectedQuarter,
+  //   year: selectedYear,
+  //   companyId,
+  // });
   const analyticsData = useAnalyticsDashboardData({
-    period: 'quarterly',
-    quarter: selectedQuarter,
-    year: selectedYear,
+    period: publishedQuarter === 'FY'
+      ? 'annual'
+      : 'quarterly',
+    quarter: publishedQuarter,
+    year: publishedYear,
     companyId,
   });
 
   // Fetch all companies data (annual combined) for PDF chart comparisons
+  // const allCompaniesData = useAnalyticsDashboardData({
+  //   period: 'annual',
+  //   year: selectedYear,
+  // });
   const allCompaniesData = useAnalyticsDashboardData({
     period: 'annual',
-    year: selectedYear,
+    year: publishedYear,
   });
 
   // Fetch portfolio rankings for PDF export
-  const { rankings, isLoading: isRankingsLoading } = usePortfolioRankings(selectedYear, selectedQuarter);
+  // const { rankings, isLoading: isRankingsLoading } = usePortfolioRankings(selectedYear, selectedQuarter);
+  const { rankings, isLoading: isRankingsLoading } =
+    usePortfolioRankings(
+      publishedYear,
+      publishedQuarter
+    );
 
   // Get quarterly data status to show appropriate buttons
   const quarterlyStatus = useQuarterlyDataStatus(companyId, selectedYear);
@@ -113,7 +156,7 @@ const CompanyDashboard = () => {
   // Handle quarter action click
   const handleQuarterAction = (quarterKey: string, action: 'view' | 'edit' | 'add') => {
     // Both 'add' and 'view'/'edit' go to Business Information for that quarter
-    navigate(`/company/kpi-entry?tab=quarterly&feature=businessInformation&quarter=${quarterKey}&year=${selectedYear}`);
+    navigate(`/mis/kpi-entry?tab=quarterly&feature=businessInformation&quarter=${quarterKey}&year=${selectedYear}`);
   };
 
   const handleDownloadMIS = () => {
@@ -188,7 +231,7 @@ const CompanyDashboard = () => {
               <Play className="w-4 h-4 mr-2" />
               View Demo
             </Button>
-            <Button onClick={() => navigate(`/company/data-entry?quarter=${selectedQuarter}&year=${selectedYear}`)}>
+            <Button onClick={() => navigate(`/mis/data-entry?quarter=${selectedQuarter}&year=${selectedYear}`)}>
               <ClipboardList className="w-4 h-4 mr-2" />
               Continue Data Entry
             </Button>
@@ -196,11 +239,34 @@ const CompanyDashboard = () => {
         }
       />
 
+      {isLockedToPublished && !settingsLoading && (
+        <Alert className="mb-4 border-amber-300 bg-amber-50 dark:bg-amber-950/20">
+          <Lock className="w-4 h-4 text-amber-600" />
+
+          <AlertTitle className="text-amber-900 dark:text-amber-200">
+            Scores locked to {publishedQuarter} {publishedYear}
+          </AlertTitle>
+
+          <AlertDescription className="text-amber-800 dark:text-amber-300/90">
+            Your ESG grades, percentile cards, rankings and recommendations are
+            locked to {publishedQuarter} {publishedYear} results.
+
+            {selectedQuarter} {selectedYear} scores
+            will be published after the reporting window closes and Fireside completes
+            recalibration.
+
+            You can still enter data for
+            {selectedQuarter} {selectedYear}
+            in the table below.
+          </AlertDescription>
+        </Alert>
+      )}
 
 
       {/* Progress Report - Stat Cards */}
       {(() => {
         // Compute Overall Rank percentile from average raw score (matching Category Breakdown)
+
         const myRanking = rankings.find(r => r.companyId === companyId);
         const myAvgScore = myRanking ? Math.round((myRanking.completionPct + myRanking.consistencyPct + myRanking.timelinessScore) / 3 * 10) / 10 : 0;
         const allAvgScores = rankings.map(r => Math.round((r.completionPct + r.consistencyPct + r.timelinessScore) / 3 * 10) / 10);
@@ -215,7 +281,7 @@ const CompanyDashboard = () => {
           { label: 'Consistency', value: consistencyPercentile, icon: <BarChart3 className="w-4 h-4 text-blue-600" />, color: 'border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/10', n: nCompanies },
           { label: 'Timeliness', value: timelinessPercentile, icon: <Calendar className="w-4 h-4 text-purple-600" />, color: 'border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/10', n: nCompanies },
         ];
-
+        // console.log('Peer comparison data:', { completenessPercentile, consistencyPercentile, timelinessPercentile, overallPct, progressCards });
         const getOrdinalSuffix = (n: number): string => {
           const s = ['th', 'st', 'nd', 'rd'];
           const v = n % 100;
@@ -316,7 +382,7 @@ const CompanyDashboard = () => {
                 { label: 'Social Score', value: companyData?.insights?.socialScore ?? 0, percentile: socPctile, icon: <UsersRound className="w-4 h-4 text-blue-600" />, color: 'border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/10', clickType: 'social' as const, n: submitting.length },
                 { label: 'Governance Score', value: companyData?.insights?.governanceScore ?? 0, percentile: govPctile, icon: <Shield className="w-4 h-4 text-purple-600" />, color: 'border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/10', clickType: 'governance' as const, n: submitting.length },
               ];
-
+              console.log('ESG score cards data:', { companyData, esgCards, esgPctileMap, envPctileMap, socPctileMap, govPctileMap });
               return (
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
                   {allAd ? esgCards.map(card => {
@@ -328,8 +394,10 @@ const CompanyDashboard = () => {
                         className={`${card.color} transition-all hover:shadow-md cursor-pointer hover:ring-2 hover:ring-primary/30`}
                         onClick={() => {
                           if (isEnvNA) {
+                            alert('Environment KPIs were not activated for your company. Please contact the Fireside team if you believe this is an error.');
                             setEnvNADialogOpen(true);
                           } else {
+                            alert(`You clicked on ${card.label} details. This will open a dialog with a detailed breakdown of the underlying KPIs contributing to this score, along with insights and recommendations for improvement.`);
                             setScoreDetailType(card.clickType);
                             setScoreDetailOpen(true);
                           }
@@ -369,7 +437,6 @@ const CompanyDashboard = () => {
           </>
         );
       })()}
-
       {/* ESG Recommendations Panel */}
       {(() => {
         const allAd = allCompaniesData.data;
@@ -380,7 +447,7 @@ const CompanyDashboard = () => {
             companyId={companyId}
             allCompaniesRaw={allRaw}
             rankings={rankings}
-            year={selectedYear}
+            year={publishedYear}
           />
         );
       })()}
@@ -623,6 +690,8 @@ const CompanyDashboard = () => {
         </CardContent>
       </Card>
 
+
+
       {/* Environment NA Dialog */}
       <Dialog open={envNADialogOpen} onOpenChange={setEnvNADialogOpen}>
         <DialogContent className="sm:max-w-md">
@@ -644,7 +713,7 @@ const CompanyDashboard = () => {
         onOpenChange={setScoreDetailOpen}
         scoreType={scoreDetailType}
         companyId={companyId}
-        year={selectedYear}
+        year={publishedYear}
         dashboardViewMode={'category'}
       />
     </UnifiedSidebarLayout>

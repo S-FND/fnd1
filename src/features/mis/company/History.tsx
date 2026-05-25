@@ -11,10 +11,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  History as HistoryIcon, 
-  FileSpreadsheet, 
-  AlertTriangle, 
+import {
+  History as HistoryIcon,
+  FileSpreadsheet,
+  AlertTriangle,
   CheckCircle2,
   Loader2,
   Trash2,
@@ -33,6 +33,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { httpClient } from '@/lib/httpClient';
 
 interface HistoricalUpload {
   id: string;
@@ -79,7 +80,7 @@ const History = () => {
   const { user, effectiveCompanyId } = useAuth();
   const navigate = useNavigate();
   const companyId = effectiveCompanyId || user?.companyId || 'company-1';
-  
+
   const [activeTab, setActiveTab] = useState<'data' | 'uploads'>('data');
   const [selectedQuarter, setSelectedQuarter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
@@ -95,28 +96,42 @@ const History = () => {
     setIsLoading(true);
     try {
       // Load uploads
-      const { data: uploadsData, error: uploadsError } = await supabase
-        .from('historical_kpi_uploads')
-        .select('*')
-        .eq('company_id', companyId)
-        .order('created_at', { ascending: false });
+      // const { data: uploadsData, error: uploadsError } = await supabase
+      //   .from('historical_kpi_uploads')
+      //   .select('*')
+      //   .eq('company_id', companyId)
+      //   .order('created_at', { ascending: false });
 
-      if (uploadsError) throw uploadsError;
-      setUploads(uploadsData || []);
+      const data = await httpClient.get(`mis/historical-uploads?companyId=${companyId}`);
+
+      // if (data.error) throw data.error;
+      if (data.data) {
+        const uploadsData = data.data as HistoricalUpload[];
+
+        setUploads(uploadsData || []);
+      }
 
       // Load entries with master KPI join
-      let query = supabase
-        .from('historical_kpi_entries')
-        .select(`
-          *,
-          kpi_master (
-            name,
-            esg,
-            category
-          )
-        `)
-        .eq('company_id', companyId)
-        .order('quarter', { ascending: false });
+      // let query = supabase
+      //   .from('historical_kpi_entries')
+      //   .select(`
+      //     *,
+      //     kpi_master (
+      //       name,
+      //       esg,
+      //       category
+      //     )
+      //   `)
+      //   .eq('company_id', companyId)
+      //   .order('quarter', { ascending: false });
+
+        let historicalData= await httpClient.get(`mis/historical-kpi-entries?companyId=${companyId}&order=quarter.desc`);
+          // if(historicalData.error) throw historicalData.error;
+           if(historicalData.data) {
+               const entriesData = historicalData.data as HistoricalEntry[];
+        setEntries(entriesData || []); 
+          }
+        
 
       if (selectedQuarter !== 'all') {
         query = query.eq('quarter', selectedQuarter);
@@ -137,7 +152,7 @@ const History = () => {
 
   const handleDeleteUpload = async () => {
     if (!deleteUploadId) return;
-    
+
     try {
       const { error } = await supabase
         .from('historical_kpi_uploads')
@@ -236,8 +251,8 @@ const History = () => {
               <CardContent className="py-12 text-center">
                 <HistoryIcon className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                 <p className="text-muted-foreground">No historical data found</p>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="mt-4"
                   onClick={() => navigate('/company/upload-historical')}
                 >
@@ -330,8 +345,8 @@ const History = () => {
               <CardContent className="py-12 text-center">
                 <FileSpreadsheet className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
                 <p className="text-muted-foreground">No files uploaded yet</p>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="mt-4"
                   onClick={() => navigate('/company/upload-historical')}
                 >
@@ -376,8 +391,8 @@ const History = () => {
                             <Badge key={q} variant="secondary">{q}</Badge>
                           ))}
                         </div>
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="icon"
                           onClick={() => setDeleteUploadId(upload.id)}
                           className="text-destructive hover:text-destructive"

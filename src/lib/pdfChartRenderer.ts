@@ -6,7 +6,7 @@
 import jsPDF from 'jspdf';
 import { FEATURE_FIELD_MAPPINGS } from '@/lib/featureFieldMapping';
 import { FEATURE_INSIGHT_METRICS } from '@/lib/featureInsightMetrics';
-import { CompanyRawMetrics, InsightMetrics } from '@/hooks/useAnalyticsDashboardData';
+import { CompanyRawMetrics, InsightMetrics } from '@/hooks/useAnalyticsDashboardDataOld';
 
 const BAR_COLORS = [
   [34, 197, 94],   // green

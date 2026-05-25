@@ -48,13 +48,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onForgotPassword }) => {
     <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-sm">
       <div className="space-y-2">
       <div className="flex justify-between">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">Email/LoginId</Label>
         {/* You can leave the right side empty if there's nothing like "Forgot password" */}
         <span></span>
       </div>
         <Input
           id="email"
-          type="email"
+          type="text"
           placeholder="example@company.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}

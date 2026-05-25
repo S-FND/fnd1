@@ -129,7 +129,7 @@ const Upload = () => {
       } else {
         toast.error('Failed to import KPI data');
       }
-      navigate('/company/data-entry');
+      navigate('/mis/data-entry');
     } catch (error) {
       console.error('Import error:', error);
       toast.error('Failed to import data');

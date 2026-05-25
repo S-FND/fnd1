@@ -30,6 +30,7 @@ export const useAuthProvider = () => {
   
       if (storedUser && storedUser !== "undefined") {
         setUser(JSON.parse(storedUser));
+        setEffectiveCompanyId(JSON.parse(storedUser).company_id || '');
       }
   
       if (storedPermissions && storedPermissions !== "undefined") {
@@ -75,6 +76,7 @@ export const useAuthProvider = () => {
 
       const rolePermissions = defaultPermissions[user.role] || {};
       setUser(user);
+      setEffectiveCompanyId(user.companyId || user.company_id || '');
       setToken(token);
       setPermissions(rolePermissions);
       localStorage.setItem("fandoro-user", JSON.stringify(user));

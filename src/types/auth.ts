@@ -41,6 +41,8 @@ export interface User {
   company?: CompanyInfo;
   supplierInfo?: SupplierInfo;
   vendorInfo?: VendorInfo;
+  company_id?: string;
+  misCompanyId?: string;
 }
 
 export interface Permissions {

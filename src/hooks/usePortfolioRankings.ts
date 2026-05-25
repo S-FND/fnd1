@@ -5,6 +5,7 @@ import { FEATURE_FIELD_MAPPINGS } from '@/lib/featureFieldMapping';
 import { isCompanyExcluded } from '@/lib/companyExclusions';
 import { fetchAllRows } from '@/lib/supabasePaginate';
 import { useAsOf, isPeriodAfterCutoff } from '@/contexts/AsOfContext';
+import { httpClient } from '@/lib/httpClient';
 
 export interface ESGCompleteness {
   E: number;
@@ -25,6 +26,29 @@ export interface CompanyRanking {
   consistencyPercentile: number;
   timelinessPercentile: number;
   esgCompleteness: ESGCompleteness;
+}
+
+// types/api.ts
+export interface CompanyProfileRaw {
+  companyId: string;
+  revenueStage: string;
+  industry: string;
+}
+
+export interface KpiEntryRaw {
+  companyId: string;
+  kpiId: string;
+  value: string | null;
+  quarter: string;
+  submittedAt: string | null;
+  kpi_id: string; // for compatibility with existing code
+}
+
+export interface FeatureSettingRaw {
+  companyId: string;
+  featureKey: string;
+  enabled: boolean;
+  feature_key: string; // for compatibility with existing code
 }
 
 // ─── Shared helpers (mirrors usePeerComparison) ───
@@ -126,59 +150,286 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
   const [isLoading, setIsLoading] = useState(true);
   const { asOf } = useAsOf();
 
+  // useEffect(() => {
+  //   const fetch = async () => {
+  //     setIsLoading(true);
+  //     try {
+  //       const [profilesData, allEntries, allFeatures] = await Promise.all([
+  //         fetchAllRows('company_profiles', 'company_id, revenue_stage, industry'),
+  //         fetchAllRows('kpi_entries', 'company_id, kpi_id, value, quarter, submitted_at', [{ column: 'year', value: year }]),
+  //         fetchAllRows('company_feature_settings', 'company_id, feature_key, enabled', [{ column: 'enabled', value: true }]),
+  //       ]);
+
+  //       // Build profile lookup for industry info
+  //       const profileMap: Record<string, { revenue_stage: string; industry: string }> = {};
+  //       for (const p of profilesData) {
+  //         profileMap[p.company_id as string] = { revenue_stage: p.revenue_stage as string, industry: p.industry as string };
+  //       }
+
+  //       // Use mockCompanies as the source of truth for company list
+  //       const companies = mockCompanies
+  //         .filter(c => c.investmentStatus === 'Invested')
+  //         .map(c => ({
+  //           company_id: c.id,
+  //           industry: profileMap[c.id]?.industry || c.industry || '',
+  //           brand: c.brand || c.name,
+  //         }));
+
+  //       // Cast to typed arrays
+  //       const allTypedEntries = allEntries as unknown as { company_id: string; kpi_id: string; value: string | null; quarter: string; submitted_at: string | null }[];
+  //       // Apply "As of <Month>/<Year>" cutoff: drop entries from periods whose deadline hasn't passed yet.
+  //       const typedEntries = asOf
+  //         ? allTypedEntries.filter(e => !isPeriodAfterCutoff(e.quarter, year, asOf))
+  //         : allTypedEntries;
+  //       const typedFeatures = allFeatures as unknown as { company_id: string; feature_key: string; enabled: boolean }[];
+
+  //       // Build feature maps
+  //       const featureMap: Record<string, Set<string>> = {};
+  //       for (const f of typedFeatures) {
+  //         if (!featureMap[f.company_id]) featureMap[f.company_id] = new Set();
+  //         featureMap[f.company_id].add(f.feature_key);
+  //       }
+
+  //       // Raw scores
+  //       const raw = companies.map(company => {
+  //         const cEntries = typedEntries.filter(e => e.company_id === company.company_id);
+  //         const enabled = featureMap[company.company_id] || new Set();
+  //         const qFeats = enabled.size > 0 ? ALL_QUARTERLY_FEATURES.filter(k => enabled.has(k)) : ALL_QUARTERLY_FEATURES;
+  //         const aFeats = enabled.size > 0 ? ALL_ANNUAL_FEATURES.filter(k => enabled.has(k)) : ALL_ANNUAL_FEATURES;
+  //         const totalKPIs = getTotalKPICount(qFeats) * 4 + getTotalKPICount(aFeats);
+
+  //         // Exclude company from specific quarters for completeness calculation
+  //         let totalFilled = 0;
+  //         let adjustedTotalKPIs = totalKPIs;
+
+  //         // Per-ESG category completeness
+  //         const envQFeats = qFeats.filter(k => ENV_QUARTERLY_FEATURES.includes(k));
+  //         const envAFeats = aFeats.filter(k => ENV_ANNUAL_FEATURES.includes(k));
+  //         const socQFeats = qFeats.filter(k => SOCIAL_QUARTERLY_FEATURES.includes(k));
+  //         const socAFeats = aFeats.filter(k => SOCIAL_ANNUAL_FEATURES.includes(k));
+  //         const govQFeats = qFeats.filter(k => GOV_QUARTERLY_FEATURES.includes(k));
+  //         const govAFeats = aFeats.filter(k => GOV_ANNUAL_FEATURES.includes(k));
+
+  //         let envTotal = getTotalKPICount(envQFeats) * 4 + getTotalKPICount(envAFeats);
+  //         let envFilled = 0;
+  //         let socTotal = getTotalKPICount(socQFeats) * 4 + getTotalKPICount(socAFeats);
+  //         let socFilled = 0;
+  //         let govTotal = getTotalKPICount(govQFeats) * 4 + getTotalKPICount(govAFeats);
+  //         let govFilled = 0;
+
+  //         for (const p of ['Q1', 'Q2', 'Q3', 'Q4', 'FY']) {
+  //           if (isCompanyExcluded(company.company_id, p, year)) {
+  //             // Reduce total expected KPIs for excluded quarters
+  //             if (p !== 'FY') {
+  //               adjustedTotalKPIs -= getTotalKPICount(qFeats);
+  //               envTotal -= getTotalKPICount(envQFeats);
+  //               socTotal -= getTotalKPICount(socQFeats);
+  //               govTotal -= getTotalKPICount(govQFeats);
+  //             }
+  //             continue;
+  //           }
+  //           const pEntries = cEntries.filter(e => e.quarter === p);
+  //           totalFilled += countFilledKPIs(p === 'FY' ? aFeats : qFeats, pEntries);
+
+  //           // Per-ESG fills
+  //           if (p === 'FY') {
+  //             envFilled += countFilledKPIs(envAFeats, pEntries);
+  //             socFilled += countFilledKPIs(socAFeats, pEntries);
+  //             govFilled += countFilledKPIs(govAFeats, pEntries);
+  //           } else {
+  //             envFilled += countFilledKPIs(envQFeats, pEntries);
+  //             socFilled += countFilledKPIs(socQFeats, pEntries);
+  //             govFilled += countFilledKPIs(govQFeats, pEntries);
+  //           }
+  //         }
+  //         const completionPct = adjustedTotalKPIs > 0 ? r2((totalFilled / adjustedTotalKPIs) * 100) : 0;
+
+  //         const esgCompleteness: ESGCompleteness = {
+  //           E: envTotal > 0 ? r2((envFilled / envTotal) * 100) : 0,
+  //           S: socTotal > 0 ? r2((socFilled / socTotal) * 100) : 0,
+  //           G: govTotal > 0 ? r2((govFilled / govTotal) * 100) : 0,
+  //           overall: completionPct,
+  //         };
+
+  //         // Consistency
+  //         const qKPIDefs: { kpiId: string; fieldIds: string[] }[] = [];
+  //         for (const fk of qFeats) {
+  //           const m = FEATURE_FIELD_MAPPINGS[fk];
+  //           if (!m) continue;
+  //           for (const kpi of m.kpis) {
+  //             if (kpi.excludeFromProgress) continue;
+  //             qKPIDefs.push({ kpiId: kpi.id, fieldIds: kpi.fields.map(f => f.id) });
+  //           }
+  //         }
+  //         // Consistency: only count non-excluded quarters
+  //         let consistencyRatio = 0;
+  //         const eligibleQuarters = ['Q1', 'Q2', 'Q3', 'Q4'].filter(q => !isCompanyExcluded(company.company_id, q, year));
+  //         const eligibleCount = eligibleQuarters.length || 1;
+  //         for (const kpiDef of qKPIDefs) {
+  //           let qWithData = 0;
+  //           for (const q of eligibleQuarters) {
+  //             const qE = cEntries.filter(e => e.quarter === q);
+  //             if (isKPIGroupFilled({ id: kpiDef.kpiId, fields: kpiDef.fieldIds.map(id => ({ id })) }, qE)) qWithData++;
+  //           }
+  //           consistencyRatio += qWithData / eligibleCount;
+  //         }
+  //         const consistencyPct = qKPIDefs.length > 0 ? r2((consistencyRatio / qKPIDefs.length) * 100) : 0;
+
+  //         // Timeliness — use FIRST submission per period, then take latest across periods
+  //         // Freeze timeliness as of March 3 of the following year: ignore submissions after this date
+  //         const deadlineYear = year + 1;
+  //         const TIMELINESS_CUTOFF = new Date(deadlineYear, 2, 3, 23, 59, 59).getTime(); // March 3 of deadline year
+  //         const periods = ['Q1', 'Q2', 'Q3', 'Q4', 'FY'];
+  //         const firstSubmissionPerPeriod: number[] = [];
+  //         for (const p of periods) {
+  //           if (isCompanyExcluded(company.company_id, p, year)) continue;
+  //           const periodSubs = cEntries
+  //             .filter(e => e.quarter === p && e.submitted_at)
+  //             .map(e => new Date(e.submitted_at!).getTime())
+  //             .filter(d => !isNaN(d) && d <= TIMELINESS_CUTOFF);
+  //           if (periodSubs.length > 0) {
+  //             firstSubmissionPerPeriod.push(Math.min(...periodSubs));
+  //           }
+  //         }
+
+  //         let timelinessScore = 0; // Companies with no submissions get 0
+  //         if (firstSubmissionPerPeriod.length > 0) {
+  //           // The company's effective submission date is the latest of the first-submissions
+  //           const effectiveDate = Math.max(...firstSubmissionPerPeriod);
+  //           const feb4 = new Date(deadlineYear, 1, 4).getTime();
+  //           const feb20 = new Date(deadlineYear, 1, 20).getTime();
+  //           const feb24 = new Date(deadlineYear, 1, 24).getTime();
+
+  //           if (effectiveDate <= feb4) {
+  //             timelinessScore = 100;
+  //           } else if (effectiveDate <= feb20) {
+  //             const daysSinceFeb4 = (effectiveDate - feb4) / (1000 * 60 * 60 * 24);
+  //             timelinessScore = Math.max(90, 100 - (daysSinceFeb4 / 16) * 10);
+  //           } else if (effectiveDate <= feb24) {
+  //             const daysSinceFeb20 = (effectiveDate - feb20) / (1000 * 60 * 60 * 24);
+  //             timelinessScore = Math.max(70, 90 - (daysSinceFeb20 / 4) * 20);
+  //           } else {
+  //             const daysLate = (effectiveDate - feb24) / (1000 * 60 * 60 * 24);
+  //             timelinessScore = Math.max(0, 70 - daysLate);
+  //           }
+  //         }
+
+  //         // No floor — companies with no submissions score 0
+  //         timelinessScore = r2(timelinessScore);
+
+  //         return {
+  //           companyId: company.company_id,
+  //           companyName: company.brand,
+  //           brand: company.brand,
+  //           industry: company.industry,
+  //           completionPct,
+  //           consistencyPct,
+  //           timelinessScore,
+  //           esgCompleteness,
+  //         };
+  //       });
+
+  //       // Compute percentiles using ascending sort matching ESGCategoryBreakdown.assignPercentiles
+  //       // Sort ascending by score, then by brand alphabetically for deterministic tie-breaking
+  //       const assignPercentiles = (items: typeof raw, getScore: (r: typeof raw[0]) => number): Map<string, number> => {
+  //         const sorted = [...items].sort((a, b) => {
+  //           const diff = getScore(a) - getScore(b);
+  //           return diff !== 0 ? diff : a.brand.localeCompare(b.brand);
+  //         });
+  //         const n = sorted.length;
+  //         const result = new Map<string, number>();
+  //         sorted.forEach((r, idx) => {
+  //           result.set(r.companyId, n <= 1 ? 99 : Math.max(1, Math.min(99, Math.round(((idx + 1) / n) * 99))));
+  //         });
+  //         return result;
+  //       };
+
+  //       const completionPctiles = assignPercentiles(raw, r => r.completionPct);
+  //       const consistencyPctiles = assignPercentiles(raw, r => r.consistencyPct);
+  //       const timelinessPctiles = assignPercentiles(raw, r => r.timelinessScore);
+
+  //       const ranked: CompanyRanking[] = raw.map(r => ({
+  //         ...r,
+  //         completenessPercentile: completionPctiles.get(r.companyId) || 1,
+  //         consistencyPercentile: consistencyPctiles.get(r.companyId) || 1,
+  //         timelinessPercentile: timelinessPctiles.get(r.companyId) || 1,
+  //       }));
+
+  //       setRankings(ranked);
+  //     } catch (err) {
+  //       console.error('Error fetching portfolio rankings:', err);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
+
+  //   fetch();
+  // }, [year, quarter, asOf?.month, asOf?.year]);
+
   useEffect(() => {
-    const fetch = async () => {
+    const fetchData = async () => {
       setIsLoading(true);
       try {
-        const [profilesData, allEntries, allFeatures] = await Promise.all([
-          fetchAllRows('company_profiles', 'company_id, revenue_stage, industry'),
-          fetchAllRows('kpi_entries', 'company_id, kpi_id, value, quarter, submitted_at', [{ column: 'year', value: year }]),
-          fetchAllRows('company_feature_settings', 'company_id, feature_key, enabled', [{ column: 'enabled', value: true }]),
-        ]);
+        // 1. Fetch all data in parallel from NestJS MongoDB backend
+       
 
-        // Build profile lookup for industry info
+        let profilesRes=await httpClient.get<CompanyProfileRaw[]>('mis/company-profile');
+        let entriesRes=await httpClient.get<KpiEntryRaw[]>(`mis/kpi-entries?year=${year}`);
+        let featuresRes=await httpClient.get<FeatureSettingRaw[]>('mis/company-feature-settings');
+        console.log('Fetched data:', { profiles: profilesRes.data, entries: entriesRes.data, features: featuresRes.data });
+        
+        const profilesData = profilesRes.data;
+        const allEntries = entriesRes.data;
+        const allFeatures = featuresRes.data;
+        
+        // 2. Build profile lookup: companyId → { revenue_stage, industry }
         const profileMap: Record<string, { revenue_stage: string; industry: string }> = {};
         for (const p of profilesData) {
-          profileMap[p.company_id as string] = { revenue_stage: p.revenue_stage as string, industry: p.industry as string };
+          profileMap[p.companyId] = {
+            revenue_stage: p.revenueStage,
+            industry: p.industry,
+          };
         }
 
-        // Use mockCompanies as the source of truth for company list
+        // 3. Build company list from mockCompanies (invested only)
         const companies = mockCompanies
           .filter(c => c.investmentStatus === 'Invested')
           .map(c => ({
-            company_id: c.id,
+            companyId: c.id,
             industry: profileMap[c.id]?.industry || c.industry || '',
             brand: c.brand || c.name,
           }));
 
-        // Cast to typed arrays
-        const allTypedEntries = allEntries as unknown as { company_id: string; kpi_id: string; value: string | null; quarter: string; submitted_at: string | null }[];
-        // Apply "As of <Month>/<Year>" cutoff: drop entries from periods whose deadline hasn't passed yet.
-        const typedEntries = asOf
-          ? allTypedEntries.filter(e => !isPeriodAfterCutoff(e.quarter, year, asOf))
-          : allTypedEntries;
-        const typedFeatures = allFeatures as unknown as { company_id: string; feature_key: string; enabled: boolean }[];
+        // 4. Apply "As of <Month>/<Year>" cutoff filter on entries
+        const typedEntries: KpiEntryRaw[] = asOf
+          ? allEntries.filter(e => !isPeriodAfterCutoff(e.quarter, year, asOf))
+          : allEntries;
 
-        // Build feature maps
+        // 5. Build feature map: companyId → Set<featureKey>
         const featureMap: Record<string, Set<string>> = {};
-        for (const f of typedFeatures) {
-          if (!featureMap[f.company_id]) featureMap[f.company_id] = new Set();
-          featureMap[f.company_id].add(f.feature_key);
+        for (const f of allFeatures) {
+          if (!featureMap[f.companyId]) featureMap[f.companyId] = new Set();
+          featureMap[f.companyId].add(f.feature_key);
         }
 
-        // Raw scores
+        // 6. Compute raw scores per company (completeness, consistency, timeliness)
         const raw = companies.map(company => {
-          const cEntries = typedEntries.filter(e => e.company_id === company.company_id);
-          const enabled = featureMap[company.company_id] || new Set();
-          const qFeats = enabled.size > 0 ? ALL_QUARTERLY_FEATURES.filter(k => enabled.has(k)) : ALL_QUARTERLY_FEATURES;
-          const aFeats = enabled.size > 0 ? ALL_ANNUAL_FEATURES.filter(k => enabled.has(k)) : ALL_ANNUAL_FEATURES;
+          const cEntries = typedEntries.filter(e => e.companyId === company.companyId);
+          const enabled = featureMap[company.companyId] || new Set();
+
+          const qFeats = enabled.size > 0
+            ? ALL_QUARTERLY_FEATURES.filter(k => enabled.has(k))
+            : ALL_QUARTERLY_FEATURES;
+          const aFeats = enabled.size > 0
+            ? ALL_ANNUAL_FEATURES.filter(k => enabled.has(k))
+            : ALL_ANNUAL_FEATURES;
+
           const totalKPIs = getTotalKPICount(qFeats) * 4 + getTotalKPICount(aFeats);
 
-          // Exclude company from specific quarters for completeness calculation
           let totalFilled = 0;
           let adjustedTotalKPIs = totalKPIs;
 
-          // Per-ESG category completeness
+          // Per-ESG category feature sets
           const envQFeats = qFeats.filter(k => ENV_QUARTERLY_FEATURES.includes(k));
           const envAFeats = aFeats.filter(k => ENV_ANNUAL_FEATURES.includes(k));
           const socQFeats = qFeats.filter(k => SOCIAL_QUARTERLY_FEATURES.includes(k));
@@ -193,9 +444,9 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
           let govTotal = getTotalKPICount(govQFeats) * 4 + getTotalKPICount(govAFeats);
           let govFilled = 0;
 
+          // 6a. Completeness — per period, skip excluded quarters
           for (const p of ['Q1', 'Q2', 'Q3', 'Q4', 'FY']) {
-            if (isCompanyExcluded(company.company_id, p, year)) {
-              // Reduce total expected KPIs for excluded quarters
+            if (isCompanyExcluded(company.companyId, p, year)) {
               if (p !== 'FY') {
                 adjustedTotalKPIs -= getTotalKPICount(qFeats);
                 envTotal -= getTotalKPICount(envQFeats);
@@ -207,7 +458,6 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
             const pEntries = cEntries.filter(e => e.quarter === p);
             totalFilled += countFilledKPIs(p === 'FY' ? aFeats : qFeats, pEntries);
 
-            // Per-ESG fills
             if (p === 'FY') {
               envFilled += countFilledKPIs(envAFeats, pEntries);
               socFilled += countFilledKPIs(socAFeats, pEntries);
@@ -218,7 +468,10 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
               govFilled += countFilledKPIs(govQFeats, pEntries);
             }
           }
-          const completionPct = adjustedTotalKPIs > 0 ? r2((totalFilled / adjustedTotalKPIs) * 100) : 0;
+
+          const completionPct = adjustedTotalKPIs > 0
+            ? r2((totalFilled / adjustedTotalKPIs) * 100)
+            : 0;
 
           const esgCompleteness: ESGCompleteness = {
             E: envTotal > 0 ? r2((envFilled / envTotal) * 100) : 0,
@@ -227,7 +480,7 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
             overall: completionPct,
           };
 
-          // Consistency
+          // 6b. Consistency — across non-excluded quarters
           const qKPIDefs: { kpiId: string; fieldIds: string[] }[] = [];
           for (const fk of qFeats) {
             const m = FEATURE_FIELD_MAPPINGS[fk];
@@ -237,45 +490,49 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
               qKPIDefs.push({ kpiId: kpi.id, fieldIds: kpi.fields.map(f => f.id) });
             }
           }
-          // Consistency: only count non-excluded quarters
-          let consistencyRatio = 0;
-          const eligibleQuarters = ['Q1', 'Q2', 'Q3', 'Q4'].filter(q => !isCompanyExcluded(company.company_id, q, year));
+
+          const eligibleQuarters = ['Q1', 'Q2', 'Q3', 'Q4'].filter(
+            q => !isCompanyExcluded(company.companyId, q, year)
+          );
           const eligibleCount = eligibleQuarters.length || 1;
+          let consistencyRatio = 0;
+
           for (const kpiDef of qKPIDefs) {
             let qWithData = 0;
             for (const q of eligibleQuarters) {
-              const qE = cEntries.filter(e => e.quarter === q);
-              if (isKPIGroupFilled({ id: kpiDef.kpiId, fields: kpiDef.fieldIds.map(id => ({ id })) }, qE)) qWithData++;
+              const qEntries = cEntries.filter(e => e.quarter === q);
+              if (isKPIGroupFilled(
+                { id: kpiDef.kpiId, fields: kpiDef.fieldIds.map(id => ({ id })) },
+                qEntries
+              )) qWithData++;
             }
             consistencyRatio += qWithData / eligibleCount;
           }
-          const consistencyPct = qKPIDefs.length > 0 ? r2((consistencyRatio / qKPIDefs.length) * 100) : 0;
 
-          // Timeliness — use FIRST submission per period, then take latest across periods
-          // Freeze timeliness as of March 3 of the following year: ignore submissions after this date
+          const consistencyPct = qKPIDefs.length > 0
+            ? r2((consistencyRatio / qKPIDefs.length) * 100)
+            : 0;
+
+          // 6c. Timeliness — first submission per period, capped at March 3 of next year
           const deadlineYear = year + 1;
-          const TIMELINESS_CUTOFF = new Date(deadlineYear, 2, 3, 23, 59, 59).getTime(); // March 3 of deadline year
-          const periods = ['Q1', 'Q2', 'Q3', 'Q4', 'FY'];
+          const TIMELINESS_CUTOFF = new Date(deadlineYear, 2, 3, 23, 59, 59).getTime();
+          const feb4 = new Date(deadlineYear, 1, 4).getTime();
+          const feb20 = new Date(deadlineYear, 1, 20).getTime();
+          const feb24 = new Date(deadlineYear, 1, 24).getTime();
+
           const firstSubmissionPerPeriod: number[] = [];
-          for (const p of periods) {
-            if (isCompanyExcluded(company.company_id, p, year)) continue;
+          for (const p of ['Q1', 'Q2', 'Q3', 'Q4', 'FY']) {
+            if (isCompanyExcluded(company.companyId, p, year)) continue;
             const periodSubs = cEntries
-              .filter(e => e.quarter === p && e.submitted_at)
-              .map(e => new Date(e.submitted_at!).getTime())
+              .filter(e => e.quarter === p && e.submittedAt)
+              .map(e => new Date(e.submittedAt!).getTime())
               .filter(d => !isNaN(d) && d <= TIMELINESS_CUTOFF);
-            if (periodSubs.length > 0) {
-              firstSubmissionPerPeriod.push(Math.min(...periodSubs));
-            }
+            if (periodSubs.length > 0) firstSubmissionPerPeriod.push(Math.min(...periodSubs));
           }
 
-          let timelinessScore = 0; // Companies with no submissions get 0
+          let timelinessScore = 0;
           if (firstSubmissionPerPeriod.length > 0) {
-            // The company's effective submission date is the latest of the first-submissions
             const effectiveDate = Math.max(...firstSubmissionPerPeriod);
-            const feb4 = new Date(deadlineYear, 1, 4).getTime();
-            const feb20 = new Date(deadlineYear, 1, 20).getTime();
-            const feb24 = new Date(deadlineYear, 1, 24).getTime();
-
             if (effectiveDate <= feb4) {
               timelinessScore = 100;
             } else if (effectiveDate <= feb20) {
@@ -290,24 +547,23 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
             }
           }
 
-          // No floor — companies with no submissions score 0
-          timelinessScore = r2(timelinessScore);
-
           return {
-            companyId: company.company_id,
+            companyId: company.companyId,
             companyName: company.brand,
             brand: company.brand,
             industry: company.industry,
             completionPct,
             consistencyPct,
-            timelinessScore,
+            timelinessScore: r2(timelinessScore),
             esgCompleteness,
           };
         });
 
-        // Compute percentiles using ascending sort matching ESGCategoryBreakdown.assignPercentiles
-        // Sort ascending by score, then by brand alphabetically for deterministic tie-breaking
-        const assignPercentiles = (items: typeof raw, getScore: (r: typeof raw[0]) => number): Map<string, number> => {
+        // 7. Assign percentiles (ascending sort, deterministic tie-break by brand)
+        const assignPercentiles = (
+          items: typeof raw,
+          getScore: (r: typeof raw[0]) => number
+        ): Map<string, number> => {
           const sorted = [...items].sort((a, b) => {
             const diff = getScore(a) - getScore(b);
             return diff !== 0 ? diff : a.brand.localeCompare(b.brand);
@@ -324,6 +580,7 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
         const consistencyPctiles = assignPercentiles(raw, r => r.consistencyPct);
         const timelinessPctiles = assignPercentiles(raw, r => r.timelinessScore);
 
+        // 8. Merge percentiles into final ranked list
         const ranked: CompanyRanking[] = raw.map(r => ({
           ...r,
           completenessPercentile: completionPctiles.get(r.companyId) || 1,
@@ -339,8 +596,7 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
       }
     };
 
-    fetch();
-  }, [year, quarter, asOf?.month, asOf?.year]);
-
+    fetchData();
+  }, [year, quarter]);
   return { rankings, isLoading };
 };
