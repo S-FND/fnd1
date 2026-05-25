@@ -709,8 +709,8 @@ const PreviewSubmission = () => {
       //   .eq('quarter', selectedQuarter)
       //   .eq('year', selectedYear);
       const quarterlyUpdateData = { submitted_at: now };
-      await httpClient.put(`/company/${companyId}/kpi-entries/submit?quarter=${selectedQuarter}&year=${selectedYear}`, quarterlyUpdateData); // Updated to use httpClient
-
+      let quarterlyResponse = await httpClient.put(`mis/kpi-entries/submit?quarter=${selectedQuarter}&year=${selectedYear}`); // Updated to use httpClient
+      console.log('Quarterly submission response:', quarterlyResponse);
       // if (quarterlyError) throw quarterlyError;
 
       // Update submitted_at for annual entries
@@ -721,7 +721,8 @@ const PreviewSubmission = () => {
       //   .eq('quarter', 'FY')
       //   .eq('year', currentFY);
       const annualUpdateData = { submitted_at: now };
-      await httpClient.put(`/company/${companyId}/kpi-entries/submit?quarter=FY&year=${currentFY}`, annualUpdateData); // Updated to use httpClient
+      let annualResponse = await httpClient.put(`mis/kpi-entries/submit?quarter=FY&year=${currentFY}`); // Updated to use httpClient
+      console.log('Annual submission response:', annualResponse);
 
       // if (annualError) throw annualError;
 

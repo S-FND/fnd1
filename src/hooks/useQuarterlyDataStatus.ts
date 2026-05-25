@@ -46,7 +46,7 @@ export const useQuarterlyDataStatus = (companyId: string, year: number): Quarter
       //   .eq('company_id', companyId)
       //   .eq('year', year)
       //   .in('quarter', ['Q1', 'Q2', 'Q3', 'Q4']);
-      const data=await httpClient.get<{ quarter: string; kpi_id: string; value: string }[]>(`mis/kpi-entries/status?companyId=${companyId}&year=${year}&quarters=Q1,Q2,Q3,Q4`);
+      const data=await httpClient.get<{ quarter: string; kpi_id: string; value: string }[]>(`mis/kpi-entries?companyId=${companyId}&year=${year}&quarters=Q1,Q2,Q3,Q4`);
 
       // if (error) throw error;
       
