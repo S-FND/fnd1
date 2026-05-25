@@ -89,7 +89,12 @@ export default {
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out'
+			},
+			backgroundColor: {
+				'status-success': 'hsl(var(--status-success))',
+				'status-error': 'hsl(var(--status-error))',
 			}
+
 		}
 	},
 	plugins: [require("tailwindcss-animate")],

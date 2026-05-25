@@ -19,6 +19,7 @@ import { ESGCapPriority } from '../types/esgDD';
 import { cn } from '@/lib/utils';
 import { AlertsPanel } from '@/components/esg-cap/AlertsPanel';
 import { useESGCAPAlerts } from '@/hooks/useESGCAPAlerts';
+import { History } from "lucide-react";
 
 import {
   fetchEsgCap,
@@ -31,6 +32,9 @@ import { PageAccessContext } from '@/context/PageAccessContext';
 import Loader from '@/components/ui/loader';
 import { set } from 'date-fns';
 import { ESGCapScoring } from '../components/esg-cap/ESGCapScoring';
+import AuditDrawer, { AuditLog } from '../components/esg-cap/AuditDrawer';
+import { httpClient } from '@/lib/httpClient';
+import AssessmentTypeDialog from '@/features/mis/company/Assessmenttypedialog';
 
 interface PlanHistory {
   updateByUserId: string;
@@ -360,6 +364,7 @@ const ESGCapPage = () => {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
     new Set(["CP – Conditions Precedent", "CS – Conditions Subsequent", "ESG Roadmap", "Other Items"])
   );
+  const [assesmentTypeOpen, setAssessmentTypeOpen] = useState(false);
 
   const toggleGroup = (groupName: string) => {
     setCollapsedGroups(prev => {
@@ -369,6 +374,9 @@ const ESGCapPage = () => {
       return newSet;
     });
   };
+  const [auditOpen, setAuditOpen] = useState(false);
+  const [selectedLog, setSelectedLog] = useState(null);
+  const [logs, setLogs] = useState<AuditLog[]>([]);
 
   useEffect(() => {
     const userData = localStorage.getItem('fandoro-user');
@@ -597,7 +605,7 @@ const ESGCapPage = () => {
       !item.actualDate
     );
   };
-  ;
+  
 
   const sortedItems = [...filteredItems].sort((a, b) => {
     // 1. overdue items on top
@@ -707,7 +715,11 @@ const ESGCapPage = () => {
     return loading || !buttonEnabled || isPlanFinalized;
   };
 
-  logger.log('shouldDisableAcceptButton', shouldDisableAcceptButton());
+  // useEffect(() => {
+  //   if(user && user.misCompanyId) {
+  //     setAssessmentTypeOpen(true);
+  //   }
+  // }, [user]);
 
   if (isLoading) {
     return (
@@ -781,13 +793,24 @@ const ESGCapPage = () => {
       "Other Items": [],
     }
   );
+  const getAuditLogs = async () => {
+    let logs = await httpClient.get('audit');
+    console.log("audit logs ", logs);
+    if (logs?.status == 200) {
+      setLogs(logs.data['data']);
+    }
+  }
+
+  useEffect(() => {
+    getAuditLogs();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <Loader show={loading} text={loadingMessage} />
       <UnifiedSidebarLayout>
         <Card className="shadow-lg border-0">
-            {/* <CardHeader className="border-b">
+          {/* <CardHeader className="border-b">
               <CardDescription className="text-sm">
                 <h1 className="text-3xl font-bold tracking-tight">ESG Corrective Action Plan</h1>
                 <p className="mt-1">
@@ -796,6 +819,16 @@ const ESGCapPage = () => {
               </CardDescription>
             </CardHeader> */}
           <CardContent className="p-6">
+            <div className="flex justify-end mb-4">
+              <Button
+                variant="outline"
+                onClick={() => setAuditOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <History className="w-4 h-4" />
+                Audit Logs
+              </Button>
+            </div>
             {/* Filters Section */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <div className="w-full sm:w-auto">
@@ -897,8 +930,18 @@ const ESGCapPage = () => {
           </CardContent>
         </Card>
       </UnifiedSidebarLayout>
+      <AuditDrawer open={auditOpen} onClose={() => setAuditOpen(false)} logs={logs} />
+      <AssessmentTypeDialog />
+
     </div>
   );
 };
 
 export default ESGCapPage;
+
+// isOpenStatus={assesmentTypeOpen}
+//         onClose={() => setAssessmentTypeOpen(false)}
+//         onProceed={(type: "mis" | "escap") => {
+//           console.log("Selected:", type);
+//           setAssessmentTypeOpen(false);
+//         }}
