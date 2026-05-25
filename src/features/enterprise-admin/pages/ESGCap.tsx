@@ -19,6 +19,7 @@ import { ESGCapPriority } from '../types/esgDD';
 import { cn } from '@/lib/utils';
 import { AlertsPanel } from '@/components/esg-cap/AlertsPanel';
 import { useESGCAPAlerts } from '@/hooks/useESGCAPAlerts';
+import { History } from "lucide-react";
 
 import {
   fetchEsgCap,
@@ -31,6 +32,8 @@ import { PageAccessContext } from '@/context/PageAccessContext';
 import Loader from '@/components/ui/loader';
 import { set } from 'date-fns';
 import { ESGCapScoring } from '../components/esg-cap/ESGCapScoring';
+import AuditDrawer, { AuditLog } from '../components/esg-cap/AuditDrawer';
+import { httpClient } from '@/lib/httpClient';
 
 interface PlanHistory {
   updateByUserId: string;
@@ -369,6 +372,9 @@ const ESGCapPage = () => {
       return newSet;
     });
   };
+  const [auditOpen, setAuditOpen] = useState(false);
+  const [selectedLog, setSelectedLog] = useState(null);
+  const [logs, setLogs] = useState<AuditLog[]>([]);
 
   useEffect(() => {
     const userData = localStorage.getItem('fandoro-user');
@@ -781,6 +787,17 @@ const ESGCapPage = () => {
       "Other Items": [],
     }
   );
+  const getAuditLogs = async () => {
+    let logs = await httpClient.get('audit');
+    console.log("audit logs ", logs);
+    if (logs?.status == 200) {
+      setLogs(logs.data['data']);
+    }
+  }
+
+  useEffect(() => {
+    getAuditLogs();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -796,6 +813,16 @@ const ESGCapPage = () => {
               </CardDescription>
             </CardHeader> */}
           <CardContent className="p-6">
+            <div className="flex justify-end mb-4">
+              <Button
+                variant="outline"
+                onClick={() => setAuditOpen(true)}
+                className="flex items-center gap-2"
+              >
+                <History className="w-4 h-4" />
+                Audit Logs
+              </Button>
+            </div>
             {/* Filters Section */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
               <div className="w-full sm:w-auto">
@@ -897,6 +924,8 @@ const ESGCapPage = () => {
           </CardContent>
         </Card>
       </UnifiedSidebarLayout>
+      <AuditDrawer open={auditOpen} onClose={() => setAuditOpen(false)} logs={logs} />
+
     </div>
   );
 };
