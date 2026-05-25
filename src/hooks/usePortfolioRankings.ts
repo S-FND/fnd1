@@ -373,7 +373,7 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
         // 1. Fetch all data in parallel from NestJS MongoDB backend
        
 
-        let profilesRes=await httpClient.get<CompanyProfileRaw[]>('mis/company-profile');
+        let profilesRes=await httpClient.get<CompanyProfileRaw[]>('mis/company-profiles');
         let entriesRes=await httpClient.get<KpiEntryRaw[]>(`mis/kpi-entries?year=${year}`);
         let featuresRes=await httpClient.get<FeatureSettingRaw[]>('mis/company-feature-settings');
         console.log('Fetched data:', { profiles: profilesRes.data, entries: entriesRes.data, features: featuresRes.data });
