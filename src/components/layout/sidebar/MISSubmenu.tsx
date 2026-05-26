@@ -325,8 +325,8 @@ export const MISSubmenu: React.FC<MISSubmenuProps> = ({ isExpanded, onToggle }) 
                         </SidebarMenuSubItem>
 
                         <SidebarMenuSubItem>
-                            <SidebarMenuSubButton asChild isActive={location.pathname === '/mis/preview-submit'}>
-                                <Link to="/mis/preview-submit">
+                            <SidebarMenuSubButton asChild isActive={location.pathname === '/mis/support'}>
+                                <Link to="/mis/support">
                                     <MessageSquare className="w-5 h-5 flex-shrink-0" />
                                     <span>Help & Support</span>
                                 </Link>

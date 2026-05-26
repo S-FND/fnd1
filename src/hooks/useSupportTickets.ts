@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { TicketStatus } from '@/types/esg';
+import { httpClient } from '@/lib/httpClient';
 
 export interface SupportTicket {
   id: string;
@@ -24,6 +25,7 @@ export interface SupportTicket {
   contact_phone?: string;
   created_at: string;
   updated_at: string;
+  createdAt: string; // For backward compatibility with older data that uses snake_case
 }
 
 interface CreateTicketData {
@@ -56,30 +58,36 @@ export const useSupportTickets = (companyId?: string, fetchAll: boolean = false)
   const fetchTickets = useCallback(async () => {
     try {
       setLoading(true);
-      
-      let query = supabase
-        .from('support_tickets')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      // If not fetching all, filter by company_id
-      if (!fetchAll && companyId) {
-        query = query.eq('company_id', companyId);
-      } else if (!fetchAll && !companyId) {
-        setLoading(false);
-        return;
-      }
 
-      const { data, error } = await query;
+      // let query = supabase
+      //   .from('support_tickets')
+      //   .select('*')
+      //   .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      
+      // // If not fetching all, filter by company_id
+      // if (!fetchAll && companyId) {
+      //   query = query.eq('company_id', companyId);
+      // } else if (!fetchAll && !companyId) {
+      //   setLoading(false);
+      //   return;
+      // }
+      // if(fetchAll){
+      //   query = query.is('company_id', null);
+      // }
+      let {data,status}=await httpClient.get<SupportTicket[]>(`mis/support-tickets?companyId=${fetchAll ? '' : companyId }&fetchAll=${fetchAll}`) ;
+
+      if(status !== 200) throw new Error('Failed to fetch tickets');
+
+      // const { data, error } = await query;
+
+      // if (error) throw error;
+
       // Map status values for backward compatibility
       const mappedData = (data || []).map(ticket => ({
         ...ticket,
-        status: ticket.status === 'in_progress' ? 'work_in_progress' : ticket.status
+        status: ticket.status === "in_review" ? 'work_in_progress' : ticket.status
       })) as SupportTicket[];
-      
+
       setTickets(mappedData);
     } catch (err: any) {
       console.error('Error fetching support tickets:', err);
@@ -95,11 +103,14 @@ export const useSupportTickets = (companyId?: string, fetchAll: boolean = false)
   const createTicket = async (data: CreateTicketData): Promise<boolean> => {
     try {
       setSubmitting(true);
-      const { error } = await supabase
-        .from('support_tickets')
-        .insert([data]);
+      // const { error } = await supabase
+      //   .from('support_tickets')
+      //   .insert([data]);
 
-      if (error) throw error;
+      const {data: ticketData,status} = await httpClient.post('mis/support-tickets', data) ;
+      
+      if (status !== 200) throw new Error('Failed to create ticket');
+
 
       toast.success('Your issue has been submitted successfully. Our team will get back to you soon.');
       await fetchTickets();
@@ -113,15 +124,18 @@ export const useSupportTickets = (companyId?: string, fetchAll: boolean = false)
     }
   };
 
-  const updateTicket = async (ticketId: string, data: UpdateTicketData): Promise<boolean> => {
+  const updateTicket = async (ticketId: string, updateData: UpdateTicketData): Promise<boolean> => {
     try {
       setSubmitting(true);
-      const { error } = await supabase
-        .from('support_tickets')
-        .update(data)
-        .eq('id', ticketId);
+      // const { error } = await supabase
+      //   .from('support_tickets')
+      //   .update(data)
+      //   .eq('id', ticketId);
 
-      if (error) throw error;
+        const {data,status}=await httpClient.post(`mis/support-tickets/update-status`, {...updateData,ticketId}) ; 
+
+      // if (error) throw error;
+      if(!status || status !== 200) throw new Error('Failed to update ticket');
 
       toast.success('Ticket updated successfully');
       await fetchTickets();
