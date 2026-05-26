@@ -385,7 +385,7 @@ export const DocumentUploadModal = ({
               <div className="space-y-4">
 
                 {/* STATUS */}
-                <div className={`p-4 rounded-md border ${validationResult.valid
+                {/* <div className={`p-4 rounded-md border ${validationResult.valid
                     ? "bg-green-50 border-green-200"
                     : "bg-red-50 border-red-200"
                   }`}>
@@ -405,10 +405,10 @@ export const DocumentUploadModal = ({
                     <p><strong>Improvement Needed:</strong> {validationResult.improvementPercentage}%</p>
                     <p><strong>Confidence:</strong> {validationResult.confidence}%</p>
                   </div>
-                </div>
+                </div> */}
 
                 {/* SCORE */}
-                <div className="p-3 border rounded-md">
+                {/* <div className="p-3 border rounded-md">
                   <p className="text-sm font-medium mb-2">Score Breakdown</p>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     {Object.entries(validationResult.scores).map(([key, value]) => (
@@ -418,10 +418,10 @@ export const DocumentUploadModal = ({
                       </div>
                     ))}
                   </div>
-                </div>
+                </div> */}
 
                 {/* MISSING */}
-                {validationResult.missingSections?.length > 0 && (
+                {/* {validationResult.missingSections?.length > 0 && (
                   <div>
                     <p className="text-sm font-medium mb-2 text-red-600">
                       Missing Sections
@@ -434,10 +434,10 @@ export const DocumentUploadModal = ({
                       ))}
                     </div>
                   </div>
-                )}
+                )} */}
 
                 {/* ISSUES */}
-                {validationResult.issues?.length > 0 && (
+                {/* {validationResult.issues?.length > 0 && (
                   <div>
                     <p className="text-sm font-medium mb-2">Issues</p>
                     <ul className="text-xs list-disc pl-5 space-y-1">
@@ -446,7 +446,7 @@ export const DocumentUploadModal = ({
                       ))}
                     </ul>
                   </div>
-                )}
+                )} */}
 
                 {/* IMPROVEMENTS */}
                 {validationResult.suggestedImprovements?.length > 0 && (
