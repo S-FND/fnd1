@@ -65,46 +65,69 @@ export const BusinessInformationTable = ({ formData, onInputChange, historicalDa
         <p className="text-xs text-muted-foreground">
           Enter your quarterly business metrics for the current reporting period.
         </p>
-        
-        <div className="rounded-md border">
-          <Table>
+        <div className="rounded-md border overflow-x-auto">
+          <Table className="w-full text-sm text-left">
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-[50px]">Sno</TableHead>
-                <TableHead className="w-[350px]">KPI Name</TableHead>
-                <TableHead className="w-[100px]">Unit</TableHead>
-                <TableHead className="w-[150px]">Value</TableHead>
-                <TableHead className="w-[180px]">Previous Value</TableHead>
+              <TableRow className="bg-muted/40">
+                <TableHead className="w-[50px] text-left font-semibold">
+                  Sno
+                </TableHead>
+
+                <TableHead className="min-w-[350px] text-left font-semibold">
+                  KPI Name
+                </TableHead>
+
+                <TableHead className="w-[100px] text-left font-semibold">
+                  Unit
+                </TableHead>
+
+                <TableHead className="w-[180px] text-left font-semibold">
+                  Value
+                </TableHead>
+
+                <TableHead className="w-[220px] text-left font-semibold">
+                  Previous Value
+                </TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
               {BUSINESS_KPIS.map((kpi, index) => {
                 const historicalEntries = getHistoricalEntries(kpi.key);
-                // KPI number is index + 1 (1, 2, 3, 4...)
                 const kpiNumber = index + 1;
-                
+
                 return (
-                  <TableRow key={kpi.key}>
-                    <TableCell className="text-muted-foreground">
+                  <TableRow key={kpi.key} className="align-top">
+                    <TableCell className="text-left text-muted-foreground">
                       <CellNumberBadge kpiNumber={kpiNumber} />
                     </TableCell>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
+
+                    <TableCell className="font-medium text-left">
+                      <div className="flex items-start gap-2">
                         <span>{kpi.name}</span>
+
                         {kpi.description && (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                              <Info className="h-4 w-4 mt-0.5 text-muted-foreground cursor-help shrink-0" />
                             </TooltipTrigger>
-                            <TooltipContent side="right" className="max-w-xs">
+
+                            <TooltipContent
+                              side="right"
+                              className="max-w-xs text-left"
+                            >
                               <p>{kpi.description}</p>
                             </TooltipContent>
                           </Tooltip>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{kpi.unit}</TableCell>
-                    <TableCell>
+
+                    <TableCell className="text-left text-muted-foreground">
+                      {kpi.unit}
+                    </TableCell>
+
+                    <TableCell className="text-left">
                       <FormattedNumberInput
                         value={String(formData[kpi.key] || '')}
                         onChange={(value) => onInputChange(kpi.key, value)}
@@ -112,43 +135,66 @@ export const BusinessInformationTable = ({ formData, onInputChange, historicalDa
                         className="w-full"
                       />
                     </TableCell>
-                    <TableCell>
+
+                    <TableCell className="text-left">
                       {historicalEntries.length > 0 ? (
-                        <div className="flex flex-col gap-1">
-                          {historicalEntries.slice(0, 2).map((entry, idx) => (
-                            entry.value && (
-                              <Tooltip key={`${entry.quarter}-${idx}`}>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    onClick={() => handleCopyHistoricalValue(kpi.key, entry.value!)}
-                                    className={cn(
-                                      "inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded",
-                                      "bg-muted hover:bg-muted/80 transition-colors",
-                                      "max-w-full text-left"
-                                    )}
+                        <div className="flex flex-col gap-1 items-start">
+                          {historicalEntries.slice(0, 2).map(
+                            (entry, idx) =>
+                              entry.value && (
+                                <Tooltip key={`${entry.quarter}-${idx}`}>
+                                  <TooltipTrigger asChild>
+                                    <button
+                                      onClick={() =>
+                                        handleCopyHistoricalValue(
+                                          kpi.key,
+                                          entry.value!
+                                        )
+                                      }
+                                      className={cn(
+                                        "inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-md",
+                                        "bg-muted hover:bg-muted/80 transition-colors",
+                                        "text-left"
+                                      )}
+                                    >
+                                      <span className="font-medium text-muted-foreground">
+                                        {entry.quarter}:
+                                      </span>
+
+                                      <span className="text-foreground">
+                                        {formatNumberWithCommas(entry.value)}
+                                      </span>
+
+                                      <Copy className="w-2.5 h-2.5 opacity-40" />
+                                    </button>
+                                  </TooltipTrigger>
+
+                                  <TooltipContent
+                                    side="left"
+                                    className="text-left"
                                   >
-                                    <span className="font-medium text-muted-foreground shrink-0">
-                                      {entry.quarter}:
-                                    </span>
-                                    <span className="truncate max-w-[60px] text-foreground">
-                                      {formatNumberWithCommas(entry.value)}
-                                    </span>
-                                    <Copy className="w-2.5 h-2.5 shrink-0 opacity-40" />
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent side="left">
-                                  <div className="space-y-1">
-                                    <p className="text-xs font-medium">{entry.quarter}</p>
-                                    <p className="text-xs">Value: {entry.value}</p>
-                                    <p className="text-xs text-muted-foreground">Click to copy</p>
-                                  </div>
-                                </TooltipContent>
-                              </Tooltip>
-                            )
-                          ))}
+                                    <div className="space-y-1">
+                                      <p className="text-xs font-medium">
+                                        {entry.quarter}
+                                      </p>
+
+                                      <p className="text-xs">
+                                        Value: {entry.value}
+                                      </p>
+
+                                      <p className="text-xs text-muted-foreground">
+                                        Click to copy
+                                      </p>
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              )
+                          )}
                         </div>
                       ) : (
-                        <span className="text-xs text-muted-foreground italic">—</span>
+                        <span className="text-xs text-muted-foreground italic">
+                          —
+                        </span>
                       )}
                     </TableCell>
                   </TableRow>
@@ -157,7 +203,6 @@ export const BusinessInformationTable = ({ formData, onInputChange, historicalDa
             </TableBody>
           </Table>
         </div>
-        
         <p className="text-xs text-muted-foreground mt-3 p-3 bg-muted/50 rounded-md border border-dashed">
           <strong>Note:</strong> With regards to Tier 2+ markets revenue & % of female customers please provide cumulative for all sales channels (D2C, E-Comm, Q-Comm). If absolute data is not available for third-party channels, please include estimates in the overall percentage.
         </p>

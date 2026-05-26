@@ -148,7 +148,7 @@ export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({
           // style={!hideSidebar ? { marginLeft: 'var(--sidebar-width, 20rem)' } : {}}
         >
           <Navbar hideSidebarTrigger={hideSidebar} />
-          <main className="flex-1 overflow-auto w-full p-12">
+          <main className="flex-1 overflow-auto w-full ">
             <div className=" mx-auto  w-full">
               <PageOverlay>
                 {children}
