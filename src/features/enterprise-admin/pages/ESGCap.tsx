@@ -409,7 +409,7 @@ const ESGCapPage = () => {
     if (!entityId) return;
 
     setLoading(true);
-    setLoadingMessage("Loading esg items ...")
+    setLoadingMessage("Loading")
     try {
       const data = await fetchEsgCap(entityId);
       if (data?.status) {
@@ -819,7 +819,16 @@ const ESGCapPage = () => {
               </CardDescription>
             </CardHeader> */}
           <CardContent className="p-6">
-            <div className="flex justify-end mb-4">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+          <ESGCapFilters
+                  searchTerm={searchTerm}
+                  setSearchTerm={setSearchTerm}
+                  statusFilter={statusFilter}
+                  setStatusFilter={setStatusFilter}
+                  categoryFilter={categoryFilter}
+                  setCategoryFilter={setCategoryFilter}
+                />
+            {/* <div className="flex justify-end mb-2"> */}
               <Button
                 variant="outline"
                 onClick={() => setAuditOpen(true)}
@@ -830,18 +839,7 @@ const ESGCapPage = () => {
               </Button>
             </div>
             {/* Filters Section */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <div className="w-full sm:w-auto">
-                <ESGCapFilters
-                  searchTerm={searchTerm}
-                  setSearchTerm={setSearchTerm}
-                  statusFilter={statusFilter}
-                  setStatusFilter={setStatusFilter}
-                  categoryFilter={categoryFilter}
-                  setCategoryFilter={setCategoryFilter}
-                />
-              </div>
-            </div>
+               
 
             {/* Alerts Panel - MOVED OUTSIDE the filters container */}
             {!isInvestorEmailExists && esgCap?.plan && esgCap.plan.length > 0 && (
@@ -856,11 +854,11 @@ const ESGCapPage = () => {
             )}
 
             {sortedItems.length > 0 && (
-              <div className="mt-6 py-4">
+              // <div className="mt-6 py-4">
                 <ESGCapScoring items={sortedItems} />
-              </div>
+              // </div>
             )}
-            <div className="space-y-6">
+            <div className="space-y-4  mt-4">
               {Object.entries(groupedItems)
                 .filter(([_, items]) => items.length > 0)
                 .map(([groupName, items]) => {

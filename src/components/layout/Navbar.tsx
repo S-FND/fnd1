@@ -104,7 +104,7 @@ export const Navbar: React.FC<NavbarProps> = ({ hideSidebarTrigger = false }) =>
 
   return (
     <header className="border-b sticky top-0 z-40 bg-background">
-      <div className="flex h-16 items-center px-4 md:px-6">
+      <div className="flex h-8 items-center px-4 md:px-6">
         {/* Left side with sidebar trigger - Hide when needed */}
         <div className="flex items-center gap-4">
           {!hideSidebarTrigger && <SidebarTrigger />}
