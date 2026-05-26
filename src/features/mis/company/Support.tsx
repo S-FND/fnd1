@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,7 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useAuth } from '@/contexts/AuthContext';
+// import { useAuth } from '@/contexts/AuthContext';
 import { useSupportTickets, SupportTicket } from '@/hooks/useSupportTickets';
 import { useCompanyFeatures, QUARTERLY_FEATURES, ANNUAL_FEATURES } from '@/hooks/useCompanyFeatures';
 import { TicketStatus } from '@/types/esg';
@@ -52,6 +51,8 @@ import {
   FileQuestion
 } from 'lucide-react';
 import { format } from 'date-fns';
+import UnifiedSidebarLayout from '@/components/layout/UnifiedSidebarLayout';
+import { useAuth } from '@/context/AuthContext';
 
 const Support = () => {
   const { user, companyName, effectiveCompanyId } = useAuth();
@@ -163,7 +164,7 @@ const Support = () => {
   };
 
   return (
-    <DashboardLayout>
+    <UnifiedSidebarLayout>
       <PageHeader
         title="Help & Support"
         subtitle="Report challenges or ask questions about specific KPIs or fields"
@@ -432,7 +433,7 @@ const Support = () => {
                           <TableCell>{getPriorityBadge(ticket.priority)}</TableCell>
                           <TableCell>{getStatusBadge(ticket.status)}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">
-                            {format(new Date(ticket.created_at), 'MMM d, yyyy')}
+                            {format(new Date(ticket.createdAt), 'MMM d, yyyy')}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -551,7 +552,7 @@ const Support = () => {
           </Card>
         </TabsContent>
       </Tabs>
-    </DashboardLayout>
+    </UnifiedSidebarLayout>
   );
 };
 

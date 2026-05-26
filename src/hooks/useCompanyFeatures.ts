@@ -65,7 +65,7 @@ export const useCompanyFeatures = (companyId?: string) => {
       const data=await httpClient.get(`mis/company-feature-settings?companyId=${companyId}`) as { data: CompanyFeatureSetting[]; error?: any };
 
       if (data.error) throw data.error;
-
+      console.log('Fetched company features:', data.data);
       // Get the set of current feature keys
       const currentFeatureKeys = new Set(ALL_FEATURES.map(f => f.key));
       
@@ -107,7 +107,7 @@ export const useCompanyFeatures = (companyId?: string) => {
         setFeatures(typedData);
       } else {
         // Filter to only include features that are in our current feature list
-        const validData = data.filter(d => currentFeatureKeys.has(d.feature_key as FeatureKey));
+        const validData = data.data.filter(d => currentFeatureKeys.has(d.feature_key as FeatureKey));
         const typedData = validData.map((item) => ({
           ...item,
           feature_type: item.feature_type as FeatureType,
