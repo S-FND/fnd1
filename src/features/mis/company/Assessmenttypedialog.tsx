@@ -137,7 +137,7 @@ export default function AssessmentTypeDialog() {
         </div>
 
         {/* Cards */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-2 gap-3 mb-6 text-left">
           {cards.map((card: Card) => {
             const isSelected = selected === card.id;
             return (

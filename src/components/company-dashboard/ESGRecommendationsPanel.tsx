@@ -436,7 +436,7 @@ export const ESGRecommendationsPanel = ({
               </div>
               {items.map(p => {
                 return (
-                  <div key={p.key} className="flex items-center py-0.5 pl-4">
+                  <div key={p.key} className="flex items-center py-0.5">
                     <span className="text-xs text-foreground leading-tight">{p.label}</span>
                   </div>
                 );
@@ -504,7 +504,7 @@ export const ESGRecommendationsPanel = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {columns.map(col => (
             <div key={col.title} className={`rounded-lg border ${col.border} ${col.bg} p-3`}>
-              <h4 className="text-sm font-semibold mb-2">{col.title}</h4>
+              <h4 className="text-sm font-semibold text-left mb-2">{col.title}</h4>
               {renderParamList(col.items)}
             </div>
           ))}

@@ -24,7 +24,7 @@ export const AdditionalCommentsSection = ({
           <MessageSquare className="w-3.5 h-3.5 text-primary" />
           Additional Comments
         </CardTitle>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-[11px] text-left text-muted-foreground">
           Add any additional details, context, or information not covered elsewhere
         </p>
       </CardHeader>

@@ -50,14 +50,14 @@ const QUARTERS_INFO = [
 ];
 
 const CompanyDashboard = () => {
-  const { user,effectiveCompanyId } = useAuth();
-  const companyName = user?.name;
+  const { user, effectiveCompanyId } = useAuth();
+  const companyName = user?.misCompanyId;
   // const effectiveCompanyId = "company-4";
   const navigate = useNavigate();
-  const companyId = effectiveCompanyId || user?.company_id ;
+  const companyId = effectiveCompanyId || user?.company_id;
   useEffect(() => {
     console.log('Auth context values in CompanyDashboard:', { user, effectiveCompanyId, companyId });
-  }, [effectiveCompanyId,user]);
+  }, [effectiveCompanyId, user]);
 
   // State for selected quarter view — defaults to the open period (Q1 2026).
   // Year can flip between 2025 (historical, view-only) and 2026 (current) via arrows.
@@ -200,55 +200,52 @@ const CompanyDashboard = () => {
 
   return (
     <UnifiedSidebarLayout>
-      <PageHeader
-        title={`Welcome, ${user?.name || 'User'}`}
-        subtitle={`${companyName} • ${selectedQuarter} ${selectedYear} ESG Data Collection`}
-        actions={
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={handleDownloadMIS}
-              disabled={analyticsData.isLoading || !analyticsData.data || allCompaniesData.isLoading}
-            >
-              <FileDown className="w-4 h-4 mr-2" />
-              Download MIS PDF
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                const storageUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/founder-guide/Fireside_ESG_Platform_Founders_Guide.pdf`;
-                const link = document.createElement('a');
-                link.href = storageUrl;
-                link.download = 'Fireside_ESG_Platform_Founders_Guide.pdf';
-                link.target = '_blank';
-                link.click();
-              }}
-            >
-              <BookOpen className="w-4 h-4 mr-2" />
-              Founder's Guide
-            </Button>
-            <Button onClick={() => window.open('https://firesidekpi.lovable.app/demo', '_blank')}>
-              <Play className="w-4 h-4 mr-2" />
-              View Demo
-            </Button>
-            <Button onClick={() => navigate(`/mis/data-entry?quarter=${selectedQuarter}&year=${selectedYear}`)}>
-              <ClipboardList className="w-4 h-4 mr-2" />
-              Continue Data Entry
-            </Button>
-          </div>
-        }
-      />
+      <div className="text-left mt-2">
+        <PageHeader
+          title={`Welcome, ${user?.misCompanyId || 'User'}`}
+          subtitle={`${companyName} • ${selectedQuarter} ${selectedYear} ESG Data Collection`}
+          actions={
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={handleDownloadMIS}
+                disabled={analyticsData.isLoading || !analyticsData.data || allCompaniesData.isLoading}
+              >
+                <FileDown className="w-4 h-4 mr-2" />
+                Download MIS PDF
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const storageUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/founder-guide/Fireside_ESG_Platform_Founders_Guide.pdf`;
+                  const link = document.createElement('a');
+                  link.href = storageUrl;
+                  link.download = 'Fireside_ESG_Platform_Founders_Guide.pdf';
+                  link.target = '_blank';
+                  link.click();
+                }}
+              >
+                <BookOpen className="w-4 h-4 mr-2" />
+                Founder's Guide
+              </Button>
+              <Button onClick={() => window.open('https://firesidekpi.lovable.app/demo', '_blank')}>
+                <Play className="w-4 h-4 mr-2" />
+                View Demo
+              </Button>
+              <Button onClick={() => navigate(`/mis/data-entry?quarter=${selectedQuarter}&year=${selectedYear}`)}>
+                <ClipboardList className="w-4 h-4 mr-2" />
+                Continue Data Entry
+              </Button>
+            </div>
+          }
+        />
+      </div>
 
       {isLockedToPublished && !settingsLoading && (
         <Alert className="mb-4 border-amber-300 bg-amber-50 dark:bg-amber-950/20">
           <Lock className="w-4 h-4 text-amber-600" />
-
-          <AlertTitle className="text-amber-900 dark:text-amber-200">
-            Scores locked to {publishedQuarter} {publishedYear}
-          </AlertTitle>
-
-          <AlertDescription className="text-amber-800 dark:text-amber-300/90">
-            Your ESG grades, percentile cards, rankings and recommendations are
+          <AlertDescription className="text-left text-amber-800 dark:text-amber-300/90">
+            <b>Scores locked to {publishedQuarter} {publishedYear}</b> Your ESG grades, percentile cards, rankings and recommendations are
             locked to {publishedQuarter} {publishedYear} results.
 
             {selectedQuarter} {selectedYear} scores
@@ -326,7 +323,9 @@ const CompanyDashboard = () => {
                         <span className={`text-2xl font-bold ${gradeColor}`}>{grade}</span>
                         <span className="text-xs text-muted-foreground mb-1">grade</span>
                       </div>
-                      <Badge variant="secondary" className="text-[9px] mt-1">n={card.n}</Badge>
+                      <div className="flex items-center justify-between mt-1">
+                        <Badge variant="secondary" className="text-[9px] mt-1">n={card.n}</Badge>
+                      </div>
                     </CardContent>
                   </Card>
                 );
@@ -649,7 +648,7 @@ const CompanyDashboard = () => {
           ) : (
             <CompletionRing percentage={overallPercentage} size="lg" />
           )}
-          <div className="flex-1">
+          <div className="flex-1 text-left">
             <h3 className="text-lg font-semibold mb-0.5">Overall KPI Progress</h3>
             <p className="text-sm text-muted-foreground">
               {totalFilled} of {totalAssigned} KPIs completed across all periods
@@ -669,26 +668,27 @@ const CompanyDashboard = () => {
       </Card>
 
       {/* Weightage Note */}
-      <Card className="border-dashed border-muted-foreground/30 bg-muted/30">
-        <CardContent className="pt-4 pb-4 space-y-3">
-          <p className="text-xs text-muted-foreground italic">
-            <strong>Note:</strong> Each KPI score has a different weightage, determined internally by Fireside, and is not equally distributed.
-          </p>
-          <div className="border-t border-border pt-2">
-            <p className="text-xs font-semibold text-muted-foreground mb-1">Glossary</p>
-            <ul className="text-xs text-muted-foreground space-y-0.5 list-disc list-inside">
-              <li><strong>EPR</strong> — Extended Producer Responsibility: A regulatory framework where producers are responsible for the end-of-life management of their products and packaging.</li>
-              <li><strong>VPN</strong> — Voluntary Plastic Neutrality: A voluntary commitment to offset plastic usage by recovering and recycling an equivalent amount of plastic waste.</li>
-              <li><strong>P&S Recycled/Pkg</strong> — Primary & Secondary Recycled Packaging: The percentage of primary and secondary packaging materials (plastic, paper, glass, metal, plant-based) that are sourced from recycled content.</li>
-              <li><strong>ESG</strong> — Environmental, Social & Governance: A framework for evaluating a company's performance across sustainability and ethical dimensions.</li>
-              <li><strong>CEI</strong> — Circular Economy Index: A composite score measuring a company's progress toward circular material flows, used as the Environment score.</li>
-              <li><strong>GHG</strong> — Greenhouse Gas: Gases that trap heat in the atmosphere, commonly tracked under Scope 1, 2, and 3 emissions.</li>
-              <li><strong>DEI</strong> — Diversity, Equity & Inclusion: Policies and metrics related to workforce diversity and equitable practices.</li>
-              <li><strong>SRI</strong> — Socially Responsible Investment: Investment strategies that consider social and environmental impact alongside financial returns.</li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
+      <CardContent className="pt-4 pb-4 space-y-3">
+        {/* ✅ Added text-left */}
+        <p className="text-xs text-muted-foreground italic text-left">
+          <strong>Note:</strong> Each KPI score has a different weightage, determined internally by Fireside, and is not equally distributed.
+        </p>
+        <div className="border-t border-border pt-2">
+          {/* ✅ Added text-left */}
+          <p className="text-xs font-semibold text-muted-foreground mb-1 text-left">Glossary</p>
+          {/* ✅ Changed list-inside to list-outside, added pl-4 and text-left */}
+          <ul className="text-xs text-muted-foreground space-y-0.5 list-disc list-outside pl-4 text-left">
+            <li><strong>EPR</strong> — Extended Producer Responsibility: A regulatory framework where producers are responsible for the end-of-life management of their products and packaging.</li>
+            <li><strong>VPN</strong> — Voluntary Plastic Neutrality: A voluntary commitment to offset plastic usage by recovering and recycling an equivalent amount of plastic waste.</li>
+            <li><strong>P&S Recycled/Pkg</strong> — Primary & Secondary Recycled Packaging: The percentage of primary and secondary packaging materials (plastic, paper, glass, metal, plant-based) that are sourced from recycled content.</li>
+            <li><strong>ESG</strong> — Environmental, Social & Governance: A framework for evaluating a company's performance across sustainability and ethical dimensions.</li>
+            <li><strong>CEI</strong> — Circular Economy Index: A composite score measuring a company's progress toward circular material flows, used as the Environment score.</li>
+            <li><strong>GHG</strong> — Greenhouse Gas: Gases that trap heat in the atmosphere, commonly tracked under Scope 1, 2, and 3 emissions.</li>
+            <li><strong>DEI</strong> — Diversity, Equity & Inclusion: Policies and metrics related to workforce diversity and equitable practices.</li>
+            <li><strong>SRI</strong> — Socially Responsible Investment: Investment strategies that consider social and environmental impact alongside financial returns.</li>
+          </ul>
+        </div>
+      </CardContent>
 
 
 

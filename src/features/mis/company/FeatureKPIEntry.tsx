@@ -22,10 +22,10 @@ import { PeriodSelector } from '@/components/PeriodSelector';
 import { AdditionalCommentsSection } from '@/components/kpi-tables/AdditionalCommentsSection';
 import { EditPausedBanner } from '@/components/EditPausedBanner';
 import { isPeriodEditable } from '@/lib/companyAccessControl';
-import { 
+import {
   QuarterlyKPITabs,
-  CertificationsTable, 
-  SourcingFulfilmentTable, 
+  CertificationsTable,
+  SourcingFulfilmentTable,
   GovernancePoliciesTable,
   OperationsTable,
   SRITable,
@@ -49,7 +49,7 @@ import { FashionMaterialsTable } from '@/components/kpi-tables/FashionMaterialsT
 import { ExternalReportingTable } from '@/components/kpi-tables/ExternalReportingTable';
 import { HealthCareTable } from '@/components/kpi-tables/HealthCareTable';
 import { KPI, ESGCategory, CoreLevel, RevenueStage, Industry, KPIIndustry, mapIndustryToKPIIndustries, FeatureModule } from '@/types/esg';
-import { 
+import {
   ArrowLeft,
   Loader2,
   Save,
@@ -142,8 +142,8 @@ const FeatureKPIEntry = () => {
   const { user, companyName, effectiveCompanyId, isAdmin, isFandoro, isCompanyReadOnly } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  
-  const companyId = effectiveCompanyId || user?.company_id ;
+
+  const companyId = effectiveCompanyId || user?.company_id;
 
   useEffect(() => {
     console.log('Auth context values in FeatureKPIEntry:', { user, effectiveCompanyId, companyId });
@@ -151,25 +151,25 @@ const FeatureKPIEntry = () => {
   const featureKey = searchParams.get('feature') || '';
   const tabType = searchParams.get('tab') as 'quarterly' | 'annual' || 'quarterly';
   const isAnnual = tabType === 'annual';
-  
+
   // Read quarter/year from URL params if available.
   // Default to the open period (Q1 / JFM 2026) so company users land on the editable quarter.
   const urlQuarter = searchParams.get('quarter');
   const urlYear = searchParams.get('year');
-  
+
   // Period selection state - initialize from URL params
   const selectedQuarter = urlQuarter || (isAnnual ? 'Q4' : 'Q1');
   const selectedYear = urlYear ? parseInt(urlYear) : (isAnnual ? 2025 : 2026);
-  
+
   // For annual KPIs, use the URL year param or fall back to FY 2025 (FY 2026 not yet open).
   const currentFY = isAnnual
     ? (urlYear ? parseInt(urlYear) : 2025)
     : getCurrentFinancialYear();
-  
+
   // For data fetching, use selected quarter/year
   const currentQuarter = selectedQuarter;
   const currentYear = selectedYear;
-  
+
   // Period-aware read-only: only Q1 2026 (quarterly) is editable. Everything else
   // — all 2025 periods, FY 2025, FY 2026 — is locked for everyone.
   // We also still respect the company-level role lock from AuthContext.
@@ -177,7 +177,7 @@ const FeatureKPIEntry = () => {
   const yearToCheck = isAnnual ? currentFY : currentYear;
   const periodLocked = !isPeriodEditable(periodToCheck, yearToCheck);
   const readOnly = isCompanyReadOnly || periodLocked;
-  
+
   // Handle quarter change - update URL and redirect if needed
   const handleQuarterChange = useCallback((newQuarter: string) => {
     // If we're on an annual feature and switching away from Q4, redirect to data-entry page
@@ -189,7 +189,7 @@ const FeatureKPIEntry = () => {
     // Update URL with new quarter, keeping the rest of the params
     navigate(`/mis/kpi-entry?tab=${tabType}&feature=${featureKey}&quarter=${newQuarter}&year=${selectedYear}`);
   }, [isAnnual, navigate, tabType, featureKey, selectedYear]);
-  
+
   // Handle year change - update URL
   const handleYearChange = useCallback((newYear: number) => {
     navigate(`/mis/kpi-entry?tab=${tabType}&feature=${featureKey}&quarter=${selectedQuarter}&year=${newYear}`);
@@ -197,14 +197,14 @@ const FeatureKPIEntry = () => {
 
   // Find feature info
   const featureInfo = [...QUARTERLY_FEATURES, ...ANNUAL_FEATURES].find(f => f.key === featureKey);
-  
+
   // Check if feature is marked as optional for this company
   const { isFeatureOptional } = useCompanyFeatures(companyId);
   const isCurrentFeatureOptional = isFeatureOptional(featureKey);
-  
+
   // Get KPI overrides for this company
   const { getEffectiveCoreLevel, isLoading: isLoadingOverrides } = useCompanyKPIOverrides(companyId);
-  
+
   // State
   const [isLoading, setIsLoading] = useState(true);
   const [allKPIs, setAllKPIs] = useState<KPI[]>([]);
@@ -247,17 +247,17 @@ const FeatureKPIEntry = () => {
   // Auto-initialize governance policy boolean fields so "No" counts as a response
   useEffect(() => {
     if (featureKey !== 'governancePolicies' || isLoading || hasInitializedGovRef.current) return;
-    
+
     const GOVERNANCE_POLICIES = [
       'posh', 'code_of_conduct', 'supplier_code_of_conduct', 'health_and_safety',
       'dei', 'hr', 'human_rights', 'esg', 'environment',
       'grievance_internal', 'grievance_external', 'data_protection',
     ];
     const BOOL_FIELDS = ['in_place', 'training'];
-    
+
     let needsSave = false;
     const updates: Record<string, boolean> = {};
-    
+
     for (const policy of GOVERNANCE_POLICIES) {
       for (const field of BOOL_FIELDS) {
         const key = `policy_${policy}_${field}`;
@@ -267,7 +267,7 @@ const FeatureKPIEntry = () => {
         }
       }
     }
-    
+
     if (needsSave) {
       hasInitializedGovRef.current = true;
       setFormData(prev => ({ ...prev, ...updates }));
@@ -294,17 +294,17 @@ const FeatureKPIEntry = () => {
       //   .maybeSingle();
       // debugger;
       const data: {
-          data: {
-            revenue_stage: RevenueStage;
-            industry: Industry;
-          },
-          status: number;
+        data: {
+          revenue_stage: RevenueStage;
+          industry: Industry;
+        },
+        status: number;
 
-        } = await httpClient.get(`mis/company-profiles?companyId=${companyId}`)
+      } = await httpClient.get(`mis/company-profiles?companyId=${companyId}`)
 
-        if (!data.status || data.status !== 200) throw new Error('Failed to load company profile');
+      if (!data.status || data.status !== 200) throw new Error('Failed to load company profile');
 
-        
+
 
       if (data && data.data) {
         setCompanyProfile({
@@ -322,7 +322,7 @@ const FeatureKPIEntry = () => {
         }
       }
     };
-    if(companyId) {
+    if (companyId) {
       loadProfile();
     }
   }, [companyId]);
@@ -335,7 +335,7 @@ const FeatureKPIEntry = () => {
         //   .from('kpi_master')
         //   .select('*')
         //   .order('created_at', { ascending: true });
-        const  data: { data: DBKPIMaster[];  } = await httpClient.get('mis/kpi-masters');
+        const data: { data: DBKPIMaster[]; } = await httpClient.get('mis/kpi-masters');
         // debugger;
         if (data) {
           const mappedKPIs = (data.data as DBKPIMaster[]).map(dbToKPI);
@@ -356,14 +356,14 @@ const FeatureKPIEntry = () => {
       if (allKPIs.length === 0) {
         return;
       }
-      
+
       setIsLoading(true);
-      
+
       try {
         // For annual KPIs, determine the target year
         const targetYear = isAnnual ? currentFY : currentYear;
         const targetQuarter = isAnnual ? 'FY' : currentQuarter;
-        
+
         // const { data, error } = await supabase
         //   .from('kpi_entries')
         //   .select('kpi_id, value')
@@ -399,7 +399,7 @@ const FeatureKPIEntry = () => {
           //   .eq('year', lastYear);
           const lastYearData: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=FY&year=${lastYear}`);
 
-          if ( lastYearData && lastYearData.data.length > 0) {
+          if (lastYearData && lastYearData.data.length > 0) {
             const entries: Record<string, string | number | boolean> = {};
             lastYearData.data.forEach(entry => {
               if (entry.value !== null) {
@@ -424,15 +424,15 @@ const FeatureKPIEntry = () => {
           // Q1 2026 (JFM 2026) is the newly opened quarter. If the company has
           // no entries yet for this period, pre-fill from the same KPIs they
           // submitted in Q4 2025 (OND 2025) so they only need to update changes.
-            // const { data: prevQData, error: prevQErr } = await supabase
-            //   .from('kpi_entries')
-            //   .select('kpi_id, value')
-            //   .eq('company_id', companyId)
-            //   .eq('quarter', 'Q4')
-            //   .eq('year', 2025);
-            const prevQData: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=Q4&year=2025`);
+          // const { data: prevQData, error: prevQErr } = await supabase
+          //   .from('kpi_entries')
+          //   .select('kpi_id, value')
+          //   .eq('company_id', companyId)
+          //   .eq('quarter', 'Q4')
+          //   .eq('year', 2025);
+          const prevQData: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=Q4&year=2025`);
 
-          if ( prevQData && prevQData.data.length > 0) {
+          if (prevQData && prevQData.data.length > 0) {
             const entries: Record<string, string | number | boolean> = {};
             prevQData.data.forEach(entry => {
               if (entry.value !== null) {
@@ -454,10 +454,10 @@ const FeatureKPIEntry = () => {
           // Quarter order: Q1, Q2, Q3, Q4. Current year is Apr-Mar FY.
           const quarterOrder = ['Q1', 'Q2', 'Q3', 'Q4'];
           const currentQIndex = quarterOrder.indexOf(currentQuarter);
-          
+
           // Try previous quarters in reverse order (most recent first)
           let preFillData: Record<string, string | number | boolean> = {};
-          
+
           for (let i = currentQIndex - 1; i >= 0; i--) {
             const prevQuarter = quarterOrder[i];
             // const { data: prevData, error: prevError } = await supabase
@@ -468,9 +468,9 @@ const FeatureKPIEntry = () => {
             //   .eq('year', currentYear)
             //   .like('kpi_id', '%vendor_%')
             //   .or('kpi_id.like.%msme_%,kpi_id.like.%logistics_%,kpi_id.like.%sourcing_%');
-              const prevData: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=${prevQuarter}&year=${currentYear}&kpi_id=vendor_%25&or=kpi_id.like.%25msme_%25,kpi_id.like.%25logistics_%25,kpi_id.like.%25sourcing_%25`);
+            const prevData: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=${prevQuarter}&year=${currentYear}&kpi_id=vendor_%25&or=kpi_id.like.%25msme_%25,kpi_id.like.%25logistics_%25,kpi_id.like.%25sourcing_%25`);
 
-            if ( prevData && prevData.data.length > 0) {
+            if (prevData && prevData.data.length > 0) {
               prevData.data.forEach(entry => {
                 if (entry.value !== null && !preFillData[entry.kpi_id]) {
                   if (entry.value === 'true') {
@@ -488,7 +488,7 @@ const FeatureKPIEntry = () => {
               }
             }
           }
-          
+
           if (Object.keys(preFillData).length > 0) {
             setFormData(preFillData);
             setHasUnsavedChanges(true);
@@ -513,10 +513,10 @@ const FeatureKPIEntry = () => {
   useEffect(() => {
     const loadHistoricalData = async () => {
       if (allKPIs.length === 0) return;
-      
+
       try {
         const historicalMap: Record<string, HistoricalEntry[]> = {};
-        
+
         // 1. Load from historical_kpi_entries table (AI-matched historical uploads)
         // const { data: historicalData, error: historicalError } = await supabase
         //   .from('historical_kpi_entries')
@@ -530,7 +530,7 @@ const FeatureKPIEntry = () => {
         // if (historicalError) throw historicalError;
 
         if (historicalData && historicalData.data.length > 0) {
-          for (const entry of historicalData.data ) {
+          for (const entry of historicalData.data) {
             if (entry.matched_kpi_id && entry.original_value) {
               if (!historicalMap[entry.matched_kpi_id]) {
                 historicalMap[entry.matched_kpi_id] = [];
@@ -543,7 +543,7 @@ const FeatureKPIEntry = () => {
             }
           }
         }
-        
+
         // 2. Also load from kpi_entries for previous quarters (uploaded template data)
         // Get previous quarter entries (not the current one being edited)
         const previousEntries: { data: { kpi_id: string; value: string | null; quarter: string; year: number }[]; error?: any } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&value=not.is.null&order=year.desc`);
@@ -553,29 +553,29 @@ const FeatureKPIEntry = () => {
         //   .eq('company_id', companyId)
         //   .not('value', 'is', null)
         //   .order('year', { ascending: false })
-          // .order('quarter', { ascending: false });
+        // .order('quarter', { ascending: false });
 
         // if (previousError) throw previousError;
 
         if (previousEntries && previousEntries.data.length > 0) {
           for (const entry of previousEntries.data) {
             // Skip current period entries
-            const isCurrentPeriod = isAnnual 
+            const isCurrentPeriod = isAnnual
               ? entry.quarter === 'FY' && entry.year === currentFY
               : entry.quarter === currentQuarter && entry.year === currentYear;
-            
+
             if (isCurrentPeriod) continue;
-            
+
             if (entry.kpi_id && entry.value) {
               if (!historicalMap[entry.kpi_id]) {
                 historicalMap[entry.kpi_id] = [];
               }
-              
+
               // Check if this quarter already exists
-              const quarterLabel = entry.quarter === 'FY' 
-                ? `FY ${entry.year}-${(entry.year + 1).toString().slice(-2)}` 
+              const quarterLabel = entry.quarter === 'FY'
+                ? `FY ${entry.year}-${(entry.year + 1).toString().slice(-2)}`
                 : `${entry.quarter} ${entry.year}-${(entry.year + 1).toString().slice(-2)}`;
-              
+
               const exists = historicalMap[entry.kpi_id].some(h => h.quarter === quarterLabel);
               if (!exists) {
                 historicalMap[entry.kpi_id].push({
@@ -586,7 +586,7 @@ const FeatureKPIEntry = () => {
               }
             }
           }
-          
+
           // Sort each KPI's historical entries by quarter (most recent first)
           Object.keys(historicalMap).forEach(kpiId => {
             historicalMap[kpiId].sort((a, b) => {
@@ -609,7 +609,7 @@ const FeatureKPIEntry = () => {
             historicalMap[kpiId] = historicalMap[kpiId].slice(0, 2);
           });
         }
-        
+
         setHistoricalData(historicalMap);
       } catch (error) {
         console.error('Error loading historical data:', error);
@@ -626,7 +626,7 @@ const FeatureKPIEntry = () => {
       environmental: { esg: 'E' },
       social: { esg: 'S' },
       governance: { esg: 'G' },
-      
+
       packaging: { featureModule: 'packaging' },
       packagingBasic: { featureModule: 'packagingBasic' },
       packagingDetailed: { featureModule: 'packagingDetailed' },
@@ -636,7 +636,7 @@ const FeatureKPIEntry = () => {
       wasteDetailed: { featureModule: 'wasteDetailed' },
       incidentLog: { featureModule: 'incidentLog' },
       policies: { featureModule: 'policies' },
-      
+
       productServiceCertifications: { featureModule: 'productServiceCertifications' },
       csr: { featureModule: 'csr' },
       // Annual features
@@ -653,60 +653,60 @@ const FeatureKPIEntry = () => {
   // Filter applicable KPIs
   const applicableKPIs = useMemo(() => {
     if (!companyProfile) return [];
-    
+
     const kpiIndustries = mapIndustryToKPIIndustries(companyProfile.industry);
     const featureFilter = getFeatureFilter(featureKey);
-    
-  // Specialized feature modules that contain mixed quarterly/annual KPIs
+
+    // Specialized feature modules that contain mixed quarterly/annual KPIs
     const specializedModules = [
-      'packagingBasic', 'packagingDetailed', 'primarySecondaryPackaging', 'waterDetailed', 'energyDetailed', 
+      'packagingBasic', 'packagingDetailed', 'primarySecondaryPackaging', 'waterDetailed', 'energyDetailed',
       'wasteDetailed', 'incidentLog', 'policies', 'grievances',
       'certifications', 'sourcingFulfillment', 'operations', 'governancePolicies', 'sri',
       'productServiceCertifications', 'csr'
     ];
-    
-    
+
+
     // Categories to INCLUDE in Social/Employment and Wages feature - includes Leadership
     const allowedSocialCategories = ['Employees', 'Leadership'];
-    
+
     const isSpecializedModule = featureFilter.featureModule && specializedModules.includes(featureFilter.featureModule);
-    
+
     // Auto-calculated fields - these will be shown but not editable
     const autoCalculatedFields = [
       'Total White-Collar Gross Wages',
-      'Total White-Collar Employees', 
+      'Total White-Collar Employees',
       'Total Blue-Collar Gross Wages',
       'Total Blue-Collar Employees'
     ];
-    
+
     return allKPIs.filter(kpi => {
-      if(!Array.isArray(kpi.industries)) {
-        kpi.industries=JSON.parse(kpi.industries as unknown as string) as KPIIndustry[];
+      if (!Array.isArray(kpi.industries)) {
+        kpi.industries = JSON.parse(kpi.industries as unknown as string) as KPIIndustry[];
       }
       // Check revenue stage and industry
-      const matchesProfile = kpi.revenueStages.includes(companyProfile.revenueStage) && 
+      const matchesProfile = kpi.revenueStages.includes(companyProfile.revenueStage) &&
         kpi.industries.some(ind => kpiIndustries.includes(ind));
-      
+
       if (!matchesProfile) return false;
-      
+
       // Check company-specific
       if (kpi.targetCompanies && kpi.targetCompanies.length > 0) {
         if (!kpi.targetCompanies.includes(companyId)) return false;
       }
-      
+
       // Filter by feature - ESG category OR feature module
       if (featureFilter.esg) {
         // For ESG-based features (Environmental, Social, Governance)
         // Apply period filter for ESG-based features
         if (isAnnual && kpi.period !== 'Annual') return false;
         if (!isAnnual && kpi.period !== 'Quarterly') return false;
-        
+
         // Only include KPIs that match the ESG AND don't have a specific feature module assigned
         if (kpi.esg !== featureFilter.esg) return false;
         if (kpi.featureModule && !['environmental', 'social', 'governance'].includes(kpi.featureModule)) {
           return false; // This KPI belongs to a specialized module
         }
-        
+
         // For Social feature, only include specific categories (Employees + Leadership)
         if (featureFilter.esg === 'S' && !allowedSocialCategories.includes(kpi.category)) {
           return false;
@@ -714,15 +714,15 @@ const FeatureKPIEntry = () => {
       } else if (featureFilter.featureModule) {
         // For specialized feature modules
         const matchesModule = kpi.featureModule === featureFilter.featureModule;
-        
+
         // Special case: Water Metrics (Detailed) should include Water Management category
-        const isWaterDetailedWithWaterMgmt = featureFilter.featureModule === 'waterDetailed' && 
+        const isWaterDetailedWithWaterMgmt = featureFilter.featureModule === 'waterDetailed' &&
           (kpi.category === 'Water Management' || kpi.featureModule === 'waterDetailed');
-        
+
         // Special case: Energy Management (Detailed) should include Energy Consumption category
-        const isEnergyDetailedWithEnergy = featureFilter.featureModule === 'energyDetailed' && 
+        const isEnergyDetailedWithEnergy = featureFilter.featureModule === 'energyDetailed' &&
           (kpi.category === 'Energy Consumption' || kpi.featureModule === 'energyDetailed');
-        
+
         if (!matchesModule && !isWaterDetailedWithWaterMgmt && !isEnergyDetailedWithEnergy) {
           return false;
         }
@@ -731,7 +731,7 @@ const FeatureKPIEntry = () => {
         if (isAnnual && kpi.period !== 'Annual') return false;
         if (!isAnnual && kpi.period !== 'Quarterly') return false;
       }
-      
+
       return true;
     }).map(kpi => {
       // Apply effective core level (considering overrides)
@@ -772,7 +772,7 @@ const FeatureKPIEntry = () => {
         // const { error } = await supabase
         //   .from('kpi_entries')
         //   .upsert(entries, { onConflict: 'company_id,kpi_id,quarter,year' });
-        const data= await httpClient.post('mis/kpi-entries/upsert', { entries, onConflict: 'company_id,kpi_id,quarter,year' });
+        const data = await httpClient.post('mis/kpi-entries/upsert', { entries, onConflict: 'company_id,kpi_id,quarter,year' });
 
         // if (error) throw error;
       }
@@ -813,7 +813,7 @@ const FeatureKPIEntry = () => {
       setLastSaved(new Date());
       setHasUnsavedChanges(false);
       toast.success('Data saved! Redirecting to preview...');
-      
+
       // Navigate to preview page with current period params
       navigate(`/mis/preview-submit?quarter=${currentQuarter}&year=${currentYear}`);
     } catch (error) {
@@ -885,9 +885,9 @@ const FeatureKPIEntry = () => {
       //   .eq('company_id', companyId)
       //   .eq('quarter', isAnnual ? 'FY' : currentQuarter)
       //   .eq('year', isAnnual ? currentFY : currentYear);
-        const data: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`msi/kpi-entries?companyId=${companyId}&quarter=${isAnnual ? 'FY' : currentQuarter}&year=${isAnnual ? currentFY : currentYear}`);
+      const data: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`msi/kpi-entries?companyId=${companyId}&quarter=${isAnnual ? 'FY' : currentQuarter}&year=${isAnnual ? currentFY : currentYear}`);
 
-      if ( data) {
+      if (data) {
         const entries: Record<string, string | number | boolean> = {};
         data.data.forEach(entry => {
           if (entry.value !== null) {
@@ -910,11 +910,11 @@ const FeatureKPIEntry = () => {
   // Group KPIs by category for display
   const groupedKPIs = useMemo(() => {
     const result: Record<string, Record<string, KPI[]>> = {};
-    
+
     applicableKPIs.forEach(kpi => {
       const category = kpi.category || 'General';
       const subCategory = kpi.subCategory || 'General';
-      
+
       if (!result[category]) {
         result[category] = {};
       }
@@ -923,14 +923,14 @@ const FeatureKPIEntry = () => {
       }
       result[category][subCategory].push(kpi);
     });
-    
+
     return result;
   }, [applicableKPIs]);
 
   // Auto-calculated field names for display
   const autoCalculatedFieldNames = [
     'Total White-Collar Gross Wages',
-    'Total White-Collar Employees', 
+    'Total White-Collar Employees',
     'Total Blue-Collar Gross Wages',
     'Total Blue-Collar Employees'
   ];
@@ -938,7 +938,7 @@ const FeatureKPIEntry = () => {
   // Calculate auto-calculated values based on form data
   const calculatedValues = useMemo(() => {
     const values: Record<string, number> = {};
-    
+
     // Find the KPIs for male and female values to sum them
     const findKPIValueByNamePart = (namePart: string): number => {
       const matchingKPI = allKPIs.find(kpi => kpi.name.toLowerCase().includes(namePart.toLowerCase()));
@@ -948,27 +948,27 @@ const FeatureKPIEntry = () => {
       }
       return 0;
     };
-    
+
     // Total White-Collar Employees = Male + Female
     const wcMale = findKPIValueByNamePart('white-collar employees (male)') || findKPIValueByNamePart('white collar employees (male)');
     const wcFemale = findKPIValueByNamePart('white-collar employees (female)') || findKPIValueByNamePart('white collar employees (female)');
     values['Total White-Collar Employees'] = wcMale + wcFemale;
-    
+
     // Total Blue-Collar Employees = Male + Female
     const bcMale = findKPIValueByNamePart('blue-collar employees (male)') || findKPIValueByNamePart('blue collar employees (male)');
     const bcFemale = findKPIValueByNamePart('blue-collar employees (female)') || findKPIValueByNamePart('blue collar employees (female)');
     values['Total Blue-Collar Employees'] = bcMale + bcFemale;
-    
+
     // Total White-Collar Gross Wages = Male + Female
     const wcWagesMale = findKPIValueByNamePart('white-collar gross wages (male)') || findKPIValueByNamePart('white collar gross wages (male)');
     const wcWagesFemale = findKPIValueByNamePart('white-collar gross wages (female)') || findKPIValueByNamePart('white collar gross wages (female)');
     values['Total White-Collar Gross Wages'] = wcWagesMale + wcWagesFemale;
-    
+
     // Total Blue-Collar Gross Wages = Male + Female
     const bcWagesMale = findKPIValueByNamePart('blue-collar gross wages (male)') || findKPIValueByNamePart('blue collar gross wages (male)');
     const bcWagesFemale = findKPIValueByNamePart('blue-collar gross wages (female)') || findKPIValueByNamePart('blue collar gross wages (female)');
     values['Total Blue-Collar Gross Wages'] = bcWagesMale + bcWagesFemale;
-    
+
     return values;
   }, [allKPIs, formData]);
 
@@ -985,7 +985,7 @@ const FeatureKPIEntry = () => {
     fields: string[];
     excludeFromProgress?: boolean;
   }
-  
+
   const getKPIGroupsForFeature = (feature: string): KPIGroup[] => {
     const kpiGroupsMap: Record<string, KPIGroup[]> = {
       // Social / Employment & Compensation - 11 KPI groups (8 Employees + 3 Leadership)
@@ -1171,7 +1171,7 @@ const FeatureKPIEntry = () => {
     if (typeof value === 'string') {
       const trimmed = value.trim();
       if (trimmed === '') return false;
-      
+
       // Check for JSON arrays (e.g., awards, initiatives lists)
       if (trimmed.startsWith('[')) {
         try {
@@ -1179,7 +1179,7 @@ const FeatureKPIEntry = () => {
           if (Array.isArray(parsed)) {
             // Empty array is not filled
             if (parsed.length === 0) return false;
-            
+
             // Special handling for CSR initiatives - must have at least one initiative with a non-empty description
             if (fieldKey === 'csr_initiatives_list') {
               return parsed.some((item: any) => {
@@ -1191,7 +1191,7 @@ const FeatureKPIEntry = () => {
                 return false;
               });
             }
-            
+
             // Array with empty objects is not filled
             if (parsed.every((item: any) => {
               if (typeof item === 'object' && item !== null) {
@@ -1218,49 +1218,49 @@ const FeatureKPIEntry = () => {
   // Calculate progress for the feature with mandatory/optional breakdown
   const progressData = useMemo(() => {
     const kpiGroups = getKPIGroupsForFeature(featureKey);
-    
+
     // Use KPI groups if this is a specialized table feature
     if (kpiGroups.length > 0) {
       const trackableGroups = kpiGroups.filter(g => !g.excludeFromProgress);
       const filledCount = trackableGroups.filter(isKPIGroupFilled).length;
-      
-      return { 
-        totalKPIs: trackableGroups.length, 
+
+      return {
+        totalKPIs: trackableGroups.length,
         filledKPIs: filledCount,
       };
     }
-    
+
     // Default: use applicableKPIs from database
     const filledCount = applicableKPIs.filter(kpi => isFieldFilled(formData[kpi.id])).length;
-    
-    return { 
-      totalKPIs: applicableKPIs.length, 
+
+    return {
+      totalKPIs: applicableKPIs.length,
       filledKPIs: filledCount,
     };
   }, [applicableKPIs, formData, featureKey]);
 
   // Check if this is an annual feature with a structured table
   const isStructuredAnnualFeature = isAnnual && ['certifications', 'sourcingFulfillment', 'operations', 'governancePolicies', 'sri', 'csr', 'waterManagement', 'energyManagement', 'wasteManagement', 'externalReporting'].includes(featureKey);
-  
+
   // Incident log uses the standard SpreadsheetKPITable like other features
-  
+
   // Check if this is the packaging detailed feature which needs tertiary toggle
   const isPackagingDetailedFeature = featureKey === 'packagingDetailed';
-  
+
   // Get tertiary KPIs for packaging detailed view
   const tertiaryKPIs = useMemo(() => {
     if (!isPackagingDetailedFeature || !companyProfile) return [];
-    
+
     const kpiIndustries = mapIndustryToKPIIndustries(companyProfile.industry);
-    
+
     return allKPIs.filter(kpi => {
       // Must be in packagingTertiary module
       if (kpi.featureModule !== 'packagingTertiary') return false;
-      
+
       // Check revenue stage and industry
-      const matchesProfile = kpi.revenueStages.includes(companyProfile.revenueStage) && 
+      const matchesProfile = kpi.revenueStages.includes(companyProfile.revenueStage) &&
         kpi.industries.some(ind => kpiIndustries.includes(ind));
-      
+
       return matchesProfile;
     });
   }, [allKPIs, companyProfile, isPackagingDetailedFeature]);
@@ -1290,7 +1290,7 @@ const FeatureKPIEntry = () => {
 
   const renderInput = (kpi: KPI) => {
     const currentValue = formData[kpi.id];
-    
+
     // Check if this is an auto-calculated field
     if (isAutoCalculated(kpi.name)) {
       const calculatedValue = calculatedValues[kpi.name] || 0;
@@ -1326,7 +1326,7 @@ const FeatureKPIEntry = () => {
 
     const isNumeric = ['Quantitative', 'Metric Tons', 'Cost in INR Cr', 'Number', 'Currency', 'Percentage'].includes(kpi.metricType);
     const isPercentage = kpi.metricType === 'Percentage';
-    
+
     return (
       <div className="relative flex items-center gap-1">
         <Input
@@ -1350,15 +1350,28 @@ const FeatureKPIEntry = () => {
   return (
     <UnifiedSidebarLayout fixedHeight={isAnnual}>
       <PageHeader
-        title={featureInfo?.label || featureKey}
-        subtitle={
-          <span>
-            {featureInfo && 'description' in featureInfo && featureInfo.description && (
-              <span className="text-muted-foreground">{featureInfo.description}</span>
-            )}
-            {featureInfo && 'description' in featureInfo && featureInfo.description && isAnnual && ' • '}
-            {isAnnual && <span className="text-muted-foreground">Jan-Dec {currentFY}</span>}
-          </span>
+        title={
+          <div className="flex flex-col items-start text-left">
+            <h1 className="text-2xl font-bold">
+              {featureInfo?.label || featureKey}
+            </h1>
+
+            <div className="text-sm text-muted-foreground">
+              {featureInfo &&
+                'description' in featureInfo &&
+                featureInfo.description && (
+                  <span>{featureInfo.description}</span>
+                )}
+
+              {featureInfo &&
+                'description' in featureInfo &&
+                featureInfo.description &&
+                isAnnual &&
+                ' • '}
+
+              {isAnnual && <span>Jan-Dec {currentFY}</span>}
+            </div>
+          </div>
         }
         actions={
           <div className="flex items-center gap-4">
@@ -1374,11 +1387,10 @@ const FeatureKPIEntry = () => {
                 />
               </div>
             )}
-            
+
             {/* Year Selector and Quarter Selector for Annual KPIs */}
             {isAnnual && (
               <div className="flex items-center gap-4">
-                {/* Quarter selector - allows user to switch quarters (will redirect if not Q4) */}
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">Quarter:</span>
                   <PeriodSelector
@@ -1389,14 +1401,21 @@ const FeatureKPIEntry = () => {
                     showIcon={false}
                   />
                 </div>
+
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Annual Year:</span>
+                  <span className="text-sm text-muted-foreground">
+                    Annual Year:
+                  </span>
+
                   <select
                     value={currentFY}
                     onChange={(e) => {
                       const newYear = parseInt(e.target.value);
-                      navigate(`/mis/kpi-entry?tab=annual&feature=${featureKey}&quarter=Q4&year=${newYear}`);
+
+                      navigate(
+                        `/mis/kpi-entry?tab=annual&feature=${featureKey}&quarter=Q4&year=${newYear}`
+                      );
                     }}
                     className="h-9 px-3 rounded-md border border-input bg-background text-sm"
                   >
@@ -1406,11 +1425,11 @@ const FeatureKPIEntry = () => {
                 </div>
               </div>
             )}
+
             {!readOnly && (
               <div className="flex items-center gap-2">
-                {/* Download Template Button */}
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={handleDownloadTemplate}
                   disabled={isDownloading}
@@ -1420,12 +1439,12 @@ const FeatureKPIEntry = () => {
                   ) : (
                     <Download className="w-4 h-4 mr-2" />
                   )}
+
                   Download Template
                 </Button>
-                
-                {/* Upload Template Button */}
-                <Button 
-                  variant="outline" 
+
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => setShowUploadDialog(true)}
                 >
@@ -1434,7 +1453,7 @@ const FeatureKPIEntry = () => {
                 </Button>
               </div>
             )}
-            
+
             <div className="flex items-center gap-3">
               {lastSaved && (
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -1442,8 +1461,12 @@ const FeatureKPIEntry = () => {
                   Auto-saved
                 </div>
               )}
-              
-              <Button variant="outline" size="sm" onClick={() => navigate('/mis/data-entry')}>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/mis/data-entry')}
+              >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
               </Button>
@@ -1457,19 +1480,18 @@ const FeatureKPIEntry = () => {
       {/* Annual notice for annual KPIs */}
       {isAnnual && (
         <Card className="border-primary/20 bg-primary/5 mb-4">
-          <CardContent className="p-3 flex items-start gap-3">
-            <div className="flex items-center gap-2 shrink-0">
-              <Info className="w-4 h-4 text-primary" />
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs font-medium">Annual KPIs - Jan-Dec {currentFY}</p>
-              <p className="text-[11px] text-muted-foreground">
-                You need to fill this data once. Going forward, the data shared in the previous period will be pre-filled in the cells. Please update incase there are any changes.
-              </p>
-              <p className="text-[11px] text-muted-foreground">
-                Data is auto-saved as you enter.
-              </p>
-            </div>
+          <CardContent className="p-3 flex items-center gap-2 flex-wrap">
+            <Info className="w-4 h-4 text-primary shrink-0" />
+
+            <p className="text-xs">
+              <span className="font-medium">
+                Annual KPIs - Jan-Dec {currentFY}
+              </span>
+
+              <span className="text-muted-foreground ml-2">
+                You need to fill this data once. Going forward, the data shared in the previous period will be pre-filled in the cells. Please update in case there are any changes. Data is auto-saved as you enter.
+              </span>
+            </p>
           </CardContent>
         </Card>
       )}
@@ -1477,8 +1499,8 @@ const FeatureKPIEntry = () => {
       {/* Feature Progress Bar */}
       <Card className="mb-4">
         <CardContent className="p-4">
-          <FeatureProgressBar 
-            totalKPIs={progressData.totalKPIs} 
+          <FeatureProgressBar
+            totalKPIs={progressData.totalKPIs}
             filledKPIs={progressData.filledKPIs}
           />
         </CardContent>
@@ -1486,10 +1508,10 @@ const FeatureKPIEntry = () => {
 
       {/* Read-only banner */}
       {readOnly && (
-        <Card className="border-status-warning/30 bg-status-warning/5 mb-4">
+        <Card className="border-orange-200 bg-orange-50 mb-4">
           <CardContent className="p-3 flex items-center gap-3">
-            <Lock className="w-4 h-4 text-status-warning shrink-0" />
-            <p className="text-xs font-medium text-status-warning">
+            <Lock className="w-4 h-4 text-orange-300 shrink-0" />
+            <p className="text-xs font-medium text-orange-300">
               View Only — Your company's data entry is currently locked. Contact Fireside Ventures if you need to make changes.
             </p>
           </CardContent>
@@ -1497,217 +1519,217 @@ const FeatureKPIEntry = () => {
       )}
 
       {/* Wrap tables in a read-only container when locked */}
-      <div className={readOnly ? 'pointer-events-none opacity-75' : ''}>
-      {/* Custom feature tables */}
-      {featureKey === 'businessInformation' ? (
-        <BusinessInformationTable formData={formData} onInputChange={handleInputChange} historicalData={historicalData} />
-      ) : featureKey === 'sourcingFulfillment' ? (
-        <SourcingFulfilmentTable formData={formData} onInputChange={handleInputChange} />
-      ) : featureKey === 'fashionMaterials' ? (
-        <FashionMaterialsTable formData={formData} onInputChange={handleInputChange} />
-      ) : featureKey === 'incidentLog' ? (
-        <div className="space-y-4">
-          <IncidentsTable formData={formData} onInputChange={handleInputChange} />
-          <GrievancesTable formData={formData} onInputChange={handleInputChange} />
-        </div>
-      ) : featureKey === 'productServiceCertifications' ? (
-        <ProductServiceCertificationsTable formData={formData} onInputChange={handleInputChange} />
-      ) : featureKey === 'primarySecondaryPackaging' && companyProfile ? (
-        // Primary & Secondary Packaging - uses Food/BPC/Nutra packaging components for ALL industries
-        // Fashion-specific materials go in the separate "Materials & Packaging (Fashion)" feature
-        <div className="space-y-4">
-          <FoodBPCNutraPackagingBasic formData={formData} onInputChange={handleInputChange} />
-          <FoodBPCNutraPackagingDetailed formData={formData} onInputChange={handleInputChange} />
-        </div>
-      ) : featureKey === 'social' ? (
-        <div className="space-y-4">
-          <EmployeesTable formData={formData} onInputChange={handleInputChange} historicalData={historicalData} />
-          <LeadershipTable formData={formData} onInputChange={handleInputChange} historicalData={historicalData} startingKpiNumber={8} />
-        </div>
-      ) : featureKey === 'healthCare' ? (
-        <HealthCareTable formData={formData} onInputChange={handleInputChange} />
-      ) : isStructuredAnnualFeature ? (
-        <div className="space-y-4">
-          {featureKey === 'certifications' && (
-            <CertificationsTable formData={formData} onInputChange={handleInputChange} />
-          )}
-          {featureKey === 'sourcingFulfillment' && (
-            <SourcingFulfilmentTable formData={formData} onInputChange={handleInputChange} />
-          )}
-          {featureKey === 'operations' && (
-            <OperationsTable formData={formData} onInputChange={handleInputChange} />
-          )}
-          {featureKey === 'governancePolicies' && (
-            <GovernancePoliciesTable formData={formData} onInputChange={handleInputChange} />
-          )}
-          {featureKey === 'sri' && (
-            <SRITable formData={formData} onInputChange={handleInputChange} />
-          )}
-          {featureKey === 'csr' && (
-            <CSRTable formData={formData} onInputChange={handleInputChange} />
-          )}
-          {featureKey === 'waterManagement' && (
-            <WaterManagementDetailedTable formData={formData} onInputChange={handleInputChange} />
-          )}
-          {featureKey === 'energyManagement' && (
-            <EnergyManagementDetailedTable formData={formData} onInputChange={handleInputChange} />
-          )}
-          {featureKey === 'wasteManagement' && (
-            <WasteManagementTable formData={formData} onInputChange={handleInputChange} />
-          )}
-          {featureKey === 'externalReporting' && (
-            <ExternalReportingTable formData={formData} onInputChange={handleInputChange} />
-          )}
-        </div>
-      ) : (
-        <div className="border border-border rounded-lg overflow-hidden bg-card">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50 hover:bg-muted/50">
-                <TableHead className="w-[40px] px-2"></TableHead>
-                <TableHead className="w-[180px] text-xs font-semibold">Category</TableHead>
-                <TableHead className="text-xs font-semibold">KPI Metric</TableHead>
-                <TableHead className="w-[80px] text-xs font-semibold text-center">Category</TableHead>
-                <TableHead className="w-[180px] text-xs font-semibold">Enter Value</TableHead>
-                <TableHead className="w-[160px] text-xs font-semibold">Historical Data</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {Object.entries(groupedKPIs).map(([category, subCategories]) => {
-                const categoryKey = category;
-                const isCollapsed = collapsedCategories.has(categoryKey);
-                const allKPIsInCategory = Object.values(subCategories).flat();
-                const firstKPI = allKPIsInCategory[0];
-                const esg = firstKPI?.esg || 'G';
-                const colors = esgColors[esg];
-                
-                let rowIndex = 0;
-                
-                return (
-                  <>
-                    {/* Category Header */}
-                    <TableRow 
-                      key={categoryKey}
-                      className={cn(
-                        "cursor-pointer hover:bg-muted/50 border-l-4",
-                        colors.border,
-                        colors.bg
-                      )}
-                      onClick={() => toggleCategory(categoryKey)}
-                    >
-                      <TableCell className="px-2">
-                        {isCollapsed ? (
-                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4 text-muted-foreground" />
+      <div className={readOnly ? 'pointer-events-none text-left opacity-75' : ''}>
+        {/* Custom feature tables */}
+        {featureKey === 'businessInformation' ? (
+          <BusinessInformationTable formData={formData} onInputChange={handleInputChange} historicalData={historicalData} />
+        ) : featureKey === 'sourcingFulfillment' ? (
+          <SourcingFulfilmentTable formData={formData} onInputChange={handleInputChange} />
+        ) : featureKey === 'fashionMaterials' ? (
+          <FashionMaterialsTable formData={formData} onInputChange={handleInputChange} />
+        ) : featureKey === 'incidentLog' ? (
+          <div className="space-y-4">
+            <IncidentsTable formData={formData} onInputChange={handleInputChange} />
+            <GrievancesTable formData={formData} onInputChange={handleInputChange} />
+          </div>
+        ) : featureKey === 'productServiceCertifications' ? (
+          <ProductServiceCertificationsTable formData={formData} onInputChange={handleInputChange} />
+        ) : featureKey === 'primarySecondaryPackaging' && companyProfile ? (
+          // Primary & Secondary Packaging - uses Food/BPC/Nutra packaging components for ALL industries
+          // Fashion-specific materials go in the separate "Materials & Packaging (Fashion)" feature
+          <div className="space-y-4">
+            <FoodBPCNutraPackagingBasic formData={formData} onInputChange={handleInputChange} />
+            <FoodBPCNutraPackagingDetailed formData={formData} onInputChange={handleInputChange} />
+          </div>
+        ) : featureKey === 'social' ? (
+          <div className="space-y-4">
+            <EmployeesTable formData={formData} onInputChange={handleInputChange} historicalData={historicalData} />
+            <LeadershipTable formData={formData} onInputChange={handleInputChange} historicalData={historicalData} startingKpiNumber={8} />
+          </div>
+        ) : featureKey === 'healthCare' ? (
+          <HealthCareTable formData={formData} onInputChange={handleInputChange} />
+        ) : isStructuredAnnualFeature ? (
+          <div className="space-y-4">
+            {featureKey === 'certifications' && (
+              <CertificationsTable formData={formData} onInputChange={handleInputChange} />
+            )}
+            {featureKey === 'sourcingFulfillment' && (
+              <SourcingFulfilmentTable formData={formData} onInputChange={handleInputChange} />
+            )}
+            {featureKey === 'operations' && (
+              <OperationsTable formData={formData} onInputChange={handleInputChange} />
+            )}
+            {featureKey === 'governancePolicies' && (
+              <GovernancePoliciesTable formData={formData} onInputChange={handleInputChange} />
+            )}
+            {featureKey === 'sri' && (
+              <SRITable formData={formData} onInputChange={handleInputChange} />
+            )}
+            {featureKey === 'csr' && (
+              <CSRTable formData={formData} onInputChange={handleInputChange} />
+            )}
+            {featureKey === 'waterManagement' && (
+              <WaterManagementDetailedTable formData={formData} onInputChange={handleInputChange} />
+            )}
+            {featureKey === 'energyManagement' && (
+              <EnergyManagementDetailedTable formData={formData} onInputChange={handleInputChange} />
+            )}
+            {featureKey === 'wasteManagement' && (
+              <WasteManagementTable formData={formData} onInputChange={handleInputChange} />
+            )}
+            {featureKey === 'externalReporting' && (
+              <ExternalReportingTable formData={formData} onInputChange={handleInputChange} />
+            )}
+          </div>
+        ) : (
+          <div className="border border-border rounded-lg overflow-hidden bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                  <TableHead className="w-[40px] px-2"></TableHead>
+                  <TableHead className="w-[180px] text-xs font-semibold">Category</TableHead>
+                  <TableHead className="text-xs font-semibold">KPI Metric</TableHead>
+                  <TableHead className="w-[80px] text-xs font-semibold text-center">Category</TableHead>
+                  <TableHead className="w-[180px] text-xs font-semibold">Enter Value</TableHead>
+                  <TableHead className="w-[160px] text-xs font-semibold">Historical Data</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Object.entries(groupedKPIs).map(([category, subCategories]) => {
+                  const categoryKey = category;
+                  const isCollapsed = collapsedCategories.has(categoryKey);
+                  const allKPIsInCategory = Object.values(subCategories).flat();
+                  const firstKPI = allKPIsInCategory[0];
+                  const esg = firstKPI?.esg || 'G';
+                  const colors = esgColors[esg];
+
+                  let rowIndex = 0;
+
+                  return (
+                    <>
+                      {/* Category Header */}
+                      <TableRow
+                        key={categoryKey}
+                        className={cn(
+                          "cursor-pointer hover:bg-muted/50 border-l-4",
+                          colors.border,
+                          colors.bg
                         )}
-                      </TableCell>
-                      <TableCell colSpan={5} className="py-2">
-                        <div className="flex items-center gap-3">
-                          <span className={cn("text-sm font-medium", colors.text)}>
-                            {category}
-                          </span>
-                          <span className="text-xs text-muted-foreground ml-auto">
-                            {allKPIsInCategory.length} items
-                          </span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                    
-                    {/* KPI Rows */}
-                    {!isCollapsed && Object.entries(subCategories).map(([subCategory, kpis]) => 
-                      kpis.map((kpi, kpiIdx) => {
-                        const historical = historicalData[kpi.id] || [];
-                        const isFirstInSubCat = kpiIdx === 0;
-                        rowIndex++;
-                        
-                        return (
-                          <TableRow 
-                            key={kpi.id}
-                            className={cn(
-                              "group hover:bg-muted/30 border-l-4",
-                              colors.border,
-                              rowIndex % 2 === 0 ? "bg-background" : "bg-muted/10"
-                            )}
-                          >
-                            <TableCell className="px-2"></TableCell>
-                            <TableCell className="py-2">
-                              {isFirstInSubCat && subCategory !== 'General' && (
-                                <span className="text-xs font-medium text-foreground/80">
-                                  {subCategory}
-                                </span>
+                        onClick={() => toggleCategory(categoryKey)}
+                      >
+                        <TableCell className="px-2">
+                          {isCollapsed ? (
+                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </TableCell>
+                        <TableCell colSpan={5} className="py-2">
+                          <div className="flex items-center gap-3">
+                            <span className={cn("text-sm font-medium", colors.text)}>
+                              {category}
+                            </span>
+                            <span className="text-xs text-muted-foreground ml-auto">
+                              {allKPIsInCategory.length} items
+                            </span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+
+                      {/* KPI Rows */}
+                      {!isCollapsed && Object.entries(subCategories).map(([subCategory, kpis]) =>
+                        kpis.map((kpi, kpiIdx) => {
+                          const historical = historicalData[kpi.id] || [];
+                          const isFirstInSubCat = kpiIdx === 0;
+                          rowIndex++;
+
+                          return (
+                            <TableRow
+                              key={kpi.id}
+                              className={cn(
+                                "group hover:bg-muted/30 border-l-4",
+                                colors.border,
+                                rowIndex % 2 === 0 ? "bg-background" : "bg-muted/10"
                               )}
-                            </TableCell>
-                            <TableCell className="py-2">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm">
-                                  {kpi.name}
-                                  {kpi.coreLevel === 1 && <span className="text-destructive ml-0.5">*</span>}
-                                </span>
-                                {kpi.definition && (
-                                  <Popover>
-                                    <PopoverTrigger asChild>
-                                      <button 
-                                        type="button" 
-                                        className="p-0.5 rounded hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <Info className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />
-                                      </button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="max-w-xs" side="top">
-                                      <div className="space-y-1">
-                                        <p className="font-medium text-sm">{kpi.name}</p>
-                                        <p className="text-xs text-muted-foreground">{kpi.definition}</p>
-                                      </div>
-                                    </PopoverContent>
-                                  </Popover>
+                            >
+                              <TableCell className="px-2"></TableCell>
+                              <TableCell className="py-2">
+                                {isFirstInSubCat && subCategory !== 'General' && (
+                                  <span className="text-xs font-medium text-foreground/80">
+                                    {subCategory}
+                                  </span>
                                 )}
-                              </div>
-                            </TableCell>
-                            <TableCell className="py-2 text-center">
-                              <Badge 
-                                variant="secondary" 
-                                className={cn(
-                                  "text-[10px] px-1.5 py-0.5",
-                                  coreLevelColors[kpi.coreLevel]
-                                )}
-                              >
-                                {kpi.coreLevel === 1 ? 'Mandatory' : 'Optional'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="py-2">
-                              {renderInput(kpi)}
-                            </TableCell>
-                            <TableCell className="py-2">
-                              <KPIHistoryTable entries={historical} />
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })
-                    )}
-                  </>
-                );
-              })}
-            </TableBody>
-          </Table>
-          
-          {/* Footer summary */}
-          <div className="px-4 py-2 border-t border-border bg-muted/20 flex items-center justify-between text-xs text-muted-foreground">
-            <span>{applicableKPIs.length} KPIs total</span>
-            <div className="flex items-center gap-4">
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-destructive" />
-                Mandatory: {applicableKPIs.filter(k => k.coreLevel === 1).length}
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-muted-foreground" />
-                Optional: {applicableKPIs.filter(k => k.coreLevel === 2).length}
-              </span>
+                              </TableCell>
+                              <TableCell className="py-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm">
+                                    {kpi.name}
+                                    {kpi.coreLevel === 1 && <span className="text-destructive ml-0.5">*</span>}
+                                  </span>
+                                  {kpi.definition && (
+                                    <Popover>
+                                      <PopoverTrigger asChild>
+                                        <button
+                                          type="button"
+                                          className="p-0.5 rounded hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <Info className="w-3.5 h-3.5 text-muted-foreground hover:text-foreground" />
+                                        </button>
+                                      </PopoverTrigger>
+                                      <PopoverContent className="max-w-xs" side="top">
+                                        <div className="space-y-1">
+                                          <p className="font-medium text-sm">{kpi.name}</p>
+                                          <p className="text-xs text-muted-foreground">{kpi.definition}</p>
+                                        </div>
+                                      </PopoverContent>
+                                    </Popover>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell className="py-2 text-center">
+                                <Badge
+                                  variant="secondary"
+                                  className={cn(
+                                    "text-[10px] px-1.5 py-0.5",
+                                    coreLevelColors[kpi.coreLevel]
+                                  )}
+                                >
+                                  {kpi.coreLevel === 1 ? 'Mandatory' : 'Optional'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="py-2">
+                                {renderInput(kpi)}
+                              </TableCell>
+                              <TableCell className="py-2">
+                                <KPIHistoryTable entries={historical} />
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      )}
+                    </>
+                  );
+                })}
+              </TableBody>
+            </Table>
+
+            {/* Footer summary */}
+            <div className="px-4 py-2 border-t border-border bg-muted/20 flex items-center justify-between text-xs text-muted-foreground">
+              <span>{applicableKPIs.length} KPIs total</span>
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-destructive" />
+                  Mandatory: {applicableKPIs.filter(k => k.coreLevel === 1).length}
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-muted-foreground" />
+                  Optional: {applicableKPIs.filter(k => k.coreLevel === 2).length}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       </div>{/* end read-only wrapper */}
 
@@ -1716,40 +1738,40 @@ const FeatureKPIEntry = () => {
         featureKey={featureKey}
         value={(formData[`${featureKey}_additional_comments`] as string) || ''}
         onChange={(value) => readOnly ? undefined : handleInputChange(`${featureKey}_additional_comments`, value)}
-        />
+      />
 
       {/* Save/Submit Actions */}
       {!readOnly && (
-      <div className="flex items-center justify-between pt-4 pb-2 border-t border-border mt-6">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>{progressData.filledKPIs}/{progressData.totalKPIs} filled</span>
-          {lastSaved && (
-            <>
-              <span className="text-border">•</span>
-              <span className="flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3 text-status-success" />
-                Saved {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            </>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="secondary"
-            size="sm"
-            onClick={handleManualSave}
-            disabled={isSaving}
-            className="bg-primary/15 hover:bg-primary/25 border border-primary/30 text-primary font-medium"
-          >
-            {isSaving ? (
-              <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-            ) : (
-              <Save className="w-3.5 h-3.5 mr-1.5" />
+        <div className="flex items-center justify-between pt-4 pb-2 border-t border-border mt-6">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>{progressData.filledKPIs}/{progressData.totalKPIs} filled</span>
+            {lastSaved && (
+              <>
+                <span className="text-border">•</span>
+                <span className="flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-status-success" />
+                  Saved {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </>
             )}
-            Save Draft
-          </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleManualSave}
+              disabled={isSaving}
+              className="bg-primary/15 hover:bg-primary/25 border border-primary/30 text-primary font-medium"
+            >
+              {isSaving ? (
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+              ) : (
+                <Save className="w-3.5 h-3.5 mr-1.5" />
+              )}
+              Save Draft
+            </Button>
+          </div>
         </div>
-      </div>
       )}
 
       {/* Upload Dialog - use feature-specific dialog if available */}
