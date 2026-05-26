@@ -312,7 +312,7 @@ export default function DocumentSummaryDialog({
                 ) : null}
               </>
             )}
-            {/* <div className="mt-6 border-t pt-4">
+            <div className="mt-6 border-t pt-4">
               <p className="font-semibold mb-2">Status</p>
               <div className="flex gap-4">
                 <span className={`px-3 py-1 rounded-full text-sm ${
@@ -340,7 +340,7 @@ export default function DocumentSummaryDialog({
                   Cancel
                 </button>
               </div>
-            </div> */}
+            </div>
           </div>
         </div>
       </div>
