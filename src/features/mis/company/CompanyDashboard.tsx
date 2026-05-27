@@ -783,6 +783,34 @@ interface EsgCard {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
+
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface ProgressCard {
+  label: string;
+  value: number;
+  icon: React.ReactNode;
+  color: string;
+  n: number;
+}
+
+interface EsgCard {
+  label: string;
+  value: number;
+  percentile: number;
+  icon: React.ReactNode;
+  color: string;
+  clickType: 'composite' | 'environment' | 'social' | 'governance';
+  n: number;
+  isEnvNA?: boolean;
+}
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
 const QUARTERS_INFO = [
   { key: 'Q1', label: 'Q1', months: 'JFM', description: 'Jan-Mar' },
   { key: 'Q2', label: 'Q2', months: 'AMJ', description: 'Apr-Jun' },
@@ -802,11 +830,16 @@ const getGrade = (percentile: number): { grade: string; color: string } => {
 
 const assignPercentiles = (pool: any[], key: string): Map<string, number> => {
   const entries = pool
-    .filter(c => { const v = c.insights?.[key]; return v !== undefined && v !== null && !isNaN(v); })
+    .filter(c => {
+      const v = c.insights?.[key];
+      return v !== undefined && v !== null && !isNaN(v);
+    })
     .map(c => ({ brand: c.brand as string, score: c.insights[key] as number }));
   if (entries.length === 0) return new Map();
   if (entries.length === 1) return new Map([[entries[0].brand, 99]]);
-  const sorted = [...entries].sort((a, b) => a.score - b.score || a.brand.localeCompare(b.brand));
+  const sorted = [...entries].sort((a, b) =>
+    a.score !== b.score ? a.score - b.score : a.brand.localeCompare(b.brand)
+  );
   return new Map(
     sorted.map((c, idx) => [
       c.brand,
@@ -820,21 +853,17 @@ const assignPercentiles = (pool: any[], key: string): Map<string, number> => {
 const CompanyDashboard = () => {
   const { user, effectiveCompanyId } = useAuth();
   const companyName = user?.misCompanyId;
-  // const effectiveCompanyId = "company-4";
-  const navigate = useNavigate();
-  const companyId = effectiveCompanyId || user?.company_id;
-  useEffect(() => {
-    console.log('Auth context values in CompanyDashboard:', { user, effectiveCompanyId, companyId });
-  }, [effectiveCompanyId, user]);
+  const navigate    = useNavigate();
+  const companyId   = effectiveCompanyId || user?.company_id;
 
   // ── Quarter / year selection ──────────────────────────────
   const [selectedQuarter, setSelectedQuarter] = useState<string>('Q1');
-  const [selectedYear, setSelectedYear]       = useState<number>(2026);
+  const [selectedYear,    setSelectedYear]    = useState<number>(2026);
 
   // ── Dialog state ──────────────────────────────────────────
-  const [scoreDetailOpen,  setScoreDetailOpen]  = useState(false);
-  const [scoreDetailType,  setScoreDetailType]  = useState<'environment' | 'social' | 'governance' | 'composite'>('environment');
-  const [envNADialogOpen,  setEnvNADialogOpen]  = useState(false);
+  const [scoreDetailOpen, setScoreDetailOpen] = useState(false);
+  const [scoreDetailType, setScoreDetailType] = useState<'environment' | 'social' | 'governance' | 'composite'>('environment');
+  const [envNADialogOpen, setEnvNADialogOpen] = useState(false);
 
   // ── Derived / computed state ──────────────────────────────
   const [progressCards,      setProgressCards]      = useState<ProgressCard[]>([]);
@@ -852,20 +881,22 @@ const CompanyDashboard = () => {
 
   const allQuartersProgress = useAllQuartersProgress(companyId, selectedYear, 0, true);
   const peerComparison      = usePeerComparison(companyId, publishedQuarter, publishedYear);
-  const analyticsData       = useAnalyticsDashboardData({
+
+  const analyticsData = useAnalyticsDashboardData({
     period:  publishedQuarter === 'FY' ? 'annual' : 'quarterly',
     quarter: publishedQuarter,
     year:    publishedYear,
     companyId,
   });
+
   const allCompaniesData = useAnalyticsDashboardData({
     period: 'annual',
     year:   publishedYear,
   });
-  const { rankings, isLoading: isRankingsLoading } = usePortfolioRankings(publishedYear, publishedQuarter);
-  const quarterlyStatus = useQuarterlyDataStatus(companyId, selectedYear);
 
-  const { quarters, overallPercentage, totalFilled, totalAssigned, isLoading } = allQuartersProgress;
+  const { rankings, isLoading: isRankingsLoading }                                              = usePortfolioRankings(publishedYear, publishedQuarter);
+  const quarterlyStatus                                                                          = useQuarterlyDataStatus(companyId, selectedYear);
+  const { quarters, overallPercentage, totalFilled, totalAssigned, isLoading }                  = allQuartersProgress;
   const { completenessPercentile, consistencyPercentile, timelinessPercentile, isLoading: isPeerLoading } = peerComparison;
 
   const hasAnyQuarterData =
@@ -893,8 +924,8 @@ const CompanyDashboard = () => {
     const allAvgScores = rankings.map(r =>
       Math.round((r.completionPct + r.consistencyPct + r.timelinessScore) / 3 * 10) / 10
     );
-    const sortedAvg  = [...allAvgScores].sort((a, b) => a - b);
-    let overallIdx   = sortedAvg.findIndex(v => v >= myAvgScore);
+    const sortedAvg = [...allAvgScores].sort((a, b) => a - b);
+    let overallIdx  = sortedAvg.findIndex(v => v >= myAvgScore);
     if (overallIdx === -1) overallIdx = sortedAvg.length - 1;
     const overallPct = sortedAvg.length <= 1
       ? 99
@@ -939,7 +970,6 @@ const CompanyDashboard = () => {
 
     const allAd      = allCompaniesData.data;
     const allRawData = allAd?.quarterlyCombinedRawData || allAd?.companyRawData || [];
-
     if (allRawData.length === 0) return;
 
     const companyData = allRawData.find((c: any) => c.companyId === companyId);
@@ -953,11 +983,10 @@ const CompanyDashboard = () => {
 
     setRecommendationsRaw(allRawData);
 
-    const submitting  = allRawData.filter((c: any) => Object.keys(c.kpis).length > 0);
-    const envEligible = submitting.filter((c: any) => c.hasEnvironmentFeature);
+    const submitting           = allRawData.filter((c: any) => Object.keys(c.kpis).length > 0);
+    const envEligible          = submitting.filter((c: any) => c.hasEnvironmentFeature);
     const companyHasEnvFeature = companyData?.hasEnvironmentFeature !== false;
-
-    const companyBrand = companyData.brand || companyName || '';
+    const companyBrand         = companyData.brand || companyName || '';
 
     // debug — remove once confirmed working
     console.log('[ESGCards] companyBrand:', companyBrand);
@@ -973,48 +1002,48 @@ const CompanyDashboard = () => {
 
     setEsgCards([
       {
-        label:     'ESG Composite Score',
-        value:     companyData.insights?.esgCompositeScore    ?? 0,
+        label:      'ESG Composite Score',
+        value:      companyData.insights?.esgCompositeScore    ?? 0,
         percentile: esgPctile,
-        icon:      <BarChart3 className="w-4 h-4 text-emerald-600" />,
-        color:     'border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20',
-        clickType: 'composite',
-        n:         submitting.length,
+        icon:       <BarChart3 className="w-4 h-4 text-emerald-600" />,
+        color:      'border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20',
+        clickType:  'composite',
+        n:          submitting.length,
       },
       {
-        label:     'Environment Score',
-        value:     companyData.insights?.circularEconomyIndex ?? 0,
+        label:      'Environment Score',
+        value:      companyData.insights?.circularEconomyIndex ?? 0,
         percentile: envPctile,
-        icon:      <Leaf className="w-4 h-4 text-amber-600" />,
-        color:     'border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/10',
-        clickType: 'environment',
-        n:         envEligible.length,
-        isEnvNA:   !companyHasEnvFeature,
+        icon:       <Leaf className="w-4 h-4 text-amber-600" />,
+        color:      'border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/10',
+        clickType:  'environment',
+        n:          envEligible.length,
+        isEnvNA:    !companyHasEnvFeature,
       },
       {
-        label:     'Social Score',
-        value:     companyData.insights?.socialScore          ?? 0,
+        label:      'Social Score',
+        value:      companyData.insights?.socialScore          ?? 0,
         percentile: socPctile,
-        icon:      <UsersRound className="w-4 h-4 text-blue-600" />,
-        color:     'border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/10',
-        clickType: 'social',
-        n:         submitting.length,
+        icon:       <UsersRound className="w-4 h-4 text-blue-600" />,
+        color:      'border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/10',
+        clickType:  'social',
+        n:          submitting.length,
       },
       {
-        label:     'Governance Score',
-        value:     companyData.insights?.governanceScore      ?? 0,
+        label:      'Governance Score',
+        value:      companyData.insights?.governanceScore      ?? 0,
         percentile: govPctile,
-        icon:      <Shield className="w-4 h-4 text-purple-600" />,
-        color:     'border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/10',
-        clickType: 'governance',
-        n:         submitting.length,
+        icon:       <Shield className="w-4 h-4 text-purple-600" />,
+        color:      'border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/10',
+        clickType:  'governance',
+        n:          submitting.length,
       },
     ]);
   }, [allCompaniesData.data, allCompaniesData.isLoading, companyId, companyName]);
 
   // ── Handlers ──────────────────────────────────────────────
-  const handleQuarterAction = (quarterKey: string, action: 'view' | 'edit' | 'add') => {
-    navigate(`/mis/kpi-entry?tab=quarterly&feature=businessInformation&quarter=${quarterKey}&year=${selectedYear}`);
+  const handleQuarterAction = (_quarterKey: string, _action: 'view' | 'edit' | 'add') => {
+    navigate(`/mis/kpi-entry?tab=quarterly&feature=businessInformation&quarter=${_quarterKey}&year=${selectedYear}`);
   };
 
   const handleDownloadMIS = () => {
@@ -1022,22 +1051,22 @@ const CompanyDashboard = () => {
     const companyRaw = allCosRaw.find((c: any) => c.companyId === companyId);
     if (!companyRaw) return;
 
-    const ranking              = rankings.find(r => r.companyId === companyId);
-    const effectiveIndustry    = companyRaw.industry || ranking?.industry || 'N/A';
+    const ranking               = rankings.find(r => r.companyId === companyId);
+    const effectiveIndustry     = companyRaw.industry || ranking?.industry || 'N/A';
     const effectiveRevenueStage = companyRaw.revenueStage || '';
 
     const effectiveRanking = ranking || {
       companyId,
-      companyName:            companyName || companyRaw.companyName || '',
-      brand:                  companyName || companyRaw.brand || '',
-      industry:               effectiveIndustry,
-      completionPct:          overallPercentage,
-      consistencyPct:         0,
-      timelinessScore:        0,
+      companyName:           companyName || companyRaw.companyName || '',
+      brand:                 companyName || companyRaw.brand || '',
+      industry:              effectiveIndustry,
+      completionPct:         overallPercentage,
+      consistencyPct:        0,
+      timelinessScore:       0,
       completenessPercentile,
       consistencyPercentile,
       timelinessPercentile,
-      esgCompleteness:        { E: 0, S: 0, G: 0, overall: overallPercentage },
+      esgCompleteness:       { E: 0, S: 0, G: 0, overall: overallPercentage },
     };
 
     generateCompanyMISPdf({
@@ -1057,6 +1086,8 @@ const CompanyDashboard = () => {
   // ─────────────────────────────────────────────────────────────────────────────
   return (
     <UnifiedSidebarLayout>
+
+      {/* ── Page Header ─────────────────────────────────────── */}
       <div className="text-left mt-2">
         <PageHeader
           title={`Welcome, ${user?.misCompanyId || 'User'}`}
@@ -1075,10 +1106,10 @@ const CompanyDashboard = () => {
                 variant="outline"
                 onClick={() => {
                   const storageUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/founder-guide/Fireside_ESG_Platform_Founders_Guide.pdf`;
-                  const link = document.createElement('a');
-                  link.href = storageUrl;
-                  link.download = 'Fireside_ESG_Platform_Founders_Guide.pdf';
-                  link.target = '_blank';
+                  const link       = document.createElement('a');
+                  link.href        = storageUrl;
+                  link.download    = 'Fireside_ESG_Platform_Founders_Guide.pdf';
+                  link.target      = '_blank';
                   link.click();
                 }}
               >
@@ -1098,26 +1129,20 @@ const CompanyDashboard = () => {
         />
       </div>
 
-      {/* Locked-period alert */}
+      {/* ── Locked-period alert ──────────────────────────────── */}
       {isLockedToPublished && !settingsLoading && (
         <Alert className="mb-4 border-amber-300 bg-amber-50 dark:bg-amber-950/20">
           <Lock className="w-4 h-4 text-amber-600" />
           <AlertDescription className="text-left text-amber-800 dark:text-amber-300/90">
-            <b>Scores locked to {publishedQuarter} {publishedYear}</b> Your ESG grades, percentile cards, rankings and recommendations are
-            locked to {publishedQuarter} {publishedYear} results.
-
-            {selectedQuarter} {selectedYear} scores
-            will be published after the reporting window closes and Fireside completes
-            recalibration.
-
-            You can still enter data for
-            {selectedQuarter} {selectedYear}
-            in the table below.
+            <b>Scores locked to {publishedQuarter} {publishedYear}.</b>{' '}
+            Your ESG grades, percentile cards, rankings and recommendations are locked to {publishedQuarter} {publishedYear} results.{' '}
+            {selectedQuarter} {selectedYear} scores will be published after the reporting window closes and Fireside completes recalibration.{' '}
+            You can still enter data for {selectedQuarter} {selectedYear} in the table below.
           </AlertDescription>
         </Alert>
       )}
 
-      {/* ── Progress Report ─────────────────────────────────── */}
+      {/* ── Progress Report ──────────────────────────────────── */}
       <div className="flex items-center gap-2 mb-3">
         <Trophy className="w-5 h-5 text-amber-500" />
         <h2 className="text-base font-semibold">Progress Report - Category (AA–C)</h2>
@@ -1143,10 +1168,11 @@ const CompanyDashboard = () => {
                   </CardContent>
                 </Card>
               );
-            })}
+            })
+        }
       </div>
 
-      {/* ── ESG Score Cards ──────────────────────────────────── */}
+      {/* ── ESG Score Cards ───────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         {allCompaniesData.isLoading || esgCards.length === 0
           ? [1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)
@@ -1180,119 +1206,21 @@ const CompanyDashboard = () => {
                         <span className={`text-2xl font-bold ${gradeColor}`}>{grade}</span>
                         <span className="text-xs text-muted-foreground mb-1">grade</span>
                       </div>
-                      <div className="flex items-center justify-between mt-1">
-                        <Badge variant="secondary" className="text-[9px] mt-1">n={card.n}</Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-
-            {/* ESG Score Stat Cards */}
-            {(() => {
-              // Use all-companies annual data for ESG scores to ensure proper percentile normalization
-              // (single-company quarterly data normalizes against a pool of 1, giving incorrect percentiles)
-              const allAd = allCompaniesData.data;
-              const allRawData = allAd?.quarterlyCombinedRawData || allAd?.companyRawData || [];
-              const companyData = allRawData.find(c => c.companyId === companyId);
-              const companyHasEnvFeature = companyData?.hasEnvironmentFeature !== false;
-
-              // Compute cohort percentiles matching ESGCategoryBreakdown.assignPercentiles
-              // Use rank-based approach: sort ascending, assign percentile = round(((idx+1)/n)*99)
-              // Then look up this company by brand to get its exact percentile
-              const submitting = allRawData.filter(c => Object.keys(c.kpis).length > 0);
-              const envEligible = submitting.filter(c => (c as any).hasEnvironmentFeature);
-
-              const assignPercentilesForKey = (pool: typeof allRawData, key: string): Map<string, number> => {
-                const entries = pool
-                  .filter(c => { const v = (c.insights as any)?.[key]; return v !== undefined && v !== null && !isNaN(v); })
-                  .map(c => ({ brand: c.brand, score: (c.insights as any)[key] as number }));
-                if (entries.length === 0) return new Map();
-                if (entries.length === 1) return new Map([[entries[0].brand, 99]]);
-                const sorted = [...entries].sort((a, b) => {
-                  const diff = a.score - b.score;
-                  return diff !== 0 ? diff : a.brand.localeCompare(b.brand);
-                });
-                const result = new Map<string, number>();
-                sorted.forEach((c, idx) => {
-                  result.set(c.brand, Math.max(1, Math.min(99, Math.round(((idx + 1) / sorted.length) * 99))));
-                });
-                return result;
-              };
-
-              const companyBrand = companyData?.brand || companyName || '';
-              const esgPctileMap = assignPercentilesForKey(submitting, 'esgCompositeScore');
-              const envPctileMap = assignPercentilesForKey(envEligible, 'circularEconomyIndex');
-              const socPctileMap = assignPercentilesForKey(submitting, 'socialScore');
-              const govPctileMap = assignPercentilesForKey(submitting, 'governanceScore');
-
-              const esgPctile = esgPctileMap.get(companyBrand) ?? 1;
-              const envPctile = envPctileMap.get(companyBrand) ?? 1;
-              const socPctile = socPctileMap.get(companyBrand) ?? 1;
-              const govPctile = govPctileMap.get(companyBrand) ?? 1;
-
-              const esgCards = [
-                { label: 'ESG Composite Score', value: companyData?.insights?.esgCompositeScore ?? 0, percentile: esgPctile, icon: <BarChart3 className="w-4 h-4 text-emerald-600" />, color: 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20', clickType: 'composite' as const, n: submitting.length },
-                { label: 'Environment Score', value: companyData?.insights?.circularEconomyIndex ?? 0, percentile: envPctile, icon: <Leaf className="w-4 h-4 text-amber-600" />, color: 'border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/10', clickType: 'environment' as const, n: envEligible.length },
-                { label: 'Social Score', value: companyData?.insights?.socialScore ?? 0, percentile: socPctile, icon: <UsersRound className="w-4 h-4 text-blue-600" />, color: 'border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/10', clickType: 'social' as const, n: submitting.length },
-                { label: 'Governance Score', value: companyData?.insights?.governanceScore ?? 0, percentile: govPctile, icon: <Shield className="w-4 h-4 text-purple-600" />, color: 'border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/10', clickType: 'governance' as const, n: submitting.length },
-              ];
-              console.log('ESG score cards data:', { companyData, esgCards, esgPctileMap, envPctileMap, socPctileMap, govPctileMap });
-              return (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                  {allAd ? esgCards.map(card => {
-                    const isEnvNA = card.clickType === 'environment' && !companyHasEnvFeature;
-                    const { grade, color: gradeColor } = getScoreGrade(card.percentile);
-                    return (
-                      <Card
-                        key={card.label}
-                        className={`${card.color} transition-all hover:shadow-md cursor-pointer hover:ring-2 hover:ring-primary/30`}
-                        onClick={() => {
-                          if (isEnvNA) {
-                            alert('Environment KPIs were not activated for your company. Please contact the Fireside team if you believe this is an error.');
-                            setEnvNADialogOpen(true);
-                          } else {
-                            alert(`You clicked on ${card.label} details. This will open a dialog with a detailed breakdown of the underlying KPIs contributing to this score, along with insights and recommendations for improvement.`);
-                            setScoreDetailType(card.clickType);
-                            setScoreDetailOpen(true);
-                          }
-                        }}
-                      >
-                        <CardContent className="pt-3 pb-2">
-                          <div className="flex items-center justify-between mb-1">
-                            <p className="text-[11px] font-medium text-muted-foreground">{card.label}</p>
-                            {card.icon}
-                          </div>
-                          {isEnvNA ? (
-                            <div className="flex items-end gap-2">
-                              <span className="text-2xl font-bold text-muted-foreground">NA</span>
-                              <span className="text-xs text-muted-foreground mb-1">not applicable</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-end gap-2">
-                              <span className={`text-2xl font-bold ${gradeColor}`}>{grade}</span>
-                              <span className="text-xs text-muted-foreground mb-1">grade</span>
-                            </div>
-                          )}
-                          <div className="flex items-center justify-between mt-1">
-                            <Badge variant="secondary" className="text-[9px]">n={card.n}</Badge>
-                            <p className="text-[9px] text-muted-foreground">
-                              {isEnvNA ? 'Click for details →' : 'Click to view breakdown →'}
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  }) : [1, 2, 3, 4].map(i => (
-                    <Skeleton key={i} className="h-24 rounded-lg" />
-                  ))}
-                </div>
+                    )}
+                    <div className="flex items-center justify-between mt-1">
+                      <Badge variant="secondary" className="text-[9px]">n={card.n}</Badge>
+                      <p className="text-[9px] text-muted-foreground">
+                        {card.isEnvNA ? 'Click for details →' : 'Click to view breakdown →'}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
               );
-            })}
+            })
+        }
       </div>
 
-      {/* ── ESG Recommendations ──────────────────────────────── */}
+      {/* ── ESG Recommendations ───────────────────────────────── */}
       {recommendationsRaw.length > 0 && !allCompaniesData.isLoading && (
         <ESGRecommendationsPanel
           companyId={companyId}
@@ -1302,7 +1230,7 @@ const CompanyDashboard = () => {
         />
       )}
 
-      {/* ── Quarter Selection ────────────────────────────────── */}
+      {/* ── Quarter Selection ─────────────────────────────────── */}
       <Card className="mb-6">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-2">
@@ -1329,6 +1257,7 @@ const CompanyDashboard = () => {
             </div>
           ) : (
             <div className="flex items-center gap-2">
+
               {/* Left arrow */}
               <Button
                 variant="outline"
@@ -1344,14 +1273,14 @@ const CompanyDashboard = () => {
 
               <div className="grid grid-cols-4 gap-3 flex-1 min-w-0">
                 {QUARTERS_INFO.map(q => {
-                  const quarterStatus = quarterlyStatus[q.key as keyof typeof quarterlyStatus] as { hasData: boolean; entryCount: number };
-                  const hasData       = quarterStatus?.hasData || false;
+                  const quarterStatus   = quarterlyStatus[q.key as keyof typeof quarterlyStatus] as { hasData: boolean; entryCount: number };
+                  const hasData         = quarterStatus?.hasData || false;
                   const quarterProgress = quarters[q.key];
-                  const progressPct   = quarterProgress?.percentage || 0;
-                  const isEditable    = isPeriodEditable(q.key, selectedYear);
-                  const isFuture2026  = selectedYear === 2026 && !isEditable;
-                  const isDisabled    = isFuture2026;
-                  const isSelected    = selectedQuarter === q.key;
+                  const progressPct     = quarterProgress?.percentage || 0;
+                  const isEditable      = isPeriodEditable(q.key, selectedYear);
+                  const isFuture2026    = selectedYear === 2026 && !isEditable;
+                  const isDisabled      = isFuture2026;
+                  const isSelected      = selectedQuarter === q.key;
 
                   return (
                     <div
@@ -1456,6 +1385,7 @@ const CompanyDashboard = () => {
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
+
             </div>
           )}
         </CardContent>
@@ -1464,11 +1394,10 @@ const CompanyDashboard = () => {
       {/* ── Overall KPI Progress ──────────────────────────────── */}
       <Card className="mb-6 overflow-hidden">
         <CardContent className="p-5 flex items-center gap-4">
-          {isLoading ? (
-            <Skeleton className="w-20 h-20 rounded-full" />
-          ) : (
-            <CompletionRing percentage={overallPercentage} size="lg" />
-          )}
+          {isLoading
+            ? <Skeleton className="w-20 h-20 rounded-full" />
+            : <CompletionRing percentage={overallPercentage} size="lg" />
+          }
           <div className="flex-1 text-left">
             <h3 className="text-lg font-semibold mb-0.5">Overall KPI Progress</h3>
             <p className="text-sm text-muted-foreground">
@@ -1486,30 +1415,29 @@ const CompanyDashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Weightage Note */}
-      <CardContent className="pt-4 pb-4 space-y-3">
-        {/* ✅ Added text-left */}
-        <p className="text-xs text-muted-foreground italic text-left">
-          <strong>Note:</strong> Each KPI score has a different weightage, determined internally by Fireside, and is not equally distributed.
-        </p>
-        <div className="border-t border-border pt-2">
-          {/* ✅ Added text-left */}
-          <p className="text-xs font-semibold text-muted-foreground mb-1 text-left">Glossary</p>
-          {/* ✅ Changed list-inside to list-outside, added pl-4 and text-left */}
-          <ul className="text-xs text-muted-foreground space-y-0.5 list-disc list-outside pl-4 text-left">
-            <li><strong>EPR</strong> — Extended Producer Responsibility: A regulatory framework where producers are responsible for the end-of-life management of their products and packaging.</li>
-            <li><strong>VPN</strong> — Voluntary Plastic Neutrality: A voluntary commitment to offset plastic usage by recovering and recycling an equivalent amount of plastic waste.</li>
-            <li><strong>P&S Recycled/Pkg</strong> — Primary & Secondary Recycled Packaging: The percentage of primary and secondary packaging materials (plastic, paper, glass, metal, plant-based) that are sourced from recycled content.</li>
-            <li><strong>ESG</strong> — Environmental, Social & Governance: A framework for evaluating a company's performance across sustainability and ethical dimensions.</li>
-            <li><strong>CEI</strong> — Circular Economy Index: A composite score measuring a company's progress toward circular material flows, used as the Environment score.</li>
-            <li><strong>GHG</strong> — Greenhouse Gas: Gases that trap heat in the atmosphere, commonly tracked under Scope 1, 2, and 3 emissions.</li>
-            <li><strong>DEI</strong> — Diversity, Equity & Inclusion: Policies and metrics related to workforce diversity and equitable practices.</li>
-            <li><strong>SRI</strong> — Socially Responsible Investment: Investment strategies that consider social and environmental impact alongside financial returns.</li>
-          </ul>
-        </div>
-      </CardContent>
+      {/* ── Weightage Note & Glossary ─────────────────────────── */}
+      <Card className="border-dashed border-muted-foreground/30 bg-muted/30 mb-6">
+        <CardContent className="pt-4 pb-4 space-y-3">
+          <p className="text-xs text-muted-foreground italic text-left">
+            <strong>Note:</strong> Each KPI score has a different weightage, determined internally by Fireside, and is not equally distributed.
+          </p>
+          <div className="border-t border-border pt-2">
+            <p className="text-xs font-semibold text-muted-foreground mb-1 text-left">Glossary</p>
+            <ul className="text-xs text-muted-foreground space-y-0.5 list-disc list-outside pl-4 text-left">
+              <li><strong>EPR</strong> — Extended Producer Responsibility: A regulatory framework where producers are responsible for the end-of-life management of their products and packaging.</li>
+              <li><strong>VPN</strong> — Voluntary Plastic Neutrality: A voluntary commitment to offset plastic usage by recovering and recycling an equivalent amount of plastic waste.</li>
+              <li><strong>P&amp;S Recycled/Pkg</strong> — Primary &amp; Secondary Recycled Packaging: The percentage of primary and secondary packaging materials that are sourced from recycled content.</li>
+              <li><strong>ESG</strong> — Environmental, Social &amp; Governance: A framework for evaluating a company's performance across sustainability and ethical dimensions.</li>
+              <li><strong>CEI</strong> — Circular Economy Index: A composite score measuring a company's progress toward circular material flows, used as the Environment score.</li>
+              <li><strong>GHG</strong> — Greenhouse Gas: Gases that trap heat in the atmosphere, commonly tracked under Scope 1, 2, and 3 emissions.</li>
+              <li><strong>DEI</strong> — Diversity, Equity &amp; Inclusion: Policies and metrics related to workforce diversity and equitable practices.</li>
+              <li><strong>SRI</strong> — Socially Responsible Investment: Investment strategies that consider social and environmental impact alongside financial returns.</li>
+            </ul>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* ── Environment NA Dialog ────────────────────────────── */}
+      {/* ── Environment NA Dialog ─────────────────────────────── */}
       <Dialog open={envNADialogOpen} onOpenChange={setEnvNADialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -1524,7 +1452,7 @@ const CompanyDashboard = () => {
         </DialogContent>
       </Dialog>
 
-      {/* ── ESG Score Detail Dialog ──────────────────────────── */}
+      {/* ── ESG Score Detail Dialog ───────────────────────────── */}
       <ESGScoreDetailDialog
         open={scoreDetailOpen}
         onOpenChange={setScoreDetailOpen}
@@ -1533,10 +1461,9 @@ const CompanyDashboard = () => {
         year={publishedYear}
         dashboardViewMode={'category'}
       />
+
     </UnifiedSidebarLayout>
   );
 };
-
-// export default CompanyDashboard;
 
 export default CompanyDashboard;

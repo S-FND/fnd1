@@ -41,6 +41,7 @@ export interface KpiEntryRaw {
   value: string | null;
   quarter: string;
   submittedAt: string | null;
+  submitted_at?: string | null; // For backward compatibility with older data that uses snake_case
   kpi_id: string; // for compatibility with existing code
 }
 
@@ -375,7 +376,7 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
 
         let profilesRes=await httpClient.get<CompanyProfileRaw[]>('mis/company-profiles');
         let entriesRes=await httpClient.get<KpiEntryRaw[]>(`mis/kpi-entries?year=${year}`);
-        let featuresRes=await httpClient.get<FeatureSettingRaw[]>('mis/company-feature-settings');
+        let featuresRes=await httpClient.get<FeatureSettingRaw[]>('mis/company-feature-settings?enabled=true');
         console.log('Fetched data:', { profiles: profilesRes.data, entries: entriesRes.data, features: featuresRes.data });
         
         const profilesData = profilesRes.data;
@@ -412,6 +413,7 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
           featureMap[f.companyId].add(f.feature_key);
         }
 
+        console.log('Processed data:', { companies, typedEntries, featureMap }); 
         // 6. Compute raw scores per company (completeness, consistency, timeliness)
         const raw = companies.map(company => {
           const cEntries = typedEntries.filter(e => e.companyId === company.companyId);
@@ -524,8 +526,8 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
           for (const p of ['Q1', 'Q2', 'Q3', 'Q4', 'FY']) {
             if (isCompanyExcluded(company.companyId, p, year)) continue;
             const periodSubs = cEntries
-              .filter(e => e.quarter === p && e.submittedAt)
-              .map(e => new Date(e.submittedAt!).getTime())
+              .filter(e => e.quarter === p && e.submitted_at)
+              .map(e => new Date(e.submitted_at!).getTime())
               .filter(d => !isNaN(d) && d <= TIMELINESS_CUTOFF);
             if (periodSubs.length > 0) firstSubmissionPerPeriod.push(Math.min(...periodSubs));
           }

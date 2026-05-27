@@ -1609,7 +1609,7 @@ export const useAnalyticsDashboardData = (filters: AnalyticsFilters) => {
         }
 
         const featuresRes = await httpClient.get<{ companyId: string; feature_key: string,enabled: boolean }[]>(
-          'mis/company-feature-settings'
+          'mis/company-feature-settings?enabled=true'
         );
         const featureRows = featuresRes.data || [];
         // console.log('Fetched feature settings rows:', featureRows);
@@ -1654,7 +1654,7 @@ export const useAnalyticsDashboardData = (filters: AnalyticsFilters) => {
         if (filters.firesidePOC) filteredCompanies = filteredCompanies.filter(c => c.fl === filters.firesidePOC);
         if (filters.companyId) filteredCompanies = filteredCompanies.filter(c => c.id === filters.companyId);
         const companyIds = new Set(filteredCompanies.map(c => c.id));
-
+        console.log(`Filtered companies (${filteredCompanies.length}):`, filteredCompanies.map(c => c.name));
         const timeSeries: TimeSeriesPoint[] = periods.map(p => {
           const periodEntries = allEntries.filter(e => {
             if (!companyIds.has(e.companyId)) return false;
