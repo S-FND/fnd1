@@ -291,6 +291,7 @@ export const DocumentUploadModal = ({
       formData.append("itemResource", itemResource || '');
       formData.append("itemSourceType", itemSourceType || '');
       formData.append("indicatorLabel", indicatorLabel);
+      formData.append("indicatorResponse", "yes");
       let uploadRes = await httpClient.post<ValidationResult>('esgdd/escap/upload-file/esgcap', formData);
 
       if (uploadRes.status !== 201) {
