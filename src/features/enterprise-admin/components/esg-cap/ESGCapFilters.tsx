@@ -21,8 +21,8 @@ export const ESGCapFilters: React.FC<ESGCapFiltersProps> = ({
   setCategoryFilter
 }) => {
   return (
-    <div className="flex flex-col md:flex-row gap-4 mb-6">
-      <div className="w-full md:w-[750px]">
+    <div className="flex flex-col md:flex-row gap-4">
+      <div className="w-full md:w-[585px]">
         <Input 
           placeholder="Search item..." 
           value={searchTerm}

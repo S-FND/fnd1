@@ -7,27 +7,34 @@ import { PriorityBadge } from './PriorityBadge';
 import { Badge } from '@/components/ui/badge';
 import { ESGCapRowActions } from './ESGCapRowActions';
 
+const normalizeStatus = (status?: string) =>
+  (status ?? "").trim().toLowerCase();
 // ✅ Updated helper — returns proper status values
 const getEffectiveStatus = (item: ESGCapItem): ESGCapItem['status'] => {
   if (!item.targetDate) return item.status;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const targetDate = new Date(item.targetDate);
   targetDate.setHours(0, 0, 0, 0);
 
-  // If past due and not closed by investor → overdue
-  if (targetDate < today && item.investorStatus !== 'Closed' && !item.actualDate) {
+  const isClosed = normalizeStatus(item.investorStatus) === "closed";
+
+  if (targetDate < today && !isClosed && !item.actualDate) {
     return 'overdue';
   }
-  
-  // If due within 1 month and not closed → due in <1 month
+
   const oneMonthLater = new Date();
   oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
   oneMonthLater.setHours(0, 0, 0, 0);
-  
-  if (targetDate >= today && targetDate <= oneMonthLater && item.investorStatus !== 'Closed' && !item.actualDate) {
+
+  if (
+    targetDate >= today &&
+    targetDate <= oneMonthLater &&
+    !isClosed &&
+    !item.actualDate
+  ) {
     return 'due in <1 month';
   }
 
@@ -68,68 +75,40 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
   // Helper function
   const isOverdue = (item: ESGCapItem) => {
     if (!item.targetDate) return false;
-
+  
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
+  
     const targetDate = new Date(item.targetDate);
     targetDate.setHours(0, 0, 0, 0);
-
-    return (
-      targetDate < today &&
-      item.investorStatus !== "Closed" &&  // ✅ Capital C
-      !item.actualDate
-    );
+  
+    const isClosed = normalizeStatus(item.investorStatus) === "closed";
+  
+    return targetDate < today && !isClosed && !item.actualDate;
   };
 
   const rowClassName = `
   transition-colors
-  ${item.investorStatus === "Closed"
-      ? "bg-gray-300 text-gray-500"
-      : isOverdue(item)
-        ? "text-red-700"
-        : ""
-    }
+  ${normalizeStatus(item.investorStatus) === "closed"
+    ? "bg-gray-300 text-gray-500"
+    : isOverdue(item)
+      ? "text-red-700"
+      : ""
+  }
 `;
 
 const parseDisplayDate = (dateStr: string | undefined): string => {
   if (!dateStr || dateStr === '—' || dateStr === '-') return '-';
-  
-  // Already ISO format YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-      const date = new Date(dateStr);
-      if (!isNaN(date.getTime())) {
-          return date.toLocaleDateString('en-GB', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
-          });
-      }
-  }
-  
-  // DD-MMM-YY format (e.g., "30-Dec-23")
-  const months: Record<string, string> = {
-      'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04', 'may': '05', 'jun': '06',
-      'jul': '07', 'aug': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12'
-  };
-  const match = dateStr.match(/^(\d{1,2})-([a-zA-Z]{3})-(\d{2,4})$/);
-  if (match) {
-      const day = match[1].padStart(2, '0');
-      const month = months[match[2].toLowerCase()] || '01';
-      const year = match[3].length === 2 
-          ? (parseInt(match[3]) > 50 ? `19${match[3]}` : `20${match[3]}`) 
-          : match[3];
-      const isoDate = new Date(`${year}-${month}-${day}`);
-      if (!isNaN(isoDate.getTime())) {
-          return isoDate.toLocaleDateString('en-GB', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
-          });
-      }
-  }
-  
-  return '-';
+
+  const date = new Date(dateStr);
+
+  if (isNaN(date.getTime())) return '-';
+
+  return date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
 };
 
 // Add this helper function inside the component or outside

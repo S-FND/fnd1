@@ -66,6 +66,7 @@ export default function DocumentSummaryDialog({
   const [status, setStatus] = useState<"Accepted" | "Rejected" | null>(null);
   const [reason, setReason] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<{
     file: typeof files[0];
     idx: number;
@@ -99,6 +100,7 @@ export default function DocumentSummaryDialog({
   const handleDeleteConfirmed = async () => {
     if (!confirmDelete) return;
     const { file, idx } = confirmDelete;
+    setIsDeleting(true);
     setConfirmDelete(null);
     setDeleting(file.filename);
 
@@ -113,7 +115,7 @@ export default function DocumentSummaryDialog({
         }).toString();
         await httpClient.delete(`esgdd/escap/delete-file-esgcap?${queryParams}`);
       }
-
+      setIsDeleting(false);
       toast.success("Document deleted");
       window.location.reload();
       if (files.length === 1) {
@@ -123,6 +125,7 @@ export default function DocumentSummaryDialog({
         setSelectedIndex(newIndex);
       }
     } catch (error: any) {
+      setIsDeleting(false);
       console.error("Delete error:", error);
       toast.error(error?.message || "Failed to delete document");
     } finally {
@@ -362,10 +365,14 @@ export default function DocumentSummaryDialog({
                 Cancel
               </button>
               <button
-                onClick={handleDeleteConfirmed}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                onClick={() => {
+                  if (isDeleting) return;
+                  handleDeleteConfirmed();
+                }}
+                disabled={isDeleting || !!deleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Delete Permanently
+                {isDeleting ? "Deleting..." : "Delete Permanently"}
               </button>
             </div>
           </div>

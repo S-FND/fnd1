@@ -17,6 +17,7 @@ import { FileSearch } from 'lucide-react';
 import { useAuthProvider } from '@/hooks/useAuthProvider';
 import { log } from 'console';
 import { useVerifierStatus } from '@/hooks/useVerifierStatus';
+import { MISSubmenu } from './MISSubmenu';
 
 interface SidebarNavigationProps {
   role: string;
@@ -91,30 +92,30 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
           // SUBMENU FILTER
           let filteredSubmenu = [];
-if (menu.submenu?.length > 0) {
-  filteredSubmenu = menu.submenu
-    .map((sub) => {
-      // Skip if sidebarHide is true
-      if (hideSettings[sub.name] === true) return null;
+          if (menu.submenu?.length > 0) {
+            filteredSubmenu = menu.submenu
+              .map((sub) => {
+                // Skip if sidebarHide is true
+                if (hideSettings[sub.name] === true) return null;
 
-      // For items with real URLs, keep them
-      if (sub.href && sub.href !== "#") {
-        return sub;
-      }
+                // For items with real URLs, keep them
+                if (sub.href && sub.href !== "#") {
+                  return sub;
+                }
 
-      // For items with href === "#", keep them only if they have visible nested submenus
-      if (sub.submenu?.length > 0) {
-        const visibleNested = sub.submenu.filter(
-          (nested) => hideSettings[nested.name] !== true && nested.href && nested.href !== "#"
-        );
-        if (visibleNested.length > 0) {
-          return { ...sub, submenu: visibleNested };
-        }
-      }
-      return null;
-    })
-    .filter(Boolean);
-}
+                // For items with href === "#", keep them only if they have visible nested submenus
+                if (sub.submenu?.length > 0) {
+                  const visibleNested = sub.submenu.filter(
+                    (nested) => hideSettings[nested.name] !== true && nested.href && nested.href !== "#"
+                  );
+                  if (visibleNested.length > 0) {
+                    return { ...sub, submenu: visibleNested };
+                  }
+                }
+                return null;
+              })
+              .filter(Boolean);
+          }
           return {
             ...menu,
             submenu: filteredSubmenu
@@ -187,13 +188,20 @@ if (menu.submenu?.length > 0) {
     logger.debug("🔵 SidebarNavigation: Expanded menus state changed:", expandedMenus);
   }, [expandedMenus]);
 
-  const safeVisibleItems = Array.isArray(visibleItems) ? visibleItems : [];
-  
+  // ✅ Fixed
+useEffect(() => {
+  if (user && !user.misCompanyId) {
+    setVisibleItems((prev: any[]) => prev.filter((item) => item.name !== "MIS"));
+  }
+}, [user]); // ← only re-run when user changes, not visibleItems
+
+const safeVisibleItems = Array.isArray(visibleItems) ? visibleItems : [];
+
   return (
     <SidebarGroup>
       <SidebarGroupContent>
         <SidebarMenu className="space-y-1">
-          {safeVisibleItems.map((item) => {
+          {visibleItems.map((item) => {
             const isActive = location.pathname === item.href ||
               (item.href !== '/' && location.pathname.startsWith(item.href));
 
@@ -272,6 +280,16 @@ if (menu.submenu?.length > 0) {
                 />
               );
             }
+            else if (item.name === 'MIS' && user?.misCompanyId) {
+              return (
+                <MISSubmenu
+                  key={item.name}
+                  isExpanded={expandedMenus.mis}
+                  onToggle={() => toggleMenu('mis')}
+                />
+              )
+            }
+
             // Regular menu items
             else {
               return (

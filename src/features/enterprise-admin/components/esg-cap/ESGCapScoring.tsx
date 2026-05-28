@@ -44,7 +44,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items }) => {
 
   // ✅ Count by new statuses
   const completedCount = items.filter(
-    (item) => item.investorStatus === "Closed"
+    (item) => item.investorStatus === "closed"
   ).length;
 
   const overdueCount = items.filter(

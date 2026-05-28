@@ -42,6 +42,8 @@ export interface User {
   company?: CompanyInfo;
   supplierInfo?: SupplierInfo;
   vendorInfo?: VendorInfo;
+  company_id?: string;
+  misCompanyId?: string;
 }
 
 export interface Permissions {
@@ -67,4 +69,9 @@ export interface AuthContextType {
   hasReadAccess: (feature: string) => boolean;
   hasWriteAccess: (feature: string) => boolean;
   isAuthenticatedStatus : (roles?:string[]) => boolean;
+  companyName: string;
+  effectiveCompanyId: string;
+  isAdmin: boolean;
+  isFandoro: boolean;
+  isCompanyReadOnly: boolean;
 }
