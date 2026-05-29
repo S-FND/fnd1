@@ -176,7 +176,7 @@ const FeatureKPIEntry = () => {
   const periodToCheck = isAnnual ? 'FY' : currentQuarter;
   const yearToCheck = isAnnual ? currentFY : currentYear;
   const periodLocked = !isPeriodEditable(periodToCheck, yearToCheck);
-  const readOnly = isCompanyReadOnly || periodLocked;
+  const readOnly = user && user.misCompanyId == 'NEWME' ? false : isCompanyReadOnly || periodLocked;
 
   // Handle quarter change - update URL and redirect if needed
   const handleQuarterChange = useCallback((newQuarter: string) => {
@@ -1350,28 +1350,15 @@ const FeatureKPIEntry = () => {
   return (
     <UnifiedSidebarLayout fixedHeight={isAnnual}>
       <PageHeader
-        title={
-          <div className="flex flex-col items-start text-left">
-            <h1 className="text-2xl font-bold">
-              {featureInfo?.label || featureKey}
-            </h1>
-
-            <div className="text-sm text-muted-foreground">
-              {featureInfo &&
-                'description' in featureInfo &&
-                featureInfo.description && (
-                  <span>{featureInfo.description}</span>
-                )}
-
-              {featureInfo &&
-                'description' in featureInfo &&
-                featureInfo.description &&
-                isAnnual &&
-                ' • '}
-
-              {isAnnual && <span>Jan-Dec {currentFY}</span>}
-            </div>
-          </div>
+        title={featureInfo?.label || featureKey}
+        subtitle={
+          <span>
+            {featureInfo && 'description' in featureInfo && featureInfo.description && (
+              <span className="text-muted-foreground">{featureInfo.description}</span>
+            )}
+            {featureInfo && 'description' in featureInfo && featureInfo.description && isAnnual && ' • '}
+            {isAnnual && <span className="text-muted-foreground">Jan-Dec {currentFY}</span>}
+          </span>
         }
         actions={
           <div className="flex items-center gap-4">
@@ -1391,6 +1378,7 @@ const FeatureKPIEntry = () => {
             {/* Year Selector and Quarter Selector for Annual KPIs */}
             {isAnnual && (
               <div className="flex items-center gap-4">
+                {/* Quarter selector - allows user to switch quarters (will redirect if not Q4) */}
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">Quarter:</span>
                   <PeriodSelector
@@ -1401,21 +1389,14 @@ const FeatureKPIEntry = () => {
                     showIcon={false}
                   />
                 </div>
-
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    Annual Year:
-                  </span>
-
+                  <span className="text-sm text-muted-foreground">Annual Year:</span>
                   <select
                     value={currentFY}
                     onChange={(e) => {
                       const newYear = parseInt(e.target.value);
-
-                      navigate(
-                        `/mis/kpi-entry?tab=annual&feature=${featureKey}&quarter=Q4&year=${newYear}`
-                      );
+                      navigate(`/company/kpi-entry?tab=annual&feature=${featureKey}&quarter=Q4&year=${newYear}`);
                     }}
                     className="h-9 px-3 rounded-md border border-input bg-background text-sm"
                   >
@@ -1425,9 +1406,9 @@ const FeatureKPIEntry = () => {
                 </div>
               </div>
             )}
-
             {!readOnly && (
               <div className="flex items-center gap-2">
+                {/* Download Template Button */}
                 <Button
                   variant="outline"
                   size="sm"
@@ -1439,10 +1420,10 @@ const FeatureKPIEntry = () => {
                   ) : (
                     <Download className="w-4 h-4 mr-2" />
                   )}
-
                   Download Template
                 </Button>
 
+                {/* Upload Template Button */}
                 <Button
                   variant="outline"
                   size="sm"
@@ -1462,11 +1443,7 @@ const FeatureKPIEntry = () => {
                 </div>
               )}
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/mis/data-entry')}
-              >
+              <Button variant="outline" size="sm" onClick={() => navigate('/company/data-entry')}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
               </Button>
@@ -1522,7 +1499,7 @@ const FeatureKPIEntry = () => {
       <div className={readOnly ? 'pointer-events-none text-left opacity-75' : ''}>
         {/* Custom feature tables */}
         {featureKey === 'businessInformation' ? (
-          <BusinessInformationTable formData={formData} onInputChange={handleInputChange} historicalData={historicalData} />
+          <BusinessInformationTable formData={formData} onInputChange={handleInputChange} historicalData={historicalData}  />
         ) : featureKey === 'sourcingFulfillment' ? (
           <SourcingFulfilmentTable formData={formData} onInputChange={handleInputChange} />
         ) : featureKey === 'fashionMaterials' ? (
