@@ -101,168 +101,297 @@ export const FoodBPCNutraPackagingDetailed = ({
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/30">
-                    <TableHead className="w-[450px]">Metric</TableHead>
-                    <TableHead className="w-[100px]">Unit</TableHead>
-                    <TableHead className="w-[300px]">Value</TableHead>
+                  <TableRow className="bg-muted/40">
+                    <TableHead className="w-[450px] text-left font-semibold">
+                      Metric
+                    </TableHead>
+
+                    <TableHead className="w-[100px] text-left font-semibold">
+                      Unit
+                    </TableHead>
+
+                    <TableHead className="w-[300px] text-left font-semibold">
+                      Value
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
+
                 <TableBody>
                   {/* Total material for secondary */}
                   {SECONDARY_PACKAGING_FIELDS.map((field) => (
-                    <TableRow key={field.id}>
-                      <TableCell className="font-medium text-sm">
-                        <div className="flex items-center">
-                          <CellNumberBadge kpiNumber={field.kpiNumber} fieldLetter={field.fieldLetter} />
-                          {field.label}
-                        </div>
-                      </TableCell>
-                      <TableCell><Badge variant="secondary" className="text-xs">{field.unit}</Badge></TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            placeholder="0"
-                            value={getValue('secondary', field.id)}
-                            onChange={(e) => handleChange('secondary', field.id, e.target.value)}
-                            className="w-40 h-9 text-sm"
-                            disabled={readOnly}
+                    <TableRow key={field.id} className="align-top">
+                      <TableCell className="font-medium text-sm text-left">
+                        <div className="flex items-start gap-2">
+                          <CellNumberBadge
+                            kpiNumber={field.kpiNumber}
+                            fieldLetter={field.fieldLetter}
                           />
-                          <span className="text-xs text-muted-foreground">{field.unit}</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  
-                  {/* Breakup header */}
-                  <TableRow className="bg-blue-50 dark:bg-blue-950/20">
-                    <TableCell colSpan={3} className="font-medium text-sm py-2">
-                      Breakup of materials used for secondary packaging
-                    </TableCell>
-                  </TableRow>
-                  
-                  {SECONDARY_BREAKUP_FIELDS.map((field) => {
-                    const totalMaterial = parseFloat(getValue('secondary', 'secondary_total_material')) || 0;
-                    const fieldValue = parseFloat(getValue('secondary_breakup', field.id)) || 0;
-                    const percentage = totalMaterial > 0 ? ((fieldValue / totalMaterial) * 100).toFixed(1) : '0.0';
-                    
-                    return (
-                      <TableRow key={field.id}>
-                      <TableCell className="font-medium text-sm pl-8">
-                        <div className="flex items-center">
-                          <CellNumberBadge kpiNumber={5} fieldLetter={field.fieldLetter} />
-                          {field.label}
-                        </div>
-                      </TableCell>
-                        <TableCell><Badge variant="secondary" className="text-xs">{field.unit}</Badge></TableCell>
-                        <TableCell>
-                          {field.type === 'number' ? (
-                            <div className="flex items-center gap-2">
-                              <Input
-                                type="number"
-                                placeholder="0"
-                                value={getValue('secondary_breakup', field.id)}
-                                onChange={(e) => handleChange('secondary_breakup', field.id, e.target.value)}
-                                className="w-32 h-9 text-sm"
-                                disabled={readOnly}
-                                min={0}
-                              />
-                              <span className="text-xs text-muted-foreground">MT</span>
-                              <Badge variant="outline" className="text-xs ml-1">{percentage}%</Badge>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <Input
-                                type="number"
-                                placeholder="0"
-                                value={getValue('secondary_breakup', field.id)}
-                                onChange={(e) => handleChange('secondary_breakup', field.id, e.target.value)}
-                                className="w-32 h-9 text-sm"
-                                disabled={readOnly}
-                                min={0}
-                              />
-                              <span className="text-xs text-muted-foreground">MT</span>
-                              <Badge variant="outline" className="text-xs ml-1">{percentage}%</Badge>
-                            </div>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                  
-                  {/* Recyclability header */}
-                  <TableRow className="bg-blue-50 dark:bg-blue-950/20">
-                    <TableCell colSpan={3} className="font-medium text-sm py-2">
-                      Recyclability of materials (%)
-                    </TableCell>
-                  </TableRow>
-                  
-                  {SECONDARY_RECYCLABILITY_FIELDS.map((field) => (
-                    <TableRow key={field.id}>
-                      <TableCell className="font-medium text-sm pl-8">
-                        <div className="flex items-center gap-1.5">
-                          <CellNumberBadge kpiNumber={5} fieldLetter={field.fieldLetter} />
-                          {field.label}
+
+                          <span>{field.label}</span>
+
                           {field.tooltip && (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help hover:text-primary transition-colors" />
+                                <Info className="h-4 w-4 mt-0.5 text-muted-foreground cursor-help shrink-0" />
                               </TooltipTrigger>
-                              <TooltipContent side="right" className="max-w-sm whitespace-pre-line">
-                                <p className="text-xs">{field.tooltip}</p>
+
+                              <TooltipContent
+                                side="right"
+                                className="max-w-sm text-left"
+                              >
+                                <p>{field.tooltip}</p>
                               </TooltipContent>
                             </Tooltip>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell><Badge variant="secondary" className="text-xs">{field.unit}</Badge></TableCell>
-                      <TableCell>
+
+                      <TableCell className="text-left">
+                        <Badge variant="secondary" className="text-xs">
+                          {field.unit}
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell className="text-left">
                         <div className="flex items-center gap-2">
                           <Input
                             type="number"
                             placeholder="0"
-                            value={getValue('secondary_recyclability', field.id)}
-                            onChange={(e) => handleChange('secondary_recyclability', field.id, e.target.value)}
+                            value={getValue('secondary', field.id)}
+                            onChange={(e) =>
+                              handleChange('secondary', field.id, e.target.value)
+                            }
+                            className="w-40 h-9 text-sm"
+                            disabled={readOnly}
+                          />
+
+                          <span className="text-xs text-muted-foreground">
+                            {field.unit}
+                          </span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+
+                  {/* Breakup header */}
+                  <TableRow className="bg-muted/30">
+                    <TableCell
+                      colSpan={3}
+                      className="font-semibold text-sm py-2 text-left"
+                    >
+                      Breakup of materials used for secondary packaging
+                    </TableCell>
+                  </TableRow>
+
+                  {SECONDARY_BREAKUP_FIELDS.map((field) => {
+                    const totalMaterial =
+                      parseFloat(
+                        getValue('secondary', 'secondary_total_material')
+                      ) || 0;
+
+                    const fieldValue =
+                      parseFloat(
+                        getValue('secondary_breakup', field.id)
+                      ) || 0;
+
+                    const percentage =
+                      totalMaterial > 0
+                        ? ((fieldValue / totalMaterial) * 100).toFixed(1)
+                        : '0.0';
+
+                    return (
+                      <TableRow key={field.id} className="align-top">
+                        <TableCell className="font-medium text-sm text-left pl-8">
+                          <div className="flex items-start gap-2">
+                            <CellNumberBadge
+                              kpiNumber={5}
+                              fieldLetter={field.fieldLetter}
+                            />
+
+                            <span>{field.label}</span>
+
+                            {field.tooltip && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Info className="h-4 w-4 mt-0.5 text-muted-foreground cursor-help shrink-0" />
+                                </TooltipTrigger>
+
+                                <TooltipContent
+                                  side="right"
+                                  className="max-w-sm text-left"
+                                >
+                                  <p>{field.tooltip}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
+                          </div>
+                        </TableCell>
+
+                        <TableCell className="text-left">
+                          <Badge variant="secondary" className="text-xs">
+                            {field.unit}
+                          </Badge>
+                        </TableCell>
+
+                        <TableCell className="text-left">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              placeholder="0"
+                              value={getValue('secondary_breakup', field.id)}
+                              onChange={(e) =>
+                                handleChange(
+                                  'secondary_breakup',
+                                  field.id,
+                                  e.target.value
+                                )
+                              }
+                              className="w-32 h-9 text-sm"
+                              disabled={readOnly}
+                              min={0}
+                            />
+
+                            <span className="text-xs text-muted-foreground">
+                              MT
+                            </span>
+
+                            <Badge
+                              variant="outline"
+                              className="text-xs ml-1"
+                            >
+                              {percentage}%
+                            </Badge>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+
+                  {/* Recyclability header */}
+                  <TableRow className="bg-muted/30">
+                    <TableCell
+                      colSpan={3}
+                      className="font-semibold text-sm py-2 text-left"
+                    >
+                      Recyclability of materials (%)
+                    </TableCell>
+                  </TableRow>
+
+                  {SECONDARY_RECYCLABILITY_FIELDS.map((field) => (
+                    <TableRow key={field.id} className="align-top">
+                      <TableCell className="font-medium text-sm text-left pl-8">
+                        <div className="flex items-start gap-2">
+                          <CellNumberBadge
+                            kpiNumber={5}
+                            fieldLetter={field.fieldLetter}
+                          />
+
+                          <span>{field.label}</span>
+
+                          {field.tooltip && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info className="h-4 w-4 mt-0.5 text-muted-foreground cursor-help shrink-0" />
+                              </TooltipTrigger>
+
+                              <TooltipContent
+                                side="right"
+                                className="max-w-sm whitespace-pre-line text-left"
+                              >
+                                <p>{field.tooltip}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
+                      </TableCell>
+
+                      <TableCell className="text-left">
+                        <Badge variant="secondary" className="text-xs">
+                          {field.unit}
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell className="text-left">
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            placeholder="0"
+                            value={getValue(
+                              'secondary_recyclability',
+                              field.id
+                            )}
+                            onChange={(e) =>
+                              handleChange(
+                                'secondary_recyclability',
+                                field.id,
+                                e.target.value
+                              )
+                            }
                             className="w-32 h-9 text-sm"
                             disabled={readOnly}
                             min={0}
                             max={100}
                           />
+
                           <span className="text-xs text-muted-foreground">%</span>
                         </div>
                       </TableCell>
                     </TableRow>
                   ))}
-                  
+
                   {/* Nature of plastics used */}
-                  <TableRow className="bg-blue-50 dark:bg-blue-950/20">
-                    <TableCell colSpan={3} className="font-medium text-sm py-2">
-                      <div className="flex items-start gap-1.5">
-                        <span>For your top 3-5 packaging SKUs, share: Product name | packaging weight (MT) | plastic type used (#1-7, check description), and % recyclable vs. non-recyclable.</span>
+                  <TableRow className="bg-muted/30">
+                    <TableCell
+                      colSpan={3}
+                      className="font-semibold text-sm py-2 text-left"
+                    >
+                      <div className="flex items-start gap-2">
+                        <span>
+                          For your top 3-5 packaging SKUs, share: Product
+                          name | packaging weight (MT) | plastic type used
+                          (#1-7, check description), and % recyclable vs.
+                          non-recyclable.
+                        </span>
+
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help hover:text-primary transition-colors flex-shrink-0 mt-0.5" />
+                            <Info className="h-4 w-4 mt-0.5 text-muted-foreground cursor-help shrink-0" />
                           </TooltipTrigger>
-                          <TooltipContent side="right" className="max-w-sm whitespace-pre-line">
-                            <p className="text-xs">{PLASTICS_INFO}</p>
+
+                          <TooltipContent
+                            side="right"
+                            className="max-w-sm whitespace-pre-line text-left"
+                          >
+                            <p>{PLASTICS_INFO}</p>
                           </TooltipContent>
                         </Tooltip>
                       </div>
                     </TableCell>
                   </TableRow>
-                  
-                  <TableRow>
-                    <TableCell colSpan={3} className="py-3">
+
+                  <TableRow className="align-top">
+                    <TableCell colSpan={3} className="py-3 text-left">
                       <Textarea
-                        placeholder="Example:&#10;Shampoo | 4 MT | HDPE #1 bottle + PP #5 cap | 80% recyclable, 15% non-recyclable (cap/pump)&#10;Granola Bar | 2 MT | LDPE #4 wrapper + BOPP laminate | 0% recyclable (multi-layer packaging)"
-                        value={getValue('secondary_plastics', 'nature_details')}
-                        onChange={(e) => handleChange('secondary_plastics', 'nature_details', e.target.value)}
+                        placeholder={`Example:
+Shampoo | 4 MT | HDPE #1 bottle + PP #5 cap | 80% recyclable, 15% non-recyclable (cap/pump)
+
+Granola Bar | 2 MT | LDPE #4 wrapper + BOPP laminate | 0% recyclable (multi-layer packaging)`}
+                        value={getValue(
+                          'secondary_plastics',
+                          'nature_details'
+                        )}
+                        onChange={(e) =>
+                          handleChange(
+                            'secondary_plastics',
+                            'nature_details',
+                            e.target.value
+                          )
+                        }
                         className="min-h-[120px] text-sm"
                         disabled={readOnly}
                       />
                     </TableCell>
                   </TableRow>
-                  
                 </TableBody>
               </Table>
             </div>

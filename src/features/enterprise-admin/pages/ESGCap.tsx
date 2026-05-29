@@ -89,7 +89,6 @@ const ComparePlanView = ({
     key: keyof ESGCapItem;
     direction: 'asc' | 'desc';
   } | null>(null);
-
   const requestSort = (key: keyof ESGCapItem) => {
     let direction: 'asc' | 'desc' = 'asc';
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -377,6 +376,7 @@ const ESGCapPage = () => {
   const [auditOpen, setAuditOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [cardFilter, setCardFilter] = useState<string | null>(null);
 
   useEffect(() => {
     const userData = localStorage.getItem('fandoro-user');
@@ -581,13 +581,27 @@ const ESGCapPage = () => {
   const alerts = useESGCAPAlerts(esgCap?.plan || [], originalPlan, esgCap?.finalPlan || false);
 
   const filteredItems = esgCap?.plan?.filter(item => {
-    const matchesSearch =
-      item.item?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
-      item.measures?.toLowerCase().includes(searchTerm?.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
-    const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
+    const itemTitle = item?.item || '';
+    const itemMeasures = item?.measures || '';
+    const itemStatus = item?.status || '';
+    const itemCategory = item?.category || '';
+    const investorStatus = item?.investorStatus || '';
 
-    return matchesSearch && matchesStatus && matchesCategory;
+    const matchesSearch = itemTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      itemMeasures.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || itemStatus === statusFilter;
+    const matchesCategory = categoryFilter === 'all' || itemCategory === categoryFilter;
+
+    let matchesCardFilter = true;
+    if (cardFilter) {
+      if (cardFilter === 'closed') {
+        matchesCardFilter = investorStatus.toLowerCase() === 'closed';
+      } else if (cardFilter) {
+        matchesCardFilter = itemStatus.toLowerCase() === cardFilter.toLowerCase();
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesCategory && matchesCardFilter;
   }) || [];
 
   const isOverdue = (item: ESGCapItem) => {
@@ -605,7 +619,7 @@ const ESGCapPage = () => {
       !item.actualDate
     );
   };
-  
+
 
   const sortedItems = [...filteredItems].sort((a, b) => {
     // 1. overdue items on top
@@ -819,16 +833,16 @@ const ESGCapPage = () => {
               </CardDescription>
             </CardHeader> */}
           <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-          <ESGCapFilters
-                  searchTerm={searchTerm}
-                  setSearchTerm={setSearchTerm}
-                  statusFilter={statusFilter}
-                  setStatusFilter={setStatusFilter}
-                  categoryFilter={categoryFilter}
-                  setCategoryFilter={setCategoryFilter}
-                />
-            {/* <div className="flex justify-end mb-2"> */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+              <ESGCapFilters
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+                categoryFilter={categoryFilter}
+                setCategoryFilter={setCategoryFilter}
+              />
+              {/* <div className="flex justify-end mb-2"> */}
               <Button
                 variant="outline"
                 onClick={() => setAuditOpen(true)}
@@ -839,7 +853,7 @@ const ESGCapPage = () => {
               </Button>
             </div>
             {/* Filters Section */}
-               
+
 
             {/* Alerts Panel - MOVED OUTSIDE the filters container */}
             {!isInvestorEmailExists && esgCap?.plan && esgCap.plan.length > 0 && (
@@ -853,56 +867,77 @@ const ESGCapPage = () => {
               </div>
             )}
 
-            {sortedItems.length > 0 && (
-              // <div className="mt-6 py-4">
-                <ESGCapScoring items={sortedItems} />
-              // </div>
-            )}
+            {/* {sortedItems.length > 0 && (
+              <div className="mt-6 py-4"> */}
+              <ESGCapScoring items={sortedItems}
+                onFilterChange={setCardFilter}
+                activeFilter={cardFilter}
+              />
+             {/* </div>
+            )} */}
             <div className="space-y-4  mt-4">
-              {Object.entries(groupedItems)
-                .filter(([_, items]) => items.length > 0)
-                .map(([groupName, items]) => {
-                  const isCollapsed = collapsedGroups.has(groupName);
-                  return (
-                    <div key={groupName} className="border rounded-lg overflow-hidden bg-white">
-                      <div
-                        className="px-4 py-3 border-b bg-slate-50 cursor-pointer flex justify-between items-center hover:bg-slate-100"
-                        onClick={() => toggleGroup(groupName)}
-                      >
-                        <h2 className="text-lg font-semibold text-slate-800">{groupName}</h2>
-                        <span className="text-slate-500">{isCollapsed ? '▼' : '▶'}</span>
-                      </div>
-                      {/* Content - only shown when expanded */}
-                      {!isCollapsed && (
-                        <div className="overflow-x-auto">
-                          {showComparisonView ? (
-                            <ComparePlanView
-                              currentPlan={items}
-                              originalPlan={originalPlan.filter(original => {
-                                if (groupName === "CP – Conditions Precedent") return original.dealCondition === "CP";
-                                if (groupName === "CS – Conditions Subsequent") return original.dealCondition === "CS";
-                                if (groupName === "ESG Roadmap") return original.dealCondition === "ESG_Roadmap";
-                                return original.dealCondition !== "CP" && original.dealCondition !== "CS" && original.dealCondition !== "ESG_Roadmap";
-                              })}
-                              onRevertItem={handleRevertItem}
-                              onRevertField={handleRevertField}
-                              showComparisonView={showComparisonView}
-                            />
-                          ) : (
-                            <ESGCapTable
-                              sortedItems={items}
-                              sortConfig={sortConfig}
-                              requestSort={requestSort}
-                              onItemUpdate={handleUpdateItem}
-                              buttonEnabled={buttonEnabled}
-                              finalPlan={isPlanFinalized}
-                            />
-                          )}
+              {filteredItems.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-lg border border-dashed">
+                  <p className="text-muted-foreground">No items match the current filters.</p>
+                  <Button
+                    variant="link"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setStatusFilter('all');
+                      setCategoryFilter('all');
+                      setCardFilter(null);
+                    }}
+                    className="mt-2"
+                  >
+                    Clear all filters
+                  </Button>
+                </div>
+              ) : (
+                Object.entries(groupedItems)
+                  .filter(([_, items]) => items.length > 0)
+                  .map(([groupName, items]) => {
+                    const isCollapsed = collapsedGroups.has(groupName);
+                    return (
+                      <div key={groupName} className="border rounded-lg overflow-hidden bg-white">
+                        <div
+                          className="px-4 py-3 border-b bg-slate-50 cursor-pointer flex justify-between items-center hover:bg-slate-100"
+                          onClick={() => toggleGroup(groupName)}
+                        >
+                          <h2 className="text-lg font-semibold text-slate-800">{groupName}</h2>
+                          <span className="text-slate-500">{isCollapsed ? '▼' : '▶'}</span>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
+                        {/* Content - only shown when expanded */}
+                        {!isCollapsed && (
+                          <div className="overflow-x-auto">
+                            {showComparisonView ? (
+                              <ComparePlanView
+                                currentPlan={items}
+                                originalPlan={originalPlan.filter(original => {
+                                  if (groupName === "CP – Conditions Precedent") return original.dealCondition === "CP";
+                                  if (groupName === "CS – Conditions Subsequent") return original.dealCondition === "CS";
+                                  if (groupName === "ESG Roadmap") return original.dealCondition === "ESG_Roadmap";
+                                  return original.dealCondition !== "CP" && original.dealCondition !== "CS" && original.dealCondition !== "ESG_Roadmap";
+                                })}
+                                onRevertItem={handleRevertItem}
+                                onRevertField={handleRevertField}
+                                showComparisonView={showComparisonView}
+                              />
+                            ) : (
+                              <ESGCapTable
+                                sortedItems={items}
+                                sortConfig={sortConfig}
+                                requestSort={requestSort}
+                                onItemUpdate={handleUpdateItem}
+                                buttonEnabled={buttonEnabled}
+                                finalPlan={isPlanFinalized}
+                              />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
             </div>
 
             {/* Action Buttons */}

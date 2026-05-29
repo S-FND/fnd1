@@ -122,63 +122,84 @@ export const VendorMISSection = ({
           </p>
         </div>
         <div className="overflow-x-auto">
-          <Table>
+          <Table className="w-full text-sm text-left">
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-[160px]">Category</TableHead>
-                <TableHead className="w-[160px]">
+              <TableRow className="bg-muted/40">
+                <TableHead className="w-[160px] text-left font-semibold">
+                  Category
+                </TableHead>
+
+                <TableHead className="w-[220px] text-left font-semibold">
                   <div className="flex flex-col">
                     <div className="flex items-center gap-1">
                       <span>Number of significant Vendors/Suppliers</span>
+
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                            <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help shrink-0" />
                           </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="text-xs">"Significant" = vendors accounting for more than 10% dependence in a category</p>
+
+                          <TooltipContent className="max-w-xs text-left">
+                            <p className="text-xs">
+                              "Significant" = vendors accounting for more than 10%
+                              dependence in a category
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     </div>
+
                     <span className="text-xs font-normal text-muted-foreground">
                       (N/A if in-house)
                     </span>
                   </div>
                 </TableHead>
-                <TableHead className="w-[120px]">
+
+                <TableHead className="w-[140px] text-left font-semibold">
                   <div className="flex flex-col">
                     <span>% International</span>
+
                     <span className="text-xs font-normal text-muted-foreground">
                       (by value)
                     </span>
                   </div>
                 </TableHead>
-                <TableHead className="w-[180px]">
+
+                <TableHead className="w-[220px] text-left font-semibold">
                   <div className="flex items-center gap-1">
                     <span>Typical nature of businesses</span>
+
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                          <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help shrink-0" />
                         </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="text-xs">Mark what most businesses in the given category represent</p>
+
+                        <TooltipContent className="max-w-xs text-left">
+                          <p className="text-xs">
+                            Mark what most businesses in the given category represent
+                          </p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   </div>
                 </TableHead>
-                <TableHead className="w-[180px]">
+
+                <TableHead className="w-[220px] text-left font-semibold">
                   <div className="flex items-center gap-1">
                     <span>DEI Factors</span>
+
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                          <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help shrink-0" />
                         </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="text-xs">Mark what most businesses in the given category represent</p>
+
+                        <TooltipContent className="max-w-xs text-left">
+                          <p className="text-xs">
+                            Mark what most businesses in the given category represent
+                          </p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -186,16 +207,22 @@ export const VendorMISSection = ({
                 </TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
               {VENDOR_CATEGORIES.map((category) => (
-                <TableRow key={category.id}>
-                  <TableCell className="font-medium bg-muted/30">
-                    <div className="flex items-center">
-                      <CellNumberBadge kpiNumber={2} fieldLetter={category.letterIndex} />
-                      {category.label}
+                <TableRow key={category.id} className="align-top">
+                  <TableCell className="font-medium bg-muted/30 text-left">
+                    <div className="flex items-center gap-2">
+                      <CellNumberBadge
+                        kpiNumber={2}
+                        fieldLetter={category.letterIndex}
+                      />
+
+                      <span>{category.label}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="py-2">
+
+                  <TableCell className="py-2 text-left">
                     <Input
                       type="text"
                       placeholder="N/A or count"
@@ -207,7 +234,8 @@ export const VendorMISSection = ({
                       disabled={readOnly}
                     />
                   </TableCell>
-                  <TableCell className="py-2">
+
+                  <TableCell className="py-2 text-left">
                     <div className="flex items-center gap-1">
                       <Input
                         type="number"
@@ -216,29 +244,46 @@ export const VendorMISSection = ({
                         max="100"
                         value={getValue(category.id, 'pct_international')}
                         onChange={(e) =>
-                          handleChange(category.id, 'pct_international', e.target.value)
+                          handleChange(
+                            category.id,
+                            'pct_international',
+                            e.target.value
+                          )
                         }
                         className="w-16 h-8 text-sm"
                         disabled={readOnly}
                       />
+
                       <span className="text-xs text-muted-foreground">%</span>
                     </div>
                   </TableCell>
-                  <TableCell className="py-2">
+
+                  <TableCell className="py-2 text-left">
                     <Select
                       value={getValue(category.id, 'size') || undefined}
-                      onValueChange={(value) => handleChange(category.id, 'size', value === '__clear__' ? '' : value)}
+                      onValueChange={(value) =>
+                        handleChange(
+                          category.id,
+                          'size',
+                          value === '__clear__' ? '' : value
+                        )
+                      }
                       disabled={readOnly}
                     >
                       <SelectTrigger className="h-8 text-sm w-[160px]">
                         <SelectValue placeholder="Select size..." />
                       </SelectTrigger>
+
                       <SelectContent className="bg-background z-50">
                         {getValue(category.id, 'size') && (
-                          <SelectItem value="__clear__" className="text-muted-foreground italic">
+                          <SelectItem
+                            value="__clear__"
+                            className="text-muted-foreground italic"
+                          >
                             Clear selection
                           </SelectItem>
                         )}
+
                         {SIZE_OPTIONS.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
@@ -247,7 +292,8 @@ export const VendorMISSection = ({
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell className="py-2">
+
+                  <TableCell className="py-2 text-left">
                     <Popover>
                       <PopoverTrigger asChild disabled={readOnly}>
                         <Button
@@ -256,26 +302,43 @@ export const VendorMISSection = ({
                           className="h-8 text-sm w-[160px] justify-between font-normal"
                           disabled={readOnly}
                         >
-                          <span className="truncate">{getDEILabel(category.id)}</span>
+                          <span className="truncate">
+                            {getDEILabel(category.id)}
+                          </span>
+
                           <ChevronDown className="ml-1 h-4 w-4 opacity-50" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-[200px] p-2 bg-background z-50" align="start">
+
+                      <PopoverContent
+                        className="w-[200px] p-2 bg-background z-50"
+                        align="start"
+                      >
                         <div className="space-y-2">
                           {DEI_OPTIONS.map((option) => {
-                            const isSelected = getSelectedDEI(category.id).includes(option.value);
+                            const isSelected = getSelectedDEI(category.id).includes(
+                              option.value
+                            );
+
                             return (
                               <div
                                 key={option.value}
                                 className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-muted cursor-pointer"
-                                onClick={() => toggleDEI(category.id, option.value)}
+                                onClick={() =>
+                                  toggleDEI(category.id, option.value)
+                                }
                               >
                                 <Checkbox
                                   checked={isSelected}
-                                  onCheckedChange={() => toggleDEI(category.id, option.value)}
+                                  onCheckedChange={() =>
+                                    toggleDEI(category.id, option.value)
+                                  }
                                   disabled={readOnly}
                                 />
-                                <span className="text-sm">{option.label}</span>
+
+                                <span className="text-sm">
+                                  {option.label}
+                                </span>
                               </div>
                             );
                           })}

@@ -1102,7 +1102,7 @@ const CompanyDashboard = () => {
                 <FileDown className="w-4 h-4 mr-2" />
                 Download MIS PDF
               </Button>
-              <Button
+              {/* <Button
                 variant="outline"
                 onClick={() => {
                   const storageUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/founder-guide/Fireside_ESG_Platform_Founders_Guide.pdf`;
@@ -1115,7 +1115,19 @@ const CompanyDashboard = () => {
               >
                 <BookOpen className="w-4 h-4 mr-2" />
                 Founder's Guide
-              </Button>
+              </Button> */}
+              <Button
+  variant="outline"
+  onClick={() => {
+    window.open(
+      '/pdfs/Fireside_ESG_Platform_Founders_Guide (8).pdf',
+      '_blank'
+    );
+  }}
+>
+  <BookOpen className="w-4 h-4 mr-2" />
+  Founder's Guide
+</Button>
               <Button onClick={() => window.open('https://firesidekpi.lovable.app/demo', '_blank')}>
                 <Play className="w-4 h-4 mr-2" />
                 View Demo

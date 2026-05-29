@@ -627,7 +627,19 @@ const ESGCapDetailsPage: React.FC = () => {
                             <div className="rounded-xl border bg-muted/30 p-5">
                                 <div className="flex items-start justify-between gap-4">
                                     <div>
-                                        <div className="text-sm font-semibold text-foreground">Request Change</div>
+                                        <div className="relative group flex items-center gap-1 w-fit">
+                                            <div className="text-sm font-semibold text-foreground">
+                                                Request Change
+                                            </div>
+
+                                            <Info className="w-4 h-4 text-muted-foreground cursor-pointer" />
+
+                                            <div className="absolute left-0 top-full mt-2 hidden group-hover:block z-50">
+                                                <div className="inline-block w-fit whitespace-nowrap rounded-md bg-white text-black text-xs px-3 py-2 shadow-lg">
+                                                    Make request changes for CAP items like timeline, completion indicators, CP/CS status, etc.
+                                                </div>
+                                            </div>
+                                        </div>
                                         {capItem?.comment === 'Change-Request' && (
                                             <div className="mt-2 space-y-2">
                                                 <Badge
