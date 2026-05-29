@@ -1443,7 +1443,7 @@ const FeatureKPIEntry = () => {
                 </div>
               )}
 
-              <Button variant="outline" size="sm" onClick={() => navigate('/company/data-entry')}>
+              <Button variant="outline" size="sm" onClick={() => navigate('/mis/data-entry')}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back
               </Button>
