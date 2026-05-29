@@ -1452,7 +1452,7 @@ const FeatureKPIEntry = () => {
         }
       />
 
-      <EditPausedBanner quarter={periodToCheck} year={yearToCheck} className="mb-4" />
+      {readOnly && <EditPausedBanner quarter={periodToCheck} year={yearToCheck} className="mb-4" />}
 
       {/* Annual notice for annual KPIs */}
       {isAnnual && (
