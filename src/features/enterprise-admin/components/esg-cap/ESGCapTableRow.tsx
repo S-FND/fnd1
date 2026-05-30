@@ -130,7 +130,7 @@ const getInvestorStatusBadge = (status: string) => {
 
   if (compact) {
     return (
-      <TableRow className={rowClassName} onClick={handleEdit} style={{ cursor: "pointer" }}>
+      <TableRow className={rowClassName} >
         <TableCell className="text-center font-medium" style={{ padding: "0.3rem" }}>{index + 1}</TableCell>
 
         {/* Item column with expand/collapse */}
@@ -143,7 +143,7 @@ const getInvestorStatusBadge = (status: string) => {
           )}
         </TableCell> */}
 
-        <TableCell className="font-medium max-w-xs text-left" style={{ padding: "0.3rem" }}>
+        <TableCell className="font-medium max-w-xs text-left" onClick={handleEdit} style={{ cursor: "pointer",padding: "0.3rem" }}>
           {item.item || '-'}
         </TableCell>
 

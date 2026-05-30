@@ -822,9 +822,9 @@ const QUARTERS_INFO = [
 
 const getGrade = (percentile: number): { grade: string; color: string } => {
   if (percentile >= 80) return { grade: 'AA', color: 'text-emerald-600' };
-  if (percentile >= 60) return { grade: 'A',  color: 'text-blue-600' };
+  if (percentile >= 60) return { grade: 'A', color: 'text-blue-600' };
   if (percentile >= 40) return { grade: 'BB', color: 'text-amber-600' };
-  if (percentile >= 20) return { grade: 'B',  color: 'text-orange-600' };
+  if (percentile >= 20) return { grade: 'B', color: 'text-orange-600' };
   return { grade: 'C', color: 'text-red-600' };
 };
 
@@ -853,12 +853,12 @@ const assignPercentiles = (pool: any[], key: string): Map<string, number> => {
 const CompanyDashboard = () => {
   const { user, effectiveCompanyId } = useAuth();
   const companyName = user?.misCompanyId;
-  const navigate    = useNavigate();
-  const companyId   = effectiveCompanyId || user?.company_id;
+  const navigate = useNavigate();
+  const companyId = effectiveCompanyId || user?.company_id;
 
   // ── Quarter / year selection ──────────────────────────────
   const [selectedQuarter, setSelectedQuarter] = useState<string>('Q1');
-  const [selectedYear,    setSelectedYear]    = useState<number>(2026);
+  const [selectedYear, setSelectedYear] = useState<number>(2026);
 
   // ── Dialog state ──────────────────────────────────────────
   const [scoreDetailOpen, setScoreDetailOpen] = useState(false);
@@ -866,37 +866,37 @@ const CompanyDashboard = () => {
   const [envNADialogOpen, setEnvNADialogOpen] = useState(false);
 
   // ── Derived / computed state ──────────────────────────────
-  const [progressCards,      setProgressCards]      = useState<ProgressCard[]>([]);
-  const [esgCards,           setEsgCards]           = useState<EsgCard[]>([]);
+  const [progressCards, setProgressCards] = useState<ProgressCard[]>([]);
+  const [esgCards, setEsgCards] = useState<EsgCard[]>([]);
   const [recommendationsRaw, setRecommendationsRaw] = useState<any[]>([]);
 
   // ── Data hooks ────────────────────────────────────────────
   const { getPublishedPeriod, loading: settingsLoading } = useAdminSettings();
-  const published        = getPublishedPeriod();
-  const publishedYear    = published.year;
+  const published = getPublishedPeriod();
+  const publishedYear = published.year;
   const publishedQuarter = published.quarter;
 
   const isLockedToPublished =
     selectedYear !== publishedYear || selectedQuarter !== publishedQuarter;
 
   const allQuartersProgress = useAllQuartersProgress(companyId, selectedYear, 0, true);
-  const peerComparison      = usePeerComparison(companyId, publishedQuarter, publishedYear);
+  const peerComparison = usePeerComparison(companyId, publishedQuarter, publishedYear);
 
   const analyticsData = useAnalyticsDashboardData({
-    period:  publishedQuarter === 'FY' ? 'annual' : 'quarterly',
+    period: publishedQuarter === 'FY' ? 'annual' : 'quarterly',
     quarter: publishedQuarter,
-    year:    publishedYear,
+    year: publishedYear,
     companyId,
   });
 
   const allCompaniesData = useAnalyticsDashboardData({
     period: 'annual',
-    year:   publishedYear,
+    year: publishedYear,
   });
 
-  const { rankings, isLoading: isRankingsLoading }                                              = usePortfolioRankings(publishedYear, publishedQuarter);
-  const quarterlyStatus                                                                          = useQuarterlyDataStatus(companyId, selectedYear);
-  const { quarters, overallPercentage, totalFilled, totalAssigned, isLoading }                  = allQuartersProgress;
+  const { rankings, isLoading: isRankingsLoading } = usePortfolioRankings(publishedYear, publishedQuarter);
+  const quarterlyStatus = useQuarterlyDataStatus(companyId, selectedYear);
+  const { quarters, overallPercentage, totalFilled, totalAssigned, isLoading } = allQuartersProgress;
   const { completenessPercentile, consistencyPercentile, timelinessPercentile, isLoading: isPeerLoading } = peerComparison;
 
   const hasAnyQuarterData =
@@ -920,12 +920,12 @@ const CompanyDashboard = () => {
       return;
     }
 
-    const myAvgScore   = Math.round((myRanking.completionPct + myRanking.consistencyPct + myRanking.timelinessScore) / 3 * 10) / 10;
+    const myAvgScore = Math.round((myRanking.completionPct + myRanking.consistencyPct + myRanking.timelinessScore) / 3 * 10) / 10;
     const allAvgScores = rankings.map(r =>
       Math.round((r.completionPct + r.consistencyPct + r.timelinessScore) / 3 * 10) / 10
     );
     const sortedAvg = [...allAvgScores].sort((a, b) => a - b);
-    let overallIdx  = sortedAvg.findIndex(v => v >= myAvgScore);
+    let overallIdx = sortedAvg.findIndex(v => v >= myAvgScore);
     if (overallIdx === -1) overallIdx = sortedAvg.length - 1;
     const overallPct = sortedAvg.length <= 1
       ? 99
@@ -936,28 +936,28 @@ const CompanyDashboard = () => {
       {
         label: 'Overall Rank',
         value: overallPct,
-        icon:  <Trophy className="w-4 h-4 text-amber-600" />,
+        icon: <Trophy className="w-4 h-4 text-amber-600" />,
         color: 'border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/10',
         n,
       },
       {
         label: 'Completeness',
         value: completenessPercentile,
-        icon:  <ClipboardList className="w-4 h-4 text-emerald-600" />,
+        icon: <ClipboardList className="w-4 h-4 text-emerald-600" />,
         color: 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20',
         n,
       },
       {
         label: 'Consistency',
         value: consistencyPercentile,
-        icon:  <BarChart3 className="w-4 h-4 text-blue-600" />,
+        icon: <BarChart3 className="w-4 h-4 text-blue-600" />,
         color: 'border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/10',
         n,
       },
       {
         label: 'Timeliness',
         value: timelinessPercentile,
-        icon:  <Calendar className="w-4 h-4 text-purple-600" />,
+        icon: <Calendar className="w-4 h-4 text-purple-600" />,
         color: 'border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/10',
         n,
       },
@@ -968,7 +968,7 @@ const CompanyDashboard = () => {
   useEffect(() => {
     if (allCompaniesData.isLoading || !allCompaniesData.data) return;
 
-    const allAd      = allCompaniesData.data;
+    const allAd = allCompaniesData.data;
     const allRawData = allAd?.quarterlyCombinedRawData || allAd?.companyRawData || [];
     if (allRawData.length === 0) return;
 
@@ -983,60 +983,60 @@ const CompanyDashboard = () => {
 
     setRecommendationsRaw(allRawData);
 
-    const submitting           = allRawData.filter((c: any) => Object.keys(c.kpis).length > 0);
-    const envEligible          = submitting.filter((c: any) => c.hasEnvironmentFeature);
+    const submitting = allRawData.filter((c: any) => Object.keys(c.kpis).length > 0);
+    const envEligible = submitting.filter((c: any) => c.hasEnvironmentFeature);
     const companyHasEnvFeature = companyData?.hasEnvironmentFeature !== false;
-    const companyBrand         = companyData.brand || companyName || '';
+    const companyBrand = companyData.brand || companyName || '';
 
     // debug — remove once confirmed working
     console.log('[ESGCards] companyBrand:', companyBrand);
     console.log('[ESGCards] esgPctileMap keys:', [...assignPercentiles(submitting, 'esgCompositeScore').keys()]);
 
-    const esgPctile = assignPercentiles(submitting,  'esgCompositeScore').get(companyBrand)    ?? 1;
+    const esgPctile = assignPercentiles(submitting, 'esgCompositeScore').get(companyBrand) ?? 1;
     const envPctile = assignPercentiles(envEligible, 'circularEconomyIndex').get(companyBrand) ?? 1;
-    const socPctile = assignPercentiles(submitting,  'socialScore').get(companyBrand)          ?? 1;
-    const govPctile = assignPercentiles(submitting,  'governanceScore').get(companyBrand)      ?? 1;
+    const socPctile = assignPercentiles(submitting, 'socialScore').get(companyBrand) ?? 1;
+    const govPctile = assignPercentiles(submitting, 'governanceScore').get(companyBrand) ?? 1;
 
     // debug — remove once confirmed working
     console.log('[ESGCards] percentiles:', { esgPctile, envPctile, socPctile, govPctile });
 
     setEsgCards([
       {
-        label:      'ESG Composite Score',
-        value:      companyData.insights?.esgCompositeScore    ?? 0,
+        label: 'ESG Composite Score',
+        value: companyData.insights?.esgCompositeScore ?? 0,
         percentile: esgPctile,
-        icon:       <BarChart3 className="w-4 h-4 text-emerald-600" />,
-        color:      'border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20',
-        clickType:  'composite',
-        n:          submitting.length,
+        icon: <BarChart3 className="w-4 h-4 text-emerald-600" />,
+        color: 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20',
+        clickType: 'composite',
+        n: submitting.length,
       },
       {
-        label:      'Environment Score',
-        value:      companyData.insights?.circularEconomyIndex ?? 0,
+        label: 'Environment Score',
+        value: companyData.insights?.circularEconomyIndex ?? 0,
         percentile: envPctile,
-        icon:       <Leaf className="w-4 h-4 text-amber-600" />,
-        color:      'border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/10',
-        clickType:  'environment',
-        n:          envEligible.length,
-        isEnvNA:    !companyHasEnvFeature,
+        icon: <Leaf className="w-4 h-4 text-amber-600" />,
+        color: 'border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/10',
+        clickType: 'environment',
+        n: envEligible.length,
+        isEnvNA: !companyHasEnvFeature,
       },
       {
-        label:      'Social Score',
-        value:      companyData.insights?.socialScore          ?? 0,
+        label: 'Social Score',
+        value: companyData.insights?.socialScore ?? 0,
         percentile: socPctile,
-        icon:       <UsersRound className="w-4 h-4 text-blue-600" />,
-        color:      'border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/10',
-        clickType:  'social',
-        n:          submitting.length,
+        icon: <UsersRound className="w-4 h-4 text-blue-600" />,
+        color: 'border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/10',
+        clickType: 'social',
+        n: submitting.length,
       },
       {
-        label:      'Governance Score',
-        value:      companyData.insights?.governanceScore      ?? 0,
+        label: 'Governance Score',
+        value: companyData.insights?.governanceScore ?? 0,
         percentile: govPctile,
-        icon:       <Shield className="w-4 h-4 text-purple-600" />,
-        color:      'border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/10',
-        clickType:  'governance',
-        n:          submitting.length,
+        icon: <Shield className="w-4 h-4 text-purple-600" />,
+        color: 'border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/10',
+        clickType: 'governance',
+        n: submitting.length,
       },
     ]);
   }, [allCompaniesData.data, allCompaniesData.isLoading, companyId, companyName]);
@@ -1047,36 +1047,36 @@ const CompanyDashboard = () => {
   };
 
   const handleDownloadMIS = () => {
-    const allCosRaw  = allCompaniesData.data?.quarterlyCombinedRawData || allCompaniesData.data?.companyRawData || [];
+    const allCosRaw = allCompaniesData.data?.quarterlyCombinedRawData || allCompaniesData.data?.companyRawData || [];
     const companyRaw = allCosRaw.find((c: any) => c.companyId === companyId);
     if (!companyRaw) return;
 
-    const ranking               = rankings.find(r => r.companyId === companyId);
-    const effectiveIndustry     = companyRaw.industry || ranking?.industry || 'N/A';
+    const ranking = rankings.find(r => r.companyId === companyId);
+    const effectiveIndustry = companyRaw.industry || ranking?.industry || 'N/A';
     const effectiveRevenueStage = companyRaw.revenueStage || '';
 
     const effectiveRanking = ranking || {
       companyId,
-      companyName:           companyName || companyRaw.companyName || '',
-      brand:                 companyName || companyRaw.brand || '',
-      industry:              effectiveIndustry,
-      completionPct:         overallPercentage,
-      consistencyPct:        0,
-      timelinessScore:       0,
+      companyName: companyName || companyRaw.companyName || '',
+      brand: companyName || companyRaw.brand || '',
+      industry: effectiveIndustry,
+      completionPct: overallPercentage,
+      consistencyPct: 0,
+      timelinessScore: 0,
       completenessPercentile,
       consistencyPercentile,
       timelinessPercentile,
-      esgCompleteness:       { E: 0, S: 0, G: 0, overall: overallPercentage },
+      esgCompleteness: { E: 0, S: 0, G: 0, overall: overallPercentage },
     };
 
     generateCompanyMISPdf({
-      companyName:     companyName || companyRaw.brand || companyRaw.companyName || 'Company',
-      industry:        effectiveIndustry,
-      revenueStage:    effectiveRevenueStage,
+      companyName: companyName || companyRaw.brand || companyRaw.companyName || 'Company',
+      industry: effectiveIndustry,
+      revenueStage: effectiveRevenueStage,
       companyId,
       companyRaw,
       allCompaniesRaw: allCosRaw,
-      ranking:         effectiveRanking,
+      ranking: effectiveRanking,
       overallProgress: { filled: totalFilled, total: totalAssigned, percentage: overallPercentage },
     });
   };
@@ -1102,32 +1102,18 @@ const CompanyDashboard = () => {
                 <FileDown className="w-4 h-4 mr-2" />
                 Download MIS PDF
               </Button>
-              {/* <Button
+              <Button
                 variant="outline"
                 onClick={() => {
-                  const storageUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/founder-guide/Fireside_ESG_Platform_Founders_Guide.pdf`;
-                  const link       = document.createElement('a');
-                  link.href        = storageUrl;
-                  link.download    = 'Fireside_ESG_Platform_Founders_Guide.pdf';
-                  link.target      = '_blank';
-                  link.click();
+                  window.open(
+                    '/pdfs/Fireside_ESG_Platform_Founders_Guide (8).pdf',
+                    '_blank'
+                  );
                 }}
               >
                 <BookOpen className="w-4 h-4 mr-2" />
                 Founder's Guide
-              </Button> */}
-              <Button
-  variant="outline"
-  onClick={() => {
-    window.open(
-      '/pdfs/Fireside_ESG_Platform_Founders_Guide (8).pdf',
-      '_blank'
-    );
-  }}
->
-  <BookOpen className="w-4 h-4 mr-2" />
-  Founder's Guide
-</Button>
+              </Button>
               <Button onClick={() => window.open('https://firesidekpi.lovable.app/demo', '_blank')}>
                 <Play className="w-4 h-4 mr-2" />
                 View Demo
@@ -1164,23 +1150,23 @@ const CompanyDashboard = () => {
         {isPeerLoading || progressCards.length === 0
           ? [1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)
           : progressCards.map(card => {
-              const { grade, color: gradeColor } = getGrade(card.value);
-              return (
-                <Card key={card.label} className={`${card.color} transition-all hover:shadow-md`}>
-                  <CardContent className="pt-3 pb-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-[11px] font-medium text-muted-foreground">{card.label}</p>
-                      {card.icon}
-                    </div>
-                    <div className="flex items-end gap-2">
-                      <span className={`text-2xl font-bold ${gradeColor}`}>{grade}</span>
-                      <span className="text-xs text-muted-foreground mb-1">grade</span>
-                    </div>
-                    <Badge variant="secondary" className="text-[9px] mt-1">n={card.n}</Badge>
-                  </CardContent>
-                </Card>
-              );
-            })
+            const { grade, color: gradeColor } = getGrade(card.value);
+            return (
+              <Card key={card.label} className={`${card.color} transition-all hover:shadow-md`}>
+                <CardContent className="pt-3 pb-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-[11px] font-medium text-muted-foreground">{card.label}</p>
+                    {card.icon}
+                  </div>
+                  <div className="flex items-end gap-2">
+                    <span className={`text-2xl font-bold ${gradeColor}`}>{grade}</span>
+                    <span className="text-xs text-muted-foreground mb-1">grade</span>
+                  </div>
+                  <Badge variant="secondary" className="text-[9px] mt-1">n={card.n}</Badge>
+                </CardContent>
+              </Card>
+            );
+          })
         }
       </div>
 
@@ -1189,46 +1175,46 @@ const CompanyDashboard = () => {
         {allCompaniesData.isLoading || esgCards.length === 0
           ? [1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)
           : esgCards.map(card => {
-              const { grade, color: gradeColor } = getGrade(card.percentile);
-              return (
-                <Card
-                  key={card.label}
-                  className={`${card.color} transition-all hover:shadow-md cursor-pointer hover:ring-2 hover:ring-primary/30`}
-                  onClick={() => {
-                    if (card.isEnvNA) {
-                      setEnvNADialogOpen(true);
-                    } else {
-                      setScoreDetailType(card.clickType);
-                      setScoreDetailOpen(true);
-                    }
-                  }}
-                >
-                  <CardContent className="pt-3 pb-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-[11px] font-medium text-muted-foreground">{card.label}</p>
-                      {card.icon}
+            const { grade, color: gradeColor } = getGrade(card.percentile);
+            return (
+              <Card
+                key={card.label}
+                className={`${card.color} transition-all hover:shadow-md cursor-pointer hover:ring-2 hover:ring-primary/30`}
+                onClick={() => {
+                  if (card.isEnvNA) {
+                    setEnvNADialogOpen(true);
+                  } else {
+                    setScoreDetailType(card.clickType);
+                    setScoreDetailOpen(true);
+                  }
+                }}
+              >
+                <CardContent className="pt-3 pb-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-[11px] font-medium text-muted-foreground">{card.label}</p>
+                    {card.icon}
+                  </div>
+                  {card.isEnvNA ? (
+                    <div className="flex items-end gap-2">
+                      <span className="text-2xl font-bold text-muted-foreground">NA</span>
+                      <span className="text-xs text-muted-foreground mb-1">not applicable</span>
                     </div>
-                    {card.isEnvNA ? (
-                      <div className="flex items-end gap-2">
-                        <span className="text-2xl font-bold text-muted-foreground">NA</span>
-                        <span className="text-xs text-muted-foreground mb-1">not applicable</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-end gap-2">
-                        <span className={`text-2xl font-bold ${gradeColor}`}>{grade}</span>
-                        <span className="text-xs text-muted-foreground mb-1">grade</span>
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between mt-1">
-                      <Badge variant="secondary" className="text-[9px]">n={card.n}</Badge>
-                      <p className="text-[9px] text-muted-foreground">
-                        {card.isEnvNA ? 'Click for details →' : 'Click to view breakdown →'}
-                      </p>
+                  ) : (
+                    <div className="flex items-end gap-2">
+                      <span className={`text-2xl font-bold ${gradeColor}`}>{grade}</span>
+                      <span className="text-xs text-muted-foreground mb-1">grade</span>
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })
+                  )}
+                  <div className="flex items-center justify-between mt-1">
+                    <Badge variant="secondary" className="text-[9px]">n={card.n}</Badge>
+                    <p className="text-[9px] text-muted-foreground">
+                      {card.isEnvNA ? 'Click for details →' : 'Click to view breakdown →'}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })
         }
       </div>
 
@@ -1285,25 +1271,24 @@ const CompanyDashboard = () => {
 
               <div className="grid grid-cols-4 gap-3 flex-1 min-w-0">
                 {QUARTERS_INFO.map(q => {
-                  const quarterStatus   = quarterlyStatus[q.key as keyof typeof quarterlyStatus] as { hasData: boolean; entryCount: number };
-                  const hasData         = quarterStatus?.hasData || false;
+                  const quarterStatus = quarterlyStatus[q.key as keyof typeof quarterlyStatus] as { hasData: boolean; entryCount: number };
+                  const hasData = quarterStatus?.hasData || false;
                   const quarterProgress = quarters[q.key];
-                  const progressPct     = quarterProgress?.percentage || 0;
-                  const isEditable      = isPeriodEditable(q.key, selectedYear);
-                  const isFuture2026    = selectedYear === 2026 && !isEditable;
-                  const isDisabled      = isFuture2026;
-                  const isSelected      = selectedQuarter === q.key;
+                  const progressPct = quarterProgress?.percentage || 0;
+                  const isEditable = isPeriodEditable(q.key, selectedYear);
+                  const isFuture2026 = selectedYear === 2026 && !isEditable;
+                  const isDisabled = isFuture2026;
+                  const isSelected = selectedQuarter === q.key;
 
                   return (
                     <div
                       key={q.key}
-                      className={`relative rounded-lg border-2 transition-all ${
-                        isDisabled
+                      className={`relative rounded-lg border-2 transition-all ${isDisabled
                           ? 'border-dashed border-border bg-muted/30 cursor-not-allowed opacity-60'
                           : isSelected
                             ? 'border-primary bg-primary/5 cursor-pointer'
                             : 'border-border hover:border-primary/50 cursor-pointer'
-                      }`}
+                        }`}
                       onClick={() => { if (!isDisabled) setSelectedQuarter(q.key); }}
                       aria-disabled={isDisabled}
                       title={isDisabled ? `${q.label} ${selectedYear} is not yet open` : undefined}
