@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Droplets } from 'lucide-react';
 import { CellNumberBadge } from './CellNumberBadge';
+import { cn } from '@/lib/utils';
 interface WaterManagementDetailedTableProps {
   formData: Record<string, string | number | boolean>;
   onInputChange: (key: string, value: string) => void;
@@ -52,7 +53,7 @@ export const WaterManagementDetailedTable = ({
   const handleNAChange = (facility: string, checked: boolean) => {
     const key = getFieldKey(facility, 'na');
     onInputChange(key, checked ? 'true' : 'false');
-    
+
     // Clear values when marking as N/A
     if (checked) {
       onInputChange(getFieldKey(facility, 'water_consumed'), '');
@@ -96,12 +97,12 @@ export const WaterManagementDetailedTable = ({
     { totalGenerated: 0, recycledPctSum: 0, facilityCount: 0 }
   );
 
-  const avgFreshWaterPct = waterSummary.facilityCount > 0 
-    ? (waterSummary.freshPctSum / waterSummary.facilityCount).toFixed(1) 
+  const avgFreshWaterPct = waterSummary.facilityCount > 0
+    ? (waterSummary.freshPctSum / waterSummary.facilityCount).toFixed(1)
     : '0';
 
-  const avgWastewaterRecycledPct = wastewaterSummary.facilityCount > 0 
-    ? (wastewaterSummary.recycledPctSum / wastewaterSummary.facilityCount).toFixed(1) 
+  const avgWastewaterRecycledPct = wastewaterSummary.facilityCount > 0
+    ? (wastewaterSummary.recycledPctSum / wastewaterSummary.facilityCount).toFixed(1)
     : '0';
 
   return (
@@ -144,89 +145,164 @@ export const WaterManagementDetailedTable = ({
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/30">
-                <TableHead className="w-[200px]">Facility Type</TableHead>
-                <TableHead className="w-[60px] text-center">N/A</TableHead>
-                <TableHead className="w-[160px]">Water Consumed (Thousand m³)</TableHead>
-                <TableHead className="w-[120px]">Fresh Water (%)</TableHead>
-                <TableHead className="w-[160px]">Wastewater Generation (Thousand m³)</TableHead>
-                <TableHead className="w-[120px]">Wastewater Recycled (%)</TableHead>
+              <TableRow className="bg-muted/40">
+                <TableHead className="w-[60px] text-left font-semibold">
+                  Sno
+                </TableHead>
+
+                <TableHead className="w-[240px] text-left font-semibold">
+                  Facility Type
+                </TableHead>
+
+                <TableHead className="w-[80px] text-center font-semibold">
+                  N/A
+                </TableHead>
+
+                <TableHead className="w-[200px] text-left font-semibold">
+                  Water Consumed
+                </TableHead>
+
+                <TableHead className="w-[180px] text-left font-semibold">
+                  Fresh Water (%)
+                </TableHead>
+
+                <TableHead className="w-[240px] text-left font-semibold">
+                  Wastewater Generation
+                </TableHead>
+
+                <TableHead className="w-[220px] text-left font-semibold">
+                  Wastewater Recycled (%)
+                </TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
               {FACILITY_TYPES.map((facility, index) => {
                 const facilityIsNA = isNA(facility.id);
                 const kpiNumber = index + 1;
+
                 return (
-                  <TableRow 
+                  <TableRow
                     key={facility.id}
-                    className={facilityIsNA ? 'bg-muted/20' : ''}
+                    className={cn(
+                      "align-top",
+                      facilityIsNA && "bg-muted/20"
+                    )}
                   >
-                    <TableCell className="font-medium text-sm">
-                      <div className="flex items-center">
-                        <CellNumberBadge kpiNumber={kpiNumber} />
-                        {facility.label}
-                      </div>
+                    <TableCell className="text-left text-muted-foreground">
+                      <CellNumberBadge kpiNumber={kpiNumber} />
                     </TableCell>
-                    <TableCell className="text-center">
+
+                    <TableCell className="font-medium text-left">
+                      {facility.label}
+                    </TableCell>
+
+                    <TableCell className="text-center py-2">
                       <Checkbox
                         checked={facilityIsNA}
-                        onCheckedChange={(checked) => handleNAChange(facility.id, !!checked)}
+                        onCheckedChange={(checked) =>
+                          handleNAChange(facility.id, !!checked)
+                        }
                         disabled={readOnly}
                         aria-label={`Mark ${facility.label} as not applicable`}
                       />
                     </TableCell>
-                    <TableCell className="py-2">
-                      <Input
-                        type="number"
-                        placeholder={facilityIsNA ? '-' : '0'}
-                        value={getValue(facility.id, 'water_consumed')}
-                        onChange={(e) => handleChange(facility.id, 'water_consumed', e.target.value)}
-                        className="w-28 h-8 text-sm"
-                        disabled={readOnly || facilityIsNA}
-                        min={0}
-                        step="0.01"
-                      />
-                    </TableCell>
-                    <TableCell className="py-2">
-                      <div className="flex items-center gap-1">
+
+                    <TableCell className="text-left py-2">
+                      <div className="flex items-center gap-2">
                         <Input
                           type="number"
-                          placeholder={facilityIsNA ? '-' : '0'}
-                          value={getValue(facility.id, 'fresh_water_pct')}
-                          onChange={(e) => handleChange(facility.id, 'fresh_water_pct', e.target.value)}
-                          className="w-16 h-8 text-sm"
+                          placeholder={facilityIsNA ? "-" : "0"}
+                          value={getValue(facility.id, "water_consumed")}
+                          onChange={(e) =>
+                            handleChange(
+                              facility.id,
+                              "water_consumed",
+                              e.target.value
+                            )
+                          }
+                          className="w-28 h-8 text-sm"
+                          disabled={readOnly || facilityIsNA}
+                          min={0}
+                          step="0.01"
+                        />
+
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          Thousand m³
+                        </span>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-left py-2">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          placeholder={facilityIsNA ? "-" : "0"}
+                          value={getValue(facility.id, "fresh_water_pct")}
+                          onChange={(e) =>
+                            handleChange(
+                              facility.id,
+                              "fresh_water_pct",
+                              e.target.value
+                            )
+                          }
+                          className="w-20 h-8 text-sm"
                           disabled={readOnly || facilityIsNA}
                           min={0}
                           max={100}
                         />
+
                         <span className="text-xs text-muted-foreground">%</span>
                       </div>
                     </TableCell>
-                    <TableCell className="py-2">
-                      <Input
-                        type="number"
-                        placeholder={facilityIsNA ? '-' : '0'}
-                        value={getValue(facility.id, 'wastewater_generated')}
-                        onChange={(e) => handleChange(facility.id, 'wastewater_generated', e.target.value)}
-                        className="w-28 h-8 text-sm"
-                        disabled={readOnly || facilityIsNA}
-                        min={0}
-                        step="0.01"
-                      />
-                    </TableCell>
-                    <TableCell className="py-2">
-                      <div className="flex items-center gap-1">
+
+                    <TableCell className="text-left py-2">
+                      <div className="flex items-center gap-2">
                         <Input
                           type="number"
-                          placeholder={facilityIsNA ? '-' : '0'}
-                          value={getValue(facility.id, 'wastewater_recycled_pct')}
-                          onChange={(e) => handleChange(facility.id, 'wastewater_recycled_pct', e.target.value)}
-                          className="w-16 h-8 text-sm"
+                          placeholder={facilityIsNA ? "-" : "0"}
+                          value={getValue(facility.id, "wastewater_generated")}
+                          onChange={(e) =>
+                            handleChange(
+                              facility.id,
+                              "wastewater_generated",
+                              e.target.value
+                            )
+                          }
+                          className="w-28 h-8 text-sm"
+                          disabled={readOnly || facilityIsNA}
+                          min={0}
+                          step="0.01"
+                        />
+
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          Thousand m³
+                        </span>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-left py-2">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          placeholder={facilityIsNA ? "-" : "0"}
+                          value={getValue(
+                            facility.id,
+                            "wastewater_recycled_pct"
+                          )}
+                          onChange={(e) =>
+                            handleChange(
+                              facility.id,
+                              "wastewater_recycled_pct",
+                              e.target.value
+                            )
+                          }
+                          className="w-20 h-8 text-sm"
                           disabled={readOnly || facilityIsNA}
                           min={0}
                           max={100}
                         />
+
                         <span className="text-xs text-muted-foreground">%</span>
                       </div>
                     </TableCell>
@@ -236,7 +312,7 @@ export const WaterManagementDetailedTable = ({
             </TableBody>
           </Table>
         </div>
-        
+
         <div className="px-4 py-3 bg-blue-50 dark:bg-blue-950/20 border-t text-sm text-muted-foreground space-y-1">
           <p className="text-xs">
             <strong>Note:</strong> Check "N/A" for facility types that are not applicable to your organization. Please only mention for facilities where there is significant water usage. Fresh water refers to water from municipal supply or groundwater sources.

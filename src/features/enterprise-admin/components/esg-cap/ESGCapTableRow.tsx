@@ -6,7 +6,7 @@ import { CategoryBadge } from './CategoryBadge';
 import { PriorityBadge } from './PriorityBadge';
 import { Badge } from '@/components/ui/badge';
 import { ESGCapRowActions } from './ESGCapRowActions';
-
+import { useNavigate } from 'react-router-dom';
 const normalizeStatus = (status?: string) =>
   (status ?? "").trim().toLowerCase();
 // ✅ Updated helper — returns proper status values
@@ -84,7 +84,7 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
   
     const isClosed = normalizeStatus(item.investorStatus) === "closed";
   
-    return targetDate < today && !isClosed && !item.actualDate;
+    return normalizeStatus(item.status) === "overdue" && targetDate < today && !isClosed && !item.actualDate;
   };
 
   const rowClassName = `
@@ -122,21 +122,29 @@ const getInvestorStatusBadge = (status: string) => {
   const config = statusMap[status?.toLowerCase()] || { label: status || '-', variant: "outline", className: "bg-gray-100 text-gray-600" };
   return <Badge variant={config.variant} className={config.className}>{config.label}</Badge>;
 };
+  const navigate = useNavigate();
 
+  const handleEdit = () => {
+    navigate(`/esg-dd/cap/${item?.reportId}?itemName=${encodeURIComponent(item?.item || "")}`);
+  };
 
   if (compact) {
     return (
-      <TableRow className={rowClassName}>
+      <TableRow className={rowClassName} >
         <TableCell className="text-center font-medium" style={{ padding: "0.3rem" }}>{index + 1}</TableCell>
 
         {/* Item column with expand/collapse */}
-        <TableCell className="font-medium text-left" style={{ padding: "0.3rem" }}>
+        {/* <TableCell className="font-medium text-left" style={{ padding: "0.3rem" }}>
           {showFullItem ? item.item : truncateText(item.item, 50)}
           {item.item && item.item.length > 50 && (
             <button onClick={() => setShowFullItem(!showFullItem)} className="ml-2 text-blue-600 underline text-xs">
               {showFullItem ? "View less" : "View full"}
             </button>
           )}
+        </TableCell> */}
+
+        <TableCell className="font-medium max-w-xs text-left" onClick={handleEdit} style={{ cursor: "pointer",padding: "0.3rem" }}>
+          {item.item || '-'}
         </TableCell>
 
         <TableCell style={{ padding: "0.3rem" }}>

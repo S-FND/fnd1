@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Zap } from 'lucide-react';
 import { CellNumberBadge } from './CellNumberBadge';
+import { cn } from '@/lib/utils';
 
 interface EnergyManagementDetailedTableProps {
   formData: Record<string, string | number | boolean>;
@@ -54,7 +55,7 @@ export const EnergyManagementDetailedTable = ({
   const handleNAChange = (facility: string, checked: boolean) => {
     const key = getFieldKey(facility, 'na');
     onInputChange(key, checked ? 'true' : 'false');
-    
+
     // Clear values when marking as N/A
     if (checked) {
       onInputChange(getFieldKey(facility, 'energy_consumed'), '');
@@ -79,8 +80,8 @@ export const EnergyManagementDetailedTable = ({
     { totalEnergy: 0, renewableSum: 0, facilityCount: 0 }
   );
 
-  const avgRenewable = summary.facilityCount > 0 
-    ? (summary.renewableSum / summary.facilityCount).toFixed(1) 
+  const avgRenewable = summary.facilityCount > 0
+    ? (summary.renewableSum / summary.facilityCount).toFixed(1)
     : '0';
 
   return (
@@ -111,63 +112,113 @@ export const EnergyManagementDetailedTable = ({
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/30">
-                <TableHead className="w-[300px]">Facility Type</TableHead>
-                <TableHead className="w-[80px] text-center">N/A</TableHead>
-                <TableHead className="w-[180px]">Energy Consumed (kWh)</TableHead>
-                <TableHead className="w-[150px]">% Renewable</TableHead>
+              <TableRow className="bg-muted/40">
+                <TableHead className="w-[60px] text-left font-semibold">
+                  Sno
+                </TableHead>
+
+                <TableHead className="min-w-[300px] text-left font-semibold">
+                  Facility Type
+                </TableHead>
+
+                <TableHead className="w-[100px] text-center font-semibold">
+                  N/A
+                </TableHead>
+
+                <TableHead className="w-[260px] text-left font-semibold">
+                  Energy Consumed
+                </TableHead>
+
+                <TableHead className="w-[220px] text-left font-semibold">
+                  % Renewable
+                </TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
               {FACILITY_TYPES.map((facility, index) => {
                 const facilityIsNA = isNA(facility.id);
                 const kpiNumber = index + 1;
+
                 return (
-                  <TableRow 
+                  <TableRow
                     key={facility.id}
-                    className={facilityIsNA ? 'bg-muted/20' : ''}
+                    className={cn(
+                      "align-top",
+                      facilityIsNA && "bg-muted/20"
+                    )}
                   >
-                    <TableCell className="font-medium text-sm">
-                      <div className="flex items-center">
-                        <CellNumberBadge kpiNumber={kpiNumber} />
-                        {facility.label}
-                      </div>
+                    <TableCell className="text-left text-muted-foreground">
+                      <CellNumberBadge kpiNumber={kpiNumber} />
                     </TableCell>
-                    <TableCell className="text-center">
+
+                    <TableCell className="font-medium text-left">
+                      {facility.label}
+                    </TableCell>
+
+                    <TableCell className="text-center py-2">
                       <Checkbox
                         checked={facilityIsNA}
-                        onCheckedChange={(checked) => handleNAChange(facility.id, !!checked)}
+                        onCheckedChange={(checked) =>
+                          handleNAChange(facility.id, !!checked)
+                        }
                         disabled={readOnly}
                         aria-label={`Mark ${facility.label} as not applicable`}
                       />
                     </TableCell>
-                    <TableCell className="py-2">
+
+                    <TableCell className="text-left py-2">
                       <div className="flex items-center gap-2">
                         <Input
                           type="number"
-                          placeholder={facilityIsNA ? '-' : '0'}
-                          value={getValue(facility.id, 'energy_consumed')}
-                          onChange={(e) => handleChange(facility.id, 'energy_consumed', e.target.value)}
+                          placeholder={facilityIsNA ? "-" : "0"}
+                          value={getValue(
+                            facility.id,
+                            "energy_consumed"
+                          )}
+                          onChange={(e) =>
+                            handleChange(
+                              facility.id,
+                              "energy_consumed",
+                              e.target.value
+                            )
+                          }
                           className="w-28 h-8 text-sm"
                           disabled={readOnly || facilityIsNA}
                           min={0}
                         />
-                        <span className="text-xs text-muted-foreground">kWh</span>
+
+                        <span className="text-xs text-muted-foreground">
+                          kWh
+                        </span>
                       </div>
                     </TableCell>
-                    <TableCell className="py-2">
+
+                    <TableCell className="text-left py-2">
                       <div className="flex items-center gap-2">
                         <Input
                           type="number"
-                          placeholder={facilityIsNA ? '-' : '0'}
-                          value={getValue(facility.id, 'renewable_pct')}
-                          onChange={(e) => handleChange(facility.id, 'renewable_pct', e.target.value)}
+                          placeholder={facilityIsNA ? "-" : "0"}
+                          value={getValue(
+                            facility.id,
+                            "renewable_pct"
+                          )}
+                          onChange={(e) =>
+                            handleChange(
+                              facility.id,
+                              "renewable_pct",
+                              e.target.value
+                            )
+                          }
                           className="w-20 h-8 text-sm"
                           disabled={readOnly || facilityIsNA}
                           min={0}
                           max={100}
                         />
-                        <span className="text-xs text-muted-foreground">%</span>
+
+                        <span className="text-xs text-muted-foreground">
+                          %
+                        </span>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -176,7 +227,7 @@ export const EnergyManagementDetailedTable = ({
             </TableBody>
           </Table>
         </div>
-        
+
         <div className="px-4 py-3 bg-blue-50 dark:bg-blue-950/20 border-t text-sm text-muted-foreground">
           <p className="text-xs">
             <strong>Note:</strong> Check "N/A" for facility types that are not applicable to your organization. Warehouses refer to those where company occupies significant area (50%+ rented by company).

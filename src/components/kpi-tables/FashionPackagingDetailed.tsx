@@ -78,76 +78,145 @@ export const FashionPackagingDetailed = ({
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/30">
-                    <TableHead className="w-[450px]">Metric</TableHead>
-                    <TableHead className="w-[100px]">Unit</TableHead>
-                    <TableHead className="w-[300px]">Value</TableHead>
+                  <TableRow className="bg-muted/40">
+                    <TableHead className="min-w-[380px] text-left font-semibold">
+                      Metric
+                    </TableHead>
+
+                    <TableHead className="w-[120px] text-left font-semibold">
+                      Unit
+                    </TableHead>
+
+                    <TableHead className="w-[260px] text-left font-semibold">
+                      Value
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
+
                 <TableBody>
-                  {/* Total material for secondary */}
+                  {/* SECONDARY PACKAGING */}
                   {SECONDARY_PACKAGING_FIELDS.map((field) => (
-                    <TableRow key={field.id}>
-                      <TableCell className="font-medium text-sm">
-                        <div className="flex items-center">
-                          <CellNumberBadge kpiNumber={field.kpiNumber} fieldLetter={field.fieldLetter} />
-                          {field.label}
+                    <TableRow key={field.id} className="align-top">
+                      {/* METRIC */}
+                      <TableCell className="font-medium text-left">
+                        <div className="flex items-start gap-2">
+                          <CellNumberBadge
+                            kpiNumber={field.kpiNumber}
+                            fieldLetter={field.fieldLetter}
+                          />
+
+                          <span>{field.label}</span>
                         </div>
                       </TableCell>
-                      <TableCell><Badge variant="secondary" className="text-xs">{field.unit}</Badge></TableCell>
-                      <TableCell>
+
+                      {/* UNIT */}
+                      <TableCell className="text-left">
+                        <Badge variant="secondary" className="text-xs">
+                          {field.unit}
+                        </Badge>
+                      </TableCell>
+
+                      {/* VALUE */}
+                      <TableCell className="text-left">
                         <div className="flex items-center gap-2">
                           <Input
                             type="number"
                             placeholder="0"
-                            value={getValue('secondary', field.id)}
-                            onChange={(e) => handleChange('secondary', field.id, e.target.value)}
+                            value={getValue("secondary", field.id)}
+                            onChange={(e) =>
+                              handleChange(
+                                "secondary",
+                                field.id,
+                                e.target.value
+                              )
+                            }
                             className="w-40 h-9 text-sm"
                             disabled={readOnly}
                           />
-                          <span className="text-xs text-muted-foreground">{field.unit}</span>
+
+                          <span className="text-xs text-muted-foreground">
+                            {field.unit}
+                          </span>
                         </div>
                       </TableCell>
                     </TableRow>
                   ))}
-                  
-                  {/* Breakup header */}
-                  <TableRow className="bg-blue-50 dark:bg-blue-950/20">
-                    <TableCell colSpan={3} className="font-medium text-sm py-2">
+
+                  {/* BREAKUP HEADER */}
+                  <TableRow className="bg-blue-50/60 dark:bg-blue-950/20">
+                    <TableCell
+                      colSpan={3}
+                      className="font-semibold text-left py-3"
+                    >
                       Breakup of materials used for secondary packaging (%)
                     </TableCell>
                   </TableRow>
-                  
+
+                  {/* BREAKUP FIELDS */}
                   {SECONDARY_BREAKUP_FIELDS.map((field) => (
-                    <TableRow key={field.id}>
-                      <TableCell className="font-medium text-sm pl-8">
-                        <div className="flex items-center">
-                          <CellNumberBadge kpiNumber={5} fieldLetter={field.fieldLetter} />
-                          {field.label}
+                    <TableRow key={field.id} className="align-top">
+                      {/* METRIC */}
+                      <TableCell className="font-medium text-left pl-8">
+                        <div className="flex items-start gap-2">
+                          <CellNumberBadge
+                            kpiNumber={5}
+                            fieldLetter={field.fieldLetter}
+                          />
+
+                          <span>{field.label}</span>
                         </div>
                       </TableCell>
-                      <TableCell><Badge variant="secondary" className="text-xs">{field.unit}</Badge></TableCell>
-                      <TableCell>
-                        {field.type === 'number' ? (
+
+                      {/* UNIT */}
+                      <TableCell className="text-left">
+                        <Badge variant="secondary" className="text-xs">
+                          {field.unit}
+                        </Badge>
+                      </TableCell>
+
+                      {/* VALUE */}
+                      <TableCell className="text-left">
+                        {field.type === "number" ? (
                           <div className="flex items-center gap-2">
                             <Input
                               type="number"
                               placeholder="0"
-                              value={getValue('secondary_breakup', field.id)}
-                              onChange={(e) => handleChange('secondary_breakup', field.id, e.target.value)}
+                              value={getValue(
+                                "secondary_breakup",
+                                field.id
+                              )}
+                              onChange={(e) =>
+                                handleChange(
+                                  "secondary_breakup",
+                                  field.id,
+                                  e.target.value
+                                )
+                              }
                               className="w-32 h-9 text-sm"
                               disabled={readOnly}
                               min={0}
                               max={100}
                             />
-                            <span className="text-xs text-muted-foreground">%</span>
+
+                            <span className="text-xs text-muted-foreground">
+                              %
+                            </span>
                           </div>
                         ) : (
                           <Input
                             type="text"
                             placeholder="Specify type and %..."
-                            value={getValue('secondary_breakup', field.id)}
-                            onChange={(e) => handleChange('secondary_breakup', field.id, e.target.value)}
+                            value={getValue(
+                              "secondary_breakup",
+                              field.id
+                            )}
+                            onChange={(e) =>
+                              handleChange(
+                                "secondary_breakup",
+                                field.id,
+                                e.target.value
+                              )
+                            }
                             className="h-9 text-sm"
                             disabled={readOnly}
                           />

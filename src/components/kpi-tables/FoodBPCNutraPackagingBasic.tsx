@@ -215,9 +215,9 @@ export const FoodBPCNutraPackagingBasic = ({
       return <Textarea placeholder={`Enter details${field.maxWords ? ` (max ${field.maxWords} words)` : ''}...`} value={getValue(section, field.id)} onChange={e => handleChange(section, field.id, e.target.value)} className="min-h-[120px] text-sm" disabled={readOnly} />;
     } else if (field.type === 'number') {
       return <div className="flex items-center gap-2">
-          <Input type="number" placeholder="0" value={getValue(section, field.id)} onChange={e => handleChange(section, field.id, e.target.value)} className="w-40 h-9 text-sm" disabled={readOnly} min={field.unit === '%' ? 0 : undefined} max={field.unit === '%' ? 100 : undefined} />
-          {field.unit && <span className="text-xs text-muted-foreground">{field.unit}</span>}
-        </div>;
+        <Input type="number" placeholder="0" value={getValue(section, field.id)} onChange={e => handleChange(section, field.id, e.target.value)} className="w-40 h-9 text-sm" disabled={readOnly} min={field.unit === '%' ? 0 : undefined} max={field.unit === '%' ? 100 : undefined} />
+        {field.unit && <span className="text-xs text-muted-foreground">{field.unit}</span>}
+      </div>;
     } else {
       return <Input type="text" placeholder="Enter value..." value={getValue(section, field.id)} onChange={e => handleChange(section, field.id, e.target.value)} className="h-9 text-sm" disabled={readOnly} />;
     }
@@ -242,227 +242,412 @@ export const FoodBPCNutraPackagingBasic = ({
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/30">
-                <TableHead className="w-[450px]">Metric</TableHead>
-                <TableHead className="w-[100px]">Unit</TableHead>
-                <TableHead className="w-[300px]">Value</TableHead>
+              <TableRow className="bg-muted/40">
+                <TableHead className="min-w-[380px] text-left font-semibold">
+                  Metric
+                </TableHead>
+
+                <TableHead className="w-[120px] text-left font-semibold">
+                  Unit
+                </TableHead>
+
+                <TableHead className="w-[260px] text-left font-semibold">
+                  Value
+                </TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
-              {fields.map(field => <TableRow key={`${sectionId}-${field.id}`}>
-                  <TableCell className="font-medium text-sm align-top py-3">
-                    <div className="flex items-center gap-1.5">
-                      {kpiNumber && field.fieldLetter && <CellNumberBadge kpiNumber={kpiNumber} fieldLetter={field.fieldLetter} />}
-                      {field.label}
-                      {field.tooltip && <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help hover:text-primary transition-colors flex-shrink-0" />
-                          </TooltipTrigger>
-                          <TooltipContent side="right" className="max-w-sm">
-                            <p className="text-xs">{field.tooltip}</p>
-                          </TooltipContent>
-                        </Tooltip>}
+              {fields.map((field) => (
+                <TableRow
+                  key={`${sectionId}-${field.id}`}
+                  className="align-top"
+                >
+                  {/* METRIC */}
+                  <TableCell className="font-medium text-left py-3">
+                    <div className="flex items-start gap-2">
+                      {kpiNumber && field.fieldLetter && (
+                        <CellNumberBadge
+                          kpiNumber={kpiNumber}
+                          fieldLetter={field.fieldLetter}
+                        />
+                      )}
+
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-start gap-1.5">
+                          <span>{field.label}</span>
+
+                          {field.tooltip && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info className="w-3.5 h-3.5 mt-0.5 text-muted-foreground cursor-help hover:text-primary transition-colors shrink-0" />
+                              </TooltipTrigger>
+
+                              <TooltipContent
+                                side="right"
+                                className="max-w-sm text-left"
+                              >
+                                <p className="text-xs">
+                                  {field.tooltip}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
+
+                        {field.description && (
+                          <span className="text-xs text-muted-foreground">
+                            {field.description}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell className="align-top py-3">
-                    <Badge variant="secondary" className="text-xs">{field.unit || 'Text'}</Badge>
+
+                  {/* UNIT */}
+                  <TableCell className="text-left py-3">
+                    <Badge
+                      variant="secondary"
+                      className="text-xs"
+                    >
+                      {field.unit || "Text"}
+                    </Badge>
                   </TableCell>
-                  <TableCell className="py-3">
+
+                  {/* VALUE */}
+                  <TableCell className="text-left py-3">
                     {renderField(sectionId, field)}
                   </TableCell>
-                </TableRow>)}
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>
       </CollapsibleContent>
     </Collapsible>;
   return <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <PackageOpen className="w-4 h-4 text-esg-environmental" />
-          Packaging Metrics
-          <Badge variant="outline" className="ml-2 text-xs">Quarterly</Badge>
-        </CardTitle>
-        <p className="text-xs text-muted-foreground mt-1">All metrics except Secondary / Tertiary Packaging. </p>
-      </CardHeader>
-      <CardContent className="p-0 space-y-0">
-        {/* Approach & Vision Section - Enhanced with weblinks and documents */}
-        <Collapsible open={openSections.has('approach')} onOpenChange={() => toggleSection('approach')}>
-          <CollapsibleTrigger className="w-full px-4 py-3 bg-muted/50 border-b flex items-center justify-between hover:bg-muted/70 transition-colors">
-            <h4 className="text-sm font-medium flex items-center">
-              <CellNumberBadge kpiNumber={1} />
-              Approach & Vision
-            </h4>
-            {openSections.has('approach') ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="px-4 py-2 space-y-6">
-              {/* Current Approach Field */}
-              <ApproachVisionInput 
-                label="Current approach, policy, challenges, achievements, certifications towards sustainable packaging" 
-                textareaValue={getValue('approach', 'current_approach')} 
-                onTextareaChange={value => handleChange('approach', 'current_approach', value)} 
-                weblinks={getWeblinks('current_approach')} 
-                onWeblinksChange={links => setWeblinks('current_approach', links)} 
-                documents={getDocuments('current_approach')} 
-                onDocumentsChange={docs => setDocuments('current_approach', docs)} 
-                maxWords={300} 
-                readOnly={readOnly}
-                tooltip="You need to fill this data once. Next quarter onwards, the data shared in the previous quarter will be pre-filled in the cells. Please update in case there are any changes."
-              />
-              
-              {/* Vision & Plans Field */}
-              <ApproachVisionInput 
-                label="Vision and plans towards sustainable packaging" 
-                textareaValue={getValue('approach', 'vision_plans')} 
-                onTextareaChange={value => handleChange('approach', 'vision_plans', value)} 
-                weblinks={getWeblinks('vision_plans')} 
-                onWeblinksChange={links => setWeblinks('vision_plans', links)} 
-                documents={getDocuments('vision_plans')} 
-                onDocumentsChange={docs => setDocuments('vision_plans', docs)} 
-                maxWords={300} 
-                readOnly={readOnly}
-                tooltip="You need to fill this data once. Next quarter onwards, the data shared in the previous quarter will be pre-filled in the cells. Please update in case there are any changes."
-              />
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-        
-        {/* Total Packaging Section */}
-        {renderSection('Total Packaging', 'total', TOTAL_PACKAGING_FIELDS, 2)}
-        
-        {/* Compliance Details Section */}
-        {renderSection('Compliance Details', 'compliance', COMPLIANCE_FIELDS, 3)}
-        
-        {/* Primary Packaging Section */}
-        <Collapsible open={openSections.has('primary')} onOpenChange={() => toggleSection('primary')}>
-          <CollapsibleTrigger className="w-full px-4 py-3 bg-muted/50 border-b flex items-center justify-between hover:bg-muted/70 transition-colors">
-            <h4 className="text-sm font-medium flex items-center">
-              <CellNumberBadge kpiNumber={4} />
-              Primary Packaging
-            </h4>
-            {openSections.has('primary') ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/30">
-                    <TableHead className="w-[450px]">Metric</TableHead>
-                    <TableHead className="w-[100px]">Unit</TableHead>
-                    <TableHead className="w-[300px]">Value</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {/* Total material for primary */}
-                  {PRIMARY_PACKAGING_FIELDS.map(field => <TableRow key={field.id}>
-                      <TableCell className="font-medium text-sm">
-                        <div className="flex items-center gap-1.5">
-                          <CellNumberBadge kpiNumber={4} fieldLetter={field.fieldLetter} />
-                          {field.label}
-                          {field.tooltip && <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help hover:text-primary transition-colors" />
-                              </TooltipTrigger>
-                              <TooltipContent side="right" className="max-w-sm">
-                                <p className="text-xs">{field.tooltip}</p>
-                              </TooltipContent>
-                            </Tooltip>}
-                        </div>
-                      </TableCell>
-                      <TableCell><Badge variant="secondary" className="text-xs">{field.unit}</Badge></TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Input type="number" placeholder="0" value={getValue('primary', field.id)} onChange={e => handleChange('primary', field.id, e.target.value)} className="w-40 h-9 text-sm" disabled={readOnly} />
-                          <span className="text-xs text-muted-foreground">{field.unit}</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>)}
-                  
-                  {/* Breakup header */}
-                  <TableRow className="bg-blue-50 dark:bg-blue-950/20">
-                    <TableCell colSpan={3} className="font-medium text-sm py-2">
-                      Breakup of materials used for primary packaging
+    <CardHeader className="pb-3">
+      <CardTitle className="text-base flex items-center gap-2">
+        <PackageOpen className="w-4 h-4 text-esg-environmental" />
+        Packaging Metrics
+        <Badge variant="outline" className="ml-2 text-xs">Quarterly</Badge>
+      </CardTitle>
+      <p className="text-xs text-muted-foreground mt-1">All metrics except Secondary / Tertiary Packaging. </p>
+    </CardHeader>
+    <CardContent className="p-0 space-y-0">
+      {/* Approach & Vision Section - Enhanced with weblinks and documents */}
+      <Collapsible open={openSections.has('approach')} onOpenChange={() => toggleSection('approach')}>
+        <CollapsibleTrigger className="w-full px-4 py-3 bg-muted/50 border-b flex items-center justify-between hover:bg-muted/70 transition-colors">
+          <h4 className="text-sm font-medium flex items-center">
+            <CellNumberBadge kpiNumber={1} />
+            Approach & Vision
+          </h4>
+          {openSections.has('approach') ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="px-4 py-2 space-y-6">
+            {/* Current Approach Field */}
+            <ApproachVisionInput
+              label="Current approach, policy, challenges, achievements, certifications towards sustainable packaging"
+              textareaValue={getValue('approach', 'current_approach')}
+              onTextareaChange={value => handleChange('approach', 'current_approach', value)}
+              weblinks={getWeblinks('current_approach')}
+              onWeblinksChange={links => setWeblinks('current_approach', links)}
+              documents={getDocuments('current_approach')}
+              onDocumentsChange={docs => setDocuments('current_approach', docs)}
+              maxWords={300}
+              readOnly={readOnly}
+              tooltip="You need to fill this data once. Next quarter onwards, the data shared in the previous quarter will be pre-filled in the cells. Please update in case there are any changes."
+            />
+
+            {/* Vision & Plans Field */}
+            <ApproachVisionInput
+              label="Vision and plans towards sustainable packaging"
+              textareaValue={getValue('approach', 'vision_plans')}
+              onTextareaChange={value => handleChange('approach', 'vision_plans', value)}
+              weblinks={getWeblinks('vision_plans')}
+              onWeblinksChange={links => setWeblinks('vision_plans', links)}
+              documents={getDocuments('vision_plans')}
+              onDocumentsChange={docs => setDocuments('vision_plans', docs)}
+              maxWords={300}
+              readOnly={readOnly}
+              tooltip="You need to fill this data once. Next quarter onwards, the data shared in the previous quarter will be pre-filled in the cells. Please update in case there are any changes."
+            />
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+
+      {/* Total Packaging Section */}
+      {renderSection('Total Packaging', 'total', TOTAL_PACKAGING_FIELDS, 2)}
+
+      {/* Compliance Details Section */}
+      {renderSection('Compliance Details', 'compliance', COMPLIANCE_FIELDS, 3)}
+
+      {/* Primary Packaging Section */}
+      <Collapsible open={openSections.has('primary')} onOpenChange={() => toggleSection('primary')}>
+        <CollapsibleTrigger className="w-full px-4 py-3 bg-muted/50 border-b flex items-center justify-between hover:bg-muted/70 transition-colors">
+          <h4 className="text-sm font-medium flex items-center">
+            <CellNumberBadge kpiNumber={4} />
+            Primary Packaging
+          </h4>
+          {openSections.has('primary') ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/40">
+                  <TableHead className="w-[50px] text-left font-semibold">
+                    Sno
+                  </TableHead>
+
+                  <TableHead className="w-[450px] text-left font-semibold">
+                    Metric
+                  </TableHead>
+
+                  <TableHead className="w-[120px] text-left font-semibold">
+                    Unit
+                  </TableHead>
+
+                  <TableHead className="w-[320px] text-left font-semibold">
+                    Value
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+
+                {/* Total material for primary */}
+                {PRIMARY_PACKAGING_FIELDS.map((field, index) => (
+                  <TableRow key={field.id}>
+
+                    <TableCell className="text-left text-muted-foreground">
+                      <CellNumberBadge
+                        kpiNumber={4}
+                        fieldLetter={field.fieldLetter}
+                      />
+                    </TableCell>
+
+                    <TableCell className="font-medium text-sm text-left">
+                      <div className="flex items-center gap-1.5">
+                        <span>{field.label}</span>
+
+                        {field.tooltip && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help hover:text-primary transition-colors shrink-0" />
+                            </TooltipTrigger>
+
+                            <TooltipContent
+                              side="right"
+                              className="max-w-sm text-left"
+                            >
+                              <p className="text-xs">{field.tooltip}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-left">
+                      <Badge variant="secondary" className="text-xs">
+                        {field.unit}
+                      </Badge>
+                    </TableCell>
+
+                    <TableCell className="text-left">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={getValue('primary', field.id)}
+                          onChange={(e) =>
+                            handleChange('primary', field.id, e.target.value)
+                          }
+                          className="w-40 h-9 text-sm"
+                          disabled={readOnly}
+                        />
+
+                        <span className="text-xs text-muted-foreground">
+                          {field.unit}
+                        </span>
+                      </div>
                     </TableCell>
                   </TableRow>
-                  
-                  {PRIMARY_BREAKUP_FIELDS.map(field => {
-                    const totalMaterial = parseFloat(getValue('primary', 'primary_total_material')) || 0;
-                    const fieldValue = parseFloat(getValue('primary_breakup', field.id)) || 0;
-                    const percentage = totalMaterial > 0 ? ((fieldValue / totalMaterial) * 100).toFixed(1) : '0.0';
-                    
-                    return (
-                      <TableRow key={field.id}>
-                        <TableCell className="font-medium text-sm pl-8">
-                          <div className="flex items-center gap-1.5">
-                            <CellNumberBadge kpiNumber={4} fieldLetter={field.fieldLetter} />
-                            {field.label}
-                            {field.tooltip && <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help hover:text-primary transition-colors" />
-                                </TooltipTrigger>
-                                <TooltipContent side="right" className="max-w-sm">
-                                  <p className="text-xs">{field.tooltip}</p>
-                                </TooltipContent>
-                              </Tooltip>}
-                          </div>
-                        </TableCell>
-                        <TableCell><Badge variant="secondary" className="text-xs">{field.unit}</Badge></TableCell>
-                        <TableCell>
-                          {field.type === 'number' ? (
-                            <div className="flex items-center gap-2">
-                              <Input type="number" placeholder="0" value={getValue('primary_breakup', field.id)} onChange={e => handleChange('primary_breakup', field.id, e.target.value)} className="w-32 h-9 text-sm" disabled={readOnly} min={0} />
-                              <span className="text-xs text-muted-foreground">MT</span>
-                              <Badge variant="outline" className="text-xs ml-1">{percentage}%</Badge>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <Input type="number" placeholder="0" value={getValue('primary_breakup', field.id)} onChange={e => handleChange('primary_breakup', field.id, e.target.value)} className="w-32 h-9 text-sm" disabled={readOnly} min={0} />
-                              <span className="text-xs text-muted-foreground">MT</span>
-                              <Badge variant="outline" className="text-xs ml-1">{percentage}%</Badge>
-                            </div>
+                ))}
+
+                {/* Breakup Header */}
+                <TableRow className="bg-blue-50 dark:bg-blue-950/20">
+                  <TableCell
+                    colSpan={4}
+                    className="font-semibold text-sm py-2 text-left"
+                  >
+                    Breakup of materials used for primary packaging
+                  </TableCell>
+                </TableRow>
+
+                {PRIMARY_BREAKUP_FIELDS.map((field) => {
+                  const totalMaterial =
+                    parseFloat(getValue('primary', 'primary_total_material')) || 0;
+
+                  const fieldValue =
+                    parseFloat(getValue('primary_breakup', field.id)) || 0;
+
+                  const percentage =
+                    totalMaterial > 0
+                      ? ((fieldValue / totalMaterial) * 100).toFixed(1)
+                      : '0.0';
+
+                  return (
+                    <TableRow key={field.id}>
+
+                      <TableCell className="text-left text-muted-foreground">
+                        <CellNumberBadge
+                          kpiNumber={4}
+                          fieldLetter={field.fieldLetter}
+                        />
+                      </TableCell>
+
+                      <TableCell className="font-medium text-sm text-left">
+                        <div className="flex items-center gap-1.5">
+                          <span>{field.label}</span>
+
+                          {field.tooltip && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help hover:text-primary transition-colors shrink-0" />
+                              </TooltipTrigger>
+
+                              <TooltipContent
+                                side="right"
+                                className="max-w-sm text-left"
+                              >
+                                <p className="text-xs">{field.tooltip}</p>
+                              </TooltipContent>
+                            </Tooltip>
                           )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                  
-                  {/* Recyclability header */}
-                  <TableRow className="bg-blue-50 dark:bg-blue-950/20">
-                    <TableCell colSpan={3} className="font-medium text-sm py-2">
-                      Recyclability of materials (%)
+                        </div>
+                      </TableCell>
+
+                      <TableCell className="text-left">
+                        <Badge variant="secondary" className="text-xs">
+                          {field.unit}
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell className="text-left">
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            placeholder="0"
+                            value={getValue('primary_breakup', field.id)}
+                            onChange={(e) =>
+                              handleChange(
+                                'primary_breakup',
+                                field.id,
+                                e.target.value
+                              )
+                            }
+                            className="w-32 h-9 text-sm"
+                            disabled={readOnly}
+                            min={0}
+                          />
+
+                          <span className="text-xs text-muted-foreground">
+                            MT
+                          </span>
+
+                          <Badge variant="outline" className="text-xs">
+                            {percentage}%
+                          </Badge>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+
+                {/* Recyclability Header */}
+                <TableRow className="bg-blue-50 dark:bg-blue-950/20">
+                  <TableCell
+                    colSpan={4}
+                    className="font-semibold text-sm py-2 text-left"
+                  >
+                    Recyclability of materials (%)
+                  </TableCell>
+                </TableRow>
+
+                {PRIMARY_RECYCLABILITY_FIELDS.map((field) => (
+                  <TableRow key={field.id}>
+
+                    <TableCell className="text-left text-muted-foreground">
+                      <CellNumberBadge
+                        kpiNumber={4}
+                        fieldLetter={field.fieldLetter}
+                      />
+                    </TableCell>
+
+                    <TableCell className="font-medium text-sm text-left">
+                      <div className="flex items-center gap-1.5">
+                        <span>{field.label}</span>
+
+                        {field.tooltip && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help hover:text-primary transition-colors shrink-0" />
+                            </TooltipTrigger>
+
+                            <TooltipContent
+                              side="right"
+                              className="max-w-sm whitespace-pre-line text-left"
+                            >
+                              <p className="text-xs">{field.tooltip}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-left">
+                      <Badge variant="secondary" className="text-xs">
+                        {field.unit}
+                      </Badge>
+                    </TableCell>
+
+                    <TableCell className="text-left">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={getValue(
+                            'primary_recyclability',
+                            field.id
+                          )}
+                          onChange={(e) =>
+                            handleChange(
+                              'primary_recyclability',
+                              field.id,
+                              e.target.value
+                            )
+                          }
+                          className="w-32 h-9 text-sm"
+                          disabled={readOnly}
+                          min={0}
+                          max={100}
+                        />
+
+                        <span className="text-xs text-muted-foreground">
+                          %
+                        </span>
+                      </div>
                     </TableCell>
                   </TableRow>
-                  
-                  {PRIMARY_RECYCLABILITY_FIELDS.map(field => <TableRow key={field.id}>
-                      <TableCell className="font-medium text-sm pl-8">
-                        <div className="flex items-center gap-1.5">
-                          <CellNumberBadge kpiNumber={4} fieldLetter={field.fieldLetter} />
-                          {field.label}
-                          {field.tooltip && <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help hover:text-primary transition-colors" />
-                              </TooltipTrigger>
-                              <TooltipContent side="right" className="max-w-sm whitespace-pre-line">
-                                <p className="text-xs">{field.tooltip}</p>
-                              </TooltipContent>
-                            </Tooltip>}
-                        </div>
-                      </TableCell>
-                      <TableCell><Badge variant="secondary" className="text-xs">{field.unit}</Badge></TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Input type="number" placeholder="0" value={getValue('primary_recyclability', field.id)} onChange={e => handleChange('primary_recyclability', field.id, e.target.value)} className="w-32 h-9 text-sm" disabled={readOnly} min={0} max={100} />
-                          <span className="text-xs text-muted-foreground">%</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>)}
-                  
-                </TableBody>
-              </Table>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-      </CardContent>
-    </Card>;
+                ))}
+
+              </TableBody>
+            </Table>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </CardContent>
+  </Card>;
 };
