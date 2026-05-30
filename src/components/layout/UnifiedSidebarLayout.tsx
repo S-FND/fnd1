@@ -206,7 +206,7 @@ const UnifiedSidebar: React.FC = () => {
   return (
     <Sidebar className="border-r border-border bg-sidebar fixed top-0 left-0 h-screen shrink-0 z-40">
       <SidebarHeaderComponent user={user} />
-      <SidebarContent ref={sidebarContentRef} className="px-2">
+      <SidebarContent ref={sidebarContentRef}  style={{ paddingRight: "0.5rem" }}>
         <SidebarNavigation role={role} expandedMenus={expandedMenus} toggleMenu={toggleMenu} />
         <SidebarAdminSettings role={role} />
       </SidebarContent>
