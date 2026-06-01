@@ -233,7 +233,7 @@ export const DocumentUploadModal = ({
       // }
     } catch (error) {
       console.error("Document validation error:", error);
-      toast.error("Unable to validate document. You may proceed with upload.");
+      toast.error("Unable to validate document. Please upload the files in required formats.");
     } finally {
       setValidating(false);
     }

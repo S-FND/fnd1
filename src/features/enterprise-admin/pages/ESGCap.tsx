@@ -843,15 +843,15 @@ const ESGCapPage = () => {
                 setCategoryFilter={setCategoryFilter}
               />
               {/* <div className="flex justify-end mb-2"> */}
-              <Button
+              {/* <Button
                 variant="outline"
                 onClick={() => setAuditOpen(true)}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2" // comment for production
               >
                 <History className="w-4 h-4" />
                 Audit Logs
-              </Button>
-            </div>
+              </Button>*/}
+            </div> 
             {/* Filters Section */}
 
 
@@ -869,7 +869,7 @@ const ESGCapPage = () => {
 
             {/* {sortedItems.length > 0 && (
               <div className="mt-6 py-4"> */}
-              <ESGCapScoring items={sortedItems}
+              <ESGCapScoring items={esgCap?.plan || []}
                 onFilterChange={setCardFilter}
                 activeFilter={cardFilter}
               />
