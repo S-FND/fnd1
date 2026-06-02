@@ -188,7 +188,7 @@ const ESGCapDetailsPage: React.FC = () => {
                 setCapItem(matchedItem || null);
                 setAssigneeText(matchedItem?.assignedTo || '');
                 setChangeNote(matchedItem?.requestChange || '');
-                setUpdateText(matchedItem?.UpdateNote || '');
+                setUpdateText(matchedItem?.updateNote || '');
                 if (matchedItem?.fileUploadedData) {
                     const responses: Record<string, 'yes' | 'no' | null> = {};
                     const notes: Record<string, string> = {};
@@ -325,7 +325,7 @@ const ESGCapDetailsPage: React.FC = () => {
                         return {
                             ...item,
                             assignedTo: assigneeText?.trim(),
-                            UpdateNote: updateText?.trim(),
+                            updateNote: updateText?.trim(),
                             requestChange: changeNote?.trim(),
                             comment: 'Change-Request',
                         };
@@ -356,7 +356,7 @@ const ESGCapDetailsPage: React.FC = () => {
                         ? {
                             ...item,
                             assignedTo: assigneeText?.trim(),
-                            UpdateNote: updateText?.trim(),
+                            updateNote: updateText?.trim(),
                             comment: 'Plan-Update',
                         }
                         : item
@@ -573,7 +573,7 @@ const ESGCapDetailsPage: React.FC = () => {
                             </div>
 
                             {/* Update Notes (only if exists) */}
-                            {capItem?.UpdateNote && capItem?.comment === 'Plan-Update' && (
+                            {capItem?.updateNote && capItem?.comment === 'Plan-Update' && (
                                 <div className="rounded-xl border bg-muted/30 p-5">
                                     <div className="grid gap-5 lg:grid-cols-[260px_1fr] lg:items-start">
                                         <div>
@@ -885,7 +885,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                 month: 'short',
                                 year: 'numeric',
                             }) : 'Pending'} />
-                            <Field label="Closure Verified By" value={capItem?.closureVerifiedBy || 'Upcoming'} />
+                            <Field label="Closure Verified By" value={capItem?.closureVerifiedBy || ''} />
                         </div>
                     </SectionCard>
                             

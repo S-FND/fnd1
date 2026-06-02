@@ -120,6 +120,7 @@ import { SidebarAdminSettings } from './sidebar/SidebarAdminSettings';
 import { SidebarUserProfile } from './sidebar/SidebarUserProfile';
 import { Navbar } from './Navbar';
 import { logger } from '@/hooks/logger';
+import AssessmentTypeDialog from '@/features/mis/company/Assessmenttypedialog'; // ← keep import
 
 interface UnifiedSidebarLayoutProps {
   children: React.ReactNode;
@@ -145,9 +146,8 @@ export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({
           className={`flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-200 ${
             hideSidebar ? 'w-full' : ''
           }`}
-          // style={!hideSidebar ? { marginLeft: 'var(--sidebar-width, 20rem)' } : {}}
         >
-          <Navbar hideSidebarTrigger={hideSidebar} />
+        <Navbar hideSidebarTrigger={hideSidebar} />
           <main className="flex-1 overflow-auto w-full ">
             <div className=" mx-auto  w-full">
               <PageOverlay>
@@ -157,6 +157,7 @@ export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({
           </main>
         </div>
       </div>
+      <AssessmentTypeDialog />
     </SidebarProvider>
   );
 };
