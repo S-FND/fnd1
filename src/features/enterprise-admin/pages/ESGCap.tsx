@@ -5,7 +5,7 @@ import { Navigate, Link } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Folder } from 'lucide-react';
 import { ESGCapItem } from '../types/esgDD';
 import { ESGCapFilters } from '../components/esg-cap/ESGCapFilters';
 import { ESGCapTable } from '../components/esg-cap/ESGCapTable';
@@ -35,6 +35,7 @@ import { ESGCapScoring } from '../components/esg-cap/ESGCapScoring';
 import AuditDrawer, { AuditLog } from '../components/esg-cap/AuditDrawer';
 import { httpClient } from '@/lib/httpClient';
 import AssessmentTypeDialog from '@/features/mis/company/Assessmenttypedialog';
+import ESGCapDocumentsDialog from '../components/esg-cap/ESGCapDocumentsDialog';
 
 interface PlanHistory {
   updateByUserId: string;
@@ -364,7 +365,7 @@ const ESGCapPage = () => {
     new Set(["CP – Conditions Precedent", "CS – Conditions Subsequent", "ESG Roadmap", "Other Items"])
   );
   const [assesmentTypeOpen, setAssessmentTypeOpen] = useState(false);
-
+  const [docsDialogOpen, setDocsDialogOpen] = useState(false);
   const toggleGroup = (groupName: string) => {
     setCollapsedGroups(prev => {
       const newSet = new Set(prev);
@@ -850,7 +851,15 @@ const ESGCapPage = () => {
               >
                 <History className="w-4 h-4" />
                 Audit Logs
-              </Button>*/}
+              </Button> */}
+             <Button
+                variant="outline"
+                onClick={() => setDocsDialogOpen(true)}
+                className="flex items-center gap-2 justify-start hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+              >
+                <Folder className="w-4 h-4" />
+                Uploads
+              </Button>
             </div> 
             {/* Filters Section */}
 
@@ -965,6 +974,11 @@ const ESGCapPage = () => {
       </UnifiedSidebarLayout>
       <AuditDrawer open={auditOpen} onClose={() => setAuditOpen(false)} logs={logs} />
       <AssessmentTypeDialog />
+      <ESGCapDocumentsDialog
+        open={docsDialogOpen}
+        onClose={() => setDocsDialogOpen(false)}
+        entityId={entityId}
+      />
 
     </div>
   );

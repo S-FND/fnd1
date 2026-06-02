@@ -194,11 +194,10 @@ export default function DocumentSummaryDialog({
             {files.map((file, idx) => (
               <div
                 key={idx}
-                className={`flex items-center justify-between p-3 rounded-lg cursor-pointer border ${
-                  idx === selectedIndex
+                className={`flex items-center justify-between p-3 rounded-lg cursor-pointer border ${idx === selectedIndex
                     ? "bg-blue-50 border-blue-400"
                     : "hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 <div onClick={() => setSelectedIndex(idx)} className="flex-1">
                   <div className="relative group max-w-[200px]">
@@ -318,16 +317,23 @@ export default function DocumentSummaryDialog({
             <div className="mt-6 border-t pt-4">
               <p className="font-semibold mb-2">Status</p>
               <div className="flex gap-4">
-                <span className={`px-3 py-1 rounded-full text-sm ${
-                  status === "Accepted" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                }`}>
-                  ✅ Accepted
-                </span>
-                <span className={`px-3 py-1 rounded-full text-sm ${
-                  status === "Rejected" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-500"
-                }`}>
-                  🔄 Re-Submit 
-                </span>
+                {status === "Accepted" && (
+                  <span className="px-3 py-1 rounded-full text-sm bg-green-100 text-green-700">
+                    ✅ Accepted
+                  </span>
+                )}
+
+                {status === "Rejected" && (
+                  <span className="px-3 py-1 rounded-full text-sm bg-red-100 text-red-700">
+                    🔄 Re-Submit
+                  </span>
+                )}
+
+                {!status && (
+                  <span className="px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-500">
+                    Pending
+                  </span>
+                )}
               </div>
               {status === "Rejected" && (
                 <textarea
