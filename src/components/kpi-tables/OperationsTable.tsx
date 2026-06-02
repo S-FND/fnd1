@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Factory, Info } from 'lucide-react';
 import { CellNumberBadge } from './CellNumberBadge';
+import { cn } from '@/lib/utils';
 
 interface OperationsRow {
   id: string;
@@ -106,7 +107,7 @@ export const OperationsTable = ({
   const handleNAChange = (id: string, checked: boolean) => {
     const key = getFieldKey(id, 'na');
     onInputChange(key, checked ? 'true' : 'false');
-    
+
     // Clear values when marking as N/A
     if (checked) {
       onInputChange(getFieldKey(id, 'count'), '');
@@ -187,48 +188,81 @@ export const OperationsTable = ({
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="w-[350px]">Category</TableHead>
-                  <TableHead className="w-[80px] text-center">N/A</TableHead>
-                  <TableHead className="w-[120px]">Count</TableHead>
+                <TableRow className="bg-muted/40">
+                  <TableHead className="w-[350px] text-left font-semibold">
+                    Category
+                  </TableHead>
+
+                  <TableHead className="w-[80px] text-center font-semibold">
+                    N/A
+                  </TableHead>
+
+                  <TableHead className="w-[120px] text-left font-semibold">
+                    Count
+                  </TableHead>
                 </TableRow>
               </TableHeader>
+
               <TableBody>
                 {OPERATIONS_ROWS.map((row, index) => {
                   const rowIsNA = isNA(row.id);
-                  // Operations KPIs are numbered 2-9 (1 is MSME Classification)
+
+                  // Operations KPIs are numbered 2-9
                   const kpiNumber = index + 2;
+
                   return (
-                    <TableRow 
+                    <TableRow
                       key={row.id}
-                      className={rowIsNA ? 'bg-muted/20' : ''}
+                      className={cn(
+                        "align-top",
+                        rowIsNA && "bg-muted/20"
+                      )}
                     >
-                    <TableCell className="font-medium bg-muted/30">
+                      <TableCell className="font-medium text-left bg-muted/20">
                         <div className="space-y-1">
-                          <div className="flex items-center">
+                          <div className="flex items-start gap-2">
                             <CellNumberBadge kpiNumber={kpiNumber} />
+
                             <span>{row.category}</span>
+
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info className="h-4 w-4 mt-0.5 text-muted-foreground cursor-help shrink-0" />
+                              </TooltipTrigger>
+
+                              <TooltipContent
+                                side="right"
+                                className="max-w-xs text-left"
+                              >
+                                <p>{row.description}</p>
+                              </TooltipContent>
+                            </Tooltip>
                           </div>
-                          <p className="text-xs text-muted-foreground font-normal ml-7">
+
+                          <p className="text-xs text-muted-foreground ml-7">
                             {row.description}
                           </p>
                         </div>
                       </TableCell>
+
                       <TableCell className="text-center py-2">
                         <Checkbox
                           checked={rowIsNA}
-                          onCheckedChange={(checked) => handleNAChange(row.id, !!checked)}
+                          onCheckedChange={(checked) =>
+                            handleNAChange(row.id, !!checked)
+                          }
                           disabled={readOnly}
                           aria-label={`Mark ${row.category} as not applicable`}
                         />
                       </TableCell>
-                      <TableCell className="py-2">
+
+                      <TableCell className="text-left py-2">
                         <Input
                           type="number"
-                          placeholder={rowIsNA ? '-' : '0'}
-                          value={getValue(row.id, 'count')}
+                          placeholder={rowIsNA ? "-" : "0"}
+                          value={getValue(row.id, "count")}
                           onChange={(e) =>
-                            handleChange(row.id, 'count', e.target.value)
+                            handleChange(row.id, "count", e.target.value)
                           }
                           className="w-24 h-8 text-sm"
                           disabled={readOnly || rowIsNA}

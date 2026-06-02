@@ -67,8 +67,8 @@ export const PackagingDetailedTable = ({
   const reportTertiary = formData['pkg_detailed_report_tertiary'] === 'yes';
 
   const renderSection = (
-    title: string, 
-    sectionId: string, 
+    title: string,
+    sectionId: string,
     rows: typeof SECONDARY_PACKAGING_ROWS,
     kpiNumber: number
   ) => (
@@ -82,30 +82,63 @@ export const PackagingDetailedTable = ({
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/30">
-              <TableHead className="w-[350px]">Metric</TableHead>
-              <TableHead className="w-[120px]">Unit</TableHead>
-              <TableHead className="w-[250px]">Value</TableHead>
+            <TableRow className="bg-muted/40">
+              <TableHead className="w-[60px] text-left font-semibold">
+                Sno
+              </TableHead>
+
+              <TableHead className="min-w-[350px] text-left font-semibold">
+                Metric
+              </TableHead>
+
+              <TableHead className="w-[140px] text-left font-semibold">
+                Unit
+              </TableHead>
+
+              <TableHead className="w-[320px] text-left font-semibold">
+                Value
+              </TableHead>
             </TableRow>
           </TableHeader>
+
           <TableBody>
             {rows.map((row) => (
-              <TableRow key={`${sectionId}-${row.id}`}>
-                <TableCell className="font-medium text-sm">
-                  <div className="flex items-center">
-                    <CellNumberBadge kpiNumber={kpiNumber} fieldLetter={row.fieldLetter} />
-                    {row.label}
-                  </div>
+              <TableRow
+                key={`${sectionId}-${row.id}`}
+                className="align-top"
+              >
+                <TableCell className="text-left text-muted-foreground">
+                  <CellNumberBadge
+                    kpiNumber={kpiNumber}
+                    fieldLetter={row.fieldLetter}
+                  />
                 </TableCell>
-                <TableCell>
-                  <Badge variant="secondary" className="text-xs">{row.unit}</Badge>
+
+                <TableCell className="font-medium text-sm text-left">
+                  {row.label}
                 </TableCell>
-                <TableCell className="py-2">
-                  {row.type === 'text' ? (
+
+                <TableCell className="text-left">
+                  <Badge
+                    variant="secondary"
+                    className="text-xs"
+                  >
+                    {row.unit}
+                  </Badge>
+                </TableCell>
+
+                <TableCell className="text-left py-2">
+                  {row.type === "text" ? (
                     <Textarea
                       placeholder="Enter description..."
                       value={getValue(sectionId, row.id)}
-                      onChange={(e) => handleChange(sectionId, row.id, e.target.value)}
+                      onChange={(e) =>
+                        handleChange(
+                          sectionId,
+                          row.id,
+                          e.target.value
+                        )
+                      }
                       className="min-h-[60px] text-sm"
                       disabled={readOnly}
                     />
@@ -115,20 +148,35 @@ export const PackagingDetailedTable = ({
                         type="number"
                         placeholder="0"
                         value={getValue(sectionId, row.id)}
-                        onChange={(e) => handleChange(sectionId, row.id, e.target.value)}
+                        onChange={(e) =>
+                          handleChange(
+                            sectionId,
+                            row.id,
+                            e.target.value
+                          )
+                        }
                         className="w-32 h-8 text-sm"
                         disabled={readOnly}
-                        min={row.unit === '%' ? 0 : undefined}
-                        max={row.unit === '%' ? 100 : undefined}
+                        min={row.unit === "%" ? 0 : undefined}
+                        max={row.unit === "%" ? 100 : undefined}
                       />
-                      {row.unit === 'Metric Tons' && (
-                        <span className="text-xs text-muted-foreground">MT</span>
+
+                      {row.unit === "Metric Tons" && (
+                        <span className="text-xs text-muted-foreground">
+                          MT
+                        </span>
                       )}
-                      {row.unit === 'INR Cr' && (
-                        <span className="text-xs text-muted-foreground">Cr</span>
+
+                      {row.unit === "INR Cr" && (
+                        <span className="text-xs text-muted-foreground">
+                          Cr
+                        </span>
                       )}
-                      {row.unit === '%' && (
-                        <span className="text-xs text-muted-foreground">%</span>
+
+                      {row.unit === "%" && (
+                        <span className="text-xs text-muted-foreground">
+                          %
+                        </span>
                       )}
                     </div>
                   )}

@@ -159,7 +159,7 @@ const PreviewSubmission = () => {
         //   .select('industry')
         //   .eq('company_id', companyId)
         //   .maybeSingle();
-        const  data:{data: { industry: string | null }}  = await httpClient.get(`mis/company-profiles?companyId=${companyId}`); // Updated to use httpClient
+        const data: { data: { industry: string | null } } = await httpClient.get(`mis/company-profiles?companyId=${companyId}`); // Updated to use httpClient
 
         if (data) {
           setCompanyIndustry(data.data.industry);
@@ -240,7 +240,7 @@ const PreviewSubmission = () => {
         //   .eq('year', selectedYear)
         //   .not('value', 'is', null)
         //   .neq('value', '');
-        const quarterdata:{ data: KPIEntry[] } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&year=${selectedYear}`); // Updated to use httpClient
+        const quarterdata: { data: KPIEntry[] } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&year=${selectedYear}`); // Updated to use httpClient
         // quarter=${selectedQuarter}
         const allEntries = quarterdata.data || [];
         const quarterlyData = allEntries.filter(e => e.quarter === selectedQuarter);
@@ -298,10 +298,10 @@ const PreviewSubmission = () => {
 
     entries.forEach(entry => {
       const kpiIdLower = entry.kpi_id.toLowerCase();
-      
+
       // Skip governance policy entries for non-governance features
       if (featureKey !== 'governancePolicies') {
-        const isGovernancePolicy = governancePolicyPrefixes.some(prefix => 
+        const isGovernancePolicy = governancePolicyPrefixes.some(prefix =>
           kpiIdLower.startsWith(prefix.toLowerCase())
         );
         if (isGovernancePolicy) return;
@@ -310,7 +310,7 @@ const PreviewSubmission = () => {
       // Skip certification entries for non-certification features
       // Certifications should ONLY appear under the 'certifications' feature
       if (featureKey !== 'certifications') {
-        const isCertification = certificationPrefixes.some(prefix => 
+        const isCertification = certificationPrefixes.some(prefix =>
           kpiIdLower.startsWith(prefix.toLowerCase())
         );
         if (isCertification) return;
@@ -336,7 +336,7 @@ const PreviewSubmission = () => {
   // Build feature data when entries or enabled features change
   useEffect(() => {
     if (isLoading) return;
-    
+
     const features: FeatureData[] = [];
 
     // Process quarterly features
@@ -377,7 +377,7 @@ const PreviewSubmission = () => {
     total_customers_served: 'No. of Total Customers Served',
     unique_female_customers: '% of Unique Female Customers',
     unique_incremental_customers: 'Unique Incremental Customers',
-    
+
     // Sourcing & Fulfillment
     msme_supplier_percentage: '% of Spend on MSME Suppliers',
     logistics_carbon_initiatives: 'Logistics Optimization & Carbon Emissions Initiatives',
@@ -403,22 +403,22 @@ const PreviewSubmission = () => {
     vendor_mis_stores_clinics_pct_international: 'Stores / Clinics - % International',
     vendor_mis_stores_clinics_size: 'Stores / Clinics - Business Size',
     vendor_mis_stores_clinics_dei_factors: 'Stores / Clinics - DEI Factors',
-    
+
     // Awards & Recognitions
     founder_awards_list: 'Awards and Recognitions',
     media_mentions_list: 'Significant Media Mentions',
     other_initiatives_list: 'Other Initiatives',
-    
+
     // CSR
     csr_amount_spent: 'CSR Amount Spent (₹)',
     csr_implementation: 'Program Implementation',
     csr_initiatives_list: 'CSR Initiatives',
-    
+
     // Healthcare
     healthcare_consultations_screenings: 'No. of Doctor Consultations/Patient Screenings',
     healthcare_products_services: 'No. of Healthcare Products/Services Offered',
     healthcare_diseases_addressed: 'Diseases/Conditions Addressed',
-    
+
     // Employment & Compensation - White Collar
     employees_wc_male_fulltime: 'White-Collar Employees (Male) - Full-Time',
     employees_wc_male_contractual: 'White-Collar Employees (Male) - Contractual',
@@ -430,7 +430,7 @@ const PreviewSubmission = () => {
     employees_wc_wages_male: 'White-Collar Gross Wages (Male)',
     employees_wc_wages_female: 'White-Collar Gross Wages (Female)',
     employees_wc_total_wages: 'Total White-Collar Gross Wages',
-    
+
     // Employment & Compensation - Blue Collar
     employees_bc_male_fulltime: 'Blue-Collar Employees (Male) - Full-Time',
     employees_bc_male_contractual: 'Blue-Collar Employees (Male) - Contractual',
@@ -442,14 +442,14 @@ const PreviewSubmission = () => {
     employees_bc_wages_male: 'Blue-Collar Gross Wages (Male)',
     employees_bc_wages_female: 'Blue-Collar Gross Wages (Female)',
     employees_bc_total_wages: 'Total Blue-Collar Gross Wages',
-    
+
     // Employment - Other Metrics
     employees_enps: 'Employee Net Promoter Score (eNPS)',
     employees_attrition_rate: 'Attrition Rate',
     employees_pwd_percentage: '% of Persons with Disabilities',
     employees_total_employment: 'Total Employment',
     employees_total_wages: 'Total Gross Wages',
-    
+
     // Leadership
     leadership_clevel_total: 'Total C-Level Executives',
     leadership_clevel_female: 'Female C-Level Executives',
@@ -457,7 +457,7 @@ const PreviewSubmission = () => {
     leadership_board_female: 'Female Board Members',
     leadership_board_independent: 'Independent Board Members',
     leadership_avg_cxo_compensation: 'Avg CXO Compensation',
-    
+
     // Incidents & Grievances
     incident_posh_cases: 'PoSH - Number of Cases',
     incident_posh_open_cases: 'PoSH - Cases Open/Unresolved',
@@ -491,7 +491,7 @@ const PreviewSubmission = () => {
     incident_other_regulatory_impact: 'Other Regulatory - Impact on Business',
     has_grievances: 'Do you have any grievances logged?',
     grievances_data: 'Grievances Details',
-    
+
     // Operations
     operations_msme_classification: 'MSME/Udhyam Classification',
     operations_rented_owned_corporate_office_count: 'Rented/Owned Corporate Office - Count',
@@ -502,7 +502,7 @@ const PreviewSubmission = () => {
     operations_third_party_logistics_count: 'Third Party Logistics - Count',
     operations_coco_stores_count: 'COCO Stores - Count',
     operations_foco_stores_count: 'FOCO Stores - Count',
-    
+
     // Certifications
     cert_ingredient_self_number: 'Ingredient Certifications (Self) - Number',
     cert_ingredient_self_names: 'Ingredient Certifications (Self) - Names',
@@ -514,7 +514,7 @@ const PreviewSubmission = () => {
     cert_quality_self_number: 'Quality Certifications (Self) - Number',
     patents_granted: 'Patents/IPs - Granted',
     patents_filed: 'Patents/IPs - Filed',
-    
+
     // Governance Policies
     policy_posh_in_place: 'PoSH Policy - In Place',
     policy_posh_training: 'PoSH Policy - Training Conducted',
@@ -525,24 +525,24 @@ const PreviewSubmission = () => {
     policy_dei_in_place: 'DEI Policy - In Place',
     policy_hr_in_place: 'HR Policy - In Place',
     policy_data_protection_in_place: 'Data Protection Policy - In Place',
-    
+
     // Energy Management
     energy_detailed_office_energy_consumed: 'Office - Energy Consumed',
     energy_detailed_office_renewable_pct: 'Office - Renewable Energy %',
     energy_detailed_warehouses_energy_consumed: 'Warehouses - Energy Consumed',
     energy_detailed_manufacturing_energy_consumed: 'Manufacturing - Energy Consumed',
-    
+
     // Water Management
     water_detailed_office_water_consumed: 'Office - Water Consumed',
     water_detailed_warehouses_water_consumed: 'Warehouses - Water Consumed',
     water_detailed_manufacturing_water_consumed: 'Manufacturing - Water Consumed',
-    
+
     // Waste Management
     waste_detailed_office_waste_generated: 'Office - Waste Generated',
     waste_detailed_office_waste_recycled_pct: 'Office - Waste Recycled %',
     waste_detailed_warehouses_waste_generated: 'Warehouses - Waste Generated',
     waste_detailed_manufacturing_waste_generated: 'Manufacturing - Waste Generated',
-    
+
     // Packaging
     food_pkg_basic_approach_current_approach: 'Packaging - Current Approach',
     food_pkg_basic_approach_vision_plans: 'Packaging - Vision & Plans',
@@ -550,19 +550,19 @@ const PreviewSubmission = () => {
     food_pkg_basic_total_total_material_recycled: 'Total Packaging Material Recycled',
     food_pkg_basic_compliance_epr_targets_cpcb: 'EPR Targets (CPCB)',
     food_pkg_basic_compliance_epr_compliance_pct: 'EPR Compliance %',
-    
+
     // Fashion Materials
     fashion_materials_approach_vision: 'Materials - Approach & Vision',
     fashion_total_materials_kg: 'Total Materials Used (kg)',
     fashion_sustainable_materials_pct: 'Sustainable Materials %',
     fashion_recyclable_materials_pct: 'Recyclable Materials %',
-    
+
     // SRI
     sri_total_beneficiaries_curr: 'Total Beneficiaries (Current)',
     sri_women_beneficiaries_curr: 'Women Beneficiaries (Current)',
     sri_total_jobs_created_curr: 'Total Jobs Created (Current)',
     sri_states_impacted_curr: 'States Impacted (Current)',
-    
+
     // External Reporting
     ext_beneficiaries: 'Beneficiaries',
     ext_jobs_created: 'Jobs Created',
@@ -580,7 +580,7 @@ const PreviewSubmission = () => {
     if (KPI_LABELS[kpiId]) {
       return KPI_LABELS[kpiId];
     }
-    
+
     // Fall back to auto-formatting with more comprehensive transformations
     return kpiId
       .replace(/_/g, ' ')
@@ -618,38 +618,38 @@ const PreviewSubmission = () => {
   const formatValue = (value: string, kpiId?: string): string => {
     if (value === 'true') return 'Yes';
     if (value === 'false') return 'No';
-    
+
     // Try to parse JSON arrays (awards, initiatives, etc.)
     try {
       const parsed = JSON.parse(value);
       if (Array.isArray(parsed)) {
         if (parsed.length === 0) return '-';
-        
+
         // Handle award entries
         if (kpiId === 'founder_awards_list') {
-          return parsed.map((award: any) => 
+          return parsed.map((award: any) =>
             `${award.title || 'Award'}${award.year ? ` (${award.year})` : ''}`
           ).join('; ') || '-';
         }
-        
+
         // Handle media mentions
         if (kpiId === 'media_mentions_list') {
-          return parsed.map((mention: any) => 
+          return parsed.map((mention: any) =>
             `${mention.title || 'Media Mention'}${mention.source ? ` - ${mention.source}` : ''}`
           ).join('; ') || '-';
         }
-        
+
         // Handle initiatives (CSR or other)
         if (kpiId === 'other_initiatives_list' || kpiId === 'csr_initiatives_list') {
           return `${parsed.length} initiative${parsed.length > 1 ? 's' : ''} documented`;
         }
-        
+
         // Handle weblinks array
         if (kpiId?.includes('weblinks')) {
           const links = parsed.filter((l: string) => l && l.trim());
           return links.length > 0 ? `${links.length} link(s)` : '-';
         }
-        
+
         // Generic array handling
         return parsed.join(', ') || '-';
       }
@@ -792,26 +792,27 @@ const PreviewSubmission = () => {
 
   return (
     <UnifiedSidebarLayout>
-      <PageHeader
-        title="Preview & Submit"
-        subtitle={`Review all KPI data for ${selectedQuarter} ${selectedYear} and AY ${selectedYear}`}
-        actions={
-          <div className="flex items-center gap-4">
-            <PeriodSelector
-              quarter={selectedQuarter}
-              year={selectedYear}
-              onQuarterChange={handleQuarterChange}
-              onYearChange={handleYearChange}
-              includeAnnual
-            />
-            <Button variant="ghost" onClick={() => navigate('/mis/data-entry')}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to KPI Entry
-            </Button>
-          </div>
-        }
-      />
-
+      <div className="text-left mt-2">
+        <PageHeader
+          title="Preview & Submit"
+          subtitle={`Review all KPI data for ${selectedQuarter} ${selectedYear} and AY ${selectedYear}`}
+          actions={
+            <div className="flex items-center gap-4">
+              <PeriodSelector
+                quarter={selectedQuarter}
+                year={selectedYear}
+                onQuarterChange={handleQuarterChange}
+                onYearChange={handleYearChange}
+                includeAnnual
+              />
+              <Button variant="ghost" onClick={() => navigate('/mis/data-entry')}>
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to KPI Entry
+              </Button>
+            </div>
+          }
+        />
+      </div>
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
@@ -819,7 +820,7 @@ const PreviewSubmission = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Fields Filled</p>
-                <p className="text-2xl font-bold">{totalFilled}</p>
+                <p className="text-2xl font-bold text-left">{totalFilled}</p>
               </div>
               <CheckCircle2 className="w-8 h-8 text-primary" />
             </div>
@@ -830,8 +831,8 @@ const PreviewSubmission = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Quarterly KPIs</p>
-                <p className="text-2xl font-bold">{quarterlyFilled}</p>
-                <p className="text-xs text-muted-foreground">{quarterlyFeatures.length} features</p>
+                <p className="text-2xl font-bold text-left">{quarterlyFilled}</p>
+                <p className="text-xs text-muted-foreground text-left">{quarterlyFeatures.length} features</p>
               </div>
               <Calendar className="w-8 h-8 text-esg-environment" />
             </div>
@@ -842,8 +843,8 @@ const PreviewSubmission = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Annual KPIs</p>
-                <p className="text-2xl font-bold">{annualFilled}</p>
-                <p className="text-xs text-muted-foreground">{annualFeatures.length} features</p>
+                <p className="text-2xl font-bold text-left">{annualFilled}</p>
+                <p className="text-xs text-muted-foreground text-left">{annualFeatures.length} features</p>
               </div>
               <CalendarDays className="w-8 h-8 text-esg-social" />
             </div>
@@ -873,7 +874,7 @@ const PreviewSubmission = () => {
       </div>
 
       {totalFilled === 0 && (
-        <Alert className="mb-6">
+        <Alert className="mb-6 text-left">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             No KPI data has been entered yet. Please go to KPI Entry and fill in your data before submitting.

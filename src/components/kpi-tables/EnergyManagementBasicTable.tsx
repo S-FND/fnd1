@@ -19,21 +19,21 @@ interface EnergyManagementBasicTableProps {
 }
 
 const ENERGY_ROWS = [
-  { 
-    id: 'office_electricity', 
-    label: 'Total energy consumed at Office - Electricity', 
+  {
+    id: 'office_electricity',
+    label: 'Total energy consumed at Office - Electricity',
     unit: 'kWh',
     definition: 'Total electricity use at corporate offices (kWh) for the reporting period.'
   },
-  { 
-    id: 'office_fuel', 
-    label: 'Total energy consumed at Office - Fuel', 
+  {
+    id: 'office_fuel',
+    label: 'Total energy consumed at Office - Fuel',
     unit: 'kWh',
     definition: 'Total fuel use at corporate offices (kWh equivalent) for the reporting period.'
   },
-  { 
-    id: 'office_renewable_pct', 
-    label: 'Energy % - Renewable Source (Office)', 
+  {
+    id: 'office_renewable_pct',
+    label: 'Energy % - Renewable Source (Office)',
     unit: '%',
     definition: 'Percentage of office energy from renewable sources.'
   },
@@ -72,48 +72,82 @@ export const EnergyManagementBasicTable = ({
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/30">
-                <TableHead className="w-[400px]">Sub-Category</TableHead>
-                <TableHead className="w-[120px]">Unit</TableHead>
-                <TableHead className="w-[200px]">Value</TableHead>
+              <TableRow className="bg-muted/40">
+                <TableHead className="w-[60px] text-left font-semibold">
+                  Sno
+                </TableHead>
+
+                <TableHead className="min-w-[400px] text-left font-semibold">
+                  Sub-Category
+                </TableHead>
+
+                <TableHead className="w-[140px] text-left font-semibold">
+                  Unit
+                </TableHead>
+
+                <TableHead className="w-[260px] text-left font-semibold">
+                  Value
+                </TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
               {ENERGY_ROWS.map((row, index) => {
                 const kpiNumber = index + 1;
+
                 return (
-                <TableRow key={row.id}>
-                  <TableCell className="font-medium text-sm">
-                    <div className="flex items-center gap-2">
-                      <CellNumberBadge kpiNumber={kpiNumber} fieldLetter="a" />
-                      {row.label}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className="text-xs">{row.unit}</Badge>
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        placeholder="0"
-                        value={getValue(row.id)}
-                        onChange={(e) => handleChange(row.id, e.target.value)}
-                        className="w-32 h-8 text-sm"
-                        disabled={readOnly}
-                        min={row.unit === '%' ? 0 : undefined}
-                        max={row.unit === '%' ? 100 : undefined}
+                  <TableRow key={row.id} className="align-top">
+                    <TableCell className="text-left text-muted-foreground">
+                      <CellNumberBadge
+                        kpiNumber={kpiNumber}
+                        fieldLetter="a"
                       />
-                      {row.unit === '%' && (
-                        <span className="text-xs text-muted-foreground">%</span>
-                      )}
-                      {row.unit === 'kWh' && (
-                        <span className="text-xs text-muted-foreground">kWh</span>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )})}
+                    </TableCell>
+
+                    <TableCell className="font-medium text-left">
+                      {row.label}
+                    </TableCell>
+
+                    <TableCell className="text-left">
+                      <Badge
+                        variant="secondary"
+                        className="text-xs"
+                      >
+                        {row.unit}
+                      </Badge>
+                    </TableCell>
+
+                    <TableCell className="text-left py-2">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          value={getValue(row.id)}
+                          onChange={(e) =>
+                            handleChange(row.id, e.target.value)
+                          }
+                          className="w-32 h-8 text-sm"
+                          disabled={readOnly}
+                          min={row.unit === "%" ? 0 : undefined}
+                          max={row.unit === "%" ? 100 : undefined}
+                        />
+
+                        {row.unit === "%" && (
+                          <span className="text-xs text-muted-foreground">
+                            %
+                          </span>
+                        )}
+
+                        {row.unit === "kWh" && (
+                          <span className="text-xs text-muted-foreground">
+                            kWh
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

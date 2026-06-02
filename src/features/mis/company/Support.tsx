@@ -165,10 +165,12 @@ const Support = () => {
 
   return (
     <UnifiedSidebarLayout>
-      <PageHeader
-        title="Help & Support"
-        subtitle="Report challenges or ask questions about specific KPIs or fields"
-      />
+      <div className="text-left mt-2">
+        <PageHeader
+          title="Help & Support"
+          subtitle="Report challenges or ask questions about specific KPIs or fields"
+        />
+      </div>
 
       <Tabs defaultValue="new-request" className="space-y-6">
         <TabsList>
@@ -206,7 +208,7 @@ const Support = () => {
                 <HelpCircle className="w-5 h-5 text-primary" />
                 Report a Challenge or Issue
               </CardTitle>
-              <CardDescription>
+              <CardDescription className='text-left'>
                 Tell us about any difficulties you're facing with specific tabs, KPIs, or fields. We'll help you resolve them.
               </CardDescription>
             </CardHeader>
@@ -289,7 +291,7 @@ const Support = () => {
 
                 {/* Subject and Description */}
                 <div className="space-y-4">
-                  <div className="space-y-2">
+                  <div className="space-y-2 text-left">
                     <Label htmlFor="subject">Subject *</Label>
                     <Input
                       id="subject"
@@ -302,7 +304,7 @@ const Support = () => {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-left">
                       <Label htmlFor="priority">Priority</Label>
                       <Select value={priority} onValueChange={(v) => setPriority(v as 'low' | 'medium' | 'high')}>
                         <SelectTrigger>
@@ -317,7 +319,7 @@ const Support = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2 text-left">
                     <Label htmlFor="description">Describe your issue *</Label>
                     <Textarea
                       id="description"
@@ -344,7 +346,7 @@ const Support = () => {
                     We'll reach out to you on the provided email or phone number.
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-left">
                       <Label htmlFor="contact-email">Email Address *</Label>
                       <Input
                         id="contact-email"
@@ -355,7 +357,7 @@ const Support = () => {
                         required
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-left">
                       <Label htmlFor="contact-phone">Phone Number (Optional)</Label>
                       <Input
                         id="contact-phone"

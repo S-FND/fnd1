@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Bell, HelpCircle, Search, User, Shield } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useOverlay } from '@/context/OverlayContext';
@@ -10,6 +10,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { socketConnect } from '@/context/SocketContext';
 import { toast } from 'sonner';
 import { logger } from '@/hooks/logger';
+import { useSearchParams } from 'react-router-dom';
+import { LayoutGrid, ArrowRightLeft } from 'lucide-react';
 
 interface NavbarProps {
   hideSidebarTrigger?: boolean; // Add prop to hide sidebar trigger
@@ -29,9 +31,52 @@ export const Navbar: React.FC<NavbarProps> = ({ hideSidebarTrigger = false }) =>
   const { isOverlayActive, toggleOverlay } = useOverlay();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [searchParams, setSearchParams] = useSearchParams(); // ← ADD this line
+
+  const navigate = useNavigate(); // ← ADD
+  
+  // Detect current module from route
+  const currentType: "mis" | "escap" | null = 
+    location.pathname.startsWith('/mis') ? 'mis' :
+    location.pathname.startsWith('/esg-dd') || location.pathname.startsWith('/escap') ? 'escap' :
+    null;
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY && currentScrollY > 80) {
+        // Scrolling down & past a threshold -> hide
+        setIsVisible(false);
+      } else if (currentScrollY < lastScrollY) {
+        // Scrolling up -> show
+        setIsVisible(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
 
   // Only show overlay toggle for company admin role
   const isCompanyAdmin = user?.role === 'admin';
+
+  const assessmentConfig = {
+    mis: { 
+      label: "MIS", 
+      color: "text-green-700 bg-green-50 border-green-200 hover:bg-green-100", 
+      icon: <LayoutGrid className="h-3.5 w-3.5" />,
+      description: "Management Information System"
+    },
+    escap: { 
+      label: "ESCAP", 
+      color: "text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100", 
+      icon: <Shield className="h-3.5 w-3.5" />,
+      description: "ESG Corrective Action Plan"
+    },
+  };
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -102,6 +147,13 @@ export const Navbar: React.FC<NavbarProps> = ({ hideSidebarTrigger = false }) =>
     // You can add navigation logic here based on notification type
   };
 
+   const openAssessmentDialog = () => {
+    setSearchParams((prev) => {
+      prev.set("dialog", "assessment");
+      if (currentType) prev.set("type", currentType);
+      return prev;
+    });
+  };
   return (
     <header className="border-b sticky top-0 z-40 bg-background">
       <div className="flex h-8 items-center px-4 md:px-6">
@@ -112,6 +164,24 @@ export const Navbar: React.FC<NavbarProps> = ({ hideSidebarTrigger = false }) =>
 
         {/* Search and Right Actions */}
         <div className="ml-auto flex items-center gap-4">
+        {user?.misCompanyId && (
+          <button
+              onClick={openAssessmentDialog}
+              className={`
+                flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold 
+                transition-all duration-150 hover:shadow-sm active:scale-95 cursor-pointer
+                ${currentType 
+                  ? assessmentConfig[currentType]?.color 
+                  : "text-gray-600 bg-gray-50 border-gray-200 hover:bg-gray-100"
+                }
+              `}
+              title={currentType ? "Click to change module" : "Select module"}
+            >
+              {currentType ? assessmentConfig[currentType]?.icon : <LayoutGrid className="h-3.5 w-3.5" />}
+              <span>{currentType ? assessmentConfig[currentType]?.label : "Select Module"}</span>
+              <ArrowRightLeft className="h-3 w-3 opacity-60" />
+            </button>
+          )}
           {/* Overlay Toggle - Only for Company Admin */}
           {/* {isCompanyAdmin && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-md border bg-card">

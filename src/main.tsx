@@ -7,6 +7,7 @@ import './index.css'
 import { AuthProvider } from './context/AuthContext'
 import { OverlayProvider } from './context/OverlayContext'
 import { PageAccessProvider } from './context/PageAccessContext.tsx'
+import { ModuleProvider } from './context/ModuleContext.tsx'
 
 // Create a client
 const queryClient = new QueryClient()
@@ -17,9 +18,9 @@ createRoot(document.getElementById("root")!).render(
       <PageAccessProvider>
         <AuthProvider>
           <OverlayProvider>
-
+          <ModuleProvider>
             <App />
-
+          </ModuleProvider>
           </OverlayProvider>
         </AuthProvider>
       </PageAccessProvider>

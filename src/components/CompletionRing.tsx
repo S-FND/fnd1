@@ -45,18 +45,27 @@ export const CompletionRing = ({
         />
         {/* Progress circle */}
         <circle
-          cx="50"
-          cy="50"
-          r={radius}
-          fill="none"
-          strokeWidth={config.stroke}
-          strokeLinecap="round"
-          className={cn('transition-all duration-500 ease-out', getColor())}
-          style={{
-            strokeDasharray: circumference,
-            strokeDashoffset: strokeDashoffset,
-          }}
-        />
+  cx="50"
+  cy="50"
+  r={radius}
+  fill="none"
+  strokeWidth={config.stroke}
+  strokeLinecap="round"
+  stroke={
+    percentage === 100
+      ? '#22c55e'
+      : percentage >= 75
+      ? '#10b981'
+      : percentage >= 50
+      ? '#f59e0b'
+      : '#ef4444'
+  }
+  className="transition-all duration-500 ease-out"
+  style={{
+    strokeDasharray: circumference,
+    strokeDashoffset,
+  }}
+/>
       </svg>
       {showLabel && (
         <div className="absolute inset-0 flex items-center justify-center">

@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom'; // ← ADD
 import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuSubButton, SidebarMenuSubItem } from '@/components/ui/sidebar';
 import { SidebarNavItem } from './SidebarNavItem';
 import { ESGDDSubmenu } from './ESGDDSubmenu';
@@ -18,6 +19,7 @@ import { useAuthProvider } from '@/hooks/useAuthProvider';
 import { log } from 'console';
 import { useVerifierStatus } from '@/hooks/useVerifierStatus';
 import { MISSubmenu } from './MISSubmenu';
+import { useModule } from '@/context/ModuleContext';
 
 interface SidebarNavigationProps {
   role: string;
@@ -31,18 +33,18 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   toggleMenu
 }) => {
   const location = useLocation();
+  const { module: activeModule } = useModule();
+  
   const { user } = useAuth();
   const { pageAccessList, checkPageButtonAccess, setPageAccessList, userRole } = useContext(PageAccessContext);
 
   const [visibleItems, setVisibleItems] = useState<any[]>([]);
   const [allowedUrlsList, setAllowedUrlsList] = useState<string[]>([]);
 
-  // ✅ NEW: Add state for sidebarHide settings
   const [sidebarHideMap, setSidebarHideMap] = useState<Record<string, boolean>>({});
 
   const { isVerifier, loading: verifierLoading } = useVerifierStatus();
 
-  // ✅ NEW: Function to get sidebarHide settings from localStorage
   const getSidebarHideSettings = () => {
     try {
       const accessData = localStorage.getItem('fandoro-access');
@@ -62,13 +64,20 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     }
   };
 
-  // ✅ NEW: Function to check if menu item should be visible
   const shouldShowMenuItem = (featureName: string): boolean => {
     return sidebarHideMap[featureName] !== true;
   };
 
+    const filterByAssessmentType = (items: any[]): any[] => {
+    if (!activeModule) return items;
+    return items.filter((item) => {
+      if (item.name === 'MIS') return activeModule === 'mis';
+      if (item.name === 'ESG DD') return activeModule === 'escap';
+      return true;
+    });
+  };
+
   useEffect(() => {
-    // ✅ NEW: Load sidebarHide settings
     const hideSettings = getSidebarHideSettings();
     setSidebarHideMap(hideSettings);
 
@@ -81,7 +90,6 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     if (loggedInUserRole === 'admin') {
       logger.debug("🔵 SidebarNavigation: Admin user - filtering with sidebarHide");
 
-      // ✅ CHANGED: Filter admin menus by sidebarHide
       const allMenus = getNavigationItems('admin');
       const filteredMenus = allMenus
         .map((menu) => {
@@ -90,20 +98,14 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             return null;
           }
 
-          // SUBMENU FILTER
           let filteredSubmenu = [];
           if (menu.submenu?.length > 0) {
             filteredSubmenu = menu.submenu
               .map((sub) => {
-                // Skip if sidebarHide is true
                 if (hideSettings[sub.name] === true) return null;
-
-                // For items with real URLs, keep them
                 if (sub.href && sub.href !== "#") {
                   return sub;
                 }
-
-                // For items with href === "#", keep them only if they have visible nested submenus
                 if (sub.submenu?.length > 0) {
                   const visibleNested = sub.submenu.filter(
                     (nested) => hideSettings[nested.name] !== true && nested.href && nested.href !== "#"
@@ -122,9 +124,11 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
           };
         })
         .filter(Boolean);
-      setVisibleItems(filteredMenus);
+      
+      // ← ADD: Apply assessment type filter
+      const typeFiltered = filterByAssessmentType(filteredMenus);
+      setVisibleItems(typeFiltered);
     } else {
-      // Filter based on permissions
       const allowedUrls = pageAccessList
         .filter((p: PageAccessItem) => !['no_access'].includes(p.accessLevel) && p.url)
         .map((p: PageAccessItem) => p.url);
@@ -133,16 +137,13 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
       const filtered = getNavigationItems("all-access")
         .map((menu) => {
-          // ✅ CHANGED: Check sidebarHide first
           if (hideSettings[menu.name] === true) {
             logger.debug(`Excluding ${menu.name} - sidebarHide is true`);
             return null;
           }
 
-          // Check if parent menu itself has permission
           const menuAllowed = allowedUrls.includes(menu.href);
 
-          // Filter submenus that have permission AND not hidden by sidebarHide
           let allowedSubmenus = [];
           if (menu.submenu && menu.submenu.length > 0) {
             allowedSubmenus = menu.submenu
@@ -171,7 +172,6 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
               .filter(Boolean);
           }
 
-          // Include menu if parent is allowed OR has allowed submenus
           if (menuAllowed || allowedSubmenus.length > 0) {
             return { ...menu, submenu: allowedSubmenus };
           }
@@ -180,34 +180,33 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         })
         .filter(Boolean);
 
-      setVisibleItems(Array.isArray(filtered) ? filtered : []);
+      // ← ADD: Apply assessment type filter
+      const typeFiltered = filterByAssessmentType(filtered);
+      setVisibleItems(Array.isArray(typeFiltered) ? typeFiltered : []);
     }
-  }, [pageAccessList]);
+  }, [pageAccessList, activeModule, location.search]); // ← ADD assessmentType to dependencies
 
   useEffect(() => {
     logger.debug("🔵 SidebarNavigation: Expanded menus state changed:", expandedMenus);
   }, [expandedMenus]);
 
-  // ✅ Fixed
-useEffect(() => {
-  if (user && !user.misCompanyId) {
-    setVisibleItems((prev: any[]) => prev.filter((item) => item.name !== "MIS"));
-  }
-}, [user]); // ← only re-run when user changes, not visibleItems
+  useEffect(() => {
+    if (user && !user.misCompanyId) {
+      setVisibleItems((prev: any[]) => prev.filter((item) => item.name !== "MIS"));
+    }
+  }, [user]);
 
-const safeVisibleItems = Array.isArray(visibleItems) ? visibleItems : [];
+  const safeVisibleItems = Array.isArray(visibleItems) ? visibleItems : [];
 
   return (
     <SidebarGroup>
       <SidebarGroupContent>
         <SidebarMenu className="space-y-1">
-          {visibleItems.map((item) => {
+          {safeVisibleItems.map((item) => {
             const isActive = location.pathname === item.href ||
               (item.href !== '/' && location.pathname.startsWith(item.href));
 
-            // Handle special menu items with submenus
             if (item.name === 'ESG Management') {
-              // ✅ CHANGED: Filter submenu items
               const filteredSubmenu = item.submenu?.filter((sub: any) => shouldShowMenuItem(sub.name)) || [];
               return (
                 <ESGManagementSubmenu
@@ -219,7 +218,7 @@ const safeVisibleItems = Array.isArray(visibleItems) ? visibleItems : [];
               );
             }
             else if (item.name === 'ESG DD') {
-              // ✅ CHANGED: Filter submenu items
+              if (activeModule === 'mis') return null;
               const filteredSubmenu = item.submenu?.filter((sub: any) => shouldShowMenuItem(sub.name)) || [];
               return (
                 <ESGDDSubmenu
@@ -243,7 +242,6 @@ const safeVisibleItems = Array.isArray(visibleItems) ? visibleItems : [];
               );
             }
             else if (item.name === 'Reports') {
-              // ✅ CHANGED: Filter submenu items
               const filteredSubmenu = item.submenu?.filter((sub: any) => shouldShowMenuItem(sub.name)) || [];
               return (
                 <ReportsSubmenu
@@ -255,7 +253,6 @@ const safeVisibleItems = Array.isArray(visibleItems) ? visibleItems : [];
               );
             }
             else if (item.name === 'Stakeholders') {
-              // ✅ CHANGED: Filter submenu items
               const filteredSubmenu = item.submenu?.filter((sub: any) => shouldShowMenuItem(sub.name)) || [];
               return (
                 <StakeholdersSubmenu
@@ -270,7 +267,6 @@ const safeVisibleItems = Array.isArray(visibleItems) ? visibleItems : [];
             else if (item.name === 'SDG') {
               const filteredSubmenu =
                 item.submenu?.filter((sub: any) => shouldShowMenuItem(sub.name)) || [];
-
               return (
                 <SDGSubmenu
                   key={item.name}
@@ -281,6 +277,7 @@ const safeVisibleItems = Array.isArray(visibleItems) ? visibleItems : [];
               );
             }
             else if (item.name === 'MIS' && user?.misCompanyId) {
+              if (activeModule === 'escap') return null;
               return (
                 <MISSubmenu
                   key={item.name}
@@ -290,7 +287,6 @@ const safeVisibleItems = Array.isArray(visibleItems) ? visibleItems : [];
               )
             }
 
-            // Regular menu items
             else {
               return (
                 <SidebarNavItem

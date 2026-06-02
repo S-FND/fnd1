@@ -13,6 +13,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { UserCheck, Clock, Copy, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { CellNumberBadge } from './CellNumberBadge';
+import React from 'react';
+import { cn } from '@/lib/utils';
 
 interface HistoricalValue {
   value: string | null;
@@ -82,7 +84,7 @@ export const LeadershipTable = ({
     const bcWagesMale = parseNum(formData[getEmployeeFieldKey('bc_wages_male')]);
     const bcWagesFemale = parseNum(formData[getEmployeeFieldKey('bc_wages_female')]);
     const totalWagesCr = wcWagesMale + wcWagesFemale + bcWagesMale + bcWagesFemale;
-    
+
     // Get total employees from employees table
     const wcMaleFulltime = parseNum(formData[getEmployeeFieldKey('wc_male_fulltime')]);
     const wcMaleContractual = parseNum(formData[getEmployeeFieldKey('wc_male_contractual')]);
@@ -96,14 +98,14 @@ export const LeadershipTable = ({
     const bcFemaleFulltime = parseNum(formData[getEmployeeFieldKey('bc_female_fulltime')]);
     const bcFemaleContractual = parseNum(formData[getEmployeeFieldKey('bc_female_contractual')]);
     const bcFemaleParttime = parseNum(formData[getEmployeeFieldKey('bc_female_parttime')]);
-    
-    const totalEmployees = wcMaleFulltime + wcMaleContractual + wcMaleParttime + 
+
+    const totalEmployees = wcMaleFulltime + wcMaleContractual + wcMaleParttime +
       wcFemaleFulltime + wcFemaleContractual + wcFemaleParttime +
       bcMaleFulltime + bcMaleContractual + bcMaleParttime +
       bcFemaleFulltime + bcFemaleContractual + bcFemaleParttime;
-    
+
     if (totalEmployees === 0) return '-';
-    
+
     // Convert Cr to Lakhs (1 Cr = 100 Lakhs), then divide by employees
     const totalWagesLakhs = totalWagesCr * 100;
     const avgCompLakhs = totalWagesLakhs / totalEmployees;
@@ -115,7 +117,7 @@ export const LeadershipTable = ({
     const key = getFieldKey(id);
     const data = historicalData[key];
     if (!data) return null;
-    
+
     // If it's an array, return the first entry
     if (Array.isArray(data)) {
       if (data.length === 0) return null;
@@ -127,7 +129,7 @@ export const LeadershipTable = ({
         method: null,
       };
     }
-    
+
     // If it's already a single object
     return data;
   };
@@ -168,100 +170,193 @@ export const LeadershipTable = ({
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="w-[140px]">Category</TableHead>
-                <TableHead className="w-[180px]">Metric</TableHead>
-                <TableHead className="w-[120px]">Value</TableHead>
-                <TableHead className="w-[150px]">Previous</TableHead>
+              <TableRow className="bg-muted/40">
+                <TableHead className="w-[160px] text-left font-semibold">
+                  Category
+                </TableHead>
+
+                <TableHead className="min-w-[320px] text-left font-semibold">
+                  Metric
+                </TableHead>
+
+                <TableHead className="w-[180px] text-left font-semibold">
+                  Value
+                </TableHead>
+
+                <TableHead className="w-[240px] text-left font-semibold">
+                  Previous Value
+                </TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
-              {Object.entries(groupedRows).map(([category, rows]) =>
-                rows.map((row, idx) => {
-                  const historical = getHistorical(row.id);
-                  const isAutoField = (row as any).isAuto;
-                  const displayValue = isAutoField && row.id === 'avg_employee_comp' 
-                    ? getAvgEmployeeComp() 
-                    : getValue(row.id);
-                  
-                  return (
-                    <TableRow key={row.id} className={isAutoField ? 'bg-amber-50/50' : ''}>
-                      {idx === 0 && (
-                        <TableCell
-                          rowSpan={rows.length}
-                          className="align-top font-medium bg-muted/30"
-                        >
-                          {category}
+              {Object.entries(groupedRows).map(([category, rows]) => (
+                <React.Fragment key={category}>
+                  {rows.map((row, idx) => {
+                    const historical = getHistorical(row.id);
+
+                    const isAutoField = row.isAuto;
+
+                    const displayValue =
+                      isAutoField && row.id === "avg_employee_comp"
+                        ? getAvgEmployeeComp()
+                        : getValue(row.id);
+
+                    return (
+                      <TableRow
+                        key={row.id}
+                        className={cn(
+                          "align-top",
+                          isAutoField && "bg-amber-50/50"
+                        )}
+                      >
+                        {/* CATEGORY */}
+                        {idx === 0 && (
+                          <TableCell
+                            rowSpan={rows.length}
+                            className="align-top font-medium bg-muted/30 text-left"
+                          >
+                            {category}
+                          </TableCell>
+                        )}
+
+                        {/* METRIC */}
+                        <TableCell className="text-left">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-start gap-2">
+                              <CellNumberBadge
+                                kpiNumber={startingKpiNumber + row.relativeKpi}
+                                fieldLetter={row.fieldLetter}
+                              />
+
+                              <span className="font-medium">
+                                {row.subcategory}
+                              </span>
+
+                              {row.description && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Info className="w-3.5 h-3.5 mt-0.5 text-muted-foreground cursor-help shrink-0" />
+                                  </TooltipTrigger>
+
+                                  <TooltipContent
+                                    side="right"
+                                    className="max-w-xs text-left"
+                                  >
+                                    <p className="text-xs">
+                                      {row.description}
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
+
+                              {isAutoField && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-[10px] bg-amber-50 text-amber-700 border-amber-200"
+                                >
+                                  Auto
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
                         </TableCell>
-                      )}
-                      <TableCell className="py-2">
-                        <div className="flex items-center gap-1.5">
-                                    <CellNumberBadge kpiNumber={startingKpiNumber + row.relativeKpi} fieldLetter={row.fieldLetter} />
-                                    <span>
-                                      {row.subcategory}
-                                    </span>
-                                    {row.description && (
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help hover:text-primary transition-colors" />
+
+                        {/* VALUE */}
+                        <TableCell className="text-left">
+                          {isAutoField ? (
+                            <div className="w-28 h-8 flex items-center px-3 text-sm font-medium bg-muted/50 rounded-md border">
+                              {displayValue}
+                              {displayValue !== "-" &&
+                                getUnit(row.field) &&
+                                ` ${getUnit(row.field)}`}
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1">
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                value={getValue(row.id)}
+                                onChange={(e) =>
+                                  handleChange(row.id, e.target.value)
+                                }
+                                className="w-24 h-8 text-sm"
+                                disabled={readOnly}
+                              />
+
+                              {getUnit(row.field) && (
+                                <span className="text-xs text-muted-foreground">
+                                  {getUnit(row.field)}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </TableCell>
+
+                        {/* PREVIOUS */}
+                        <TableCell className="text-left">
+                          {!isAutoField &&
+                            historical &&
+                            historical.value ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleCopyHistorical(
+                                      row.id,
+                                      historical.value
+                                    )
+                                  }
+                                  className={cn(
+                                    "inline-flex items-center gap-1",
+                                    "text-[10px] px-2 py-1 rounded-md",
+                                    "bg-muted hover:bg-muted/80",
+                                    "transition-colors text-left"
+                                  )}
+                                >
+                                  <span className="font-medium text-muted-foreground">
+                                    {historical.quarter}:
+                                  </span>
+
+                                  <span className="text-foreground">
+                                    {historical.value}
+                                  </span>
+
+                                  <Copy className="w-2.5 h-2.5 opacity-40" />
+                                </button>
                               </TooltipTrigger>
-                              <TooltipContent side="right" className="max-w-xs">
-                                <p className="text-xs">{row.description}</p>
+
+                              <TooltipContent
+                                side="left"
+                                className="text-left"
+                              >
+                                <div className="space-y-1">
+                                  <p className="text-xs font-medium">
+                                    {historical.quarter}
+                                  </p>
+
+                                  <p className="text-xs">
+                                    Value: {historical.value}
+                                  </p>
+
+                                  <p className="text-xs text-muted-foreground">
+                                    Click to copy
+                                  </p>
+                                </div>
                               </TooltipContent>
                             </Tooltip>
+                          ) : (
+                            <span className="text-xs text-muted-foreground italic">
+                              —
+                            </span>
                           )}
-                          {isAutoField && (
-                            <Badge variant="outline" className="text-[10px] bg-amber-50 text-amber-700 border-amber-200">
-                              Auto
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="py-2">
-                        {isAutoField ? (
-                          <div className="w-24 h-8 flex items-center px-3 text-sm font-medium bg-muted/50 rounded-md border">
-                            {displayValue}{displayValue !== '-' && getUnit(row.field) ? ` ${getUnit(row.field)}` : ''}
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <Input
-                              type="number"
-                              placeholder="0"
-                              value={getValue(row.id)}
-                              onChange={(e) => handleChange(row.id, e.target.value)}
-                              className="w-24 h-8 text-sm"
-                              disabled={readOnly}
-                            />
-                            {getUnit(row.field) && (
-                              <span className="text-xs text-muted-foreground">{getUnit(row.field)}</span>
-                            )}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="py-2">
-                        {!isAutoField && historical && historical.value ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button
-                                type="button"
-                                onClick={() => handleCopyHistorical(row.id, historical.value!)}
-                                className="flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-1 rounded-md cursor-pointer hover:bg-primary/20 transition-colors"
-                              >
-                                <Clock className="w-3 h-3" />
-                                <span>{historical.quarter}: {historical.value}</span>
-                                <Copy className="w-3 h-3 ml-1" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent>Click to copy to current field</TooltipContent>
-                          </Tooltip>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </React.Fragment>
+              ))}
             </TableBody>
           </Table>
         </div>

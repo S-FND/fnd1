@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Recycle } from 'lucide-react';
 import { CellNumberBadge } from './CellNumberBadge';
+import { cn } from '@/lib/utils';
 
 interface WasteManagementTableProps {
   formData: Record<string, string | number | boolean>;
@@ -53,7 +54,7 @@ export const WasteManagementTable = ({
   const handleNAChange = (facility: string, checked: boolean) => {
     const key = getFieldKey(facility, 'na');
     onInputChange(key, checked ? 'true' : 'false');
-    
+
     // Clear values when marking as N/A
     if (checked) {
       onInputChange(getFieldKey(facility, 'waste_generated'), '');
@@ -78,8 +79,8 @@ export const WasteManagementTable = ({
     { totalGenerated: 0, recycledPctSum: 0, facilityCount: 0 }
   );
 
-  const avgRecycledPct = summary.facilityCount > 0 
-    ? (summary.recycledPctSum / summary.facilityCount).toFixed(1) 
+  const avgRecycledPct = summary.facilityCount > 0
+    ? (summary.recycledPctSum / summary.facilityCount).toFixed(1)
     : '0';
 
   return (
@@ -110,63 +111,118 @@ export const WasteManagementTable = ({
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/30">
-                <TableHead className="w-[300px]">Facility Type</TableHead>
-                <TableHead className="w-[80px] text-center">N/A</TableHead>
-                <TableHead className="w-[200px]">Waste Generated (Metric Tonnes)</TableHead>
-                <TableHead className="w-[150px]">Waste Recycled (%)</TableHead>
+              <TableRow className="bg-muted/40">
+                <TableHead className="w-[60px] text-left font-semibold">
+                  Sno
+                </TableHead>
+
+                <TableHead className="min-w-[300px] text-left font-semibold">
+                  Facility Type
+                </TableHead>
+
+                <TableHead className="w-[100px] text-center font-semibold">
+                  N/A
+                </TableHead>
+
+                <TableHead className="w-[280px] text-left font-semibold">
+                  Waste Generated
+                </TableHead>
+
+                <TableHead className="w-[220px] text-left font-semibold">
+                  Waste Recycled (%)
+                </TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
               {FACILITY_TYPES.map((facility) => {
                 const facilityIsNA = isNA(facility.id);
+
                 return (
-                  <TableRow 
+                  <TableRow
                     key={facility.id}
-                    className={facilityIsNA ? 'bg-muted/20' : ''}
+                    className={cn(
+                      "align-top",
+                      facilityIsNA && "bg-muted/20"
+                    )}
                   >
-                    <TableCell className="font-medium text-sm">
-                      <div className="flex items-center">
-                        <CellNumberBadge kpiNumber={facility.number} />
-                        {facility.label}
-                      </div>
+                    <TableCell className="text-left text-muted-foreground">
+                      <CellNumberBadge
+                        kpiNumber={facility.number}
+                      />
                     </TableCell>
+
+                    <TableCell className="font-medium text-left">
+                      {facility.label}
+                    </TableCell>
+
                     <TableCell className="text-center">
                       <Checkbox
                         checked={facilityIsNA}
-                        onCheckedChange={(checked) => handleNAChange(facility.id, !!checked)}
+                        onCheckedChange={(checked) =>
+                          handleNAChange(
+                            facility.id,
+                            !!checked
+                          )
+                        }
                         disabled={readOnly}
                         aria-label={`Mark ${facility.label} as not applicable`}
                       />
                     </TableCell>
-                    <TableCell className="py-2">
+
+                    <TableCell className="text-left py-2">
                       <div className="flex items-center gap-2">
                         <Input
                           type="number"
-                          placeholder={facilityIsNA ? '-' : '0'}
-                          value={getValue(facility.id, 'waste_generated')}
-                          onChange={(e) => handleChange(facility.id, 'waste_generated', e.target.value)}
+                          placeholder={facilityIsNA ? "-" : "0"}
+                          value={getValue(
+                            facility.id,
+                            "waste_generated"
+                          )}
+                          onChange={(e) =>
+                            handleChange(
+                              facility.id,
+                              "waste_generated",
+                              e.target.value
+                            )
+                          }
                           className="w-28 h-8 text-sm"
                           disabled={readOnly || facilityIsNA}
                           min={0}
                           step="0.01"
                         />
-                        <span className="text-xs text-muted-foreground">MT</span>
+
+                        <span className="text-xs text-muted-foreground">
+                          MT
+                        </span>
                       </div>
                     </TableCell>
-                    <TableCell className="py-2">
+
+                    <TableCell className="text-left py-2">
                       <div className="flex items-center gap-2">
                         <Input
                           type="number"
-                          placeholder={facilityIsNA ? '-' : '0'}
-                          value={getValue(facility.id, 'waste_recycled_pct')}
-                          onChange={(e) => handleChange(facility.id, 'waste_recycled_pct', e.target.value)}
+                          placeholder={facilityIsNA ? "-" : "0"}
+                          value={getValue(
+                            facility.id,
+                            "waste_recycled_pct"
+                          )}
+                          onChange={(e) =>
+                            handleChange(
+                              facility.id,
+                              "waste_recycled_pct",
+                              e.target.value
+                            )
+                          }
                           className="w-20 h-8 text-sm"
                           disabled={readOnly || facilityIsNA}
                           min={0}
                           max={100}
                         />
-                        <span className="text-xs text-muted-foreground">%</span>
+
+                        <span className="text-xs text-muted-foreground">
+                          %
+                        </span>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -175,7 +231,7 @@ export const WasteManagementTable = ({
             </TableBody>
           </Table>
         </div>
-        
+
         <div className="px-4 py-3 bg-green-50 dark:bg-green-950/20 border-t text-sm text-muted-foreground space-y-1">
           <p className="text-xs">
             <strong>Note:</strong> Check "N/A" for facility types that are not applicable to your organization. Include all solid waste, except packaging waste generated including organic, inorganic, and hazardous waste.

@@ -188,7 +188,7 @@ const ESGCapDetailsPage: React.FC = () => {
                 setCapItem(matchedItem || null);
                 setAssigneeText(matchedItem?.assignedTo || '');
                 setChangeNote(matchedItem?.requestChange || '');
-                setUpdateText(matchedItem?.UpdateNote || '');
+                setUpdateText(matchedItem?.updateNote || '');
                 if (matchedItem?.fileUploadedData) {
                     const responses: Record<string, 'yes' | 'no' | null> = {};
                     const notes: Record<string, string> = {};
@@ -325,7 +325,7 @@ const ESGCapDetailsPage: React.FC = () => {
                         return {
                             ...item,
                             assignedTo: assigneeText?.trim(),
-                            UpdateNote: updateText?.trim(),
+                            updateNote: updateText?.trim(),
                             requestChange: changeNote?.trim(),
                             comment: 'Change-Request',
                         };
@@ -356,7 +356,7 @@ const ESGCapDetailsPage: React.FC = () => {
                         ? {
                             ...item,
                             assignedTo: assigneeText?.trim(),
-                            UpdateNote: updateText?.trim(),
+                            updateNote: updateText?.trim(),
                             comment: 'Plan-Update',
                         }
                         : item
@@ -515,6 +515,7 @@ const ESGCapDetailsPage: React.FC = () => {
                     </div>
 
                     {/* Company Actions */}
+                    <div className="relative text-left">
                     <SectionCard
                         title="Company Actions"
                         subtitle="Operational updates from the responsible team"
@@ -572,7 +573,7 @@ const ESGCapDetailsPage: React.FC = () => {
                             </div>
 
                             {/* Update Notes (only if exists) */}
-                            {capItem?.UpdateNote && capItem?.comment === 'Plan-Update' && (
+                            {capItem?.updateNote && capItem?.comment === 'Plan-Update' && (
                                 <div className="rounded-xl border bg-muted/30 p-5">
                                     <div className="grid gap-5 lg:grid-cols-[260px_1fr] lg:items-start">
                                         <div>
@@ -627,7 +628,19 @@ const ESGCapDetailsPage: React.FC = () => {
                             <div className="rounded-xl border bg-muted/30 p-5">
                                 <div className="flex items-start justify-between gap-4">
                                     <div>
-                                        <div className="text-sm font-semibold text-foreground">Request Change</div>
+                                        <div className="relative group flex items-center gap-1 w-fit">
+                                            <div className="text-sm font-semibold text-foreground">
+                                                Request Change
+                                            </div>
+
+                                            <Info className="w-4 h-4 text-muted-foreground cursor-pointer" />
+
+                                            <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block z-50">
+                                                <div className="inline-block w-fit whitespace-nowrap rounded-md bg-white text-black text-xs px-3 py-2 shadow-lg">
+                                                    Make request changes for CAP items like timeline, completion indicators, CP/CS status, etc.
+                                                </div>
+                                            </div>
+                                        </div>
                                         {capItem?.comment === 'Change-Request' && (
                                             <div className="mt-2 space-y-2">
                                                 <Badge
@@ -697,7 +710,6 @@ const ESGCapDetailsPage: React.FC = () => {
                             })()}
                         </div>
                     </SectionCard>
-
                     {/* Investor Actions */}
                     <SectionCard
                         title={!isInvestorEmailExists ? "Investor Action" : "Fireside Action"}
@@ -873,10 +885,10 @@ const ESGCapDetailsPage: React.FC = () => {
                                 month: 'short',
                                 year: 'numeric',
                             }) : 'Pending'} />
-                            <Field label="Closure Verified By" value={capItem?.closureVerifiedBy || 'Upcoming'} />
+                            <Field label="Closure Verified By" value={capItem?.closureVerifiedBy || ''} />
                         </div>
                     </SectionCard>
-
+                            
                     {/* Attachments & Evidence (Modal) */}
                     <Dialog open={attachmentsOpen} onOpenChange={setAttachmentsOpen}>
                         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
@@ -1111,6 +1123,7 @@ const ESGCapDetailsPage: React.FC = () => {
                             </div>
                         </DialogContent>
                     </Dialog>
+                    </div>
 
                     {/* Timeline */}
                     {/* <SectionCard title="Timeline Activity" subtitle="Chronological record of changes" icon={<Activity className="h-4 w-4" />}>
