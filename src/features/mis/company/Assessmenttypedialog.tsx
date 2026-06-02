@@ -1,3 +1,4 @@
+import { useModule } from "@/context/ModuleContext";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -44,7 +45,7 @@ const cards: Card[] = [
   },
   {
     id: "escap",
-    label: "ESCAP",
+    label: "ESGCAP",
     title: "ESG Corrective Action Plan",
     description: "Document and manage remediation actions identified from due diligence assessments.",
     features: ["CAP Tracking", "Condition Precedent", "Condition Subsequent", "ESG Roadmap"],
@@ -80,7 +81,7 @@ export default function AssessmentTypeDialog() {
   const navigate = useNavigate();
 
   const isOpen = searchParams.get("dialog") === "assessment";
-
+  const { setModule } = useModule();
   useEffect(() => {
     if (isOpen) {
       setIsAnimating(true);
@@ -104,8 +105,9 @@ export default function AssessmentTypeDialog() {
 
   const handleProceed = (): void => {
     if (!selected) return;
+    setModule(selected);                     // ← save globally
     const basePath = selected === "mis" ? "/mis/dashboard" : "/esg-dd/cap";
-    navigate(`${basePath}?type=${selected}`);
+    navigate(basePath);                      // ← no query param
   };
 
   const handleCardSelect = (id: "mis" | "escap"): void => {
@@ -134,9 +136,6 @@ export default function AssessmentTypeDialog() {
 
       {/* Header */}
       <div className="relative z-10 text-center mb-5 px-4">
-        <p className="text-sm font-semibold tracking-[0.2em] uppercase text-gray-400 mb-3">
-          ESG Due Diligence
-        </p>
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
           {searchParams.get("type") ? "Switch Module" : "Select Your Module"}
         </h1>

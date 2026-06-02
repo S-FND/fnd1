@@ -19,6 +19,7 @@ import { useAuthProvider } from '@/hooks/useAuthProvider';
 import { log } from 'console';
 import { useVerifierStatus } from '@/hooks/useVerifierStatus';
 import { MISSubmenu } from './MISSubmenu';
+import { useModule } from '@/context/ModuleContext';
 
 interface SidebarNavigationProps {
   role: string;
@@ -32,8 +33,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   toggleMenu
 }) => {
   const location = useLocation();
-  const [searchParams] = useSearchParams(); // ← ADD
-  const assessmentType = searchParams.get("type") as "mis" | "escap" | null; // ← ADD
+  const { module: activeModule } = useModule();
   
   const { user } = useAuth();
   const { pageAccessList, checkPageButtonAccess, setPageAccessList, userRole } = useContext(PageAccessContext);
@@ -68,18 +68,11 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     return sidebarHideMap[featureName] !== true;
   };
 
-  // ← ADD: Filter items based on assessment type
-  const filterByAssessmentType = (items: any[]): any[] => {
-    if (!assessmentType) return items; // No filter if no type selected
-    
+    const filterByAssessmentType = (items: any[]): any[] => {
+    if (!activeModule) return items;
     return items.filter((item) => {
-      // MIS section only shows when type=mis
-      if (item.name === 'MIS') return assessmentType === 'mis';
-      // ESG DD section only shows when type=escap
-      if (item.name === 'ESG DD') return assessmentType === 'escap';
-      // ESG Management shows for both (or adjust as needed)
-      if (item.name === 'ESG Management') return true;
-      // All other items show for both
+      if (item.name === 'MIS') return activeModule === 'mis';
+      if (item.name === 'ESG DD') return activeModule === 'escap';
       return true;
     });
   };
@@ -191,7 +184,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
       const typeFiltered = filterByAssessmentType(filtered);
       setVisibleItems(Array.isArray(typeFiltered) ? typeFiltered : []);
     }
-  }, [pageAccessList, assessmentType, location.search]); // ← ADD assessmentType to dependencies
+  }, [pageAccessList, activeModule, location.search]); // ← ADD assessmentType to dependencies
 
   useEffect(() => {
     logger.debug("🔵 SidebarNavigation: Expanded menus state changed:", expandedMenus);
@@ -225,7 +218,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
               );
             }
             else if (item.name === 'ESG DD') {
-              if (assessmentType === 'mis') return null;
+              if (activeModule === 'mis') return null;
               const filteredSubmenu = item.submenu?.filter((sub: any) => shouldShowMenuItem(sub.name)) || [];
               return (
                 <ESGDDSubmenu
@@ -284,7 +277,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
               );
             }
             else if (item.name === 'MIS' && user?.misCompanyId) {
-              if (assessmentType === 'escap') return null;
+              if (activeModule === 'escap') return null;
               return (
                 <MISSubmenu
                   key={item.name}

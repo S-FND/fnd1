@@ -22,7 +22,7 @@ export const ESGCapFilters: React.FC<ESGCapFiltersProps> = ({
 }) => {
   return (
     <div className="flex flex-col md:flex-row gap-4">
-      <div className="w-full md:w-[700px]">
+      <div className="w-full md:w-[650px]">
         <Input 
           placeholder="Search item..." 
           value={searchTerm}
