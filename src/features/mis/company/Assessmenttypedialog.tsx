@@ -56,14 +56,14 @@ const cards: Card[] = [
         <polyline points="9 15 11 17 15 13" />
       </svg>
     ),
-    accentColor: "text-blue-700",
-    accentBg: "bg-blue-50",
-    borderColor: "border-blue-200",
-    hoverBorder: "hover:border-blue-400",
-    selectedBorder: "border-blue-600",
-    selectedBg: "bg-blue-50/80",
-    buttonColor: "bg-blue-700",
-    buttonHover: "hover:bg-blue-800",
+    accentColor: "text-emerald-700",
+    accentBg: "bg-emerald-50",
+    borderColor: "border-emerald-200",
+    hoverBorder: "hover:border-emerald-400",
+    selectedBorder: "border-emerald-600",
+    selectedBg: "bg-emerald-50/80",
+    buttonColor: "bg-emerald-700",
+    buttonHover: "hover:bg-emerald-800",
   },
 ];
 
@@ -223,7 +223,7 @@ export default function AssessmentTypeDialog() {
             </span>
           ) : (
             <span className="flex items-center gap-2">
-              Continue with {selected.toUpperCase()}
+              Continue 
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12" />
                 <polyline points="12 5 19 12 12 19" />
