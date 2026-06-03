@@ -34,16 +34,30 @@ const Login = () => {
           {/* <div className="mx-auto w-12 h-12 rounded-full eco-gradient flex items-center justify-center">
             <span className="text-white text-xl font-bold">F</span>
           </div> */}
-          <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center overflow-hidden">
+          {/* <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center overflow-hidden">
             <img
               src="/logo/logo_no_text_500x500.png"
               alt="Logo"
               className="w-full h-full object-cover"
             />
-          </div>
+          </div> */}
+           <div className="mx-auto flex items-center justify-center gap-3">
+            <img
+              src="/logo/Only_logo.webp"
+              alt="Logo Icon"
+              style={{ height: '60px', width: 'auto' }}
+              className="object-contain"
+            />
 
-          <h1 className="text-2xl font-bold">Fandoro </h1>
-          <p className="text-muted-foreground">Sustainability Management Platform</p>
+            <img
+              src="/logo/Fireside_Logo-01_3.webp"
+              alt="Fireside Logo"
+              style={{ width: '120px', height: 'auto' }}
+              className="object-contain"
+            />
+          </div>
+          {/* <h1 className="text-2xl font-bold">Fandoro </h1> */}
+          {/* <p className="text-muted-foreground">Sustainability Management Platform</p> */}
         </div>
         
         {/* Demo Overlay Controls */}
@@ -80,7 +94,7 @@ const Login = () => {
               <Signup onBackToLogin={() => setShowSignup(false)} />
             ) : (
               <Tabs defaultValue="company" onValueChange={setLoginType}>
-                <TabsList className="grid w-full grid-cols-3">
+                {/* <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="company" className="flex items-center gap-2">
                     <Building className="h-4 w-4" />
                     <span>Company</span>
@@ -93,7 +107,7 @@ const Login = () => {
                     <FileCheck className="h-4 w-4" />
                     <span>Vendor</span>
                   </TabsTrigger>
-                </TabsList>
+                </TabsList> */}
                 
                 <TabsContent value="company" className="pt-4">
                   <div>
