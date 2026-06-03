@@ -7,6 +7,7 @@ interface PriorityBadgeProps {
 }
 
 export const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority = 'low' }) => {
+  if (!priority?.trim()) return null;
   const getPriorityStyles = (priority: ESGCapPriority) => {
     switch (priority.toLowerCase()) {
       case 'high':

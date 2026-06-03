@@ -52,7 +52,7 @@ interface ESGCapTableRowProps {
 }
 
 const truncateText = (text: string, length = 50) =>
-  text && text.length > length ? text.slice(0, length) + '...' : text || '-';
+  text && text.length > length ? text.slice(0, length) + '...' : text || '';
 
 
 
@@ -98,11 +98,11 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
 `;
 
 const parseDisplayDate = (dateStr: string | undefined): string => {
-  if (!dateStr || dateStr === '—' || dateStr === '-') return '-';
+  if (!dateStr || dateStr === ' ' || dateStr === ' ') return ' ';
 
   const date = new Date(dateStr);
 
-  if (isNaN(date.getTime())) return '-';
+  if (isNaN(date.getTime())) return ' ';
 
   return date.toLocaleDateString('en-GB', {
     day: '2-digit',
@@ -119,7 +119,7 @@ const getInvestorStatusBadge = (status: string) => {
     "closed": { label: "Closed", variant: "default", className: "bg-green-600 text-white" },
     "deferred": { label: "Deferred", variant: "secondary", className: "bg-gray-200 text-gray-700 border-gray-300" }
   };
-  const config = statusMap[status?.toLowerCase()] || { label: status || '-', variant: "outline", className: "bg-gray-100 text-gray-600" };
+  const config = statusMap[status?.toLowerCase()] || { label: status || '', variant: "outline", className: "bg-gray-100 text-gray-600" };
   return <Badge variant={config.variant} className={config.className}>{config.label}</Badge>;
 };
   const navigate = useNavigate();
@@ -144,7 +144,7 @@ const getInvestorStatusBadge = (status: string) => {
         </TableCell> */}
 
         <TableCell className="font-medium max-w-xs text-left" onClick={handleEdit} style={{ cursor: "pointer",padding: "0.3rem" }}>
-          {item.item || '-'}
+          {item.item || ' '}
         </TableCell>
 
         <TableCell style={{ padding: "0.3rem" }}>
@@ -186,11 +186,11 @@ const getInvestorStatusBadge = (status: string) => {
 
         {/*  Status */}
         <TableCell>
-            {item.status ? <StatusBadge status={item.status} /> : '—'}
+            {item.status ? <StatusBadge status={item.status} /> : ' '}
         </TableCell>
         {/* Investor  Status */}
         <TableCell style={{ padding: "0.3rem" }}>
-          {item.investorStatus ? getInvestorStatusBadge(item.investorStatus) : '-'}
+          {item.investorStatus ? getInvestorStatusBadge(item.investorStatus) : ' '}
         </TableCell>
 
         <TableCell style={{ padding: "0.3rem" }}>{item.actualDate ? new Date(item.actualDate).toLocaleDateString('en-GB', {
@@ -198,7 +198,7 @@ const getInvestorStatusBadge = (status: string) => {
           month: 'short',
           year: 'numeric',
         })
-          : '-'}</TableCell>
+          : ' '}</TableCell>
 
         {/* Progress Percentage */}
         {/* <TableCell className="font-medium" style={{ padding: "0.3rem" }}>{item.progressPercentage ? `${item.progressPercentage}%` : '-'}</TableCell> */}
@@ -296,7 +296,7 @@ const getInvestorStatusBadge = (status: string) => {
       </TableCell>
 
       {/* 10. Timeline Month */}
-      <TableCell style={{ padding: "0.3rem" }}>{item.timelineMonth || '-'}</TableCell>
+      <TableCell style={{ padding: "0.3rem" }}>{item.timelineMonth || ''}</TableCell>
 
       {/* 11. Target Date */}
       <TableCell style={{ padding: "0.3rem" }}>{item.targetDate ? new Date(item.actualDate).toLocaleDateString('en-GB', {
@@ -390,7 +390,7 @@ const getInvestorStatusBadge = (status: string) => {
       </TableCell>
 
       {/* 20. Assigned To */}
-      <TableCell style={{ padding: "0.3rem" }}>{item.assignedTo || '-'}</TableCell>
+      <TableCell style={{ padding: "0.3rem" }}>{item.assignedTo || ''}</TableCell>
 
       {/* 21. Remarks
       <TableCell style={{ padding: "0.3rem" }}>

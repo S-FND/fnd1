@@ -434,12 +434,6 @@ const ESGCapDetailsPage: React.FC = () => {
         }
     };
 
-    const hasDocumentForIndicator = (indicatorLabel: string) => {
-        return capItem?.fileUploadedData?.some(
-            (file: any) => file.indicatorLabel === indicatorLabel
-        );
-    };
-
     const latestUploadedAt = capItem?.completionIndicators
         ?.filter(
             (item: any) =>
@@ -465,7 +459,6 @@ const ESGCapDetailsPage: React.FC = () => {
         );
     }
 
-    console.log("changeNote:", capItem);
     return (
         <UnifiedSidebarLayout>
             <div className="min-h-screen bg-[hsl(220_25%_97%)] dark:bg-background">
@@ -478,25 +471,21 @@ const ESGCapDetailsPage: React.FC = () => {
                                 <h5 className="text-3xl font-bold text-left tracking-tight">{capItem?.item}</h5>
                                 {/* <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{capItem?.description}</p> */}
                                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                                    <MetaPill label={capItem?.dealCondition} tone="slate" />
-                                    <MetaPill label={`${capItem?.priority?.charAt(0)?.toUpperCase() + capItem?.priority?.slice(1)} Priority`} />
-                                    <MetaPill label={`Due ${new Date(capItem?.targetDate).toLocaleDateString()}`} tone="blue" />
-                                    <MetaPill label={capItem?.category?.charAt(0)?.toUpperCase() + capItem?.category?.slice(1)} />
-                                    <MetaPill
-                                        label={capItem?.status?.replaceAll('_', ' ') || 'Pending'}
-                                        tone={
-                                            capItem?.status === 'completed' || capItem?.status === 'accepted'
-                                                ? 'green'
-                                                : capItem?.status === 'pending'
-                                                    ? 'amber'
-                                                    : capItem?.status === 'in_review' ||
-                                                        capItem?.status === 'in_progress'
-                                                        ? 'blue'
-                                                        : capItem?.status === 'delayed'
-                                                            ? 'red'
-                                                            : 'slate'
-                                        }
-                                    />
+                                <MetaPill label={capItem?.dealCondition || ""} tone="slate" />
+                                <MetaPill label={capItem?.priority ? `${capItem.priority.charAt(0).toUpperCase()}${capItem.priority.slice(1)} Priority` : "" } />
+                                <MetaPill label={capItem?.targetDate ? `Due ${new Date(capItem.targetDate).toLocaleDateString()}` : "" } tone="blue" />
+                                <MetaPill label={capItem?.category ? `${capItem.category.charAt(0).toUpperCase()}${capItem.category.slice(1)}` : "" } />
+                                <MetaPill label={capItem?.status?.replaceAll("_", " ") || ""} tone={capItem?.status === "completed" || capItem?.status === "accepted"
+                                            ? "green"
+                                            : capItem?.status === "pending"
+                                            ? "amber"
+                                            : capItem?.status === "in_review" || capItem?.status === "in_progress"
+                                            ? "blue"
+                                            : capItem?.status === "delayed"
+                                            ? "red"
+                                            : "slate"
+                                    }
+                                />
                                 </div>
                             </div>
                             <div className="flex gap-2">
@@ -724,9 +713,9 @@ const ESGCapDetailsPage: React.FC = () => {
                                     const current = firesideSteps.filter((s) => s.done).slice(-1)[0] ?? firesideSteps[0];
                                     return (
                                         <div className="mt-4 flex items-center gap-3 rounded-lg border bg-card p-4">
-                                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-emerald-500 bg-emerald-500 text-white">
+                                            {/* <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-emerald-500 bg-emerald-500 text-white">
                                                 <CheckCircle2 className="h-4 w-4" />
-                                            </span>
+                                            </span> */}
                                             <div>
                                                 <div className="text-sm font-semibold">{capItem?.investorStatus}</div>
                                                 {/* <div className="text-xs text-muted-foreground">{capItem?.lastReviewDate}</div> */}
@@ -755,7 +744,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                             <div className="flex items-center justify-between">
                                                 <div className="text-xs text-muted-foreground">
                                                     <p className="mt-1 text-sm text-foreground/90">
-                                                        {capItem?.reviewRemarks || "No review remarks available"}
+                                                        {capItem?.reviewRemarks || ""}
                                                     </p>
                                                 </div>
                                             </div>
@@ -808,7 +797,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                                 </div>
 
                                                 <div className="mt-1 text-sm font-medium">
-                                                    {i.indicatorLabel || '-'}
+                                                    {i.indicatorLabel || ' '}
                                                 </div>
 
                                                 {/* BADGES */}
@@ -845,7 +834,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                                 </div>
 
                                                 <div className="mt-1 text-sm text-muted-foreground whitespace-pre-wrap">
-                                                    {i.guidanceResources || '-'}
+                                                    {i.guidanceResources || ' '}
                                                 </div>
                                             </div>
 
@@ -869,22 +858,22 @@ const ESGCapDetailsPage: React.FC = () => {
                                     month: 'short',
                                     year: 'numeric',
                                 })
-                                : '—'} />
+                                : ' '} />
                             <Field label="Target Date" value={capItem?.targetDate ? new Date(capItem?.targetDate).toLocaleDateString('en-GB', {
                                 day: '2-digit',
                                 month: 'short',
                                 year: 'numeric',
-                            }) : 'Pending'} />
+                            }) : ' '} />
                             <Field label="Actual Completion" value={capItem?.actualDate ? new Date(capItem?.actualDate).toLocaleDateString('en-GB', {
                                 day: '2-digit',
                                 month: 'short',
                                 year: 'numeric',
-                            }) : 'Pending'} />
+                            }) : ' '} />
                             <Field label="Last Review Date" value={capItem?.lastReviewDate ? new Date(capItem?.lastReviewDate).toLocaleDateString('en-GB', {
                                 day: '2-digit',
                                 month: 'short',
                                 year: 'numeric',
-                            }) : 'Pending'} />
+                            }) : ' '} />
                             <Field label="Closure Verified By" value={capItem?.closureVerifiedBy || ''} />
                         </div>
                     </SectionCard>
@@ -1045,7 +1034,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                                     {/* Indicator */}
                                                     <td className="px-4 py-3">
                                                         <div className="text-sm font-medium">
-                                                            {file?.indicatorLabel || '—'}
+                                                            {file?.indicatorLabel || ' '}
                                                         </div>
                                                     </td>
 
@@ -1056,9 +1045,9 @@ const ESGCapDetailsPage: React.FC = () => {
 
                                                             <span
                                                                 className="font-medium truncate block max-w-[180px] cursor-pointer"
-                                                                title={file.filename || "Unnamed"}
+                                                                title={file.filename || " "}
                                                             >
-                                                                {file.filename || "Unnamed"}
+                                                                {file.filename || " "}
                                                             </span>
                                                         </div>
                                                     </td>
