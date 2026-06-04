@@ -178,7 +178,7 @@ export const Navbar: React.FC<NavbarProps> = ({ hideSidebarTrigger = false }) =>
               title={currentType ? "Click to change module" : "Select module"}
             >
               {currentType ? assessmentConfig[currentType]?.icon : <LayoutGrid className="h-3.5 w-3.5" />}
-              <span>{currentType ? assessmentConfig[currentType]?.label : "Select Module"}</span>
+              <span>Select Module</span>
               <ArrowRightLeft className="h-3 w-3 opacity-60" />
             </button>
           )}
