@@ -187,9 +187,27 @@ const ESGCapDetailsPage: React.FC = () => {
                 setFullPlan(data.plan || []);
                 setCapItem(matchedItem || null);
                 setAssigneeText(matchedItem?.assignedTo || '');
-                setChangeNote(matchedItem?.changeNote || '');
-                setUpdateText(matchedItem?.UpdateNote || '');
-
+                setChangeNote(matchedItem?.requestChange || '');
+                setUpdateText(matchedItem?.updateNote || '');
+                if (matchedItem?.fileUploadedData) {
+                    const responses: Record<string, 'yes' | 'no' | null> = {};
+                    const notes: Record<string, string> = {};
+                    matchedItem.fileUploadedData.forEach((entry: any) => {
+                        const label = entry.indicatorLabel?.trim();
+                        if (!label) return;
+                        if (entry.indicatorResponse === 'no') {
+                            responses[label] = 'no';
+                            if (entry.indicatorNote) notes[label] = entry.indicatorNote;
+                        } else if (entry.filename) {
+                            // Has a file uploaded -> treat as 'yes'
+                            responses[label] = 'yes';
+                            // Optionally, you could store a note from the file entry if any
+                            if (entry.indicatorNote) notes[label] = entry.indicatorNote;
+                        }
+                    });
+                    setIndicatorResponse(responses);
+                    setIndicatorNotes(notes);
+                }
                 if (
                     matchedItem &&
                     !matchedItem.aiInsights &&
@@ -218,7 +236,7 @@ const ESGCapDetailsPage: React.FC = () => {
                 entityId,
                 itemName: decodeURIComponent(itemName || ''),
             });
-    
+
             await loadData();
         } catch (error) {
             console.error(error);
@@ -307,8 +325,8 @@ const ESGCapDetailsPage: React.FC = () => {
                         return {
                             ...item,
                             assignedTo: assigneeText?.trim(),
-                            UpdateNote: updateText?.trim(),
-                            changeNote: changeNote?.trim(),
+                            updateNote: updateText?.trim(),
+                            requestChange: changeNote?.trim(),
                             comment: 'Change-Request',
                         };
                     }
@@ -338,7 +356,7 @@ const ESGCapDetailsPage: React.FC = () => {
                         ? {
                             ...item,
                             assignedTo: assigneeText?.trim(),
-                            UpdateNote: updateText?.trim(),
+                            updateNote: updateText?.trim(),
                             comment: 'Plan-Update',
                         }
                         : item
@@ -385,7 +403,7 @@ const ESGCapDetailsPage: React.FC = () => {
 
         try {
             setDeleting(file.filename);
-            
+
             const queryParams = new URLSearchParams({
                 fileName: file.filename,
                 actionItemId: file.aiSummary?.actionItemId || '',
@@ -416,11 +434,17 @@ const ESGCapDetailsPage: React.FC = () => {
         }
     };
 
-    const hasDocumentForIndicator = (indicatorLabel: string) => {
-        return capItem?.fileUploadedData?.some(
-            (file: any) => file.indicatorLabel === indicatorLabel
-        );
-    };
+    const latestUploadedAt = capItem?.completionIndicators
+        ?.filter(
+            (item: any) =>
+                item?.fileUploadUrl &&
+                item?.uploadedAt
+        )
+        ?.sort(
+            (a: any, b: any) =>
+                new Date(b.uploadedAt).getTime() -
+                new Date(a.uploadedAt).getTime()
+        )?.[0]?.uploadedAt;
     if (loading) {
         return (
             <UnifiedSidebarLayout>
@@ -434,6 +458,7 @@ const ESGCapDetailsPage: React.FC = () => {
             </UnifiedSidebarLayout>
         );
     }
+
     return (
         <UnifiedSidebarLayout>
             <div className="min-h-screen bg-[hsl(220_25%_97%)] dark:bg-background">
@@ -443,28 +468,24 @@ const ESGCapDetailsPage: React.FC = () => {
 
                         <div className="mt-3 flex flex-wrap items-start justify-between gap-4 item">
                             <div>
-                                <h5 className="text-3xl font-bold tracking-tight">{capItem?.item}</h5>
+                                <h5 className="text-3xl font-bold text-left tracking-tight">{capItem?.item}</h5>
                                 {/* <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{capItem?.description}</p> */}
                                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                                    <MetaPill label={capItem?.dealCondition} tone="slate" />
-                                    <MetaPill label={`${capItem?.priority?.charAt(0)?.toUpperCase() + capItem?.priority?.slice(1)} Priority`} />
-                                    <MetaPill label={`Due ${new Date(capItem?.targetDate).toLocaleDateString()}`} tone="blue" />
-                                    <MetaPill label={capItem?.category?.charAt(0)?.toUpperCase() + capItem?.category?.slice(1)} />
-                                    <MetaPill
-                                        label={capItem?.status?.replaceAll('_', ' ') || 'Pending'}
-                                        tone={
-                                            capItem?.status === 'completed' || capItem?.status === 'accepted'
-                                                ? 'green'
-                                                : capItem?.status === 'pending'
-                                                    ? 'amber'
-                                                    : capItem?.status === 'in_review' ||
-                                                        capItem?.status === 'in_progress'
-                                                        ? 'blue'
-                                                        : capItem?.status === 'delayed'
-                                                            ? 'red'
-                                                            : 'slate'
-                                        }
-                                    />
+                                <MetaPill label={capItem?.dealCondition || ""} tone="slate" />
+                                <MetaPill label={capItem?.priority ? `${capItem.priority.charAt(0).toUpperCase()}${capItem.priority.slice(1)} Priority` : "" } />
+                                <MetaPill label={capItem?.targetDate ? `Due ${new Date(capItem.targetDate).toLocaleDateString()}` : "" } tone="blue" />
+                                <MetaPill label={capItem?.category ? `${capItem.category.charAt(0).toUpperCase()}${capItem.category.slice(1)}` : "" } />
+                                <MetaPill label={capItem?.status?.replaceAll("_", " ") || ""} tone={capItem?.status === "completed" || capItem?.status === "accepted"
+                                            ? "green"
+                                            : capItem?.status === "pending"
+                                            ? "amber"
+                                            : capItem?.status === "in_review" || capItem?.status === "in_progress"
+                                            ? "blue"
+                                            : capItem?.status === "delayed"
+                                            ? "red"
+                                            : "slate"
+                                    }
+                                />
                                 </div>
                             </div>
                             <div className="flex gap-2">
@@ -483,6 +504,7 @@ const ESGCapDetailsPage: React.FC = () => {
                     </div>
 
                     {/* Company Actions */}
+                    <div className="relative text-left">
                     <SectionCard
                         title="Company Actions"
                         subtitle="Operational updates from the responsible team"
@@ -540,7 +562,7 @@ const ESGCapDetailsPage: React.FC = () => {
                             </div>
 
                             {/* Update Notes (only if exists) */}
-                            {capItem?.UpdateNote && capItem?.comment === 'Plan-Update' && (
+                            {capItem?.updateNote && capItem?.comment === 'Plan-Update' && (
                                 <div className="rounded-xl border bg-muted/30 p-5">
                                     <div className="grid gap-5 lg:grid-cols-[260px_1fr] lg:items-start">
                                         <div>
@@ -595,7 +617,19 @@ const ESGCapDetailsPage: React.FC = () => {
                             <div className="rounded-xl border bg-muted/30 p-5">
                                 <div className="flex items-start justify-between gap-4">
                                     <div>
-                                        <div className="text-sm font-semibold text-foreground">Request Change</div>
+                                        <div className="relative group flex items-center gap-1 w-fit">
+                                            <div className="text-sm font-semibold text-foreground">
+                                                Request Change
+                                            </div>
+
+                                            <Info className="w-4 h-4 text-muted-foreground cursor-pointer" />
+
+                                            <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block z-50">
+                                                <div className="inline-block w-fit whitespace-nowrap rounded-md bg-white text-black text-xs px-3 py-2 shadow-lg">
+                                                    Make request changes for CAP items like timeline, completion indicators, CP/CS status, etc.
+                                                </div>
+                                            </div>
+                                        </div>
                                         {capItem?.comment === 'Change-Request' && (
                                             <div className="mt-2 space-y-2">
                                                 <Badge
@@ -606,7 +640,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                                 </Badge>
 
                                                 <p className="text-xs text-muted-foreground">
-                                                    {capItem?.changeNote ||
+                                                    {capItem?.requestChange ||
                                                         'Triggers reviewer feedback workflow without modifying structured CAP fields'}
                                                 </p>
                                             </div>
@@ -665,7 +699,6 @@ const ESGCapDetailsPage: React.FC = () => {
                             })()}
                         </div>
                     </SectionCard>
-
                     {/* Investor Actions */}
                     <SectionCard
                         title={!isInvestorEmailExists ? "Investor Action" : "Fireside Action"}
@@ -680,9 +713,9 @@ const ESGCapDetailsPage: React.FC = () => {
                                     const current = firesideSteps.filter((s) => s.done).slice(-1)[0] ?? firesideSteps[0];
                                     return (
                                         <div className="mt-4 flex items-center gap-3 rounded-lg border bg-card p-4">
-                                            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-emerald-500 bg-emerald-500 text-white">
+                                            {/* <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-emerald-500 bg-emerald-500 text-white">
                                                 <CheckCircle2 className="h-4 w-4" />
-                                            </span>
+                                            </span> */}
                                             <div>
                                                 <div className="text-sm font-semibold">{capItem?.investorStatus}</div>
                                                 {/* <div className="text-xs text-muted-foreground">{capItem?.lastReviewDate}</div> */}
@@ -711,7 +744,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                             <div className="flex items-center justify-between">
                                                 <div className="text-xs text-muted-foreground">
                                                     <p className="mt-1 text-sm text-foreground/90">
-                                                        {capItem?.reviewRemarks || "No review remarks available"}
+                                                        {capItem?.reviewRemarks || ""}
                                                     </p>
                                                 </div>
                                             </div>
@@ -731,99 +764,120 @@ const ESGCapDetailsPage: React.FC = () => {
                     </SectionCard>
 
                     {/* Completion Tracking */}
-                    <SectionCard title="Completion Tracking" subtitle="Milestones and required artefacts" icon={<CheckCircle2 className="h-4 w-4" />}>
-                        <div className="grid gap-8 lg:grid-cols-2">
-                            <div>
-                                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Completion Indicators</div>
-                                <ul className="mt-4 space-y-3">
-                                    <ul className="mt-4 space-y-3">
-                                        {(capItem?.deliverable
-                                            ? capItem?.deliverable.includes("##")
-                                                ? capItem?.deliverable.split("##").filter(Boolean)
-                                                : [capItem?.deliverable].filter(Boolean)
-                                            : []
-                                        ).map((label: string) => {
-                                            const hasDoc = hasDocumentForIndicator(label);
-                                            return (
-                                                <li
-                                                    key={label}
-                                                    className="flex items-center justify-between rounded-lg border bg-card p-3"
-                                                >
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="text-sm">{label}</span>
-                                                        {hasDoc && (
-                                                            <Badge variant="outline" className="border-emerald-500 bg-emerald-50 text-emerald-700">
-                                                                <CheckCircle2 className="h-3 w-3 mr-1" /> Document Uploaded
-                                                            </Badge>
-                                                        )}
-                                                    </div>
-                                                    {/* Optional: add a "View" button that opens the document */}
-                                                    {/* {hasDoc && (
-                                                        <Button
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            onClick={() => {
-                                                                const file = capItem?.fileUploadedData.find(
-                                                                    (f: any) => f.documentType === label
-                                                                );
-                                                                if (file) handleViewDocument(file);
-                                                            }}
-                                                        >
-                                                            <Eye className="h-3 w-3" />
-                                                        </Button>
-                                                    )} */}
-                                                </li>
-                                            );
-                                        })}
-                                    </ul>
-                                </ul>
-                            </div>
-                            <div>
-                                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                    Guidance & Resources
-                                </div>
+                    <SectionCard
+                        title="Completion Tracking"
+                        subtitle="Milestones and required artefacts"
+                        icon={<CheckCircle2 className="h-4 w-4" />}
+                    >
+                        <div className="space-y-6">
 
-                                <ul className="mt-4 space-y-3">
-                                    {(capItem?.resource
-                                        ? capItem?.resource.includes("##")
-                                            ? capItem?.resource.split("##")
-                                            : [capItem?.resource]
-                                        : []
-                                    ).filter(Boolean).map((r: string) => (
-                                        <div
-                                            key={r}
-                                            className="flex items-center justify-between rounded-lg border bg-card p-3"
-                                        >
-                                            <div className="flex items-center gap-3 text-sm">
-                                                <span>{r}</span>
+                            {(capItem?.completionIndicators || []).map((i: any, idx: number) => {
+
+                                const matched = capItem?.fileUploadedData?.find(
+                                    (f: any) =>
+                                        f?.indicatorLabel?.trim()?.toLowerCase() ===
+                                        i?.indicatorLabel?.trim()?.toLowerCase()
+                                );
+
+                                const hasDoc = matched?.indicatorResponse !== 'no' && matched?.s3Link;
+                                const isNo = matched?.indicatorResponse === 'no';
+                                const note = matched?.indicatorNote;
+
+                                return (
+                                    <div key={idx} className="space-y-4">
+
+                                        {/* ROW */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                                            {/* LEFT */}
+                                            <div className="rounded-lg border bg-card p-3">
+
+                                                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                                    Completion Indicator
+                                                </div>
+
+                                                <div className="mt-1 text-sm font-medium">
+                                                    {i.indicatorLabel || ' '}
+                                                </div>
+
+                                                {/* BADGES */}
+                                                <div className="mt-2 flex flex-wrap gap-2">
+                                                    {hasDoc && (
+                                                        <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                                                            Document Uploaded
+                                                        </Badge>
+                                                    )}
+
+                                                    {isNo && (
+                                                        <div className="flex flex-wrap items-center gap-2">
+
+                                                            <Badge className="bg-amber-50 text-amber-700 border border-amber-200">
+                                                                Response Uploaded
+                                                            </Badge>
+
+                                                            {note && (
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    Note: {note}
+                                                                </span>
+                                                            )}
+
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
+
+                                            {/* RIGHT */}
+                                            <div className="rounded-lg border bg-card p-3">
+                                                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                                    Guidance & Resources
+                                                </div>
+
+                                                <div className="mt-1 text-sm text-muted-foreground whitespace-pre-wrap">
+                                                    {i.guidanceResources || ' '}
+                                                </div>
+                                            </div>
+
                                         </div>
-                                    ))}
-                                </ul>
-                            </div>
+
+                                        {/* SEPARATOR */}
+                                        {idx < capItem?.completionIndicators?.length - 1 && (
+                                            <Separator />
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
+
+                        {/* FOOTER META */}
                         <Separator className="my-6" />
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                            <Field label="Submission Date" value="12 Jul 2026" />
+                            <Field label="Submission Date" value={latestUploadedAt
+                                ? new Date(latestUploadedAt).toLocaleDateString('en-GB', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                })
+                                : ' '} />
                             <Field label="Target Date" value={capItem?.targetDate ? new Date(capItem?.targetDate).toLocaleDateString('en-GB', {
                                 day: '2-digit',
                                 month: 'short',
                                 year: 'numeric',
-                            }) : 'Pending'} />
-                            <Field label="Actual Completion" value={capItem?.actualDate ? new Date(capItem?.targetDate).toLocaleDateString('en-GB', {
+                            }) : ' '} />
+                            <Field label="Actual Completion" value={capItem?.actualDate ? new Date(capItem?.actualDate).toLocaleDateString('en-GB', {
                                 day: '2-digit',
                                 month: 'short',
                                 year: 'numeric',
-                            }) : 'Pending'} />
-                            <Field label="Last Review Date" value={capItem?.lastReviewDate ? new Date(capItem?.targetDate).toLocaleDateString('en-GB', {
+                            }) : ' '} />
+                            <Field label="Last Review Date" value={capItem?.lastReviewDate ? new Date(capItem?.lastReviewDate).toLocaleDateString('en-GB', {
                                 day: '2-digit',
                                 month: 'short',
                                 year: 'numeric',
-                            }) : 'Pending'} />
-                            <Field label="Closure Verified By" value={capItem?.closureVerifiedBy || 'Upcoming'} />
+                            }) : ' '} />
+                            <Field label="Closure Verified By" value={capItem?.closureVerifiedBy || ''} />
                         </div>
                     </SectionCard>
-
+                            
                     {/* Attachments & Evidence (Modal) */}
                     <Dialog open={attachmentsOpen} onOpenChange={setAttachmentsOpen}>
                         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
@@ -840,9 +894,10 @@ const ESGCapDetailsPage: React.FC = () => {
                                             ? capItem?.deliverable.split("##").filter(Boolean)
                                             : [capItem?.deliverable].filter(Boolean)
                                         : []
-                                    ).map((label: string) => {
+                                    ).map((rawLabel: string) => {
+                                        const label = rawLabel.trim();
                                         const response = indicatorResponse[label];
-
+                                        console.log(`Label: "${label}", Response:`, indicatorResponse[label], "Note:", indicatorNotes[label]);
                                         return (
                                             <div key={label} className="rounded-lg border p-3">
                                                 <div className="text-sm font-medium mb-3">{label}</div>
@@ -970,25 +1025,7 @@ const ESGCapDetailsPage: React.FC = () => {
 
                                             // NO response row
                                             if (file?.indicatorResponse === "no") {
-                                                return (
-                                                    <tr key={`note-${idx}`}>
-
-                                                        {/* Indicator */}
-                                                        <td className="px-4 py-3">
-                                                            <div className="text-sm font-medium">
-                                                                {file?.indicatorLabel || '—'}
-                                                            </div>
-                                                        </td>
-
-                                                        {/* Note */}
-                                                        <td
-                                                            colSpan={3}
-                                                            className="px-4 py-3 text-sm text-muted-foreground"
-                                                        >
-                                                            {file?.indicatorNote || 'No reason provided'}
-                                                        </td>
-                                                    </tr>
-                                                );
+                                                return null;
                                             }
 
                                             return (
@@ -997,7 +1034,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                                     {/* Indicator */}
                                                     <td className="px-4 py-3">
                                                         <div className="text-sm font-medium">
-                                                            {file?.indicatorLabel || '—'}
+                                                            {file?.indicatorLabel || ' '}
                                                         </div>
                                                     </td>
 
@@ -1008,9 +1045,9 @@ const ESGCapDetailsPage: React.FC = () => {
 
                                                             <span
                                                                 className="font-medium truncate block max-w-[180px] cursor-pointer"
-                                                                title={file.filename || "Unnamed"}
+                                                                title={file.filename || " "}
                                                             >
-                                                                {file.filename || "Unnamed"}
+                                                                {file.filename || " "}
                                                             </span>
                                                         </div>
                                                     </td>
@@ -1075,6 +1112,7 @@ const ESGCapDetailsPage: React.FC = () => {
                             </div>
                         </DialogContent>
                     </Dialog>
+                    </div>
 
                     {/* Timeline */}
                     {/* <SectionCard title="Timeline Activity" subtitle="Chronological record of changes" icon={<Activity className="h-4 w-4" />}>

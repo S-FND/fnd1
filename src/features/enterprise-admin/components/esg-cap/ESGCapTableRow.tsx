@@ -6,28 +6,35 @@ import { CategoryBadge } from './CategoryBadge';
 import { PriorityBadge } from './PriorityBadge';
 import { Badge } from '@/components/ui/badge';
 import { ESGCapRowActions } from './ESGCapRowActions';
-
+import { useNavigate } from 'react-router-dom';
+const normalizeStatus = (status?: string) =>
+  (status ?? "").trim().toLowerCase();
 // ✅ Updated helper — returns proper status values
 const getEffectiveStatus = (item: ESGCapItem): ESGCapItem['status'] => {
   if (!item.targetDate) return item.status;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const targetDate = new Date(item.targetDate);
   targetDate.setHours(0, 0, 0, 0);
 
-  // If past due and not closed by investor → overdue
-  if (targetDate < today && item.investorStatus !== 'Closed' && !item.actualDate) {
+  const isClosed = normalizeStatus(item.investorStatus) === "closed";
+
+  if (targetDate < today && !isClosed && !item.actualDate) {
     return 'overdue';
   }
-  
-  // If due within 1 month and not closed → due in <1 month
+
   const oneMonthLater = new Date();
   oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
   oneMonthLater.setHours(0, 0, 0, 0);
-  
-  if (targetDate >= today && targetDate <= oneMonthLater && item.investorStatus !== 'Closed' && !item.actualDate) {
+
+  if (
+    targetDate >= today &&
+    targetDate <= oneMonthLater &&
+    !isClosed &&
+    !item.actualDate
+  ) {
     return 'due in <1 month';
   }
 
@@ -45,7 +52,7 @@ interface ESGCapTableRowProps {
 }
 
 const truncateText = (text: string, length = 50) =>
-  text && text.length > length ? text.slice(0, length) + '...' : text || '-';
+  text && text.length > length ? text.slice(0, length) + '...' : text || '';
 
 
 
@@ -68,68 +75,40 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
   // Helper function
   const isOverdue = (item: ESGCapItem) => {
     if (!item.targetDate) return false;
-
+  
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
+  
     const targetDate = new Date(item.targetDate);
     targetDate.setHours(0, 0, 0, 0);
-
-    return (
-      targetDate < today &&
-      item.investorStatus !== "Closed" &&  // ✅ Capital C
-      !item.actualDate
-    );
+  
+    const isClosed = normalizeStatus(item.investorStatus) === "closed";
+  
+    return normalizeStatus(item.status) === "overdue" && targetDate < today && !isClosed && !item.actualDate;
   };
 
   const rowClassName = `
   transition-colors
-  ${item.investorStatus === "Closed"
-      ? "bg-gray-300 text-gray-500"
-      : isOverdue(item)
-        ? "text-red-700"
-        : ""
-    }
+  ${normalizeStatus(item.investorStatus) === "closed"
+    ? "bg-gray-300 text-gray-500"
+    : isOverdue(item)
+      ? "text-red-700"
+      : ""
+  }
 `;
 
 const parseDisplayDate = (dateStr: string | undefined): string => {
-  if (!dateStr || dateStr === '—' || dateStr === '-') return '-';
-  
-  // Already ISO format YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-      const date = new Date(dateStr);
-      if (!isNaN(date.getTime())) {
-          return date.toLocaleDateString('en-GB', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
-          });
-      }
-  }
-  
-  // DD-MMM-YY format (e.g., "30-Dec-23")
-  const months: Record<string, string> = {
-      'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04', 'may': '05', 'jun': '06',
-      'jul': '07', 'aug': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12'
-  };
-  const match = dateStr.match(/^(\d{1,2})-([a-zA-Z]{3})-(\d{2,4})$/);
-  if (match) {
-      const day = match[1].padStart(2, '0');
-      const month = months[match[2].toLowerCase()] || '01';
-      const year = match[3].length === 2 
-          ? (parseInt(match[3]) > 50 ? `19${match[3]}` : `20${match[3]}`) 
-          : match[3];
-      const isoDate = new Date(`${year}-${month}-${day}`);
-      if (!isNaN(isoDate.getTime())) {
-          return isoDate.toLocaleDateString('en-GB', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
-          });
-      }
-  }
-  
-  return '-';
+  if (!dateStr || dateStr === ' ' || dateStr === ' ') return ' ';
+
+  const date = new Date(dateStr);
+
+  if (isNaN(date.getTime())) return ' ';
+
+  return date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
 };
 
 // Add this helper function inside the component or outside
@@ -140,24 +119,32 @@ const getInvestorStatusBadge = (status: string) => {
     "closed": { label: "Closed", variant: "default", className: "bg-green-600 text-white" },
     "deferred": { label: "Deferred", variant: "secondary", className: "bg-gray-200 text-gray-700 border-gray-300" }
   };
-  const config = statusMap[status?.toLowerCase()] || { label: status || '-', variant: "outline", className: "bg-gray-100 text-gray-600" };
+  const config = statusMap[status?.toLowerCase()] || { label: status || '', variant: "outline", className: "bg-gray-100 text-gray-600" };
   return <Badge variant={config.variant} className={config.className}>{config.label}</Badge>;
 };
+  const navigate = useNavigate();
 
+  const handleEdit = () => {
+    navigate(`/esg-dd/cap/${item?.reportId}?itemName=${encodeURIComponent(item?.item || "")}`);
+  };
 
   if (compact) {
     return (
-      <TableRow className={rowClassName}>
+      <TableRow className={rowClassName} >
         <TableCell className="text-center font-medium" style={{ padding: "0.3rem" }}>{index + 1}</TableCell>
 
         {/* Item column with expand/collapse */}
-        <TableCell className="font-medium text-left" style={{ padding: "0.3rem" }}>
+        {/* <TableCell className="font-medium text-left" style={{ padding: "0.3rem" }}>
           {showFullItem ? item.item : truncateText(item.item, 50)}
           {item.item && item.item.length > 50 && (
             <button onClick={() => setShowFullItem(!showFullItem)} className="ml-2 text-blue-600 underline text-xs">
               {showFullItem ? "View less" : "View full"}
             </button>
           )}
+        </TableCell> */}
+
+        <TableCell className="font-medium max-w-xs text-left" onClick={handleEdit} style={{ cursor: "pointer",padding: "0.3rem" }}>
+          {item.item || ' '}
         </TableCell>
 
         <TableCell style={{ padding: "0.3rem" }}>
@@ -199,11 +186,11 @@ const getInvestorStatusBadge = (status: string) => {
 
         {/*  Status */}
         <TableCell>
-            {item.status ? <StatusBadge status={item.status} /> : '—'}
+            {item.status ? <StatusBadge status={item.status} /> : ' '}
         </TableCell>
         {/* Investor  Status */}
         <TableCell style={{ padding: "0.3rem" }}>
-          {item.investorStatus ? getInvestorStatusBadge(item.investorStatus) : '-'}
+          {item.investorStatus ? getInvestorStatusBadge(item.investorStatus) : ' '}
         </TableCell>
 
         <TableCell style={{ padding: "0.3rem" }}>{item.actualDate ? new Date(item.actualDate).toLocaleDateString('en-GB', {
@@ -211,7 +198,7 @@ const getInvestorStatusBadge = (status: string) => {
           month: 'short',
           year: 'numeric',
         })
-          : '-'}</TableCell>
+          : ' '}</TableCell>
 
         {/* Progress Percentage */}
         {/* <TableCell className="font-medium" style={{ padding: "0.3rem" }}>{item.progressPercentage ? `${item.progressPercentage}%` : '-'}</TableCell> */}
@@ -309,7 +296,7 @@ const getInvestorStatusBadge = (status: string) => {
       </TableCell>
 
       {/* 10. Timeline Month */}
-      <TableCell style={{ padding: "0.3rem" }}>{item.timelineMonth || '-'}</TableCell>
+      <TableCell style={{ padding: "0.3rem" }}>{item.timelineMonth || ''}</TableCell>
 
       {/* 11. Target Date */}
       <TableCell style={{ padding: "0.3rem" }}>{item.targetDate ? new Date(item.actualDate).toLocaleDateString('en-GB', {
@@ -403,7 +390,7 @@ const getInvestorStatusBadge = (status: string) => {
       </TableCell>
 
       {/* 20. Assigned To */}
-      <TableCell style={{ padding: "0.3rem" }}>{item.assignedTo || '-'}</TableCell>
+      <TableCell style={{ padding: "0.3rem" }}>{item.assignedTo || ''}</TableCell>
 
       {/* 21. Remarks
       <TableCell style={{ padding: "0.3rem" }}>

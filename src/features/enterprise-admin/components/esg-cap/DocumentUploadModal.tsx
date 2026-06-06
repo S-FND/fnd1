@@ -233,7 +233,7 @@ export const DocumentUploadModal = ({
       // }
     } catch (error) {
       console.error("Document validation error:", error);
-      toast.error("Unable to validate document. You may proceed with upload.");
+      toast.error("Unable to validate document. Please upload the files in required formats.");
     } finally {
       setValidating(false);
     }
@@ -291,6 +291,7 @@ export const DocumentUploadModal = ({
       formData.append("itemResource", itemResource || '');
       formData.append("itemSourceType", itemSourceType || '');
       formData.append("indicatorLabel", indicatorLabel);
+      formData.append("indicatorResponse", "yes");
       let uploadRes = await httpClient.post<ValidationResult>('esgdd/escap/upload-file/esgcap', formData);
 
       if (uploadRes.status !== 201) {

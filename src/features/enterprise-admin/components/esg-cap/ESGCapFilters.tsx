@@ -22,7 +22,7 @@ export const ESGCapFilters: React.FC<ESGCapFiltersProps> = ({
 }) => {
   return (
     <div className="flex flex-col md:flex-row gap-4">
-      <div className="w-full md:w-[585px]">
+      <div className="w-full md:w-[650px]">
         <Input 
           placeholder="Search item..." 
           value={searchTerm}
@@ -30,7 +30,7 @@ export const ESGCapFilters: React.FC<ESGCapFiltersProps> = ({
         />
       </div>
       <div className="flex gap-2">
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        {/* <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[140px]">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
@@ -40,7 +40,7 @@ export const ESGCapFilters: React.FC<ESGCapFiltersProps> = ({
             <SelectItem value="in_progress">In Progress</SelectItem>
             <SelectItem value="completed">Completed</SelectItem>
           </SelectContent>
-        </Select>
+        </Select> */}
         
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
           <SelectTrigger className="w-[140px]">

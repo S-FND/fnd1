@@ -441,12 +441,10 @@ const CompanyDashboard = () => {
               <Button
                 variant="outline"
                 onClick={() => {
-                  const storageUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/founder-guide/Fireside_ESG_Platform_Founders_Guide.pdf`;
-                  const link = document.createElement('a');
-                  link.href = storageUrl;
-                  link.download = 'Fireside_ESG_Platform_Founders_Guide.pdf';
-                  link.target = '_blank';
-                  link.click();
+                  window.open(
+                    '/pdfs/Fireside_ESG_Platform_Founders_Guide (8).pdf',
+                    '_blank'
+                  );
                 }}
               >
                 <BookOpen className="w-4 h-4 mr-2" />
@@ -622,10 +620,10 @@ const CompanyDashboard = () => {
                     <div
                       key={q.key}
                       className={`relative rounded-lg border-2 transition-all ${isDisabled
-                        ? 'border-dashed border-border bg-muted/30 cursor-not-allowed opacity-60'
-                        : isSelected
-                          ? 'border-primary bg-primary/5 cursor-pointer'
-                          : 'border-border hover:border-primary/50 cursor-pointer'
+                          ? 'border-dashed border-border bg-muted/30 cursor-not-allowed opacity-60'
+                          : isSelected
+                            ? 'border-primary bg-primary/5 cursor-pointer'
+                            : 'border-border hover:border-primary/50 cursor-pointer'
                         }`}
                       onClick={() => { if (!isDisabled) setSelectedQuarter(q.key); }}
                       aria-disabled={isDisabled}

@@ -11,10 +11,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Shirt, ChevronDown, ChevronRight } from 'lucide-react';
+import { Shirt, ChevronDown, ChevronRight, Info } from 'lucide-react';
 import { useState } from 'react';
 import { ApproachVisionInput } from './ApproachVisionInput';
 import { CellNumberBadge } from './CellNumberBadge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@radix-ui/react-tooltip';
 
 interface FashionPackagingBasicProps {
   formData: Record<string, string | number | boolean>;
@@ -200,7 +201,9 @@ export const FashionPackagingBasic = ({
   const renderSection = (
     title: string,
     sectionId: string,
-    fields: Array<{ id: string; label: string; type: string; unit?: string; maxWords?: number; fieldLetter?: string }>,
+    fields: Array<{
+      description: any; id: string; label: string; type: string; unit?: string; maxWords?: number; fieldLetter?: string
+    }>,
     kpiNumber: number
   ) => (
     <Collapsible open={openSections.has(sectionId)} onOpenChange={() => toggleSection(sectionId)}>
@@ -219,25 +222,59 @@ export const FashionPackagingBasic = ({
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-muted/30">
-                <TableHead className="w-[450px]">Metric</TableHead>
-                <TableHead className="w-[100px]">Unit</TableHead>
-                <TableHead className="w-[300px]">Value</TableHead>
+              <TableRow className="bg-muted/40">
+                <TableHead className="min-w-[380px] text-left font-semibold">
+                  Metric
+                </TableHead>
+
+                <TableHead className="w-[120px] text-left font-semibold">
+                  Unit
+                </TableHead>
+
+                <TableHead className="w-[260px] text-left font-semibold">
+                  Value
+                </TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
               {fields.map((field) => (
-                <TableRow key={`${sectionId}-${field.id}`}>
-                  <TableCell className="font-medium text-sm align-top py-3">
-                    <div className="flex items-center">
-                      <CellNumberBadge kpiNumber={kpiNumber} fieldLetter={field.fieldLetter} />
-                      {field.label}
+                <TableRow
+                  key={`${sectionId}-${field.id}`}
+                  className="align-top"
+                >
+                  {/* METRIC */}
+                  <TableCell className="font-medium text-left py-3">
+                    <div className="flex items-start gap-2">
+                      <CellNumberBadge
+                        kpiNumber={kpiNumber}
+                        fieldLetter={field.fieldLetter}
+                      />
+
+                      <div className="flex flex-col gap-1">
+                        <span>{field.label}</span>
+
+                        {field.description && (
+                          <span className="text-xs text-muted-foreground">
+                            {field.description}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell className="align-top py-3">
-                    <Badge variant="secondary" className="text-xs">{field.unit || 'Text'}</Badge>
+
+                  {/* UNIT */}
+                  <TableCell className="text-left py-3">
+                    <Badge
+                      variant="secondary"
+                      className="text-xs"
+                    >
+                      {field.unit || "Text"}
+                    </Badge>
                   </TableCell>
-                  <TableCell className="py-3">
+
+                  {/* VALUE */}
+                  <TableCell className="text-left py-3">
                     {renderField(sectionId, field)}
                   </TableCell>
                 </TableRow>
@@ -305,14 +342,14 @@ export const FashionPackagingBasic = ({
                   </TableCell>
                 </TableRow>
               ))}
-              
+
               {/* Breakup header */}
               <TableRow className="bg-blue-50 dark:bg-blue-950/20">
                 <TableCell colSpan={3} className="font-medium text-sm py-2">
                   Breakup of materials used (%)
                 </TableCell>
               </TableRow>
-              
+
               {breakupFields.map((field) => (
                 <TableRow key={field.id}>
                   <TableCell className="font-medium text-sm pl-8">
@@ -350,7 +387,7 @@ export const FashionPackagingBasic = ({
                   </TableCell>
                 </TableRow>
               ))}
-              
+
               {/* Reuse notes for warehouse */}
               {noteField && (
                 <>
@@ -416,7 +453,7 @@ export const FashionPackagingBasic = ({
                 maxWords={300}
                 readOnly={readOnly}
               />
-              
+
               {/* Vision & Plans Field */}
               <ApproachVisionInput
                 label="Vision and plans towards sustainable materials"
@@ -429,7 +466,7 @@ export const FashionPackagingBasic = ({
                 maxWords={300}
                 readOnly={readOnly}
               />
-              
+
               {/* Circularity Programs - just textarea */}
               <div className="space-y-2 py-3">
                 <label className="text-sm font-medium">Circularity or take back programs - give details</label>
@@ -444,7 +481,7 @@ export const FashionPackagingBasic = ({
             </div>
           </CollapsibleContent>
         </Collapsible>
-        
+
         {/* Total Amount of Materials Used Section - KPI 1 */}
         {renderSection('Total Amount of Materials Used', 'materials', TOTAL_MATERIALS_FIELDS, 1)}
         {/* Waste & Recyclability Section - KPI 2 */}
@@ -464,69 +501,141 @@ export const FashionPackagingBasic = ({
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/30">
-                    <TableHead className="w-[450px]">Metric</TableHead>
-                    <TableHead className="w-[100px]">Unit</TableHead>
-                    <TableHead className="w-[300px]">Value</TableHead>
+                  <TableRow className="bg-muted/40">
+                    <TableHead className="w-[450px] text-left font-semibold">
+                      Metric
+                    </TableHead>
+
+                    <TableHead className="w-[100px] text-left font-semibold">
+                      Unit
+                    </TableHead>
+
+                    <TableHead className="w-[300px] text-left font-semibold">
+                      Value
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
+
                 <TableBody>
                   {WASTE_RECYCLABILITY_FIELDS.map((field) => (
-                    <TableRow key={field.id}>
-                      <TableCell className="font-medium text-sm">
-                        <div className="flex items-center">
-                          <CellNumberBadge kpiNumber={2} fieldLetter={field.fieldLetter} />
-                          {field.label}
+                    <TableRow key={field.id} className="align-top">
+                      <TableCell className="font-medium text-sm text-left">
+                        <div className="flex items-start gap-2">
+                          <CellNumberBadge
+                            kpiNumber={2}
+                            fieldLetter={field.fieldLetter}
+                          />
+
+                          <span>{field.label}</span>
+
+                          {field.tooltip && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info className="h-4 w-4 mt-0.5 text-muted-foreground cursor-help shrink-0" />
+                              </TooltipTrigger>
+
+                              <TooltipContent
+                                side="right"
+                                className="max-w-xs text-left"
+                              >
+                                <p>{field.tooltip}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
                         </div>
                       </TableCell>
-                      <TableCell><Badge variant="secondary" className="text-xs">{field.unit}</Badge></TableCell>
-                      <TableCell>
+
+                      <TableCell className="text-left">
+                        <Badge variant="secondary" className="text-xs">
+                          {field.unit}
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell className="text-left">
                         <div className="flex items-center gap-2">
                           <Input
                             type="number"
                             placeholder="0"
                             value={getValue('waste', field.id)}
-                            onChange={(e) => handleChange('waste', field.id, e.target.value)}
+                            onChange={(e) =>
+                              handleChange('waste', field.id, e.target.value)
+                            }
                             className="w-32 h-9 text-sm"
                             disabled={readOnly}
                             min={0}
                             max={100}
                           />
+
                           <span className="text-xs text-muted-foreground">%</span>
                         </div>
                       </TableCell>
                     </TableRow>
                   ))}
-                  
-                  {/* Recyclability header */}
-                  <TableRow className="bg-blue-50 dark:bg-blue-950/20">
-                    <TableCell colSpan={3} className="font-medium text-sm py-2">
+
+                  {/* Section Header */}
+                  <TableRow className="bg-muted/30">
+                    <TableCell
+                      colSpan={3}
+                      className="font-semibold text-sm py-2 text-left"
+                    >
                       Recyclability of textile materials (%)
                     </TableCell>
                   </TableRow>
-                  
+
                   {TEXTILE_RECYCLABILITY_FIELDS.map((field) => (
-                    <TableRow key={field.id}>
-                      <TableCell className="font-medium text-sm pl-8">
-                        <div className="flex items-center">
-                          <CellNumberBadge kpiNumber={2} fieldLetter={field.fieldLetter} />
-                          {field.label}
+                    <TableRow key={field.id} className="align-top">
+                      <TableCell className="font-medium text-sm text-left pl-8">
+                        <div className="flex items-start gap-2">
+                          <CellNumberBadge
+                            kpiNumber={2}
+                            fieldLetter={field.fieldLetter}
+                          />
+
+                          <span>{field.label}</span>
+
+                          {field.tooltip && (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info className="h-4 w-4 mt-0.5 text-muted-foreground cursor-help shrink-0" />
+                              </TooltipTrigger>
+
+                              <TooltipContent
+                                side="right"
+                                className="max-w-xs text-left"
+                              >
+                                <p>{field.tooltip}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
                         </div>
                       </TableCell>
-                      <TableCell><Badge variant="secondary" className="text-xs">{field.unit}</Badge></TableCell>
-                      <TableCell>
+
+                      <TableCell className="text-left">
+                        <Badge variant="secondary" className="text-xs">
+                          {field.unit}
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell className="text-left">
                         {field.type === 'number' ? (
                           <div className="flex items-center gap-2">
                             <Input
                               type="number"
                               placeholder="0"
                               value={getValue('waste_recyclability', field.id)}
-                              onChange={(e) => handleChange('waste_recyclability', field.id, e.target.value)}
+                              onChange={(e) =>
+                                handleChange(
+                                  'waste_recyclability',
+                                  field.id,
+                                  e.target.value
+                                )
+                              }
                               className="w-32 h-9 text-sm"
                               disabled={readOnly}
                               min={0}
                               max={100}
                             />
+
                             <span className="text-xs text-muted-foreground">%</span>
                           </div>
                         ) : (
@@ -534,7 +643,13 @@ export const FashionPackagingBasic = ({
                             type="text"
                             placeholder="Specify and %..."
                             value={getValue('waste_recyclability', field.id)}
-                            onChange={(e) => handleChange('waste_recyclability', field.id, e.target.value)}
+                            onChange={(e) =>
+                              handleChange(
+                                'waste_recyclability',
+                                field.id,
+                                e.target.value
+                              )
+                            }
                             className="h-9 text-sm"
                             disabled={readOnly}
                           />
@@ -547,16 +662,16 @@ export const FashionPackagingBasic = ({
             </div>
           </CollapsibleContent>
         </Collapsible>
-        
+
         {/* Type of Textile Materials Sourced - KPI 3 */}
         {renderSection('Type of Textile Materials Sourced', 'textile_types', TEXTILE_TYPES_FIELDS, 3)}
-        
+
         {/* Warehouse Packaging Section - KPI 4 */}
         {renderBreakupSection('Warehouse Packaging', 'warehouse', WAREHOUSE_PACKAGING_FIELDS, WAREHOUSE_BREAKUP_FIELDS, true, 4)}
-        
+
         {/* Primary Packaging Section - KPI 5 */}
         {renderBreakupSection('Primary Packaging', 'primary', PRIMARY_PACKAGING_FIELDS, PRIMARY_BREAKUP_FIELDS, false, 5)}
-        
+
         {/* Compliance Details Section - KPI 6 */}
         {renderSection('Compliance Details', 'compliance', COMPLIANCE_FIELDS, 6)}
       </CardContent>

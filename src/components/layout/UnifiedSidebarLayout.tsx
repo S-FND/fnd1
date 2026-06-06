@@ -120,6 +120,7 @@ import { SidebarAdminSettings } from './sidebar/SidebarAdminSettings';
 import { SidebarUserProfile } from './sidebar/SidebarUserProfile';
 import { Navbar } from './Navbar';
 import { logger } from '@/hooks/logger';
+import AssessmentTypeDialog from '@/features/mis/company/Assessmenttypedialog'; // ← keep import
 
 interface UnifiedSidebarLayoutProps {
   children: React.ReactNode;
@@ -145,9 +146,8 @@ export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({
           className={`flex-1 flex flex-col min-w-0 overflow-hidden transition-all duration-200 ${
             hideSidebar ? 'w-full' : ''
           }`}
-          // style={!hideSidebar ? { marginLeft: 'var(--sidebar-width, 20rem)' } : {}}
         >
-          <Navbar hideSidebarTrigger={hideSidebar} />
+        <Navbar hideSidebarTrigger={hideSidebar} />
           <main className="flex-1 overflow-auto w-full ">
             <div className=" mx-auto  w-full">
               <PageOverlay>
@@ -157,6 +157,7 @@ export const UnifiedSidebarLayout: React.FC<UnifiedSidebarLayoutProps> = ({
           </main>
         </div>
       </div>
+      <AssessmentTypeDialog />
     </SidebarProvider>
   );
 };
@@ -206,7 +207,7 @@ const UnifiedSidebar: React.FC = () => {
   return (
     <Sidebar className="border-r border-border bg-sidebar fixed top-0 left-0 h-screen shrink-0 z-40">
       <SidebarHeaderComponent user={user} />
-      <SidebarContent ref={sidebarContentRef} className="px-2">
+      <SidebarContent ref={sidebarContentRef}  style={{ paddingRight: "0.5rem" }}>
         <SidebarNavigation role={role} expandedMenus={expandedMenus} toggleMenu={toggleMenu} />
         <SidebarAdminSettings role={role} />
       </SidebarContent>
