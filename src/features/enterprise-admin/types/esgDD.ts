@@ -23,7 +23,7 @@ export type ESGCapStatus = 'in_review' | 'accepted' | 'pending' | 'in_progress' 
 
 type CAPStatus = 
   | "upcoming"
-  | "due in <1 month"
+  | "due in this month"
   | "overdue"
   | "submitted"
   | "request to re-submit";
