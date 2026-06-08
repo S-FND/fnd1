@@ -31,7 +31,6 @@ const fieldMapping = {
     // Include _id from the API response (optional field)
     mappedData.user_id = apiResponse?.user_id?._id || '';
 
-    console.log('apiResponse?.user_id',apiResponse?.user_id);
     if (apiResponse?.user_id && typeof apiResponse.user_id === "object") {
       mappedData.entityId = apiResponse._id;
     }

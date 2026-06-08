@@ -46,33 +46,59 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
 
   const safeProgress = Math.max(0, Math.min(100, progressPercentage));
 
-  // ✅ Status breakdown using new company statuses
-  const statusCounts = items.reduce((acc, item) => {
-    acc[item.status] = (acc[item.status] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  // ✅ Count by new statuses
-  const completedCount = items.filter(isClosed).length;
-
-  const overdueCount = items.filter(
-    (item) => item.status === "overdue"
+  const getDateStatus = (item: ESGCapItem) => {
+    const investorStatus = (item.investorStatus || "").toLowerCase();
+  
+    if (investorStatus === "closed") {
+      return "closed";
+    }
+  
+    // if (item.status === "submitted") {
+    //   return "submitted";
+    // }
+  
+    if (!item.targetDate) {
+      return " ";
+    }
+  
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+  
+    const target = new Date(item.targetDate);
+    target.setHours(0, 0, 0, 0);
+  
+    if (target < today) {
+      return "overdue";
+    }
+  
+    if (
+      target.getMonth() === today.getMonth() &&
+      target.getFullYear() === today.getFullYear()
+    ) {
+      return "due in this month";
+    }
+  
+    return "upcoming";
+  };
+  
+  const completedCount = items.filter(
+    item => getDateStatus(item) === "closed"
   ).length;
-
-  const dueSoonCount = items.filter(
-    (item) => item.status === "due in <1 month"
-  ).length;
-
-  const upcomingCount = items.filter(
-    (item) => item.status === "upcoming"
-  ).length;
-
+  
   const submittedCount = items.filter(
-    (item) => item.status === "submitted"
+    item => (item.status || '').toLowerCase() === 'submitted'
   ).length;
-
-  const resubmitCount = items.filter(
-    (item) => item.status === "request to re-submit"
+  
+  const overdueCount = items.filter(
+    item => getDateStatus(item) === "overdue"
+  ).length;
+  
+  const dueSoonCount = items.filter(
+    item => getDateStatus(item) === "due in this month"
+  ).length;
+  
+  const upcomingCount = items.filter(
+    item => getDateStatus(item) === "upcoming"
   ).length;
 
   // Helper to style active card while preserving original background colors
@@ -115,11 +141,11 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
             </div>
 
             <div
-              className={getCardClass('due in <1 month', "bg-orange-50")}
-              onClick={() => onFilterChange?.('due in <1 month')}
+              className={getCardClass('due in this month', "bg-orange-50")}
+              onClick={() => onFilterChange?.('due in this month')}
             >
               <div className="font-semibold text-lg text-orange-700">{dueSoonCount}</div>
-              <div className="text-orange-600">Due &lt;1 Month</div>
+              <div className="text-orange-600">Due in this Month</div>
             </div>
 
             <div
