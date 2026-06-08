@@ -972,7 +972,7 @@ const ESGCapPage = () => {
           </CardContent>
         </Card>
       </UnifiedSidebarLayout>
-      <AuditDrawer open={auditOpen} onClose={() => setAuditOpen(false)} logs={logs} />
+      {/* <AuditDrawer open={auditOpen} onClose={() => setAuditOpen(false)} logs={logs} /> */}
       <AssessmentTypeDialog />
       <ESGCapDocumentsDialog
         open={docsDialogOpen}
