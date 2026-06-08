@@ -594,7 +594,7 @@ const ESGCapPage = () => {
     const matchesCategory = categoryFilter === 'all' || itemCategory === categoryFilter;
 
     const getDateStatus = (item: ESGCapItem) => {
-      if (!item.targetDate) return "upcoming";
+      if (!item.targetDate) return " ";
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);

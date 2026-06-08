@@ -15,10 +15,10 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
           <Clock className="h-3 w-3 mr-1" /> Upcoming
         </Badge>
       );
-    case 'due in <1 month':
+    case 'due in this month':
       return (
         <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-200">
-          <AlertTriangle className="h-3 w-3 mr-1" /> Due in &lt;1 Month
+          <AlertTriangle className="h-3 w-3 mr-1" /> Due in this Month
         </Badge>
       );
     case 'overdue':

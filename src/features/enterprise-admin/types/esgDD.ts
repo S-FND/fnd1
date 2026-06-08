@@ -21,9 +21,10 @@ export type ESGDDReportType = 'manual' | 'automated' | 'uploaded';
 
 export type ESGCapStatus = 'in_review' | 'accepted' | 'pending' | 'in_progress' | 'completed' | 'delayed';
 
-type CAPStatus = 
+export type CAPStatus = 
   | "upcoming"
   | "due in this month"
+  | "closed"
   | "overdue"
   | "submitted"
   | "request to re-submit";

@@ -58,7 +58,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
     // }
   
     if (!item.targetDate) {
-      return "upcoming";
+      return " ";
     }
   
     const today = new Date();
