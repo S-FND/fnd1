@@ -7,40 +7,9 @@ import { PriorityBadge } from './PriorityBadge';
 import { Badge } from '@/components/ui/badge';
 import { ESGCapRowActions } from './ESGCapRowActions';
 import { useNavigate } from 'react-router-dom';
+import { getEffectiveStatus } from '@/utils/esgStatus';
 const normalizeStatus = (status?: string) =>
   (status ?? "").trim().toLowerCase();
-// ✅ Updated helper — returns proper status values
-const getEffectiveStatus = (item: ESGCapItem): ESGCapItem['status'] => {
-  if (!item.targetDate) return item.status;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const targetDate = new Date(item.targetDate);
-  targetDate.setHours(0, 0, 0, 0);
-
-  const isClosed = normalizeStatus(item.investorStatus) === "closed";
-
-  if (targetDate < today && !isClosed && !item.actualDate) {
-    return 'overdue';
-  }
-
-  const oneMonthLater = new Date();
-  oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
-  oneMonthLater.setHours(0, 0, 0, 0);
-
-  if (
-    targetDate >= today &&
-    targetDate <= oneMonthLater &&
-    !isClosed &&
-    !item.actualDate
-  ) {
-    return 'due in <1 month';
-  }
-
-  return item.status;
-};
-
 interface ESGCapTableRowProps {
   item: any;
   index: number;
@@ -74,18 +43,14 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
 
   // Helper function
   const isOverdue = (item: ESGCapItem) => {
-    if (!item.targetDate) return false;
-  
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-  
-    const targetDate = new Date(item.targetDate);
-    targetDate.setHours(0, 0, 0, 0);
-  
-    const isClosed = normalizeStatus(item.investorStatus) === "closed";
-  
-    return normalizeStatus(item.status) === "overdue" && targetDate < today && !isClosed && !item.actualDate;
-  };
+  const isClosed = normalizeStatus(item.investorStatus) === "closed";
+
+  return (
+    getEffectiveStatus(item) === "overdue" &&
+    !isClosed &&
+    !item.actualDate
+  );
+};
 
   const rowClassName = `
   transition-colors
@@ -186,7 +151,11 @@ const getInvestorStatusBadge = (status: string) => {
 
         {/*  Status */}
         <TableCell>
-            {item.status ? <StatusBadge status={item.status} /> : ' '}
+          {item.targetDate ? (
+            <StatusBadge status={effectiveStatus} />
+          ) : (
+            <span className="text-muted-foreground">-</span>
+          )}
         </TableCell>
         {/* Investor  Status */}
         <TableCell style={{ padding: "0.3rem" }}>
@@ -327,9 +296,13 @@ const getInvestorStatusBadge = (status: string) => {
       </TableCell>
 
       {/* 14. Status */}
-      <TableCell style={{ padding: "0.3rem" }}>
-        <StatusBadge status={effectiveStatus} />
-      </TableCell>
+      <TableCell>
+          {item.targetDate ? (
+            <StatusBadge status={effectiveStatus} />
+          ) : (
+            <span className="text-muted-foreground">-</span>
+          )}
+        </TableCell>
 
       {/* 15. Current Status Update */}
       <TableCell style={{ padding: "0.3rem" }}>

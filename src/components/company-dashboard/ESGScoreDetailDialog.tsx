@@ -33,6 +33,8 @@ interface ESGScoreDetailDialogProps {
   companyId: string;
   year: number;
   dashboardViewMode?: 'percentile' | 'category';
+  kpiEntries:{ companyId: string; kpi_id: string; value: string | null; quarter: string; year: number }[];
+  features:{ companyId: string; feature_key: string, enabled: boolean }[]
 }
 
 const getGradeFromValue = (value: number): { grade: string; color: string } => {
@@ -185,18 +187,19 @@ function computeGovPercentiles(allCompanies: CompanyRawMetrics[]): Map<string, R
   return result;
 }
 
-export const ESGScoreDetailDialog = ({ open, onOpenChange, scoreType, companyId, year, dashboardViewMode = 'percentile' }: ESGScoreDetailDialogProps) => {
+export const ESGScoreDetailDialog = ({ open, onOpenChange, scoreType, companyId, year, dashboardViewMode = 'percentile',kpiEntries,features }: ESGScoreDetailDialogProps) => {
+  // debugger;
   const isCategoryView = dashboardViewMode === 'category';
   // Force annual view for all score types (quarterly toggle removed from composite)
   const [viewMode, setViewMode] = useState<'quarterly' | 'annual'>('annual');
   const config = SCORE_CONFIG[scoreType];
 
   // Fetch data for all companies (no companyId filter) for each quarter
-  const q1Data = useAnalyticsDashboardData({ period: 'quarterly', quarter: 'Q1', year });
-  const q2Data = useAnalyticsDashboardData({ period: 'quarterly', quarter: 'Q2', year });
-  const q3Data = useAnalyticsDashboardData({ period: 'quarterly', quarter: 'Q3', year });
-  const q4Data = useAnalyticsDashboardData({ period: 'quarterly', quarter: 'Q4', year });
-  const annualData = useAnalyticsDashboardData({ period: 'annual', year });
+  const q1Data = useAnalyticsDashboardData({ period: 'quarterly', quarter: 'Q1', year },kpiEntries,features);
+  const q2Data = useAnalyticsDashboardData({ period: 'quarterly', quarter: 'Q2', year },kpiEntries,features);
+  const q3Data = useAnalyticsDashboardData({ period: 'quarterly', quarter: 'Q3', year },kpiEntries,features);
+  const q4Data = useAnalyticsDashboardData({ period: 'quarterly', quarter: 'Q4', year },kpiEntries,features);
+  const annualData = useAnalyticsDashboardData({ period: 'annual', year },kpiEntries,features);
   console.log('Fetched analytics data for ESGScoreDetailDialog', { annualData });
 
   const isLoading = q1Data.isLoading || q2Data.isLoading || q3Data.isLoading || q4Data.isLoading || annualData.isLoading;
