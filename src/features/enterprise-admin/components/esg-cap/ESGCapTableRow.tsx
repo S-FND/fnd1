@@ -7,40 +7,9 @@ import { PriorityBadge } from './PriorityBadge';
 import { Badge } from '@/components/ui/badge';
 import { ESGCapRowActions } from './ESGCapRowActions';
 import { useNavigate } from 'react-router-dom';
+import { getEffectiveStatus } from '@/utils/esgStatus';
 const normalizeStatus = (status?: string) =>
   (status ?? "").trim().toLowerCase();
-// ✅ Updated helper — returns proper status values
-const getEffectiveStatus = (item: ESGCapItem): ESGCapItem['status'] => {
-  if (!item.targetDate) return item.status;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const targetDate = new Date(item.targetDate);
-  targetDate.setHours(0, 0, 0, 0);
-
-  const isClosed = normalizeStatus(item.investorStatus) === "closed";
-
-  if (targetDate < today && !isClosed && !item.actualDate) {
-    return 'overdue';
-  }
-
-  const oneMonthLater = new Date();
-  oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
-  oneMonthLater.setHours(0, 0, 0, 0);
-
-  if (
-    targetDate >= today &&
-    targetDate <= oneMonthLater &&
-    !isClosed &&
-    !item.actualDate
-  ) {
-    return 'due in <1 month';
-  }
-
-  return item.status;
-};
-
 interface ESGCapTableRowProps {
   item: any;
   index: number;
@@ -52,7 +21,7 @@ interface ESGCapTableRowProps {
 }
 
 const truncateText = (text: string, length = 50) =>
-  text && text.length > length ? text.slice(0, length) + '...' : text || '-';
+  text && text.length > length ? text.slice(0, length) + '...' : text || '';
 
 
 
@@ -74,18 +43,14 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
 
   // Helper function
   const isOverdue = (item: ESGCapItem) => {
-    if (!item.targetDate) return false;
-  
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-  
-    const targetDate = new Date(item.targetDate);
-    targetDate.setHours(0, 0, 0, 0);
-  
-    const isClosed = normalizeStatus(item.investorStatus) === "closed";
-  
-    return normalizeStatus(item.status) === "overdue" && targetDate < today && !isClosed && !item.actualDate;
-  };
+  const isClosed = normalizeStatus(item.investorStatus) === "closed";
+
+  return (
+    getEffectiveStatus(item) === "overdue" &&
+    !isClosed &&
+    !item.actualDate
+  );
+};
 
   const rowClassName = `
   transition-colors
@@ -98,11 +63,11 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
 `;
 
 const parseDisplayDate = (dateStr: string | undefined): string => {
-  if (!dateStr || dateStr === '—' || dateStr === '-') return '-';
+  if (!dateStr || dateStr === ' ' || dateStr === ' ') return ' ';
 
   const date = new Date(dateStr);
 
-  if (isNaN(date.getTime())) return '-';
+  if (isNaN(date.getTime())) return ' ';
 
   return date.toLocaleDateString('en-GB', {
     day: '2-digit',
@@ -119,7 +84,7 @@ const getInvestorStatusBadge = (status: string) => {
     "closed": { label: "Closed", variant: "default", className: "bg-green-600 text-white" },
     "deferred": { label: "Deferred", variant: "secondary", className: "bg-gray-200 text-gray-700 border-gray-300" }
   };
-  const config = statusMap[status?.toLowerCase()] || { label: status || '-', variant: "outline", className: "bg-gray-100 text-gray-600" };
+  const config = statusMap[status?.toLowerCase()] || { label: status || '', variant: "outline", className: "bg-gray-100 text-gray-600" };
   return <Badge variant={config.variant} className={config.className}>{config.label}</Badge>;
 };
   const navigate = useNavigate();
@@ -144,7 +109,7 @@ const getInvestorStatusBadge = (status: string) => {
         </TableCell> */}
 
         <TableCell className="font-medium max-w-xs text-left" onClick={handleEdit} style={{ cursor: "pointer",padding: "0.3rem" }}>
-          {item.item || '-'}
+          {item.item || ' '}
         </TableCell>
 
         <TableCell style={{ padding: "0.3rem" }}>
@@ -186,11 +151,15 @@ const getInvestorStatusBadge = (status: string) => {
 
         {/*  Status */}
         <TableCell>
-            {item.status ? <StatusBadge status={item.status} /> : '—'}
+          {item.targetDate ? (
+            <StatusBadge status={effectiveStatus} />
+          ) : (
+            <span className="text-muted-foreground">-</span>
+          )}
         </TableCell>
         {/* Investor  Status */}
         <TableCell style={{ padding: "0.3rem" }}>
-          {item.investorStatus ? getInvestorStatusBadge(item.investorStatus) : '-'}
+          {item.investorStatus ? getInvestorStatusBadge(item.investorStatus) : ' '}
         </TableCell>
 
         <TableCell style={{ padding: "0.3rem" }}>{item.actualDate ? new Date(item.actualDate).toLocaleDateString('en-GB', {
@@ -198,7 +167,7 @@ const getInvestorStatusBadge = (status: string) => {
           month: 'short',
           year: 'numeric',
         })
-          : '-'}</TableCell>
+          : ' '}</TableCell>
 
         {/* Progress Percentage */}
         {/* <TableCell className="font-medium" style={{ padding: "0.3rem" }}>{item.progressPercentage ? `${item.progressPercentage}%` : '-'}</TableCell> */}
@@ -296,7 +265,7 @@ const getInvestorStatusBadge = (status: string) => {
       </TableCell>
 
       {/* 10. Timeline Month */}
-      <TableCell style={{ padding: "0.3rem" }}>{item.timelineMonth || '-'}</TableCell>
+      <TableCell style={{ padding: "0.3rem" }}>{item.timelineMonth || ''}</TableCell>
 
       {/* 11. Target Date */}
       <TableCell style={{ padding: "0.3rem" }}>{item.targetDate ? new Date(item.actualDate).toLocaleDateString('en-GB', {
@@ -327,9 +296,13 @@ const getInvestorStatusBadge = (status: string) => {
       </TableCell>
 
       {/* 14. Status */}
-      <TableCell style={{ padding: "0.3rem" }}>
-        <StatusBadge status={effectiveStatus} />
-      </TableCell>
+      <TableCell>
+          {item.targetDate ? (
+            <StatusBadge status={effectiveStatus} />
+          ) : (
+            <span className="text-muted-foreground">-</span>
+          )}
+        </TableCell>
 
       {/* 15. Current Status Update */}
       <TableCell style={{ padding: "0.3rem" }}>
@@ -390,7 +363,7 @@ const getInvestorStatusBadge = (status: string) => {
       </TableCell>
 
       {/* 20. Assigned To */}
-      <TableCell style={{ padding: "0.3rem" }}>{item.assignedTo || '-'}</TableCell>
+      <TableCell style={{ padding: "0.3rem" }}>{item.assignedTo || ''}</TableCell>
 
       {/* 21. Remarks
       <TableCell style={{ padding: "0.3rem" }}>
