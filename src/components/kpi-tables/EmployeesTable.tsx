@@ -528,10 +528,10 @@ export const EmployeesTable = ({
       </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
-          <Table className="textAlign-left">
+          <Table>
             <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="w-[350px] textAlign-left">Sub-Category</TableHead>
+              <TableRow className="bg-muted/50 [&>th]:text-left">
+                <TableHead className="w-[350px]">Sub-Category</TableHead>
                 <TableHead className="w-[100px]">Metric Type</TableHead>
                 <TableHead className="w-[150px]">Value</TableHead>
                 <TableHead className="w-[150px]">Previous</TableHead>
