@@ -5,7 +5,7 @@ import { Navigate, Link } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Folder } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Folder, FileDown } from 'lucide-react';
 import { ESGCapItem } from '../types/esgDD';
 import { ESGCapFilters } from '../components/esg-cap/ESGCapFilters';
 import { ESGCapTable } from '../components/esg-cap/ESGCapTable';
@@ -36,6 +36,7 @@ import AuditDrawer, { AuditLog } from '../components/esg-cap/AuditDrawer';
 import { httpClient } from '@/lib/httpClient';
 import AssessmentTypeDialog from '@/features/mis/company/Assessmenttypedialog';
 import ESGCapDocumentsDialog from '../components/esg-cap/ESGCapDocumentsDialog';
+import { ExportDrawer } from './ExportDrawer';
 
 interface PlanHistory {
   updateByUserId: string;
@@ -361,6 +362,7 @@ const ESGCapPage = () => {
   const [reloadData, setReloadData] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ESGCapItem | null>(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [drawer, setDrawer] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
     new Set(["CP – Conditions Precedent", "CS – Conditions Subsequent", "ESG Roadmap", "Other Items"])
   );
@@ -853,6 +855,9 @@ const ESGCapPage = () => {
     getAuditLogs();
   }, []);
 
+  const userData = JSON.parse(localStorage.getItem('fandoro-user') || '{}');
+  const companyName = userData?.name || '';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <Loader show={loading} text={loadingMessage} />
@@ -885,6 +890,7 @@ const ESGCapPage = () => {
                 <History className="w-4 h-4" />
                 Audit Logs
               </Button> */}
+             
               <Button
                 variant="outline"
                 onClick={() => setDocsDialogOpen(true)}
@@ -892,6 +898,14 @@ const ESGCapPage = () => {
               >
                 <Folder className="w-4 h-4" />
                 Uploads
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => setDrawer(true)}
+                className="flex items-center gap-2 justify-start hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+              >
+                <FileDown className="h-4 w-4" /> Export 
               </Button>
             </div>
             {/* Filters Section */}
@@ -1012,6 +1026,7 @@ const ESGCapPage = () => {
         onClose={() => setDocsDialogOpen(false)}
         entityId={entityId}
       />
+      <ExportDrawer open={drawer} onClose={() => setDrawer(false)} items={esgCap?.plan || []} entityName={{companyName}} />
 
     </div>
   );
