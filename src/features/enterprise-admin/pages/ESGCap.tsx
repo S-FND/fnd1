@@ -593,12 +593,45 @@ const ESGCapPage = () => {
     const matchesStatus = statusFilter === 'all' || itemStatus === statusFilter;
     const matchesCategory = categoryFilter === 'all' || itemCategory === categoryFilter;
 
+    const getDateStatus = (item: ESGCapItem) => {
+      if (!item.targetDate) return " ";
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const target = new Date(item.targetDate);
+      target.setHours(0, 0, 0, 0);
+
+      if (
+        target.getMonth() === today.getMonth() &&
+        target.getFullYear() === today.getFullYear()
+      ) {
+        return "due in this month";
+      }
+
+      if (target < today) {
+        return "overdue";
+      }
+
+      return "upcoming";
+    };
+
     let matchesCardFilter = true;
+
     if (cardFilter) {
-      if (cardFilter === 'closed') {
-        matchesCardFilter = investorStatus.toLowerCase() === 'closed';
-      } else if (cardFilter) {
-        matchesCardFilter = itemStatus.toLowerCase() === cardFilter.toLowerCase();
+      if (cardFilter === "closed") {
+        matchesCardFilter =
+          investorStatus?.toLowerCase() === "closed";
+      }
+      else if (cardFilter === "submitted") {
+        matchesCardFilter =
+        itemStatus?.toLowerCase() === "submitted";
+      }
+      else {
+        matchesCardFilter =
+          investorStatus?.toLowerCase() !== "closed" &&
+          itemStatus?.toLowerCase() !== "submitted" &&
+          getDateStatus(item) === cardFilter;
       }
     }
 
@@ -852,7 +885,7 @@ const ESGCapPage = () => {
                 <History className="w-4 h-4" />
                 Audit Logs
               </Button> */}
-             <Button
+              <Button
                 variant="outline"
                 onClick={() => setDocsDialogOpen(true)}
                 className="flex items-center gap-2 justify-start hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
@@ -860,7 +893,7 @@ const ESGCapPage = () => {
                 <Folder className="w-4 h-4" />
                 Uploads
               </Button>
-            </div> 
+            </div>
             {/* Filters Section */}
 
 
@@ -878,11 +911,11 @@ const ESGCapPage = () => {
 
             {/* {sortedItems.length > 0 && (
               <div className="mt-6 py-4"> */}
-              <ESGCapScoring items={esgCap?.plan || []}
-                onFilterChange={setCardFilter}
-                activeFilter={cardFilter}
-              />
-             {/* </div>
+            <ESGCapScoring items={esgCap?.plan || []}
+              onFilterChange={setCardFilter}
+              activeFilter={cardFilter}
+            />
+            {/* </div>
             )} */}
             <div className="space-y-4  mt-4">
               {filteredItems.length === 0 ? (
@@ -946,7 +979,7 @@ const ESGCapPage = () => {
                       </div>
                     );
                   })
-                )}
+              )}
             </div>
 
             {/* Action Buttons */}
