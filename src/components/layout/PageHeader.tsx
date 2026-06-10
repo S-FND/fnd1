@@ -10,7 +10,7 @@ export const PageHeader = ({ title, subtitle, actions }: PageHeaderProps) => {
   return (
     <div className="flex flex-col gap-2 mb-3 sm:flex-row sm:items-start sm:justify-between">
       <div className="space-y-0 min-w-0 flex-shrink-0">
-        <h1 className="text-xl font-bold tracking-tight">{title}</h1>
+        <h1 className="text-xl font-bold tracking-tight text-left">{title}</h1>
         {subtitle && (
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         )}
