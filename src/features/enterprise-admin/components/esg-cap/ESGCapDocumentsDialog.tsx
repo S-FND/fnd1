@@ -402,7 +402,7 @@ const ESGCapDocumentsDialog: React.FC<ESGCapDocumentsDialogProps> = ({
                             </Button>
 
                             {/* Delete */}
-                            <Button
+                            {/* <Button
                               variant="ghost"
                               size="sm"
                               disabled={deletingDocId === doc.id || downloadingAll}
@@ -415,7 +415,7 @@ const ESGCapDocumentsDialog: React.FC<ESGCapDocumentsDialogProps> = ({
                               ) : (
                                 <Trash2 className="h-4 w-4" />
                               )}
-                            </Button>
+                            </Button> */}
                           </div>
                         </TableCell>
                       </TableRow>

@@ -96,7 +96,7 @@ export function ExportDrawer({ open, onClose, items, entityName }: Props) {
       // Category filter (deal condition)
       if (f.categories.length && !f.categories.includes(i.dealCondition)) return false;
       // Priority filter
-      if (f.priorities.length && !f.priorities.includes(i.priority)) return false;
+      if (f.priorities.length && !f.priorities.includes(i.priority?.toLowerCase())) return false;
       return true;
     }).length;
   }, [items, f]);

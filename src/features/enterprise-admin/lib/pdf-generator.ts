@@ -97,7 +97,7 @@ function applyFilters(items: ESGCapItem[], f: ExportFilters): ESGCapItem[] {
   return items.filter((i) => {
     if (f.categories.length && !f.categories.includes(i.dealCondition))
       return false;
-    if (f.priorities.length && !f.priorities.includes(i.priority)) return false;
+    if (f.priorities.length && !f.priorities.includes(i.priority?.toLowerCase())) return false;
     if (f.statuses.length && !f.statuses.includes("Total")) {
       const effective = getDateStatus(i);
       if (!f.statuses.includes(effective)) return false;
