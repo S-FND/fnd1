@@ -6,7 +6,7 @@ export interface ExportFilters {
   reportType: ReportType;
   statuses: StatusFilter[];
   priorities: ("High" | "Medium" | "Low")[];
-  categories: ("CP" | "CS")[];
+  categories: ('CP' | 'CS' | 'ESG_Roadmap' | 'none')[];
   dateField: DateField;
   dateFrom: string;
   dateTo: string;

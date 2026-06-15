@@ -9,7 +9,7 @@ export const getEffectiveStatus = (item: ESGCapItem): CAPStatus => {
 
   // 1. Preserve these exact statuses
   if (originalStatus === 'submitted') return 'submitted';
-  if (originalStatus === 'closed') return 'closed';
+//   if (originalStatus === 'closed') return 'closed';
   if (originalStatus === 'request to re-submit') return 'request to re-submit';
 
   // 2. Investor closed overrides everything else
