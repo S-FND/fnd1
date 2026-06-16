@@ -176,7 +176,8 @@ const FeatureKPIEntry = () => {
   const periodToCheck = isAnnual ? 'FY' : currentQuarter;
   const yearToCheck = isAnnual ? currentFY : currentYear;
   const periodLocked = !isPeriodEditable(periodToCheck, yearToCheck);
-  const readOnly = user && user.misCompanyId == 'NEWME' ? false : isCompanyReadOnly || periodLocked;
+  let unlockIds: string[] = ['NEWME','SUPTAILS','RIPPLR','ILUVIA','GOODBUG','TERRACTIV','SAMMMMBT'];
+  const readOnly = user && (user.misCompanyId == 'NEWME' || unlockIds.includes(user.misCompanyId)) ? false : isCompanyReadOnly || periodLocked;
 
   // Handle quarter change - update URL and redirect if needed
   const handleQuarterChange = useCallback((newQuarter: string) => {
