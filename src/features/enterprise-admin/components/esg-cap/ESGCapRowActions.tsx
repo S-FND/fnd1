@@ -258,8 +258,8 @@ export const ESGCapRowActions: React.FC<ESGCapRowActionsProps> = ({ item, onUpda
         onOpenChange={setShowTemplateModal}
         document={documentInfo?.template}
         documentType={documentInfo?.type}
-      /> */}
-      {/* <DocumentTemplateModal
+      /> 
+      <DocumentTemplateModal
         open={showTemplateModal}
         onOpenChange={setShowTemplateModal}
         item={item}

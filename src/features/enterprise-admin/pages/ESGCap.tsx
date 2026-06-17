@@ -881,15 +881,15 @@ const ESGCapPage = () => {
                 categoryFilter={categoryFilter}
                 setCategoryFilter={setCategoryFilter}
               />
-              {/* <div className="flex justify-end mb-2"> */}
-              {/* <Button
+              <div className="flex flex-wrap items-center justify-end gap-2 mb-3 md:mb-0">
+              <Button
                 variant="outline"
                 onClick={() => setAuditOpen(true)}
                 className="flex items-center gap-2" // comment for production
               >
                 <History className="w-4 h-4" />
                 Audit Logs
-              </Button> */}
+              </Button>
              
               <Button
                 variant="outline"
@@ -907,6 +907,7 @@ const ESGCapPage = () => {
               >
                 <FileDown className="h-4 w-4" /> Export 
               </Button>
+              </div>
             </div>
             {/* Filters Section */}
 
@@ -1019,7 +1020,7 @@ const ESGCapPage = () => {
           </CardContent>
         </Card>
       </UnifiedSidebarLayout>
-      {/* <AuditDrawer open={auditOpen} onClose={() => setAuditOpen(false)} logs={logs} /> */}
+      <AuditDrawer open={auditOpen} onClose={() => setAuditOpen(false)} logs={logs} />
       <AssessmentTypeDialog />
       <ESGCapDocumentsDialog
         open={docsDialogOpen}
