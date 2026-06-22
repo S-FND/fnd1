@@ -1876,7 +1876,6 @@ export const useAnalyticsDashboardData = (filters: AnalyticsFilters,
 
             const aggregation = buildAggregation(combinedKpis);
             const hasFashionPkg = fashionPkgCompanyIds.has(company.id);
-            console.log(`Company ${company.name} (${company.id}) `);
 
             const insights = deriveInsights(aggregation, company.industry, hasFashionPkg);
             return {
@@ -1928,7 +1927,6 @@ export const useAnalyticsDashboardData = (filters: AnalyticsFilters,
             quarterlyPerQuarterRawData![q] = filteredCompanies.map(company => {
               const kpis = q14ByCompanyQuarter[company.id]?.[q] || {};
               const aggregation = buildAggregation(kpis);
-              console.log(`Company ${company.name} (${company.id}) - Quarter ${q} `);
               const insights = deriveInsights(aggregation, company.industry, fashionPkgCompanyIds.has(company.id));
               return {
                 companyId: company.id,
