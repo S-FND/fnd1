@@ -50,6 +50,8 @@ import {
   Recycle,
   HelpCircle,
   CheckCircle,
+  Info,
+  Leaf,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { httpClient } from '@/lib/httpClient';
@@ -77,6 +79,67 @@ const FEATURE_ICONS: Record<string, React.ElementType> = {
   sri: FileText,
   externalReporting: FileText,
 };
+
+const ESG_CATEGORIES = [
+  {
+    label: "Environment",
+    icon: Leaf,
+    color: "text-green-800",
+    bg: "bg-green-50",
+    badge: "bg-green-100 text-green-800",
+    border: "border-green-200",
+    kpis: [
+      "Net Revenue (₹ Cr)",
+      "Virgin Plastic (MT)",
+      "Total Plastic (MT)",
+      "Plastic Recycled (MT)",
+      "Total Packaging Material Recycled (MT)",
+      "EPR Compliant Companies",
+      "Voluntary Plastic Initiative Companies",
+      "Recyclable Packaging (%)",
+      "Non-Recyclable Packaging (%)",
+      "Recyclable Materials (%)",
+      "Total Materials Used",
+      "Recyclable Materials (%)",
+      "Total Water Consumed (KL)",
+      "Avg. Fresh Water Consumed (%)",
+      "Avg. Wastewater Recycled (%)",
+    ],
+  },
+  {
+    label: "Social",
+    icon: Users,
+    color: "text-blue-800",
+    bg: "bg-blue-50",
+    badge: "bg-blue-100 text-blue-800",
+    border: "border-blue-200",
+    kpis: [
+      "Supplier CoC (In Place)",
+      "Supplier CoC (Training)",
+      "Total Vendors",
+      "Vendors with DEI Factors",
+      "Female C-Level",
+      "Total C-Level",
+      "Female Gross Wages (WC + BC)",
+      "Female Employee Count (WC + BC)",
+      "Male Gross Wages (WC + BC)",
+      "Male Employee Count (WC + BC)",
+    ],
+  },
+  {
+    label: "Governance",
+    icon: Building2,
+    color: "text-purple-800",
+    bg: "bg-purple-50",
+    badge: "bg-purple-100 text-purple-800",
+    border: "border-purple-200",
+    kpis: [
+      "Policy (In Place)",
+      "Policy (Employee Training)",
+      "High Impact Cases Unresolved",
+    ],
+  },
+];
 
 // Get current financial year
 const getCurrentFinancialYear = () => {
@@ -1039,7 +1102,7 @@ const PreviewSubmission = () => {
       </div>
 
       {/* Confirmation Dialog */}
-      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+      {/* <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Submission</AlertDialogTitle>
@@ -1052,6 +1115,98 @@ const PreviewSubmission = () => {
               Once submitted, this data will be sent for review. Are you sure you want to proceed?
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmSubmit}>
+              Confirm Submission
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog> */}
+
+      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <AlertDialogContent className="max-w-[560px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Submission</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div>
+                {/* ✅ Original text — unchanged */}
+                <p className="text-sm text-muted-foreground mb-3">
+                  You are about to submit {totalFilled} KPI entries for {selectedQuarter} {selectedYear} and FY {currentFY}-{String(currentFY + 1).slice(-2)}.
+                </p>
+                <p className="text-sm mb-0.5"><strong>Quarterly KPIs:</strong> {quarterlyFilled} fields</p>
+                <p className="text-sm mb-3"><strong>Annual KPIs:</strong> {annualFilled} fields</p>
+
+
+                {/* ✅ New — KPI breakdown grid */}
+                <div className="border-t pt-3 mb-3">
+                  <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                    KPI Breakdown
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {ESG_CATEGORIES.map((cat) => {
+                      const Icon = cat.icon;
+                      return (
+                        <div key={cat.label} className="border rounded-md overflow-hidden">
+                          <div className={`${cat.bg} border-b ${cat.border} px-2.5 py-1.5 flex items-center gap-1.5`}>
+                            <Icon className={`w-3 h-3 ${cat.color}`} />
+                            <p className={`text-[10px] font-medium uppercase tracking-wide m-0 ${cat.color}`}>
+                              {cat.label}
+                            </p>
+                            <span className={`ml-auto text-[10px] px-1.5 rounded-full ${cat.badge}`}>
+                              {cat.kpis.length}
+                            </span>
+                          </div>
+                          <div className="py-0.5">
+                            {cat.kpis.map((kpi) => (
+                              <div key={kpi} className="flex items-start gap-1.5 px-2.5 py-0.5">
+                                <CheckCircle2 className="w-3 h-3 shrink-0 mt-0.5" style={{ color: "hsl(142,72%,29%)" }} />
+                                <span className="text-[11px] leading-snug">{kpi}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <p className="text-sm text-muted-foreground mb-3">
+                  Once submitted, this data will be sent for review. Are you sure you want to proceed?
+                </p>
+
+                {/* Warning */}
+                {/* <div className="flex gap-2 items-start rounded-md p-3" style={{ ... }}>
+                  <Info className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "hsl(38, 92%, 50%)" }} />
+                  <p className="text-xs leading-relaxed m-0" style={{ color: "hsl(38, 92%, 50%)" }}>
+                    Please ensure that all the KPI information listed above is completed.
+                  </p>
+                </div> */}
+
+                {/* ✅ New — warning notice */}
+                {/* <div className="flex gap-2 items-start bg-warning/10 border border-warning/30 rounded-md p-3">
+                  <Info className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+                  <p className="text-xs text-warning leading-relaxed m-0">
+                    Please ensure that all the KPI information listed above is completed.
+                  </p>
+                </div> */}
+                <div
+                  className="flex gap-2 items-start rounded-md p-3"
+                  style={{
+                    background: "hsl(38 92% 50% / 0.1)",
+                    border: "1px solid hsl(38 92% 50% / 0.3)",
+                  }}
+                >
+                  <Info className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "hsl(38, 92%, 50%)" }} />
+                  <p className="text-xs leading-relaxed m-0" style={{ color: "hsl(38, 92%, 50%)" }}>
+                    Please ensure that all the KPI information listed above is completed.
+                  </p>
+                </div>
+
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmSubmit}>

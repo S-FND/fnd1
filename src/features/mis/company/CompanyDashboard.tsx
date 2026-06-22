@@ -158,6 +158,8 @@ const CompanyDashboard = () => {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
+  const [q4DataStatus,setQ4DataStatus]=useState(false);
+
   // ── Data hooks ────────────────────────────────────────────
   const { getPublishedPeriod, loading: settingsLoading } = useAdminSettings();
   const published = getPublishedPeriod();
@@ -216,6 +218,13 @@ const CompanyDashboard = () => {
     fetchAll();
     return () => { cancelled = true; };  // cleanup if component unmounts mid-fetch
   }, []);
+
+  useEffect(()=>{
+    if(companyId && kpiEntries && kpiEntries.length>0){
+      let q4CompanyDataStatus=kpiEntries.filter(k => k.year == 2025 && k.quarter == 'Q4' && k.companyId == companyId );
+      setQ4DataStatus(q4CompanyDataStatus.length>0?true:false)
+    }
+  },[companyId,kpiEntries])
 
 
   const analyticsData = useAnalyticsDashboardData({
@@ -311,9 +320,9 @@ const CompanyDashboard = () => {
     const companyData = allRawData.find((c: any) => c.companyId === companyId);
 
     // debug — remove once confirmed working
-    console.log('[ESGCards] companyId:', companyId);
-    console.log('[ESGCards] matched companyData:', companyData);
-    console.log('[ESGCards] allRawData ids:', allRawData.map((c: any) => c.companyId));
+    // console.log('[ESGCards] companyId:', companyId);
+    // console.log('[ESGCards] matched companyData:', companyData);
+    // console.log('[ESGCards] allRawData ids:', allRawData.map((c: any) => c.companyId));
 
     if (!companyData) return;
 
@@ -325,8 +334,8 @@ const CompanyDashboard = () => {
     const companyBrand = companyData.brand || companyName || '';
 
     // debug — remove once confirmed working
-    console.log('[ESGCards] companyBrand:', companyBrand);
-    console.log('[ESGCards] esgPctileMap keys:', [...assignPercentiles(submitting, 'esgCompositeScore').keys()]);
+    // console.log('[ESGCards] companyBrand:', companyBrand);
+    // console.log('[ESGCards] esgPctileMap keys:', [...assignPercentiles(submitting, 'esgCompositeScore').keys()]);
 
     const esgPctile = assignPercentiles(submitting, 'esgCompositeScore').get(companyBrand) ?? 1;
     const envPctile = assignPercentiles(envEligible, 'circularEconomyIndex').get(companyBrand) ?? 1;
@@ -334,7 +343,7 @@ const CompanyDashboard = () => {
     const govPctile = assignPercentiles(submitting, 'governanceScore').get(companyBrand) ?? 1;
 
     // debug — remove once confirmed working
-    console.log('[ESGCards] percentiles:', { esgPctile, envPctile, socPctile, govPctile });
+    // console.log('[ESGCards] percentiles:', { esgPctile, envPctile, socPctile, govPctile });
 
     setEsgCards([
       {
@@ -464,7 +473,7 @@ const CompanyDashboard = () => {
       </div>
 
       {/* ── Locked-period alert ──────────────────────────────── */}
-      {isLockedToPublished && !settingsLoading && (
+      {q4DataStatus && isLockedToPublished && !settingsLoading && (
         <Alert className="mb-4 border-amber-300 bg-amber-50 dark:bg-amber-950/20">
           <Lock className="w-4 h-4 text-amber-600" />
           <AlertDescription className="text-left text-amber-800 dark:text-amber-300/90">
@@ -477,12 +486,12 @@ const CompanyDashboard = () => {
       )}
 
       {/* ── Progress Report ──────────────────────────────────── */}
-      <div className="flex items-center gap-2 mb-3">
+      {q4DataStatus && <div className="flex items-center gap-2 mb-3">
         <Trophy className="w-5 h-5 text-amber-500" />
         <h2 className="text-base font-semibold">Progress Report - Category (AA–C)</h2>
-      </div>
+      </div>}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      {q4DataStatus && <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         {isPeerLoading || progressCards.length === 0
           ? [1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)
           : progressCards.map(card => {
@@ -504,10 +513,10 @@ const CompanyDashboard = () => {
             );
           })
         }
-      </div>
+      </div>}
 
       {/* ── ESG Score Cards ───────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      {q4DataStatus && <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         {allCompaniesData.isLoading || esgCards.length === 0
           ? [1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)
           : esgCards.map(card => {
@@ -552,7 +561,7 @@ const CompanyDashboard = () => {
             );
           })
         }
-      </div>
+      </div>}
 
       {/* ── ESG Recommendations ───────────────────────────────── */}
       {recommendationsRaw.length > 0 && !allCompaniesData.isLoading && (
