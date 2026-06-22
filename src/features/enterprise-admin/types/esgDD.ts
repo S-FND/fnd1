@@ -22,12 +22,12 @@ export type ESGDDReportType = 'manual' | 'automated' | 'uploaded';
 export type ESGCapStatus = 'in_review' | 'accepted' | 'pending' | 'in_progress' | 'completed' | 'delayed';
 
 export type CAPStatus = 
-  | "upcoming"
-  | "due in this month"
+  | "due-in-this-month"
   | "closed"
   | "overdue"
-  | "submitted"
-  | "request to re-submit";
+  | "partly-submitted"
+  | "submitted-pending-review"
+  | "";
 
 export type ESGCapPriority = 'high' | 'medium' | 'low';
 
@@ -147,6 +147,7 @@ export interface ESGCapItem {
   recommendation?: string;
   priority: ESGCapPriority;
   status: CAPStatus;
+  companyStatus: CAPStatus;
   investorStatus: string;
   deadline?: string;    // This might be your targetDate
   targetDate?: string;  // Alternative to deadline

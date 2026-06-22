@@ -14,12 +14,12 @@ interface Props {
 }
 
 const STATUS_FILTERS: { value: CAPStatus | "Total"; label: string }[] = [
-  { value: "Total", label: "Total" },
-  { value: "upcoming", label: "Upcoming" },
-  { value: "due in this month", label: "Due in This Month" },
+  { value: "", label: "" },
+  { value: "due-in-this-month", label: "Due in This Month" },
   { value: "closed", label: "Closed" },
   { value: "overdue", label: "Overdue" },
-  { value: "submitted", label: "Submitted" },
+  { value: "partly-submitted", label: "Partly Submitted" },
+  { value: "submitted-pending-review", label: "Submitted Pending Review" },
 ];
 
 const PRIORITIES: { value: ESGCapPriority; label: string }[] = [
@@ -37,15 +37,27 @@ const DEAL_CONDITIONS: { value: ESGCapDealCondition; label: string }[] = [
 
 const getDateStatus = (item: ESGCapItem) => {
   const investorStatus = (item.investorStatus || "").toLowerCase();
+  const companyStatus = (item.companyStatus || "").toLowerCase();
 
+  // 1. Check if investor has closed it
   if (investorStatus === "closed") {
     return "closed";
   }
 
-  if ((item.status || "").toLowerCase() === "submitted") {
-    return "submitted";
+  // 2. Check company status first (these are the actual status values)
+  if (companyStatus === "closed") {
+    return "closed";
   }
 
+  if (companyStatus === "partly-submitted") {
+    return "partly-submitted";
+  }
+
+  if (companyStatus === "submitted-pending-review") {
+    return "submitted-pending-review";
+  }
+
+  // 3. Check if overdue based on target date
   if (!item.targetDate) {
     return "";
   }
@@ -56,17 +68,20 @@ const getDateStatus = (item: ESGCapItem) => {
   const target = new Date(item.targetDate);
   target.setHours(0, 0, 0, 0);
 
+  // Check if due in current month
   if (
     target.getMonth() === today.getMonth() &&
     target.getFullYear() === today.getFullYear()
   ) {
-    return "due in this month";
+    return "due-in-this-month";
   }
 
+  // Check if overdue
   if (target < today) {
     return "overdue";
   }
 
+  // Default: upcoming (for future dates)
   return "upcoming";
 };
 
