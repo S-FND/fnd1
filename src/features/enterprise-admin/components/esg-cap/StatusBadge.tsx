@@ -56,6 +56,14 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
           </Badge>
         );
 
+      case 'submitted':
+      case 'submitted':
+        return (
+          <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200 whitespace-nowrap">
+            <Clock className="h-3 w-3 mr-1" /> Submitted
+          </Badge>
+        );
+
       case 'submitted-pending-review':
       case 'submitted pending review':
         return (

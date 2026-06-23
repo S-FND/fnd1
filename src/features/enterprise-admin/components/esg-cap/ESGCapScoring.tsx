@@ -31,7 +31,10 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
     return sum + (baseWeight * weight);
   }, 0);
 
-  // Helper: Check if target date is in current month (monthly basis, not date-wise)
+  // 🔥 Helper: Normalize status for consistent comparison
+  const normalize = (s?: string) => (s ?? '').trim().toLowerCase();
+
+  // Helper: Check if target date is in current month
   const isInCurrentMonth = (targetDate?: string): boolean => {
     if (!targetDate) return false;
     const today = new Date();
@@ -40,40 +43,60 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
       target.getFullYear() === today.getFullYear();
   };
 
-  // Helper: Get effective status from companyStatus (normalizes different formats)
+  // 🔥 FIXED: Get effective status - INVESTOR STATUS TAKES PRIORITY
   const getEffectiveCompanyStatus = (item: ESGCapItem): string => {
-    const companyStatus = (item.companyStatus || '').toLowerCase().trim();
-    const investorStatus = (item.investorStatus || '').toLowerCase().trim();
+    const companyStatus = normalize(item.companyStatus);
+    const investorStatus = normalize(item.investorStatus);
 
-    if (investorStatus === 'closed' || companyStatus === 'closed') {
+    // 🔥 1. INVESTOR STATUS TAKES PRIORITY - CHECK FIRST
+    if (investorStatus === 'closed') {
       return 'closed';
     }
+    if (investorStatus === 're-submit-requested' || investorStatus === 're-submit requested') {
+      return 're-submit-requested';
+    }
+    if (investorStatus === 'partly-submitted' || investorStatus === 'partly submitted') {
+      return 'partly-submitted';
+    }
+    if ((companyStatus === 'submitted' || companyStatus === 'submitted-pending-review') &&
+      (investorStatus === 'under-review' || investorStatus === 'under review')) {
+      return 'submitted-pending-review';
+    }
 
+    // 2. Check company status (only if investor status is not closed or overriding)
+    if (companyStatus === 'closed') {
+      return 'closed';
+    }
     if (companyStatus === 'partly-submitted' || companyStatus === 'partly submitted') {
       return 'partly-submitted';
     }
-    if (companyStatus === 'submitted-pending-review' || companyStatus === 'submitted pending review') {
-      return 'submitted-pending-review';
+    if (companyStatus === 'submitted' || companyStatus === 'submitted') {
+      return 'submitted';
     }
-    if (companyStatus === 're-submit-required' || companyStatus === 're-submit required' || companyStatus === 're-submit-Required') {
-      return 're-submit-Required';
+    if ((companyStatus === 'submitted' || companyStatus === 'submitted-pending-review') && 
+      (investorStatus === 'under-review' || investorStatus === 'under review')) {
+    return 'submitted-pending-review';
+  }
+    if (companyStatus === 're-submit-required' || companyStatus === 're-submit required') {
+      return 're-submit-requested';
     }
     if (companyStatus === 'overdue') {
       return 'overdue';
     }
 
+    // 3. If no target date, return empty
     if (!item.targetDate) return '';
 
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const target = new Date(item.targetDate);
+    target.setHours(0, 0, 0, 0);
 
     if (target.getMonth() === today.getMonth() &&
       target.getFullYear() === today.getFullYear()) {
       return 'due-in-this-month';
     }
 
-    today.setHours(0, 0, 0, 0);
-    target.setHours(0, 0, 0, 0);
     if (target < today) {
       return 'overdue';
     }
@@ -81,13 +104,26 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
     return 'upcoming';
   };
 
-  // Helper: Get investor status (use investorStatus field or derive)
+  // 🔥 FIXED: Get investor status - INVESTOR STATUS TAKES PRIORITY
   const getInvestorStatus = (item: ESGCapItem): string => {
-    if (item.investorStatus && item.investorStatus.trim() !== '') {
-      return item.investorStatus.toLowerCase();
+    const investorStatus = normalize(item.investorStatus);
+    const companyStatus = normalize(item.companyStatus);
+
+    // 🔥 1. Check investor status FIRST (handles both formats)
+    if (investorStatus === 'closed') {
+      return 'closed';
+    }
+    if (investorStatus === 're-submit-requested' || investorStatus === 're-submit requested') {
+      return 're-submit-requested';
+    }
+    if (investorStatus === 'partly-submitted' || investorStatus === 'partly submitted') {
+      return 'partly-submitted';
+    }
+    if (investorStatus === 'submitted-pending-review' || investorStatus === 'submitted pending review') {
+      return 'submitted-pending-review';
     }
 
-    const companyStatus = (item.companyStatus || '').toLowerCase();
+    // 2. Check company status (only if investor status is not set)
     if (companyStatus === 'closed') {
       return 'closed';
     }
@@ -97,15 +133,18 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
     if (companyStatus === 'submitted-pending-review' || companyStatus === 'submitted pending review') {
       return 'submitted-pending-review';
     }
-    if (companyStatus === 're-submit-required' || companyStatus === 're-submit required' || companyStatus === 're-submit-Required') {
+    if (companyStatus === 're-submit-required' || companyStatus === 're-submit required') {
       return 're-submit-requested';
     }
 
-    if (companyStatus === 'overdue' && (item.priority === 'High' || item.priority === 'high')) {
+    // 3. Check high priority overdue
+    if (companyStatus === 'overdue' &&
+      (normalize(item.priority) === 'high' || normalize(item.priority) === 'high priority')) {
       return 'high-priority-overdue';
     }
 
-    return '';
+    // 4. Return the effective status
+    return getEffectiveCompanyStatus(item);
   };
 
   // Check if item is closed
@@ -130,17 +169,15 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
   const complianceScore = Math.round(safeProgress);
 
   // ✅ Metrics using filteredItems (ONLY CP and CS)
-
   const dueThisMonthCount = filteredItems.filter(
     item => {
       const effectiveStatus = getEffectiveCompanyStatus(item);
-      return effectiveStatus === 'due-in-this-month' &&
-        getInvestorStatus(item) !== 'closed';
+      return effectiveStatus === 'due-in-this-month' && !isClosed(item);
     }
   ).length;
 
   const overdueCount = filteredItems.filter(
-    item => getEffectiveCompanyStatus(item) === 'overdue'
+    item => getEffectiveCompanyStatus(item) === 'overdue' && !isClosed(item)
   ).length;
 
   const partlySubmittedCount = filteredItems.filter(
@@ -148,15 +185,21 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
   ).length;
 
   const resubmitRequestedCount = filteredItems.filter(
-    item => (item.investorStatus || '').toLowerCase() === 're-submit-requested'
+    item => getInvestorStatus(item) === 're-submit-requested'
   ).length;
 
   const submittedPendingReviewCount = filteredItems.filter(
-    item => getInvestorStatus(item) === 'submitted-pending-review'
+    item => {
+      const companyStatus = normalize(item.companyStatus);
+      const investorStatus = normalize(item.investorStatus);
+      // Company has submitted AND investor hasn't closed it yet
+      return (companyStatus === 'submitted') &&
+        investorStatus === 'under-review';
+    }
   ).length;
 
   const closedCount = filteredItems.filter(
-    item => getInvestorStatus(item) === 'closed'
+    item => isClosed(item)
   ).length;
 
   // Helper to style active card
@@ -175,7 +218,6 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
   // ✅ Single click toggle: click to filter, click again to clear
   const handleFilterToggle = (filterKey: string | null, isStatic: boolean = false) => {
     if (isStatic) return;
-    // Toggle: if same filter is active, clear it; otherwise set it
     if (activeFilter === filterKey) {
       onFilterChange?.(null);
     } else {
@@ -185,8 +227,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
 
   return (
     <div className="space-y-4">
-      {/* ✅ Single Card with 7 items in one line */}
-      <Card className="border-l-4 border-l-blue-500 shadow-sm">
+      <Card>
         <CardContent className="py-3">
           <div className="grid grid-cols-7 gap-2">
             {/* 1. Compliance Score - STATIC */}
