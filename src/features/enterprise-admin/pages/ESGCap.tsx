@@ -173,14 +173,23 @@ const ComparePlanView = ({
 
   const StatusBadge: React.FC<{ status: string; highlight?: boolean }> = ({ status, highlight }) => {
     const statusColor = {
-      completed: "bg-green-100 text-green-800",
-      in_progress: "bg-blue-100 text-blue-800",
-      delayed: "bg-red-100 text-red-800",
-      accepted: "bg-emerald-100 text-emerald-800",
-      in_review: "bg-gray-100 text-gray-800",
-      pending: "bg-amber-100 text-amber-800"
+      // ✅ New statuses
+      "closed": "bg-green-100 text-green-800",
+      "due-in-this-month": "bg-orange-100 text-orange-800",
+      "overdue": "bg-red-100 text-red-800",
+      "partly-submitted": "bg-blue-100 text-blue-800",
+      "re-submit-Requested": "bg-amber-100 text-amber-800",
+      "submitted-pending-review": "bg-purple-100 text-purple-800",
+      "upcoming": "bg-slate-100 text-slate-800",
+      // Legacy support
+      "completed": "bg-green-100 text-green-800",
+      "in_progress": "bg-blue-100 text-blue-800",
+      "delayed": "bg-red-100 text-red-800",
+      "accepted": "bg-emerald-100 text-emerald-800",
+      "in_review": "bg-gray-100 text-gray-800",
+      "pending": "bg-amber-100 text-amber-800"
     }[status] || "bg-gray-100 text-gray-800";
-
+  
     return <Badge className={`${statusColor} ${highlight ? "border-2 border-yellow-500" : ""}`}>{status}</Badge>;
   };
 
@@ -299,7 +308,7 @@ const ComparePlanView = ({
                 </TableCell>
 
                 <TableCell>
-                  <StatusBadge status={item.status} highlight={changedFields.status} />
+                  <StatusBadge status={item.companyStatus} highlight={changedFields.companyStatus} />
                 </TableCell>
 
                 <TableCell>
@@ -589,114 +598,167 @@ const ESGCapPage = () => {
     const itemStatus = item?.status || '';
     const itemCategory = item?.category || '';
     const investorStatus = item?.investorStatus || '';
-
+    const companyStatus = item?.companyStatus || '';
+  
     const matchesSearch = itemTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
       itemMeasures.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || itemStatus === statusFilter;
     const matchesCategory = categoryFilter === 'all' || itemCategory === categoryFilter;
-
+  
     const getDateStatus = (item: ESGCapItem) => {
-      if (!item.targetDate) return " ";
-
+      const investorStatus = (item.investorStatus || "").toLowerCase();
+      const companyStatus = (item.companyStatus || "").toLowerCase();
+    
+      // 1. Check if investor has closed it
+      if (investorStatus === "closed") {
+        return "closed";
+      }
+      if (investorStatus === "re-submit-requested") {
+        return "re-submit-requested";
+      }
+    
+      // 2. Check company status
+      if (companyStatus === "closed") return "closed";
+      if (companyStatus === "partly-submitted") return "partly-submitted";
+      if (companyStatus === "submitted-pending-review") return "submitted-pending-review";
+      if (companyStatus === "due-in-this-month") return "due-in-this-month";
+      if (companyStatus === "overdue") return "overdue";
+    
+      // 3. If no target date, return empty
+      if (!item.targetDate) return "";
+    
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-
+    
       const target = new Date(item.targetDate);
       target.setHours(0, 0, 0, 0);
-
+    
+      // Check if due in current month
       if (
         target.getMonth() === today.getMonth() &&
         target.getFullYear() === today.getFullYear()
       ) {
-        return "due in this month";
+        return "due-in-this-month";
       }
-
+    
+      // Check if overdue
       if (target < today) {
         return "overdue";
       }
-
+    
       return "upcoming";
     };
-
+  
     let matchesCardFilter = true;
-
     if (cardFilter) {
+      const effectiveStatus = getDateStatus(item);
+      
       if (cardFilter === "closed") {
-        matchesCardFilter =
-          investorStatus?.toLowerCase() === "closed";
-      }
-      else if (cardFilter === "submitted") {
-        matchesCardFilter =
-        itemStatus?.toLowerCase() === "submitted";
-      }
-      else {
-        matchesCardFilter =
-          investorStatus?.toLowerCase() !== "closed" &&
-          itemStatus?.toLowerCase() !== "submitted" &&
-          getDateStatus(item) === cardFilter;
+        matchesCardFilter = investorStatus?.toLowerCase() === "closed" || 
+                            companyStatus?.toLowerCase() === "closed";
+      } else if (cardFilter === "partly-submitted") {
+        matchesCardFilter = effectiveStatus === "partly-submitted";
+      } else if (cardFilter === "submitted-pending-review") {
+        matchesCardFilter = effectiveStatus === "submitted-pending-review";
+      } else if (cardFilter === 're-submit-requested') {
+        matchesCardFilter = investorStatus === 're-submit-requested';
+      } else if (cardFilter === "due-in-this-month") {
+        matchesCardFilter = effectiveStatus === "due-in-this-month";
+      } else if (cardFilter === "overdue") {
+        matchesCardFilter = effectiveStatus === "overdue";
+      } else {
+        matchesCardFilter = effectiveStatus === cardFilter;
       }
     }
-
+  
     return matchesSearch && matchesStatus && matchesCategory && matchesCardFilter;
   }) || [];
 
   const isOverdue = (item: ESGCapItem) => {
+    const companyStatus = (item.companyStatus || "").toLowerCase();
+    const investorStatus = (item.investorStatus || "").toLowerCase();
+  
+    // If closed, not overdue
+    if (companyStatus === "closed" || investorStatus === "closed") {
+      return false;
+    }
+  
+    // If already submitted, not overdue
+    if (companyStatus === "partly-submitted" || 
+        companyStatus === "submitted-pending-review" ) {
+      return false;
+    }
+  
     if (!item.targetDate) return false;
-
+  
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
+  
     const targetDate = new Date(item.targetDate);
     targetDate.setHours(0, 0, 0, 0);
-
-    return (
-      targetDate < today &&
-      item.investorStatus !== "closed" &&
-      !item.actualDate
-    );
+  
+    return targetDate < today;
   };
 
 
   const sortedItems = [...filteredItems].sort((a, b) => {
-    // 1. overdue items on top
+    // 1. Overdue items on top
     const aOverdue = isOverdue(a);
     const bOverdue = isOverdue(b);
-
+  
     if (aOverdue && !bOverdue) return -1;
     if (!aOverdue && bOverdue) return 1;
-
-    // 2. completed items at bottom
-    const aCompleted = a.investorStatus === "closed";
-    const bCompleted = b.investorStatus === "closed";
-
-    if (aCompleted && !bCompleted) return 1;
-    if (!aCompleted && bCompleted) return -1;
-
-    // 3. normal sorting
+  
+    // 2. Closed items at bottom
+    const aClosed = a.investorStatus === "closed" || a.companyStatus === "closed";
+    const bClosed = b.investorStatus === "closed" || b.companyStatus === "closed";
+  
+    if (aClosed && !bClosed) return 1;
+    if (!aClosed && bClosed) return -1;
+  
+    // 3. Sort by selected column
     if (!sortConfig) return 0;
-
-    if (
-      sortConfig.key === "targetDate" ||
-      sortConfig.key === "createdAt" ||
-      sortConfig.key === "actualDate"
-    ) {
-      const dateA = new Date(a[sortConfig.key] || 0).getTime();
-      const dateB = new Date(b[sortConfig.key] || 0).getTime();
-
+  
+    const aVal = a[sortConfig.key];
+    const bVal = b[sortConfig.key];
+  
+    // Handle null/undefined
+    if (aVal === undefined || aVal === null) return 1;
+    if (bVal === undefined || bVal === null) return -1;
+  
+    // Date fields
+    if (["targetDate", "createdAt", "actualDate", "lastReviewDate"].includes(sortConfig.key)) {
+      const dateA = new Date(aVal || 0).getTime();
+      const dateB = new Date(bVal || 0).getTime();
+      return sortConfig.direction === "asc" ? dateA - dateB : dateB - dateA;
+    }
+  
+    // Priority
+    if (sortConfig.key === "priority") {
+      const order = { High: 3, Medium: 2, Low: 1 };
+      const aPriority = order[aVal as keyof typeof order] || 0;
+      const bPriority = order[bVal as keyof typeof order] || 0;
+      return sortConfig.direction === "asc" ? aPriority - bPriority : bPriority - aPriority;
+    }
+  
+    // String comparison
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
       return sortConfig.direction === "asc"
-        ? dateA - dateB
-        : dateB - dateA;
+        ? aVal.localeCompare(bVal)
+        : bVal.localeCompare(aVal);
     }
-
-    if (a[sortConfig.key] < b[sortConfig.key]) {
-      return sortConfig.direction === "asc" ? -1 : 1;
+  
+    // Number comparison
+    if (typeof aVal === 'number' && typeof bVal === 'number') {
+      return sortConfig.direction === "asc" ? aVal - bVal : bVal - aVal;
     }
-
-    if (a[sortConfig.key] > b[sortConfig.key]) {
-      return sortConfig.direction === "asc" ? 1 : -1;
-    }
-
-    return 0;
+  
+    // Fallback
+    const aString = String(aVal);
+    const bString = String(bVal);
+    return sortConfig.direction === "asc"
+      ? aString.localeCompare(bString)
+      : bString.localeCompare(aString);
   });
 
   const requestSort = (key: keyof ESGCapItem) => {
@@ -1027,7 +1089,7 @@ const ESGCapPage = () => {
         onClose={() => setDocsDialogOpen(false)}
         entityId={entityId}
       />
-      <ExportDrawer open={drawer} onClose={() => setDrawer(false)} items={esgCap?.plan || []} entityName={{companyName}} />
+      <ExportDrawer open={drawer} onClose={() => setDrawer(false)} items={esgCap?.plan || []} entityName={companyName} />
 
     </div>
   );
