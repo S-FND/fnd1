@@ -45,7 +45,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
 
   // 🔥 FIXED: Get effective status - INVESTOR STATUS TAKES PRIORITY
   const getEffectiveCompanyStatus = (item: ESGCapItem): string => {
-    const companyStatus = normalize(item.companyStatus);
+    const companyStatus = normalize(item.companyStatus ?? item.status);
     const investorStatus = normalize(item.investorStatus);
 
     // 🔥 1. INVESTOR STATUS TAKES PRIORITY - CHECK FIRST
@@ -107,7 +107,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
   // 🔥 FIXED: Get investor status - INVESTOR STATUS TAKES PRIORITY
   const getInvestorStatus = (item: ESGCapItem): string => {
     const investorStatus = normalize(item.investorStatus);
-    const companyStatus = normalize(item.companyStatus);
+    const companyStatus = normalize(item.companyStatus ?? item.status);
 
     // 🔥 1. Check investor status FIRST (handles both formats)
     if (investorStatus === 'closed') {
@@ -190,7 +190,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
 
   const submittedPendingReviewCount = filteredItems.filter(
     item => {
-      const companyStatus = normalize(item.companyStatus);
+      const companyStatus = normalize(item.companyStatus ?? item.status);
       const investorStatus = normalize(item.investorStatus);
       // Company has submitted AND investor hasn't closed it yet
       return (companyStatus === 'submitted') &&

@@ -37,7 +37,7 @@ const DEAL_CONDITIONS: { value: ESGCapDealCondition; label: string }[] = [
 
 const getDateStatus = (item: ESGCapItem) => {
   const investorStatus = (item.investorStatus || "").toLowerCase();
-  const companyStatus = (item.companyStatus || "").toLowerCase();
+  const companyStatus = (item.companyStatus || item.status || "").toLowerCase();
 
   // 1. Check if investor has closed it
   if (investorStatus === "closed") {

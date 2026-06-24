@@ -308,7 +308,10 @@ const ComparePlanView = ({
                 </TableCell>
 
                 <TableCell>
-                  <StatusBadge status={item.companyStatus} highlight={changedFields.companyStatus} />
+                  <StatusBadge
+                    status={item.companyStatus ?? item.status}
+                    highlight={changedFields.companyStatus}
+                  />
                 </TableCell>
 
                 <TableCell>
@@ -607,7 +610,7 @@ const ESGCapPage = () => {
   
     const getDateStatus = (item: ESGCapItem) => {
       const investorStatus = (item.investorStatus || "").toLowerCase();
-      const companyStatus = (item.companyStatus || "").toLowerCase();
+      const companyStatus = (item.companyStatus || item.status || "").toLowerCase();
     
       // 1. Check if investor has closed it
       if (investorStatus === "closed") {
@@ -680,7 +683,7 @@ const ESGCapPage = () => {
   }) || [];
 
   const isOverdue = (item: ESGCapItem) => {
-    const companyStatus = (item.companyStatus || "").toLowerCase();
+    const companyStatus = (item.companyStatus || item.status || "").toLowerCase();
     const investorStatus = (item.investorStatus || "").toLowerCase();
   
     // If closed, not overdue
