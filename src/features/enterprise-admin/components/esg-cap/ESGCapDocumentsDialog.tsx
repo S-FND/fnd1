@@ -11,7 +11,7 @@ import {
 import {
   Table, TableHeader, TableHead, TableBody, TableRow, TableCell
 } from "@/components/ui/table";
-import { FileText, Eye, Download, Loader2, Trash2, Archive } from 'lucide-react';
+import { FileText, Eye, Download, Loader2, Trash2, Archive, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { httpClient } from '@/lib/httpClient';
 import { logger } from '@/hooks/logger';
@@ -51,6 +51,7 @@ const ESGCapDocumentsDialog: React.FC<ESGCapDocumentsDialogProps> = ({
   const [deletingDocId, setDeletingDocId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<UploadedDocument | null>(null);
   const [downloadingAll, setDownloadingAll] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch all documents for entity
   const fetchDocuments = async () => {
@@ -247,6 +248,17 @@ const ESGCapDocumentsDialog: React.FC<ESGCapDocumentsDialogProps> = ({
     }
   };
 
+  // --- 🔍 FILTER LOGIC ---
+  const filteredDocuments = documents.filter((doc) => {
+    const searchLower = searchTerm.toLowerCase().trim();
+    if (!searchLower) return true;
+    return (
+      doc.filename?.toLowerCase().includes(searchLower) ||
+      doc.capItemName?.toLowerCase().includes(searchLower) ||
+      doc.indicatorLabel?.toLowerCase().includes(searchLower)
+    );
+  });
+
   // Formatters
   const formatDate = (ts?: string | number) => {
     if (!ts) return '—';
@@ -276,11 +288,12 @@ const ESGCapDocumentsDialog: React.FC<ESGCapDocumentsDialogProps> = ({
                   All Uploaded Documents
                 </DialogTitle>
                 <DialogDescription>
-                  {documents.length} document{documents.length !== 1 ? 's' : ''} uploaded
+                  {filteredDocuments.length} document{filteredDocuments.length !== 1 ? 's' : ''} shown
+                  {documents.length !== filteredDocuments.length && ` (filtered from ${documents.length})`}
                 </DialogDescription>
               </div>
               
-              {/* --- DOWNLOAD ALL BUTTON --- */}
+              {/* Download All Button */}
               {documents.length > 0 && (
                 <Button
                   variant="outline"
@@ -300,17 +313,33 @@ const ESGCapDocumentsDialog: React.FC<ESGCapDocumentsDialogProps> = ({
             </div>
           </DialogHeader>
 
+          {/* 🔍 SEARCH INPUT */}
+          <div className="relative mt-2">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search by filename, CAP item, or indicator..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 border rounded-md text-sm bg-background focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
           <div className="flex-1 overflow-y-auto py-4">
             {loading ? (
               <div className="flex flex-col items-center justify-center h-64 gap-3">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
                 <p className="text-slate-500">Loading documents...</p>
               </div>
-            ) : documents.length === 0 ? (
+            ) : filteredDocuments.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 gap-3 text-slate-400">
                 <FileText className="w-12 h-12 opacity-50" />
-                <p className="text-lg font-medium">No documents uploaded yet</p>
-                <p className="text-sm">Documents will appear here once uploaded</p>
+                <p className="text-lg font-medium">
+                  {searchTerm ? 'No matching documents' : 'No documents uploaded yet'}
+                </p>
+                <p className="text-sm">
+                  {searchTerm ? 'Try adjusting your search terms' : 'Documents will appear here once uploaded'}
+                </p>
               </div>
             ) : (
               <div className="overflow-hidden rounded-lg border">
@@ -325,7 +354,7 @@ const ESGCapDocumentsDialog: React.FC<ESGCapDocumentsDialogProps> = ({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {documents.map((doc) => (
+                    {filteredDocuments.map((doc) => (
                       <TableRow key={doc.id} className="hover:bg-muted/30">
                         {/* CAP Item */}
                         <TableCell className="px-4 py-3">
@@ -401,8 +430,8 @@ const ESGCapDocumentsDialog: React.FC<ESGCapDocumentsDialogProps> = ({
                               <Download className="h-4 w-4" />
                             </Button>
 
-                            {/* Delete */}
-                            <Button
+                            {/* Delete (commented out) */}
+                            {/* <Button
                               variant="ghost"
                               size="sm"
                               disabled={deletingDocId === doc.id || downloadingAll}
@@ -415,7 +444,7 @@ const ESGCapDocumentsDialog: React.FC<ESGCapDocumentsDialogProps> = ({
                               ) : (
                                 <Trash2 className="h-4 w-4" />
                               )}
-                            </Button>
+                            </Button> */}
                           </div>
                         </TableCell>
                       </TableRow>

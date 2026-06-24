@@ -190,21 +190,39 @@ const ESGCapDetailsPage: React.FC = () => {
                 setChangeNote(matchedItem?.requestChange || '');
                 setUpdateText(matchedItem?.updateNote || '');
                 if (matchedItem?.fileUploadedData) {
-                    const responses: Record<string, 'yes' | 'no' | null> = {};
-                    const notes: Record<string, string> = {};
+                    let responses: Record<string, 'yes' | 'no' | null> = {};
+                    let notes: Record<string, string> = {};
+
+                    // 1. First, populate from completionIndicators (source of truth for response status)
+                    if (matchedItem?.completionIndicators) {
+                    matchedItem.completionIndicators.forEach((item: any) => {
+                        const label = item.indicatorLabel?.trim();
+                        if (!label) return;
+                        if (item.indicatorResponse === 'yes' || item.indicatorResponse === 'no') {
+                        responses[label] = item.indicatorResponse;
+                        if (item.indicatorNote) notes[label] = item.indicatorNote;
+                        }
+                    });
+                    }
+
+                    // 2. Then overlay/update from fileUploadedData (if a file was uploaded, it overrides to 'yes')
+                    if (matchedItem?.fileUploadedData) {
                     matchedItem.fileUploadedData.forEach((entry: any) => {
                         const label = entry.indicatorLabel?.trim();
                         if (!label) return;
-                        if (entry.indicatorResponse === 'no') {
-                            responses[label] = 'no';
-                            if (entry.indicatorNote) notes[label] = entry.indicatorNote;
-                        } else if (entry.filename) {
-                            // Has a file uploaded -> treat as 'yes'
-                            responses[label] = 'yes';
-                            // Optionally, you could store a note from the file entry if any
-                            if (entry.indicatorNote) notes[label] = entry.indicatorNote;
+                        // If there is a filename, it's a 'yes' response
+                        if (entry.filename) {
+                        responses[label] = 'yes';
+                        if (entry.indicatorNote) notes[label] = entry.indicatorNote;
+                        }
+                        // If the entry explicitly has indicatorResponse === 'no' (unlikely but safe)
+                        else if (entry.indicatorResponse === 'no') {
+                        responses[label] = 'no';
+                        if (entry.indicatorNote) notes[label] = entry.indicatorNote;
                         }
                     });
+                    }
+
                     setIndicatorResponse(responses);
                     setIndicatorNotes(notes);
                 }
@@ -255,6 +273,7 @@ const ESGCapDetailsPage: React.FC = () => {
     const [deleting, setDeleting] = useState<string | null>(null);
     const [uploadDocumentType, setUploadDocumentType] = useState<string | null>(null);
     const selectedIndicatorRef = useRef<string | null>(null);
+    const [highlightAcknowledged, setHighlightAcknowledged] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState<{
         file: any;
         idx: number;
@@ -265,6 +284,49 @@ const ESGCapDetailsPage: React.FC = () => {
         'Labour Welfare Filing': false,
         'Gratuity Payment Proof': false,
     });
+
+    useEffect(() => {
+        // Only run on company side and if highlight is true and not yet acknowledged
+        if (capItem && entityId && capItem.highlights?.company === true && !highlightAcknowledged) {
+          // Update this item's highlights.company to false
+          const updatedPlan = fullPlan.map((item: any) =>
+            item.reportId === capItem.reportId && item.item === capItem.item
+              ? {
+                  ...item,
+                  highlights: {
+                    investor: item.highlights?.investor ?? false,
+                    company: false,
+                  },
+                }
+              : item
+          );
+      
+          // Call the API to save the change
+          const payload = {
+            entityId,
+            updatedPlan,
+          };
+      
+          editFinalizedPlan(payload)
+            .then(() => {
+              // Update local state to reflect the change
+              setCapItem((prev: any) => ({
+                ...prev,
+                highlights: { ...prev.highlights, company: false },
+              }));
+              setFullPlan(updatedPlan);
+              setHighlightAcknowledged(true);
+              // Optionally show a toast
+              console.log('Highlight marked as seen');
+            })
+            .catch((error) => {
+              console.error('Failed to clear highlight:', error);
+              // Optionally set acknowledged true to avoid retrying
+              setHighlightAcknowledged(true);
+            });
+        }
+      }, [capItem, entityId, fullPlan, highlightAcknowledged]);
+
     const [attachmentsOpen, setAttachmentsOpen] = useState(false);
     const [attachmentsMode, setAttachmentsMode] = useState<'upload' | 'view'>('upload');
     const [indicatorResponse, setIndicatorResponse] = useState<Record<string, 'yes' | 'no' | null>>({});
@@ -280,18 +342,6 @@ const ESGCapDetailsPage: React.FC = () => {
         setAttachmentsOpen(true);
     };
 
-    const firesideSteps = [
-        { label: 'Submitted', date: 'Jul 12, 2026', done: true },
-        { label: 'Under Review', date: 'Jul 14, 2026', done: true },
-        { label: 'Change Requested', date: 'Jul 18, 2026', done: true },
-        { label: 'Approved', date: 'Pending', done: false },
-        { label: 'Closed', date: 'Pending', done: false },
-    ];
-
-    const comments = [
-        { name: 'Priya Menon', role: 'Compliance Lead', time: '2 days ago', text: 'Please attach the consolidated annual return for FY25.' },
-        { name: 'Rahul Iyer', role: 'Governance Reviewer', time: '5 hours ago', text: 'Looks aligned. Awaiting Labour Welfare filing proof.' },
-    ];
 
     const investorEmailStored = localStorage.getItem("fandoro-admin");
     const isInvestorEmailExists = !!investorEmailStored;
@@ -328,6 +378,10 @@ const ESGCapDetailsPage: React.FC = () => {
                             updateNote: updateText?.trim(),
                             requestChange: changeNote?.trim(),
                             comment: 'Change-Request',
+                            highlights: {
+                                investor: true,
+                                company: false,
+                              },
                         };
                     }
 
@@ -358,6 +412,10 @@ const ESGCapDetailsPage: React.FC = () => {
                             assignedTo: assigneeText?.trim(),
                             updateNote: updateText?.trim(),
                             comment: 'Plan-Update',
+                            highlights: {
+                                investor: true,
+                                company: false,
+                              },
                         }
                         : item
                 );
@@ -710,7 +768,6 @@ const ESGCapDetailsPage: React.FC = () => {
                             <div>
                                 <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{!isInvestorEmailExists ? "Investor Status" : "Fireside Status"}</div>
                                 {(() => {
-                                    const current = firesideSteps.filter((s) => s.done).slice(-1)[0] ?? firesideSteps[0];
                                     return (
                                         <div className="mt-4 flex items-center gap-3 rounded-lg border bg-card p-4">
                                             {/* <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-emerald-500 bg-emerald-500 text-white">
@@ -773,15 +830,18 @@ const ESGCapDetailsPage: React.FC = () => {
 
                             {(capItem?.completionIndicators || []).map((i: any, idx: number) => {
 
-                                const matched = capItem?.fileUploadedData?.find(
+                                const hasFileUpload = capItem?.fileUploadedData?.some(
                                     (f: any) =>
-                                        f?.indicatorLabel?.trim()?.toLowerCase() ===
-                                        i?.indicatorLabel?.trim()?.toLowerCase()
+                                    f?.indicatorLabel?.trim()?.toLowerCase() === i?.indicatorLabel?.trim()?.toLowerCase() &&
+                                    f?.s3Link
                                 );
-
-                                const hasDoc = matched?.indicatorResponse !== 'no' && matched?.s3Link;
-                                const isNo = matched?.indicatorResponse === 'no';
-                                const note = matched?.indicatorNote;
+                                
+                                // Read response and note directly from the completionIndicators item
+                                const indicatorResponseFromBackend = i?.indicatorResponse; // 'yes' or 'no' or undefined
+                                const indicatorNoteFromBackend = i?.indicatorNote;
+                                
+                                const isNo = indicatorResponseFromBackend === 'no';
+                                const isYesWithFile = indicatorResponseFromBackend === 'yes' && hasFileUpload;
 
                                 return (
                                     <div key={idx} className="space-y-4">
@@ -802,27 +862,24 @@ const ESGCapDetailsPage: React.FC = () => {
 
                                                 {/* BADGES */}
                                                 <div className="mt-2 flex flex-wrap gap-2">
-                                                    {hasDoc && (
-                                                        <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                                                            Document Uploaded
-                                                        </Badge>
+                                                {isYesWithFile && (
+                                                    <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                        <CheckCircle2 className="h-3 w-3 mr-1" />
+                                                        Document Uploaded
+                                                    </Badge>
                                                     )}
 
                                                     {isNo && (
-                                                        <div className="flex flex-wrap items-center gap-2">
-
-                                                            <Badge className="bg-amber-50 text-amber-700 border border-amber-200">
-                                                                Response Uploaded
-                                                            </Badge>
-
-                                                            {note && (
-                                                                <span className="text-xs text-muted-foreground">
-                                                                    Note: {note}
-                                                                </span>
-                                                            )}
-
-                                                        </div>
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <Badge className="bg-amber-50 text-amber-700 border border-amber-200">
+                                                        Response Uploaded
+                                                        </Badge>
+                                                        {/* {indicatorNoteFromBackend && (
+                                                        <span className="text-xs text-muted-foreground">
+                                                            Note: {indicatorNoteFromBackend}
+                                                        </span>
+                                                        )} */}
+                                                    </div>
                                                     )}
                                                 </div>
                                             </div>

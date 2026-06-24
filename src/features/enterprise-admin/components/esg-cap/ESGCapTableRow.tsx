@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { ESGCapRowActions } from './ESGCapRowActions';
 import { useNavigate } from 'react-router-dom';
 import { getEffectiveStatus } from '@/utils/esgStatus';
+import { Check, Clock, Pencil, RotateCcw } from 'lucide-react';
 const normalizeStatus = (status?: string) =>
   (status ?? "").trim().toLowerCase();
 interface ESGCapTableRowProps {
@@ -52,6 +53,9 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
   );
 };
 
+  // Helper to check if row should be highlighted for company (new)
+  const isCompanyHighlighted = item.highlights?.company === true;
+
   const rowClassName = `
   transition-colors
   ${normalizeStatus(item.investorStatus) === "closed"
@@ -78,14 +82,46 @@ const parseDisplayDate = (dateStr: string | undefined): string => {
 
 // Add this helper function inside the component or outside
 const getInvestorStatusBadge = (status: string) => {
-  const statusMap: Record<string, { label: string; variant: "outline" | "default" | "secondary" | "destructive"; className?: string }> = {
-    "under review": { label: "Under Review", variant: "secondary", className: "bg-yellow-100 text-yellow-800 border-yellow-300" },
-    "reviewed with comments": { label: "Reviewed with Comments", variant: "outline", className: "bg-blue-100 text-blue-800 border-blue-300" },
-    "closed": { label: "Closed", variant: "default", className: "bg-green-600 text-white" },
-    "deferred": { label: "Deferred", variant: "secondary", className: "bg-gray-200 text-gray-700 border-gray-300" }
+  const statusMap: Record<string, { label: string; variant: "outline" | "default" | "secondary" | "destructive"; className?: string; icon?: React.ReactNode }> = {
+    "under-review": { 
+      label: "Under Review", 
+      variant: "outline", 
+      className: "bg-blue-100 text-blue-800 border-blue-300 px-2.5 py-1 whitespace-nowrap",
+      icon: <Clock className="h-3 w-3 mr-1" />
+    },
+    "under review": { 
+      label: "Under Review", 
+      variant: "outline", 
+      className: "bg-blue-100 text-blue-800 border-blue-300 px-2.5 py-1 whitespace-nowrap",
+      icon: <Clock className="h-3 w-3 mr-1" />
+    },
+    "reviewed with comments": { 
+      label: "Reviewed with Comments", 
+      variant: "outline", 
+      className: "bg-purple-100 text-purple-800 border-purple-300 px-2.5 py-1 whitespace-nowrap",
+      icon: <Pencil className="h-3 w-3 mr-1" />
+    },
+    "closed": { 
+      label: "Closed", 
+      variant: "default", 
+      className: "bg-green-600 text-white px-2.5 py-1 whitespace-nowrap",
+      icon: <Check className="h-3 w-3 mr-1" />
+    },
+    "deferred": { 
+      label: "Deferred", 
+      variant: "secondary", 
+      className: "bg-gray-200 text-gray-700 border-gray-300 px-2.5 py-1 whitespace-nowrap",
+      icon: null
+    },
+    "re-submit requested": { 
+      label: "Re-submit Requested", 
+      variant: "outline", 
+      className: "bg-amber-100 text-amber-800 border-amber-300 px-2.5 py-1 whitespace-nowrap",
+      icon: <RotateCcw className="h-3 w-3 mr-1" />
+    }
   };
-  const config = statusMap[status?.toLowerCase()] || { label: status || '', variant: "outline", className: "bg-gray-100 text-gray-600" };
-  return <Badge variant={config.variant} className={config.className}>{config.label}</Badge>;
+  const config = statusMap[status?.toLowerCase()] || { label: status || '', variant: "outline", className: "bg-gray-100 text-gray-600",icon: null };
+  return <Badge variant={config.variant} className={config.className}>{config.icon} {config.label}</Badge>;
 };
   const navigate = useNavigate();
 
@@ -96,7 +132,15 @@ const getInvestorStatusBadge = (status: string) => {
   if (compact) {
     return (
       <TableRow className={rowClassName} >
-        <TableCell className="text-center font-medium" style={{ padding: "0.3rem" }}>{index + 1}</TableCell>
+        {/* <TableCell className="text-center font-medium" style={{ padding: "0.3rem" }}>{index + 1}</TableCell> */}
+        <TableCell
+          className={`text-center font-medium ${
+            isCompanyHighlighted ? "border-l-4 border-green-500" : ""
+          }`}
+          style={{ padding: "0.3rem" }}
+        >
+          {index + 1}
+        </TableCell>
 
         {/* Item column with expand/collapse */}
         {/* <TableCell className="font-medium text-left" style={{ padding: "0.3rem" }}>
@@ -151,10 +195,10 @@ const getInvestorStatusBadge = (status: string) => {
 
         {/*  Status */}
         <TableCell>
-          {item.targetDate ? (
+          {item.companyStatus ? (
             <StatusBadge status={effectiveStatus} />
           ) : (
-            <span className="text-muted-foreground">-</span>
+            <span className="text-muted-foreground"></span>
           )}
         </TableCell>
         {/* Investor  Status */}
@@ -297,7 +341,7 @@ const getInvestorStatusBadge = (status: string) => {
 
       {/* 14. Status */}
       <TableCell>
-          {item.targetDate ? (
+          {item.companyStatus ? (
             <StatusBadge status={effectiveStatus} />
           ) : (
             <span className="text-muted-foreground">-</span>
