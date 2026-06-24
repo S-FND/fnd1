@@ -4,7 +4,7 @@ import { ESGCapItem, CAPStatus } from "@/features/enterprise-admin/types/esgDD";
 const normalize = (s?: string) => (s ?? "").trim().toLowerCase();
 
 export const getEffectiveStatus = (item: ESGCapItem): CAPStatus => {
-  const companyStatus = normalize(item.companyStatus);
+  const companyStatus = (item.companyStatus || item.status || "").toLowerCase();
   const investorStatus = normalize(item.investorStatus);
 
   // 3. Check company status

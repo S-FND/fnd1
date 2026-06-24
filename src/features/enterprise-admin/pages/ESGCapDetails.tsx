@@ -533,17 +533,22 @@ const ESGCapDetailsPage: React.FC = () => {
                                 <MetaPill label={capItem?.priority ? `${capItem.priority.charAt(0).toUpperCase()}${capItem.priority.slice(1)} Priority` : "" } />
                                 <MetaPill label={capItem?.targetDate ? `Due ${new Date(capItem.targetDate).toLocaleDateString()}` : "" } tone="blue" />
                                 <MetaPill label={capItem?.category ? `${capItem.category.charAt(0).toUpperCase()}${capItem.category.slice(1)}` : "" } />
-                                <MetaPill label={capItem?.status?.replaceAll("_", " ") || ""} tone={capItem?.status === "completed" || capItem?.status === "accepted"
-                                            ? "green"
-                                            : capItem?.status === "pending"
-                                            ? "amber"
-                                            : capItem?.status === "in_review" || capItem?.status === "in_progress"
-                                            ? "blue"
-                                            : capItem?.status === "delayed"
-                                            ? "red"
-                                            : "slate"
+                                <MetaPill
+                                    label={(capItem?.companyStatus ?? capItem?.status ?? "").replaceAll("_", " ")}
+                                    tone={
+                                        (capItem?.companyStatus ?? capItem?.status) === "completed" ||
+                                        (capItem?.companyStatus ?? capItem?.status) === "accepted"
+                                        ? "green"
+                                        : (capItem?.companyStatus ?? capItem?.status) === "pending"
+                                        ? "amber"
+                                        : (capItem?.companyStatus ?? capItem?.status) === "in_review" ||
+                                            (capItem?.companyStatus ?? capItem?.status) === "in_progress"
+                                        ? "blue"
+                                        : (capItem?.companyStatus ?? capItem?.status) === "delayed"
+                                        ? "red"
+                                        : "slate"
                                     }
-                                />
+                                    />
                                 </div>
                             </div>
                             <div className="flex gap-2">

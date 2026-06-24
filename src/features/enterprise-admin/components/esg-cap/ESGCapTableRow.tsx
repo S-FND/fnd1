@@ -195,10 +195,12 @@ const getInvestorStatusBadge = (status: string) => {
 
         {/*  Status */}
         <TableCell>
-          {item.companyStatus ? (
+          {effectiveStatus ? (
             <StatusBadge status={effectiveStatus} />
           ) : (
-            <span className="text-muted-foreground"></span>
+            <span className="text-muted-foreground">
+              {item.status || ""}
+            </span>
           )}
         </TableCell>
         {/* Investor  Status */}
@@ -341,10 +343,12 @@ const getInvestorStatusBadge = (status: string) => {
 
       {/* 14. Status */}
       <TableCell>
-          {item.companyStatus ? (
+          {effectiveStatus ? (
             <StatusBadge status={effectiveStatus} />
           ) : (
-            <span className="text-muted-foreground">-</span>
+            <span className="text-muted-foreground">
+              {item.status || ""}
+            </span>
           )}
         </TableCell>
 
