@@ -613,8 +613,13 @@ const ESGCapPage = () => {
       if (investorStatus === "closed") {
         return "closed";
       }
-      if (investorStatus === "re-submit-requested") {
+      if (investorStatus === "re-submit requested") {
         return "re-submit-requested";
+      }
+
+      if ((companyStatus === 'submitted' || companyStatus === 'submitted-pending-review') && 
+          (investorStatus === 'under-review' || investorStatus === 'under review')) {
+        return 'submitted-pending-review';
       }
     
       // 2. Check company status
@@ -660,7 +665,7 @@ const ESGCapPage = () => {
         matchesCardFilter = effectiveStatus === "partly-submitted";
       } else if (cardFilter === "submitted-pending-review") {
         matchesCardFilter = effectiveStatus === "submitted-pending-review";
-      } else if (cardFilter === 're-submit-requested') {
+      } else if (cardFilter === 're-submit requested') {
         matchesCardFilter = investorStatus === 're-submit-requested';
       } else if (cardFilter === "due-in-this-month") {
         matchesCardFilter = effectiveStatus === "due-in-this-month";
@@ -801,31 +806,31 @@ const ESGCapPage = () => {
     }
   };
 
-  const toggleComparisonView = () => {
-    if (showComparisonView) {
-      setShowComparisonView(false);
-    } else if (originalPlan.length > 0) {
-      setShowComparisonView(true);
-    } else {
-      toast.warning("No previous version to compare with");
-    }
-  };
+  // const toggleComparisonView = () => {
+  //   if (showComparisonView) {
+  //     setShowComparisonView(false);
+  //   } else if (originalPlan.length > 0) {
+  //     setShowComparisonView(true);
+  //   } else {
+  //     toast.warning("No previous version to compare with");
+  //   }
+  // };
 
-  const shouldDisableAcceptButton = () => {
-    if (isPlanFinalized) return true;
-    if (!esgCap || !esgCap.founderPlanFinalStatus) return false;
-    if (user?.entityType === 2 && esgCap.founderPlanFinalStatus === true) {
-      return true;
-    }
-    if (user?.entityType === 1 && esgCap.investorPlanFinalStatus) {
-      return true;
-    }
-    return false;
-  };
+  // const shouldDisableAcceptButton = () => {
+  //   if (isPlanFinalized) return true;
+  //   if (!esgCap || !esgCap.founderPlanFinalStatus) return false;
+  //   if (user?.entityType === 2 && esgCap.founderPlanFinalStatus === true) {
+  //     return true;
+  //   }
+  //   if (user?.entityType === 1 && esgCap.investorPlanFinalStatus) {
+  //     return true;
+  //   }
+  //   return false;
+  // };
 
-  const shouldDisableRequestButton = () => {
-    return loading || !buttonEnabled || isPlanFinalized;
-  };
+  // const shouldDisableRequestButton = () => {
+  //   return loading || !buttonEnabled || isPlanFinalized;
+  // };
 
   // useEffect(() => {
   //   if(user && user.misCompanyId) {
