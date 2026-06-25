@@ -16,6 +16,7 @@ const COLORS = {
   amber: [217, 159, 60] as [number, number, number],
   green: [40, 167, 69] as [number, number, number],
   blue: [70, 120, 200] as [number, number, number],
+  purple: [120, 70, 200] as [number, number, number],
   ink: [34, 40, 49] as [number, number, number],
   sub: [110, 120, 135] as [number, number, number],
   rule: [225, 228, 234] as [number, number, number],
@@ -23,26 +24,70 @@ const COLORS = {
   softRed: [253, 232, 230] as [number, number, number],
   softAmber: [253, 243, 222] as [number, number, number],
   softBlue: [232, 240, 252] as [number, number, number],
+  softPurple: [240, 232, 252] as [number, number, number],
 };
 
-const getDateStatus = (item: ESGCapItem) => {
-  const investorStatus = (item.investorStatus || "").toLowerCase();
+// ============================================================
+// 🔥 STATUS UTILITIES - FIXED
+// ============================================================
 
+const normalize = (s?: string) => (s ?? "").trim().toLowerCase();
+
+/**
+ * Get effective status with proper priority:
+ * 1. Investor status (closed, re-submit-requested, partly-submitted)
+ * 2. submitted-pending-review (company submitted + investor under-review)
+ * 3. Company status
+ * 4. Derived from target date
+ */
+const getDateStatus = (item: ESGCapItem): string => {
+  const investorStatus = normalize(item.investorStatus);
+  const companyStatus = normalize(item.companyStatus);
+
+  // 1. INVESTOR STATUS TAKES PRIORITY
   if (investorStatus === "closed") {
     return "closed";
   }
-
-  if ((item.status || "").toLowerCase() === "submitted") {
-    return "submitted";
+  if (investorStatus === "re-submit-requested" || investorStatus === "re-submit requested") {
+    return "re-submit-requested";
+  }
+  if (investorStatus === "partly-submitted" || investorStatus === "partly submitted") {
+    return "partly-submitted";
   }
 
+  // 2. submitted-pending-review: Company submitted + Investor under-review
+  if ((companyStatus === "submitted" || companyStatus === "submitted-pending-review") && 
+      (investorStatus === "under-review" || investorStatus === "under review")) {
+    return "submitted-pending-review";
+  }
+
+  // 3. Check company status
+  if (companyStatus === "closed") {
+    return "closed";
+  }
+  if (companyStatus === "partly-submitted" || companyStatus === "partly submitted") {
+    return "partly-submitted";
+  }
+  if (companyStatus === "submitted" || companyStatus === "submitted") {
+    return "submitted";
+  }
+  if (companyStatus === "submitted-pending-review" || companyStatus === "submitted pending review") {
+    return "submitted-pending-review";
+  }
+  if (companyStatus === "due-in-this-month" || companyStatus === "due in this month") {
+    return "due in this month";
+  }
+  if (companyStatus === "overdue") {
+    return "overdue";
+  }
+
+  // 4. Derive from target date
   if (!item.targetDate) {
     return "";
   }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
   const target = new Date(item.targetDate);
   target.setHours(0, 0, 0, 0);
 
@@ -60,48 +105,72 @@ const getDateStatus = (item: ESGCapItem) => {
   return "upcoming";
 };
 
+/**
+ * Get display status for PDF
+ */
 function getDisplayStatus(item: ESGCapItem): string {
   const effective = getDateStatus(item);
-  switch (effective) {
-    case "due in this month":
-      return "Due in this Month";
-    case "upcoming":
-      return "Upcoming";
-    case "overdue":
-      return "Overdue";
-    case "closed":
-      return "Closed";
-    case "submitted":
-      return "Submitted";
-    default:
-      return effective;
-  }
+  const displayMap: Record<string, string> = {
+    "due in this month": "Due in this Month",
+    "upcoming": "Upcoming",
+    "overdue": "Overdue",
+    "closed": "Closed",
+    "submitted": "Submitted",
+    "submitted-pending-review": "Submitted Pending Review",
+    "partly-submitted": "Partly Submitted",
+    "re-submit-requested": "Re-submit Requested",
+  };
+  return displayMap[effective] || effective;
 }
 
+/**
+ * Get color for status badge
+ */
 function statusColor(status: string): [number, number, number] {
   const s = status.toLowerCase();
-  if (s === "closed") return COLORS.brand;
-  if (s === "overdue") return COLORS.red;
-  if (s === "due in this month") return COLORS.amber;
-  if (s === "submitted") return COLORS.blue;
-  return COLORS.sub;
+  const colorMap: Record<string, [number, number, number]> = {
+    "closed": COLORS.brand,
+    "overdue": COLORS.red,
+    "due in this month": COLORS.amber,
+    "submitted": COLORS.blue,
+    "submitted-pending-review": COLORS.purple,
+    "partly-submitted": COLORS.blue,
+    "re-submit-requested": COLORS.amber,
+    "upcoming": COLORS.sub,
+  };
+  return colorMap[s] || COLORS.sub;
 }
 
+/**
+ * Get color for priority
+ */
 function prioColor(priority: ESGCapPriority): [number, number, number] {
-  if (priority === "high") return COLORS.red;
-  if (priority === "medium") return COLORS.amber;
-  return COLORS.blue;
+  const p = priority?.toLowerCase() as string;
+  const colorMap: Record<string, [number, number, number]> = {
+    "high": COLORS.red,
+    "medium": COLORS.amber,
+    "low": COLORS.blue,
+  };
+  return colorMap[p] || COLORS.sub;
 }
 
 function applyFilters(items: ESGCapItem[], f: ExportFilters): ESGCapItem[] {
   return items.filter((i) => {
+    // Filter by deal condition (CP/CS)
     if (f.categories.length && !f.categories.includes(i.dealCondition))
       return false;
-    if (f.priorities.length && !f.priorities.includes(i.priority?.toLowerCase())) return false;
+
+    // Filter by priority
+    if (f.priorities.length && !f.priorities.includes(i.priority?.toLowerCase()))
+      return false;
+
+    // Filter by status
     if (f.statuses.length && !f.statuses.includes("Total")) {
       const effective = getDateStatus(i);
       if (!f.statuses.includes(effective)) return false;
     }
+
+    // Filter by date range
     if (f.dateFrom || f.dateTo) {
       let dateField: string | undefined;
       if (f.dateField === "target") dateField = i.targetDate;
@@ -116,25 +185,50 @@ function applyFilters(items: ESGCapItem[], f: ExportFilters): ESGCapItem[] {
   });
 }
 
+/**
+ * Calculate summary statistics
+ */
 function calculateSummary(items: ESGCapItem[]) {
   const total = items.length;
   let closed = 0,
     overdue = 0,
     dueSoon = 0,
     upcoming = 0,
-    submitted = 0;
+    submitted = 0,
+    submittedPendingReview = 0,
+    partlySubmitted = 0,
+    resubmitRequested = 0;
 
   items.forEach((item) => {
     const status = getDateStatus(item);
-    if (status === "closed") closed++;
-    else if (status === "overdue") overdue++;
-    else if (status === "due in this month") dueSoon++;
-    else if (status === "upcoming") upcoming++;
-    else if (status === "submitted") submitted++;
+    switch (status) {
+      case "closed": closed++; break;
+      case "overdue": overdue++; break;
+      case "due in this month": dueSoon++; break;
+      case "upcoming": upcoming++; break;
+      case "submitted": submitted++; break;
+      case "submitted-pending-review": submittedPendingReview++; break;
+      case "partly-submitted": partlySubmitted++; break;
+      case "re-submit-requested": resubmitRequested++; break;
+    }
   });
 
-  return { total, closed, overdue, dueSoon, upcoming, submitted };
+  return {
+    total,
+    closed,
+    overdue,
+    dueSoon,
+    upcoming,
+    submitted,
+    submittedPendingReview,
+    partlySubmitted,
+    resubmitRequested,
+  };
 }
+
+// ============================================================
+// 🔥 PDF GENERATION HELPERS
+// ============================================================
 
 function header(doc: jsPDF, title: string, companyName?: string) {
   const w = doc.internal.pageSize.getWidth();
@@ -170,7 +264,6 @@ function decorate(doc: jsPDF, title: string, companyName?: string) {
   const total = doc.getNumberOfPages();
   for (let p = 1; p <= total; p++) {
     doc.setPage(p);
-    // Apply footer to all pages, header to all except first page
     if (p === 1) {
       footer(doc, companyName);
     } else {
@@ -242,6 +335,10 @@ function wrapText(text: string, maxLength = 50): string {
   return lines.join("\n");
 }
 
+// ============================================================
+// 🔥 MAIN PDF BUILD FUNCTION
+// ============================================================
+
 export function buildPdf(
   filters: ExportFilters,
   items: ESGCapItem[],
@@ -252,19 +349,10 @@ export function buildPdf(
   const filteredItems = applyFilters(items, filters);
   const summary = calculateSummary(filteredItems);
 
-  // REMOVED BLANK COVER PAGE - Starting directly with content
-
-  const totalPriorityScore = filteredItems.reduce((sum, item) => {
-    const priority = (item.priority || "").toLowerCase();
-    if (priority === "high") return sum + 3;
-    if (priority === "medium") return sum + 2;
-    if (priority === "low") return sum + 1;
-    return sum;
-  }, 0);
-
-  // EXECUTIVE SUMMARY - Now becomes first page
+  // ============================================================
+  // EXECUTIVE SUMMARY
+  // ============================================================
   if (filters.includeDashboard) {
-    // No doc.addPage() here since we're starting fresh
     let y = 30;
     doc.setTextColor(...COLORS.ink);
     doc.setFont("helvetica", "bold");
@@ -272,6 +360,7 @@ export function buildPdf(
     doc.text("ESGCAP Summary", 14, y);
     y += 16;
 
+    // Company Info
     const rows: [string, string][] = [
       ["Company", companyName || "Not specified"],
       [
@@ -295,6 +384,7 @@ export function buildPdf(
       y += 7;
     });
     y += 4;
+
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
     doc.setTextColor(...COLORS.sub);
@@ -305,37 +395,36 @@ export function buildPdf(
     );
     y += 10;
 
+    // KPI Cards - All statuses
     const cards: [
       string,
       string,
       [number, number, number],
       [number, number, number]
     ][] = [
-      [
-        "Total CAP Items",
-        String(summary.total),
-        COLORS.brand,
-        COLORS.softGreen,
-      ],
+      ["Total CAP Items", String(summary.total), COLORS.brand, COLORS.softGreen],
       ["Closed", String(summary.closed), COLORS.brand, COLORS.softGreen],
-      [
-        "Due in this Month",
-        String(summary.dueSoon),
-        COLORS.amber,
-        COLORS.softAmber,
-      ],
+      ["Due in this Month", String(summary.dueSoon), COLORS.amber, COLORS.softAmber],
       ["Overdue", String(summary.overdue), COLORS.red, COLORS.softRed],
       ["Submitted", String(summary.submitted), COLORS.blue, COLORS.softBlue],
+      ["Submitted Pending Review", String(summary.submittedPendingReview), COLORS.purple, COLORS.softPurple],
+      ["Partly Submitted", String(summary.partlySubmitted), COLORS.blue, COLORS.softBlue],
+      ["Re-submit Requested", String(summary.resubmitRequested), COLORS.amber, COLORS.softAmber],
       ["Upcoming", String(summary.upcoming), COLORS.sub, [240, 242, 245]],
     ];
+
     const cw = (w - 28 - 10) / 3;
+    const cardsPerRow = 3;
     cards.forEach((c, i) => {
-      const cx = 14 + (i % 3) * (cw + 5);
-      const cy = y + Math.floor(i / 3) * 35;
+      const cx = 14 + (i % cardsPerRow) * (cw + 5);
+      const cy = y + Math.floor(i / cardsPerRow) * 35;
       kpiCard(doc, cx, cy, cw, 30, c[0], c[1], c[2], c[3]);
     });
-    y += 80;
 
+    const cardsRows = Math.ceil(cards.length / cardsPerRow);
+    y += cardsRows * 35 + 10;
+
+    // Overall Completion
     const pct = summary.total
       ? Math.round((summary.closed / summary.total) * 100)
       : 0;
@@ -390,7 +479,6 @@ export function buildPdf(
     });
   }
 
-  /* CAP DETAILS */
   if (filters.includeItems) {
     doc.addPage();
     doc.setFont("helvetica", "bold");
@@ -478,24 +566,11 @@ export function buildPdf(
           data.cell.styles.textColor = [r, g, b];
           data.cell.styles.fontStyle = "bold";
         }
-        // Optional: Style for Category column
-        if (data.column.index === 6) {
-          const category = data.cell.raw as string;
-          if (category && category !== "-") {
-            data.cell.styles.textColor = COLORS.blue;
-          }
-        }
-        // Optional: Style for Deal Condition column
-        if (data.column.index === 7) {
-          const dealCondition = data.cell.raw as string;
-          if (dealCondition && dealCondition !== "-") {
-            data.cell.styles.textColor = COLORS.sub;
-          }
-        }
       },
     });
+  }
 
-    // OVERDUE section
+  if (filters.includeItems) {
     const overdueItems = filteredItems.filter(
       (i) => getDateStatus(i) === "overdue"
     );
@@ -552,42 +627,14 @@ export function buildPdf(
         },
         headStyles: { fillColor: COLORS.red, textColor: 255 },
         alternateRowStyles: { fillColor: COLORS.softRed },
-        didParseCell: (data) => {
-          if (data.section !== "body") return;
-          // Style for Priority column
-          if (data.column.index === 3) {
-            const priority = data.cell.raw as string;
-            if (priority) {
-              const [r, g, b] = prioColor(
-                priority.toLowerCase() as ESGCapPriority
-              );
-              data.cell.styles.textColor = [r, g, b];
-              data.cell.styles.fontStyle = "bold";
-            }
-          }
-          // Style for Category column
-          if (data.column.index === 4) {
-            const category = data.cell.raw as string;
-            if (category && category !== "-") {
-              data.cell.styles.textColor = COLORS.blue;
-              data.cell.styles.fontStyle = "italic";
-            }
-          }
-          // Style for Deal Condition column
-          if (data.column.index === 5) {
-            const dealCondition = data.cell.raw as string;
-            if (dealCondition && dealCondition !== "-") {
-              data.cell.styles.textColor = COLORS.amber;
-            }
-          }
-        },
       });
     }
+  }
 
-    // HIGH PRIORITY section
+  if (filters.includeItems) {
     const highPriorityItems = filteredItems.filter(
       (i) =>
-        i.priority === "high" &&
+        i.priority?.toLowerCase() === "high" &&
         getDateStatus(i) !== "submitted" &&
         getDateStatus(i) !== "closed"
     );
@@ -635,7 +682,9 @@ export function buildPdf(
     }
   }
 
-  /* APPENDIX - UPLOADED DOCUMENTS */
+  // ============================================================
+  // APPENDIX - UPLOADED DOCUMENTS
+  // ============================================================
   if (filters.includeAttachments || filters.includeComments) {
     const currentPageHeight = doc.internal.pageSize.getHeight();
     const currentY = (doc as any).lastAutoTable?.finalY || 200;
@@ -656,11 +705,9 @@ export function buildPdf(
     y += 6;
 
     if (filters.includeAttachments && filteredItems.length > 0) {
-      // Use a Map to deduplicate attachments
-      const attachmentsMap = new Map(); // key -> attachment object
+      const attachmentsMap = new Map();
 
       filteredItems.forEach((item) => {
-        // Helper to add attachment with deduplication
         const addAttachment = (
           indicatorLabel: string,
           filename: string,
@@ -669,7 +716,6 @@ export function buildPdf(
         ) => {
           if (!filename || filename === "No document") return;
 
-          // Create a unique key
           const key = `${item.item}|${indicatorLabel}|${filename}`;
           let formattedDate = "-";
           if (rawDate) {
@@ -683,7 +729,6 @@ export function buildPdf(
             }
           }
 
-          // If key already exists, only replace if current status is empty and new status is not empty
           const existing = attachmentsMap.get(key);
           if (!existing) {
             attachmentsMap.set(key, {
@@ -694,7 +739,6 @@ export function buildPdf(
               uploadedDate: formattedDate,
             });
           } else if (existing.status === "—" && status && status !== "—") {
-            // Update with better status
             attachmentsMap.set(key, {
               ...existing,
               status: status,
@@ -706,7 +750,7 @@ export function buildPdf(
           }
         };
 
-        // 1. Process fileUploadedData
+        // Process fileUploadedData
         if (item.fileUploadedData && item.fileUploadedData.length > 0) {
           item.fileUploadedData.forEach((attachment) => {
             let rawDate =
@@ -717,16 +761,16 @@ export function buildPdf(
               attachment.indicatorLabel,
               attachment.filename,
               attachment.status,
+              attachment.uploadedAt ||
               rawDate
             );
           });
         }
 
-        // 2. Process completionIndicators (only if not already added via fileUploadedData)
+        // Process completionIndicators
         if (item.completionIndicators && item.completionIndicators.length > 0) {
           item.completionIndicators.forEach((indicator) => {
             if (indicator.fileName) {
-              // Check if already exists in map using same key logic
               const key = `${item.item}|${indicator.indicatorLabel}|${indicator.fileName}`;
               if (!attachmentsMap.has(key)) {
                 addAttachment(
@@ -819,17 +863,6 @@ export function buildPdf(
                 data.cell.styles.textColor = COLORS.amber;
               } else if (status === "rejected") {
                 data.cell.styles.textColor = COLORS.red;
-              }
-            }
-            if (data.column.index === 1) {
-              data.cell.styles.fontStyle = "bold";
-              data.cell.styles.textColor = COLORS.ink;
-            }
-            if (data.column.index === 2) {
-              const indicator = data.cell.raw as string;
-              if (indicator && indicator !== "-") {
-                data.cell.styles.textColor = COLORS.sub;
-                data.cell.styles.fontStyle = "italic";
               }
             }
           },

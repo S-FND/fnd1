@@ -28,7 +28,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       case 'due in this month':
         return (
           <Badge
-            className={`${baseClass} bg-orange-100 text-orange-700 border-orange-300 hover:bg-orange-200 hover:text-orange-800 hover:border-orange-400`}
+            className={`${baseClass} bg-orange-100 text-orange-700 border-orange-300 hover:bg-orange-200 hover:text-orange-800 hover:border-orange-400 inline-flex`}
           >
             <AlertTriangle className="h-3 w-3 text-orange-500 group-hover:text-orange-600" />
             Due in this Month
@@ -38,7 +38,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       case 'overdue':
         return (
           <Badge
-            className={`${baseClass} bg-red-100 text-red-700 border-red-300 hover:bg-red-200 hover:text-red-800 hover:border-red-400`}
+            className={`${baseClass} bg-red-100 text-red-700 border-red-300 hover:bg-red-200 hover:text-red-800 hover:border-red-400 inline-flex`}
           >
             <X className="h-3 w-3 text-red-500" />
             Overdue
@@ -49,7 +49,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
       case 'partly submitted':
         return (
           <Badge
-            className={`${baseClass} bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200 hover:text-blue-800 hover:border-blue-400`}
+            className={`${baseClass} bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-200 hover:text-blue-800 hover:border-blue-400 inline-flex`}
           >
             <Upload className="h-3 w-3 text-blue-500" />
             Partly Submitted
