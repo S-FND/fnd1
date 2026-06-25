@@ -234,7 +234,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
           <div className="grid grid-cols-7 gap-2">
             {/* 1. Compliance Score - STATIC */}
             <div className="text-center p-2 rounded-lg bg-green-50 cursor-default">
-              <div className="text-lg font-bold text-green-600">{complianceScore}%</div>
+              <div className="text-lg font-bold text-green-600">-</div>
               <div className="text-[10px] text-muted-foreground leading-tight">Compliance Score</div>
             </div>
 
