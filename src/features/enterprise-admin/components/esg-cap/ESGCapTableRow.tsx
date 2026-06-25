@@ -118,6 +118,12 @@ const getInvestorStatusBadge = (status: string) => {
       variant: "outline", 
       className: "bg-amber-100 text-amber-800 border-amber-300 px-2.5 py-1 whitespace-nowrap",
       icon: <RotateCcw className="h-3 w-3 mr-1" />
+    },
+    "re-submit-requested": { 
+      label: "Re-submit Requested", 
+      variant: "outline", 
+      className: "bg-amber-100 text-amber-800 border-amber-300 px-2.5 py-1 whitespace-nowrap",
+      icon: <RotateCcw className="h-3 w-3 mr-1" />
     }
   };
   const config = statusMap[status?.toLowerCase()] || { label: status || '', variant: "outline", className: "bg-gray-100 text-gray-600",icon: null };

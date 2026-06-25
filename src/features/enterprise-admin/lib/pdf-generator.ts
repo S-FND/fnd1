@@ -28,23 +28,19 @@ const COLORS = {
 };
 
 // ============================================================
-// 🔥 STATUS UTILITIES - FIXED
+// 🔥 STATUS UTILITIES - CONSISTENT WITH EXPORT DRAWER
 // ============================================================
 
 const normalize = (s?: string) => (s ?? "").trim().toLowerCase();
 
 /**
- * Get effective status with proper priority:
- * 1. Investor status (closed, re-submit-requested, partly-submitted)
- * 2. submitted-pending-review (company submitted + investor under-review)
- * 3. Company status
- * 4. Derived from target date
+ * Get effective status - MUST MATCH the ExportDrawer's getDateStatus
  */
 const getDateStatus = (item: ESGCapItem): string => {
   const investorStatus = normalize(item.investorStatus);
   const companyStatus = normalize(item.companyStatus);
 
-  // 1. INVESTOR STATUS TAKES PRIORITY
+  // 1. Investor status takes priority
   if (investorStatus === "closed") {
     return "closed";
   }
@@ -68,20 +64,11 @@ const getDateStatus = (item: ESGCapItem): string => {
   if (companyStatus === "partly-submitted" || companyStatus === "partly submitted") {
     return "partly-submitted";
   }
-  if (companyStatus === "submitted" || companyStatus === "submitted") {
-    return "submitted";
-  }
-  if (companyStatus === "submitted-pending-review" || companyStatus === "submitted pending review") {
+  if (companyStatus === "submitted" || companyStatus === "submitted-pending-review") {
     return "submitted-pending-review";
   }
-  if (companyStatus === "due-in-this-month" || companyStatus === "due in this month") {
-    return "due in this month";
-  }
-  if (companyStatus === "overdue") {
-    return "overdue";
-  }
 
-  // 4. Derive from target date
+  // 4. Derive from target date - MUST use same format as ExportDrawer
   if (!item.targetDate) {
     return "";
   }
@@ -95,7 +82,7 @@ const getDateStatus = (item: ESGCapItem): string => {
     target.getMonth() === today.getMonth() &&
     target.getFullYear() === today.getFullYear()
   ) {
-    return "due in this month";
+    return "due-in-this-month"; // ✅ MATCHES ExportDrawer format
   }
 
   if (target < today) {
@@ -106,12 +93,12 @@ const getDateStatus = (item: ESGCapItem): string => {
 };
 
 /**
- * Get display status for PDF
+ * Get display status for PDF - converts internal status to display text
  */
 function getDisplayStatus(item: ESGCapItem): string {
   const effective = getDateStatus(item);
   const displayMap: Record<string, string> = {
-    "due in this month": "Due in this Month",
+    "due-in-this-month": "Due in this Month",  // ✅ MATCHES ExportDrawer
     "upcoming": "Upcoming",
     "overdue": "Overdue",
     "closed": "Closed",
@@ -131,6 +118,7 @@ function statusColor(status: string): [number, number, number] {
   const colorMap: Record<string, [number, number, number]> = {
     "closed": COLORS.brand,
     "overdue": COLORS.red,
+    "due-in-this-month": COLORS.amber,  // ✅ MATCHES ExportDrawer
     "due in this month": COLORS.amber,
     "submitted": COLORS.blue,
     "submitted-pending-review": COLORS.purple,
@@ -164,10 +152,20 @@ function applyFilters(items: ESGCapItem[], f: ExportFilters): ESGCapItem[] {
     if (f.priorities.length && !f.priorities.includes(i.priority?.toLowerCase()))
       return false;
 
-    // Filter by status
+    // Filter by status - MUST use same format as ExportDrawer
     if (f.statuses.length && !f.statuses.includes("Total")) {
       const effective = getDateStatus(i);
-      if (!f.statuses.includes(effective)) return false;
+      // Check if the effective status matches any selected status
+      // Also handle the display version for backward compatibility
+      const displayStatus = getDisplayStatus(i);
+      const matches = f.statuses.some(status => 
+        status === effective || 
+        status === displayStatus ||
+        // Handle the "due in this month" vs "due-in-this-month" mismatch
+        (status === "due-in-this-month" && effective === "due-in-this-month") ||
+        (status === "Due in this Month" && effective === "due-in-this-month")
+      );
+      if (!matches) return false;
     }
 
     // Filter by date range
@@ -204,7 +202,7 @@ function calculateSummary(items: ESGCapItem[]) {
     switch (status) {
       case "closed": closed++; break;
       case "overdue": overdue++; break;
-      case "due in this month": dueSoon++; break;
+      case "due-in-this-month": dueSoon++; break;
       case "upcoming": upcoming++; break;
       case "submitted": submitted++; break;
       case "submitted-pending-review": submittedPendingReview++; break;
@@ -227,7 +225,7 @@ function calculateSummary(items: ESGCapItem[]) {
 }
 
 // ============================================================
-// 🔥 PDF GENERATION HELPERS
+// 🔥 PDF GENERATION HELPERS (unchanged)
 // ============================================================
 
 function header(doc: jsPDF, title: string, companyName?: string) {
@@ -479,6 +477,9 @@ export function buildPdf(
     });
   }
 
+  // ============================================================
+  // CAP ITEM DETAILS
+  // ============================================================
   if (filters.includeItems) {
     doc.addPage();
     doc.setFont("helvetica", "bold");
@@ -570,6 +571,9 @@ export function buildPdf(
     });
   }
 
+  // ============================================================
+  // OVERDUE ITEMS
+  // ============================================================
   if (filters.includeItems) {
     const overdueItems = filteredItems.filter(
       (i) => getDateStatus(i) === "overdue"
@@ -631,6 +635,9 @@ export function buildPdf(
     }
   }
 
+  // ============================================================
+  // HIGH PRIORITY OPEN RISKS
+  // ============================================================
   if (filters.includeItems) {
     const highPriorityItems = filteredItems.filter(
       (i) =>
@@ -761,8 +768,7 @@ export function buildPdf(
               attachment.indicatorLabel,
               attachment.filename,
               attachment.status,
-              attachment.uploadedAt ||
-              rawDate
+              attachment.uploadedAt || rawDate
             );
           });
         }
