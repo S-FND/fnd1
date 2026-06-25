@@ -191,10 +191,12 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
   const submittedPendingReviewCount = filteredItems.filter(
     item => {
       const companyStatus = normalize(item.companyStatus ?? item.status);
+      console.log('companyStatus',companyStatus);
       const investorStatus = normalize(item.investorStatus);
       // Company has submitted AND investor hasn't closed it yet
       return (companyStatus === 'submitted') &&
-        investorStatus === 'under-review';
+      (investorStatus === "under-review" ||
+        investorStatus === "under review");
     }
   ).length;
 
@@ -232,7 +234,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
           <div className="grid grid-cols-7 gap-2">
             {/* 1. Compliance Score - STATIC */}
             <div className="text-center p-2 rounded-lg bg-green-50 cursor-default">
-              <div className="text-lg font-bold text-green-600">{complianceScore}%</div>
+              <div className="text-lg font-bold text-green-600">-</div>
               <div className="text-[10px] text-muted-foreground leading-tight">Compliance Score</div>
             </div>
 
@@ -242,7 +244,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
               onClick={() => handleFilterToggle('due-in-this-month')}
             >
               <div className="text-lg font-bold text-orange-600">{dueThisMonthCount}</div>
-              <div className="text-[10px] text-orange-600 font-medium leading-tight">Due This Month</div>
+              <div className="text-[10px] text-orange-600 font-medium leading-tight">Due in this Month</div>
             </div>
 
             {/* 3. Overdue - CLICKABLE TOGGLE */}

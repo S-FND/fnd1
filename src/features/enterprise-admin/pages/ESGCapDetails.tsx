@@ -1044,7 +1044,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                                                             formData.append("itemPolicy", capItem?.deliverable || "");
                                                                             formData.append("itemResource", capItem?.resource || "");
                                                                             formData.append("itemSourceType", capItem?.sourceType || "");
-                                                                            formData.append("indicatorLabel", label); // indicator label
+                                                                            formData.append("indicatorLabel", label);
                                                                             formData.append("indicatorResponse", "no");
                                                                             formData.append("indicatorNote", indicatorNotes[label] || "");
 

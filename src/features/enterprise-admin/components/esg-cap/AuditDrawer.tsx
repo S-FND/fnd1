@@ -238,7 +238,7 @@ function FileDetailsCard({ info }: { info: any }) {
         )}
         {fileInfo.fileUrl && (
           <div className="grid grid-cols-2 gap-1">
-            <span className="font-medium text-gray-500">S3 Link</span>
+            <span className="font-medium text-gray-500">Doc Link</span>
             <span className="text-xs text-blue-600 truncate" title={fileInfo.fileUrl}>
               <a
                 href="#"

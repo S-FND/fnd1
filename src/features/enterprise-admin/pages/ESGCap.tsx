@@ -609,43 +609,44 @@ const ESGCapPage = () => {
     const matchesCategory = categoryFilter === 'all' || itemCategory === categoryFilter;
   
     const getDateStatus = (item: ESGCapItem) => {
-      const investorStatus = (item.investorStatus || "").toLowerCase();
-      const companyStatus = (item.companyStatus || item.status || "").toLowerCase();
+      const investorStatus = (item.investorStatus || "").toLowerCase().trim();
+      const companyStatus = (item.companyStatus || "").toLowerCase().trim();
     
-      // 1. Check if investor has closed it
+      // 1. INVESTOR STATUS TAKES PRIORITY
       if (investorStatus === "closed") {
         return "closed";
       }
-      if (investorStatus === "re-submit requested") {
+      if (investorStatus === "re-submit-requested" || investorStatus === "re-submit requested") {
         return "re-submit-requested";
       }
-
-      if ((companyStatus === 'submitted' || companyStatus === 'submitted-pending-review') && 
-          (investorStatus === 'under-review' || investorStatus === 'under review')) {
-        return 'submitted-pending-review';
+      if (investorStatus === "partly-submitted" || investorStatus === "partly submitted") {
+        return "partly-submitted";
       }
     
-      // 2. Check company status
+      // 2. submitted-pending-review: Company submitted + Investor under-review
+      if ((companyStatus === "submitted" || companyStatus === "submitted-pending-review") && 
+          (investorStatus === "under-review" || investorStatus === "under review")) {
+        return "submitted-pending-review";
+      }
+    
+      // 3. Check company status
       if (companyStatus === "closed") return "closed";
-      if (companyStatus === "partly-submitted") return "partly-submitted";
-      if (companyStatus === "submitted-pending-review") return "submitted-pending-review";
-      if (companyStatus === "due-in-this-month") return "due-in-this-month";
+      if (companyStatus === "partly-submitted" || companyStatus === "partly submitted") return "partly-submitted";
+      if (companyStatus === "submitted" || companyStatus === "submitted") return "submitted";
+      if (companyStatus === "submitted-pending-review" || companyStatus === "submitted pending review") return "submitted-pending-review";
+      if (companyStatus === "due-in-this-month" || companyStatus === "due in this month") return "due-in-this-month";
       if (companyStatus === "overdue") return "overdue";
     
-      // 3. If no target date, return empty
+      // 4. If no target date, return empty
       if (!item.targetDate) return "";
     
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-    
       const target = new Date(item.targetDate);
       target.setHours(0, 0, 0, 0);
     
       // Check if due in current month
-      if (
-        target.getMonth() === today.getMonth() &&
-        target.getFullYear() === today.getFullYear()
-      ) {
+      if (target.getMonth() === today.getMonth() && target.getFullYear() === today.getFullYear()) {
         return "due-in-this-month";
       }
     
