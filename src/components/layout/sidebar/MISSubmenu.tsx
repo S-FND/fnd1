@@ -106,6 +106,15 @@ interface MISSubmenuProps {
     onToggle: () => void;
 }
 
+const getCurrentQuarter = () => {
+    return 'Q1';
+    const month = new Date().getMonth() + 1; // 1-12
+    if (month <= 3) return 'Q1';
+    if (month <= 6) return 'Q2';
+    if (month <= 9) return 'Q3';
+    return 'Q4';
+};
+
 export const MISSubmenu: React.FC<MISSubmenuProps> = ({ isExpanded, onToggle }) => {
     const location = useLocation();
     const [searchParams] = useSearchParams();
@@ -120,10 +129,10 @@ export const MISSubmenu: React.FC<MISSubmenuProps> = ({ isExpanded, onToggle }) 
 
     // Persist & sync quarter/year from URL
     const [lastQuarter, setLastQuarter] = useState(() =>
-        sessionStorage.getItem('fireside_selected_quarter') || 'Q1'
+        sessionStorage.getItem('fireside_selected_quarter') || getCurrentQuarter()
     );
     const [lastYear, setLastYear] = useState(() =>
-        sessionStorage.getItem('fireside_selected_year') || '2025'
+        sessionStorage.getItem('fireside_selected_year') || String(new Date().getFullYear())
     );
 
     const urlQuarter = searchParams.get('quarter');
