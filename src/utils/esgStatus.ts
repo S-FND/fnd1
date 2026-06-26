@@ -43,7 +43,7 @@ export const getEffectiveStatus = (item: ESGCapItem): CAPStatus => {
   }
 
   if (
-    (investorStatus === "under-review") &&
+    (investorStatus === "under-review" || investorStatus === "under review") &&
     (companyStatus === "submitted")
   ) {
     return "submitted-pending-review" as CAPStatus;
