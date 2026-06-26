@@ -67,6 +67,15 @@ const getDateStatus = (item: ESGCapItem): string => {
   if (companyStatus === "submitted" || companyStatus === "submitted-pending-review") {
     return "submitted-pending-review";
   }
+  if (companyStatus === "submitted-pending-review" || companyStatus === "submitted pending review") {
+    return "submitted-pending-review";
+  }
+  if (companyStatus === "due-in-this-month" || companyStatus === "due in this month") {
+    return "due in this month";
+  }
+  if (companyStatus === "overdue") {
+    return "overdue";
+  }
 
   // 4. Derive from target date - MUST use same format as ExportDrawer
   if (!item.targetDate) {
