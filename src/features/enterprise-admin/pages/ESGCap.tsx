@@ -986,12 +986,12 @@ const ESGCapPage = () => {
             {/* Alerts Panel - MOVED OUTSIDE the filters container */}
             {!isInvestorEmailExists && esgCap?.plan && esgCap.plan.length > 0 && (
               <div className="mb-6">
-                <AlertsPanel
+                {/* <AlertsPanel
                   overdueItems={alerts.overdueItems}
                   approachingDeadlines={alerts.approachingDeadlines}
                   onItemClick={handleReview}
                   finalPlan={esgCap?.finalPlan}
-                />
+                /> */}
               </div>
             )}
 
