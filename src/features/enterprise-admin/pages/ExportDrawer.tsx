@@ -192,7 +192,7 @@ export function ExportDrawer({ open, onClose, items, entityName }: Props) {
           </Section> */}
 
           {/* Status */}
-          <Section title="Status" hint="Multi-select. Empty = all statuses.">
+          <Section title="Company Status" hint="Multi-select. Empty = all statuses.">
             <ChipRow>
               {STATUS_FILTERS.map(s => (
                 <Chip key={s.value} active={f.statuses.includes(s.value)} onClick={() => setF({ ...f, statuses: toggle(f.statuses, s.value) })}>

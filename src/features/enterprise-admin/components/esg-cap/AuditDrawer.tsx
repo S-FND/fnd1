@@ -416,6 +416,19 @@ export default function AuditDrawer({ open, onClose, logs }: {
 
   if (!open) return null;
 
+  function formatFieldName(key: string) {
+    // plan.Training Records System.highlights
+    const parts = key.split(".");
+  
+    if (parts.length >= 3 && parts[0] === "plan") {
+      return `${parts[1]} → ${parts[2]}`;
+    }
+  
+    return key
+      .replace(/_/g, " ")
+      .replace(/\./g, " → ");
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
@@ -537,11 +550,11 @@ export default function AuditDrawer({ open, onClose, logs }: {
             ) : (
               <div className="space-y-4">
                 {/* Header */}
-                <div className="border-b pb-2">
+                {/* <div className="border-b pb-2">
                   <p className="text-xs text-gray-500">
                     {selectedLog.actor?.name || "System"} • {new Date(selectedLog.timestamp).toLocaleString()}
                   </p>
-                </div>
+                </div> */}
 
                 {/* User action message */}
                 {selectedLog.userActionFor?.message && (
@@ -574,7 +587,7 @@ export default function AuditDrawer({ open, onClose, logs }: {
                       <div className="space-y-2 max-h-96 overflow-y-auto">
                         {Object.entries(selectedLog.changes).map(([key, val]: [string, any]) => (
                           <div key={key} className="bg-white border rounded p-2 text-sm shadow-sm">
-                            <p className="font-medium text-gray-700 capitalize">{key.replace(/_/g, " ")}</p>
+                            <p className="font-medium text-gray-700 capitalize"> {formatFieldName(key)}</p>
                             <div className="flex flex-col gap-1 mt-1 text-xs">
                               <div>
                                 <span className="font-semibold text-red-600">Old:</span>
