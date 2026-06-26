@@ -1125,18 +1125,17 @@ const PreviewSubmission = () => {
       </AlertDialog> */}
 
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <AlertDialogContent className="max-w-[560px]">
-          <AlertDialogHeader>
+        <AlertDialogContent className="max-w-[560px] max-h-[90vh] flex flex-col">
+          <AlertDialogHeader className="flex-shrink-0">
             <AlertDialogTitle>Confirm Submission</AlertDialogTitle>
             <AlertDialogDescription asChild>
-              <div>
+              <div className="overflow-y-auto max-h-[60vh] pr-1">
                 {/* ✅ Original text — unchanged */}
                 <p className="text-sm text-muted-foreground mb-3">
                   You are about to submit {totalFilled} KPI entries for {selectedQuarter} {selectedYear} and FY {currentFY}-{String(currentFY + 1).slice(-2)}.
                 </p>
                 <p className="text-sm mb-0.5"><strong>Quarterly KPIs:</strong> {quarterlyFilled} fields</p>
                 <p className="text-sm mb-3"><strong>Annual KPIs:</strong> {annualFilled} fields</p>
-
 
                 {/* ✅ New — KPI breakdown grid */}
                 <div className="border-t pt-3 mb-3">
@@ -1175,21 +1174,7 @@ const PreviewSubmission = () => {
                   Once submitted, this data will be sent for review. Are you sure you want to proceed?
                 </p>
 
-                {/* Warning */}
-                {/* <div className="flex gap-2 items-start rounded-md p-3" style={{ ... }}>
-                  <Info className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "hsl(38, 92%, 50%)" }} />
-                  <p className="text-xs leading-relaxed m-0" style={{ color: "hsl(38, 92%, 50%)" }}>
-                    Please ensure that all the KPI information listed above is completed.
-                  </p>
-                </div> */}
-
-                {/* ✅ New — warning notice */}
-                {/* <div className="flex gap-2 items-start bg-warning/10 border border-warning/30 rounded-md p-3">
-                  <Info className="w-4 h-4 text-warning shrink-0 mt-0.5" />
-                  <p className="text-xs text-warning leading-relaxed m-0">
-                    Please ensure that all the KPI information listed above is completed.
-                  </p>
-                </div> */}
+                {/* ✅ Warning notice */}
                 <div
                   className="flex gap-2 items-start rounded-md p-3"
                   style={{
@@ -1202,12 +1187,11 @@ const PreviewSubmission = () => {
                     Please ensure that all the KPI information listed above is completed.
                   </p>
                 </div>
-
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-shrink-0 mt-2">
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmSubmit}>
               Confirm Submission
