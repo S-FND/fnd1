@@ -610,7 +610,7 @@ const ESGCapPage = () => {
   
     const getDateStatus = (item: ESGCapItem) => {
       const investorStatus = (item.investorStatus || "").toLowerCase().trim();
-      const companyStatus = (item.companyStatus || "").toLowerCase().trim();
+      const companyStatus = (item.companyStatus || item.status  || "").toLowerCase().trim();
     
       // 1. INVESTOR STATUS TAKES PRIORITY
       if (investorStatus === "closed") {
