@@ -610,7 +610,7 @@ const ESGCapPage = () => {
   
     const getDateStatus = (item: ESGCapItem) => {
       const investorStatus = (item.investorStatus || "").toLowerCase().trim();
-      const companyStatus = (item.companyStatus || "").toLowerCase().trim();
+      const companyStatus = (item.companyStatus || item.status  || "").toLowerCase().trim();
     
       // 1. INVESTOR STATUS TAKES PRIORITY
       if (investorStatus === "closed") {
@@ -984,16 +984,16 @@ const ESGCapPage = () => {
 
 
             {/* Alerts Panel - MOVED OUTSIDE the filters container */}
-            {!isInvestorEmailExists && esgCap?.plan && esgCap.plan.length > 0 && (
+            {/* {!isInvestorEmailExists && esgCap?.plan && esgCap.plan.length > 0 && (
               <div className="mb-6">
-                {/* <AlertsPanel
+                <AlertsPanel
                   overdueItems={alerts.overdueItems}
                   approachingDeadlines={alerts.approachingDeadlines}
                   onItemClick={handleReview}
                   finalPlan={esgCap?.finalPlan}
-                /> */}
+                />
               </div>
-            )}
+            )} */}
 
             {/* {sortedItems.length > 0 && (
               <div className="mt-6 py-4"> */}
