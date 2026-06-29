@@ -24,8 +24,8 @@ export const SidebarHeaderComponent: React.FC<SidebarHeaderComponentProps> = ({ 
       </Link> */}
       <Link to="/" className="flex items-center justify-center gap-2 font-bold text-xl w-full px-2">
         {/* Logo icon (instead of F) */}
-        <div className="w-8 h-8 flex items-center justify-center overflow-hidden">
-          <img src="/logo/Only_logo.webp" alt="F Logo" className="w-full h-full object-cover" />
+        <div className="w-8 h-8 flex items-center justify-center">
+          <img src="/logo/Only_logo.webp" alt="F Logo" className="w-full h-full object-contain" />
         </div>
 
         {/* Brand name (instead of Fandoro) */}
