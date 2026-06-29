@@ -844,14 +844,14 @@ const ESGCapPage = () => {
                 setCategoryFilter={setCategoryFilter}
               />
               {/* <div className="flex justify-end mb-2"> */}
-              {/* <Button
+              <Button
                 variant="outline"
                 onClick={() => setAuditOpen(true)}
                 className="flex items-center gap-2" // comment for production
               >
                 <History className="w-4 h-4" />
                 Audit Logs
-              </Button> */}
+              </Button>
              <Button
                 variant="outline"
                 onClick={() => setDocsDialogOpen(true)}
