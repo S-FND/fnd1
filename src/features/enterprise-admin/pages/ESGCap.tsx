@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
@@ -31,6 +31,10 @@ import { PageAccessContext } from '@/context/PageAccessContext';
 import Loader from '@/components/ui/loader';
 import { set } from 'date-fns';
 import { ESGCapScoring } from '../components/esg-cap/ESGCapScoring';
+import { calculateComplianceScore, useComplianceScore } from '../components/esg-cap/useComplianceScore';
+import { mapESGCapItems } from '../components/esg-cap/mapESGCapItem';
+import ComplianceScoreCard from '../components/esg-cap/complianceScoreCard';
+
 
 interface PlanHistory {
   updateByUserId: string;
@@ -380,6 +384,20 @@ const ESGCapPage = () => {
       setButtonEnabled(true);
     }
   }, []);
+
+  // useEffect(() => {
+  //   if (esgCap && esgCap.plan) {
+  //     const { overallScore, status, items, summary } = useComplianceScore(mapESGCapItems(esgCap.plan)); // actual deal close date
+  //     console.log("ESG CAP Compliance Score:", { overallScore, status, items, summary });
+  //   }
+  // }, [esgCap])
+
+  const result = useMemo(() => {
+    if (!esgCap?.plan) return null;
+    return calculateComplianceScore(mapESGCapItems(esgCap.plan));
+  }, [esgCap]);
+
+  console.log("ESG CAP Compliance Score:", result);
 
   const getUserEntityId = () => {
     try {
@@ -787,7 +805,7 @@ const ESGCapPage = () => {
       <Loader show={loading} text={loadingMessage} />
       <UnifiedSidebarLayout>
         <Card className="shadow-lg border-0">
-            {/* <CardHeader className="border-b">
+          {/* <CardHeader className="border-b">
               <CardDescription className="text-sm">
                 <h1 className="text-3xl font-bold tracking-tight">ESG Corrective Action Plan</h1>
                 <p className="mt-1">
@@ -822,6 +840,22 @@ const ESGCapPage = () => {
               </div>
             )}
 
+            <ComplianceScoreCard score={
+              {
+                overallScore: 29.2,
+                status: "Critical",
+                highPriorityRiskFlag: true,
+                summary: {
+                  totalCSItems: 19,
+                  completedItems: 6,
+                  overdueItems: 11,
+                  partlySubmittedItems: 0,
+                  upcomingItems: 0,
+                  resubmitRequiredItems: 0,
+                  dueThisMonthItems:2
+                }
+              }
+            } />
             {sortedItems.length > 0 && (
               <div className="mt-6 py-4">
                 <ESGCapScoring items={sortedItems} />

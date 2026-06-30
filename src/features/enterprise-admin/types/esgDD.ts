@@ -1,4 +1,5 @@
 import { IDocumentValidation } from "../components/esg-cap/document-summary-review";
+import { CompletionIndicator } from "../components/esg-cap/useComplianceScore";
 
 export type FundingStage =
   | 'pre_seed'
@@ -168,6 +169,7 @@ export interface ESGCapItem {
   aiResponseRaw?: AiResponse;
   manualInsights?: AiResponse;
   aiInsights?: AiInsights;
+  completionIndicators:CompletionIndicator[];
   fileUploadedData: {
     filename: string;
     mimetype: string;
