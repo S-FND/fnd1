@@ -62,7 +62,7 @@ export const HealthCareTable = ({
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/30">
+                <TableRow className="bg-muted/30 [&>th]:text-left">
                   <TableHead className="w-[50px] text-center text-xs font-semibold">Sno</TableHead>
                   <TableHead className="text-xs font-semibold">KPI Metric</TableHead>
                   <TableHead className="w-[100px] text-xs font-semibold">Unit</TableHead>

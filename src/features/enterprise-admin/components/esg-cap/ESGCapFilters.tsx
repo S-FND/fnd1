@@ -22,7 +22,7 @@ export const ESGCapFilters: React.FC<ESGCapFiltersProps> = ({
 }) => {
   return (
     <div className="flex flex-col md:flex-row gap-4">
-      <div className="w-full md:w-[650px]">
+      <div className="w-full md:w-[579px]">
         <Input 
           placeholder="Search item..." 
           value={searchTerm}
@@ -43,7 +43,7 @@ export const ESGCapFilters: React.FC<ESGCapFiltersProps> = ({
         </Select> */}
         
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[135px]">
             <SelectValue placeholder="Filter by category" />
           </SelectTrigger>
           <SelectContent>

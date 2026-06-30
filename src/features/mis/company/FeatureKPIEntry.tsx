@@ -176,7 +176,8 @@ const FeatureKPIEntry = () => {
   const periodToCheck = isAnnual ? 'FY' : currentQuarter;
   const yearToCheck = isAnnual ? currentFY : currentYear;
   const periodLocked = !isPeriodEditable(periodToCheck, yearToCheck);
-  const readOnly = user && user.misCompanyId == 'NEWME' ? false : isCompanyReadOnly || periodLocked;
+  let unlockIds: string[] = ['NEWME','SUPTAILS','RIPPLR','ILUVIA','GOODBUG','TERRACTIV','SAMMMMBT'];
+  const readOnly = user && (user.misCompanyId == 'NEWME' || unlockIds.includes(user.misCompanyId)) ? false : isCompanyReadOnly || periodLocked;
 
   // Handle quarter change - update URL and redirect if needed
   const handleQuarterChange = useCallback((newQuarter: string) => {
@@ -388,114 +389,116 @@ const FeatureKPIEntry = () => {
             }
           });
           setFormData(entries);
-        } else if (isAnnual) {
-          // For annual KPIs with no current data, try to pre-fill from last year
-          const lastYear = currentFY - 1;
-          // const { data: lastYearData, error: lastYearError } = await supabase
-          //   .from('kpi_entries')
-          //   .select('kpi_id, value')
-          //   .eq('company_id', companyId)
-          //   .eq('quarter', 'FY')
-          //   .eq('year', lastYear);
-          const lastYearData: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=FY&year=${lastYear}`);
+        }
+        // } else if (isAnnual) {
+        //   // For annual KPIs with no current data, try to pre-fill from last year
+        //   const lastYear = currentFY - 1;
+        //   // const { data: lastYearData, error: lastYearError } = await supabase
+        //   //   .from('kpi_entries')
+        //   //   .select('kpi_id, value')
+        //   //   .eq('company_id', companyId)
+        //   //   .eq('quarter', 'FY')
+        //   //   .eq('year', lastYear);
+        //   const lastYearData: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=FY&year=${lastYear}`);
 
-          if (lastYearData && lastYearData.data.length > 0) {
-            const entries: Record<string, string | number | boolean> = {};
-            lastYearData.data.forEach(entry => {
-              if (entry.value !== null) {
-                if (entry.value === 'true') {
-                  entries[entry.kpi_id] = true;
-                } else if (entry.value === 'false') {
-                  entries[entry.kpi_id] = false;
-                } else {
-                  entries[entry.kpi_id] = entry.value;
-                }
-              }
-            });
-            setFormData(entries);
-            // Mark as having unsaved changes since this is pre-filled data
-            if (Object.keys(entries).length > 0) {
-              setHasUnsavedChanges(true);
-            }
-          } else {
-            setFormData({});
-          }
-        } else if (!isAnnual && currentQuarter === 'Q1' && currentYear === 2026) {
-          // Q1 2026 (JFM 2026) is the newly opened quarter. If the company has
-          // no entries yet for this period, pre-fill from the same KPIs they
-          // submitted in Q4 2025 (OND 2025) so they only need to update changes.
-          // const { data: prevQData, error: prevQErr } = await supabase
-          //   .from('kpi_entries')
-          //   .select('kpi_id, value')
-          //   .eq('company_id', companyId)
-          //   .eq('quarter', 'Q4')
-          //   .eq('year', 2025);
-          const prevQData: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=Q4&year=2025`);
+        //   if (lastYearData && lastYearData.data.length > 0) {
+        //     const entries: Record<string, string | number | boolean> = {};
+        //     lastYearData.data.forEach(entry => {
+        //       if (entry.value !== null) {
+        //         if (entry.value === 'true') {
+        //           entries[entry.kpi_id] = true;
+        //         } else if (entry.value === 'false') {
+        //           entries[entry.kpi_id] = false;
+        //         } else {
+        //           entries[entry.kpi_id] = entry.value;
+        //         }
+        //       }
+        //     });
+        //     setFormData(entries);
+        //     // Mark as having unsaved changes since this is pre-filled data
+        //     if (Object.keys(entries).length > 0) {
+        //       setHasUnsavedChanges(true);
+        //     }
+        //   } else {
+        //     setFormData({});
+        //   }
+        // } else if (!isAnnual && currentQuarter === 'Q1' && currentYear === 2026) {
+        //   // Q1 2026 (JFM 2026) is the newly opened quarter. If the company has
+        //   // no entries yet for this period, pre-fill from the same KPIs they
+        //   // submitted in Q4 2025 (OND 2025) so they only need to update changes.
+        //   // const { data: prevQData, error: prevQErr } = await supabase
+        //   //   .from('kpi_entries')
+        //   //   .select('kpi_id, value')
+        //   //   .eq('company_id', companyId)
+        //   //   .eq('quarter', 'Q4')
+        //   //   .eq('year', 2025);
+        //   const prevQData: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=Q4&year=2025`);
 
-          if (prevQData && prevQData.data.length > 0) {
-            const entries: Record<string, string | number | boolean> = {};
-            prevQData.data.forEach(entry => {
-              if (entry.value !== null) {
-                if (entry.value === 'true') entries[entry.kpi_id] = true;
-                else if (entry.value === 'false') entries[entry.kpi_id] = false;
-                else entries[entry.kpi_id] = entry.value;
-              }
-            });
-            setFormData(entries);
-            // Mark dirty so the company sees their pre-filled data persists on save.
-            if (Object.keys(entries).length > 0) {
-              setHasUnsavedChanges(true);
-            }
-          } else {
-            setFormData({});
-          }
-        } else if (featureKey === 'sourcingFulfillment' && (!data || data.data.length === 0)) {
-          // For Sourcing & Fulfillment with no current quarter data, pre-fill from previous quarter in same FY
-          // Quarter order: Q1, Q2, Q3, Q4. Current year is Apr-Mar FY.
-          const quarterOrder = ['Q1', 'Q2', 'Q3', 'Q4'];
-          const currentQIndex = quarterOrder.indexOf(currentQuarter);
+        //   if (prevQData && prevQData.data.length > 0) {
+        //     const entries: Record<string, string | number | boolean> = {};
+        //     prevQData.data.forEach(entry => {
+        //       if (entry.value !== null) {
+        //         if (entry.value === 'true') entries[entry.kpi_id] = true;
+        //         else if (entry.value === 'false') entries[entry.kpi_id] = false;
+        //         else entries[entry.kpi_id] = entry.value;
+        //       }
+        //     });
+        //     setFormData(entries);
+        //     // Mark dirty so the company sees their pre-filled data persists on save.
+        //     if (Object.keys(entries).length > 0) {
+        //       setHasUnsavedChanges(true);
+        //     }
+        //   } else {
+        //     setFormData({});
+        //   }
+        // } else if (featureKey === 'sourcingFulfillment' && (!data || data.data.length === 0)) {
+        //   // For Sourcing & Fulfillment with no current quarter data, pre-fill from previous quarter in same FY
+        //   // Quarter order: Q1, Q2, Q3, Q4. Current year is Apr-Mar FY.
+        //   const quarterOrder = ['Q1', 'Q2', 'Q3', 'Q4'];
+        //   const currentQIndex = quarterOrder.indexOf(currentQuarter);
 
-          // Try previous quarters in reverse order (most recent first)
-          let preFillData: Record<string, string | number | boolean> = {};
+        //   // Try previous quarters in reverse order (most recent first)
+        //   let preFillData: Record<string, string | number | boolean> = {};
 
-          for (let i = currentQIndex - 1; i >= 0; i--) {
-            const prevQuarter = quarterOrder[i];
-            // const { data: prevData, error: prevError } = await supabase
-            //   .from('kpi_entries')
-            //   .select('kpi_id, value')
-            //   .eq('company_id', companyId)
-            //   .eq('quarter', prevQuarter)
-            //   .eq('year', currentYear)
-            //   .like('kpi_id', '%vendor_%')
-            //   .or('kpi_id.like.%msme_%,kpi_id.like.%logistics_%,kpi_id.like.%sourcing_%');
-            const prevData: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=${prevQuarter}&year=${currentYear}&kpi_id=vendor_%25&or=kpi_id.like.%25msme_%25,kpi_id.like.%25logistics_%25,kpi_id.like.%25sourcing_%25`);
+        //   for (let i = currentQIndex - 1; i >= 0; i--) {
+        //     const prevQuarter = quarterOrder[i];
+        //     // const { data: prevData, error: prevError } = await supabase
+        //     //   .from('kpi_entries')
+        //     //   .select('kpi_id, value')
+        //     //   .eq('company_id', companyId)
+        //     //   .eq('quarter', prevQuarter)
+        //     //   .eq('year', currentYear)
+        //     //   .like('kpi_id', '%vendor_%')
+        //     //   .or('kpi_id.like.%msme_%,kpi_id.like.%logistics_%,kpi_id.like.%sourcing_%');
+        //     const prevData: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=${prevQuarter}&year=${currentYear}&kpi_id=vendor_%25&or=kpi_id.like.%25msme_%25,kpi_id.like.%25logistics_%25,kpi_id.like.%25sourcing_%25`);
 
-            if (prevData && prevData.data.length > 0) {
-              prevData.data.forEach(entry => {
-                if (entry.value !== null && !preFillData[entry.kpi_id]) {
-                  if (entry.value === 'true') {
-                    preFillData[entry.kpi_id] = true;
-                  } else if (entry.value === 'false') {
-                    preFillData[entry.kpi_id] = false;
-                  } else {
-                    preFillData[entry.kpi_id] = entry.value;
-                  }
-                }
-              });
-              // Found data from a previous quarter, use it
-              if (Object.keys(preFillData).length > 0) {
-                break;
-              }
-            }
-          }
+        //     if (prevData && prevData.data.length > 0) {
+        //       prevData.data.forEach(entry => {
+        //         if (entry.value !== null && !preFillData[entry.kpi_id]) {
+        //           if (entry.value === 'true') {
+        //             preFillData[entry.kpi_id] = true;
+        //           } else if (entry.value === 'false') {
+        //             preFillData[entry.kpi_id] = false;
+        //           } else {
+        //             preFillData[entry.kpi_id] = entry.value;
+        //           }
+        //         }
+        //       });
+        //       // Found data from a previous quarter, use it
+        //       if (Object.keys(preFillData).length > 0) {
+        //         break;
+        //       }
+        //     }
+        //   }
 
-          if (Object.keys(preFillData).length > 0) {
-            setFormData(preFillData);
-            setHasUnsavedChanges(true);
-          } else {
-            setFormData({});
-          }
-        } else {
+        //   if (Object.keys(preFillData).length > 0) {
+        //     setFormData(preFillData);
+        //     setHasUnsavedChanges(true);
+        //   } else {
+        //     setFormData({});
+        //   }
+        // } 
+        else {
           // Clear form data if no entries found for this period
           setFormData({});
         }

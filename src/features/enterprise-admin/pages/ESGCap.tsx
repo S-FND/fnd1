@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Folder } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Folder, FileDown } from 'lucide-react';
 import { ESGCapItem } from '../types/esgDD';
 import { ESGCapFilters } from '../components/esg-cap/ESGCapFilters';
 import { ESGCapTable } from '../components/esg-cap/ESGCapTable';
@@ -36,6 +36,9 @@ import AuditDrawer, { AuditLog } from '../components/esg-cap/AuditDrawer';
 import { httpClient } from '@/lib/httpClient';
 import AssessmentTypeDialog from '@/features/mis/company/Assessmenttypedialog';
 import ESGCapDocumentsDialog from '../components/esg-cap/ESGCapDocumentsDialog';
+import { ExportDrawer } from './ExportDrawer';
+import { calculateComplianceScore } from '../components/esg-cap/useComplianceScore';
+import { mapESGCapItems } from '../components/esg-cap/mapESGCapItem';
 
 interface PlanHistory {
   updateByUserId: string;
@@ -172,14 +175,23 @@ const ComparePlanView = ({
 
   const StatusBadge: React.FC<{ status: string; highlight?: boolean }> = ({ status, highlight }) => {
     const statusColor = {
-      completed: "bg-green-100 text-green-800",
-      in_progress: "bg-blue-100 text-blue-800",
-      delayed: "bg-red-100 text-red-800",
-      accepted: "bg-emerald-100 text-emerald-800",
-      in_review: "bg-gray-100 text-gray-800",
-      pending: "bg-amber-100 text-amber-800"
+      // ✅ New statuses
+      "closed": "bg-green-100 text-green-800",
+      "due-in-this-month": "bg-orange-100 text-orange-800",
+      "overdue": "bg-red-100 text-red-800",
+      "partly-submitted": "bg-blue-100 text-blue-800",
+      "re-submit-Requested": "bg-amber-100 text-amber-800",
+      "submitted-pending-review": "bg-purple-100 text-purple-800",
+      "upcoming": "bg-slate-100 text-slate-800",
+      // Legacy support
+      "completed": "bg-green-100 text-green-800",
+      "in_progress": "bg-blue-100 text-blue-800",
+      "delayed": "bg-red-100 text-red-800",
+      "accepted": "bg-emerald-100 text-emerald-800",
+      "in_review": "bg-gray-100 text-gray-800",
+      "pending": "bg-amber-100 text-amber-800"
     }[status] || "bg-gray-100 text-gray-800";
-
+  
     return <Badge className={`${statusColor} ${highlight ? "border-2 border-yellow-500" : ""}`}>{status}</Badge>;
   };
 
@@ -298,7 +310,10 @@ const ComparePlanView = ({
                 </TableCell>
 
                 <TableCell>
-                  <StatusBadge status={item.status} highlight={changedFields.status} />
+                  <StatusBadge
+                    status={item.companyStatus ?? item.status}
+                    highlight={changedFields.companyStatus}
+                  />
                 </TableCell>
 
                 <TableCell>
@@ -361,6 +376,7 @@ const ESGCapPage = () => {
   const [reloadData, setReloadData] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ESGCapItem | null>(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [drawer, setDrawer] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
     new Set(["CP – Conditions Precedent", "CS – Conditions Subsequent", "ESG Roadmap", "Other Items"])
   );
@@ -389,6 +405,20 @@ const ESGCapPage = () => {
       setButtonEnabled(true);
     }
   }, []);
+
+  // useEffect(() => {
+  //   if (esgCap && esgCap.plan) {
+  //     const { overallScore, status, items, summary } = useComplianceScore(mapESGCapItems(esgCap.plan)); // actual deal close date
+  //     console.log("ESG CAP Compliance Score:", { overallScore, status, items, summary });
+  //   }
+  // }, [esgCap])
+
+  const result = useMemo(() => {
+    if (!esgCap?.plan) return null;
+    return calculateComplianceScore(mapESGCapItems(esgCap.plan));
+  }, [esgCap]);
+
+  console.log("ESG CAP Compliance Score:", result);
 
   const getUserEntityId = () => {
     try {
@@ -587,114 +617,173 @@ const ESGCapPage = () => {
     const itemStatus = item?.status || '';
     const itemCategory = item?.category || '';
     const investorStatus = item?.investorStatus || '';
-
+    const companyStatus = item?.companyStatus || '';
+  
     const matchesSearch = itemTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
       itemMeasures.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || itemStatus === statusFilter;
     const matchesCategory = categoryFilter === 'all' || itemCategory === categoryFilter;
-
+  
     const getDateStatus = (item: ESGCapItem) => {
-      if (!item.targetDate) return " ";
-
+      const investorStatus = (item.investorStatus || "").toLowerCase().trim();
+      const companyStatus = (item.companyStatus || item.status  || "").toLowerCase().trim();
+    
+      // 1. INVESTOR STATUS TAKES PRIORITY
+      if (investorStatus === "closed") {
+        return "closed";
+      }
+      if (investorStatus === "re-submit-requested" || investorStatus === "re-submit requested") {
+        return "re-submit-requested";
+      }
+      if (investorStatus === "partly-submitted" || investorStatus === "partly submitted") {
+        return "partly-submitted";
+      }
+    
+      // 2. submitted-pending-review: Company submitted + Investor under-review
+      if ((companyStatus === "submitted" || companyStatus === "submitted-pending-review") && 
+          (investorStatus === "under-review" || investorStatus === "under review")) {
+        return "submitted-pending-review";
+      }
+    
+      // 3. Check company status
+      if (companyStatus === "closed") return "closed";
+      if (companyStatus === "partly-submitted" || companyStatus === "partly submitted") return "partly-submitted";
+      if (companyStatus === "submitted" || companyStatus === "submitted") return "submitted";
+      if (companyStatus === "submitted-pending-review" || companyStatus === "submitted pending review") return "submitted-pending-review";
+      if (companyStatus === "due-in-this-month" || companyStatus === "due in this month") return "due-in-this-month";
+      if (companyStatus === "overdue") return "overdue";
+    
+      // 4. If no target date, return empty
+      if (!item.targetDate) return "";
+    
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-
       const target = new Date(item.targetDate);
       target.setHours(0, 0, 0, 0);
-
-      if (
-        target.getMonth() === today.getMonth() &&
-        target.getFullYear() === today.getFullYear()
-      ) {
-        return "due in this month";
+    
+      // Check if due in current month
+      if (target.getMonth() === today.getMonth() && target.getFullYear() === today.getFullYear()) {
+        return "due-in-this-month";
       }
-
+    
+      // Check if overdue
       if (target < today) {
         return "overdue";
       }
-
+    
       return "upcoming";
     };
-
+  
     let matchesCardFilter = true;
-
     if (cardFilter) {
+      const effectiveStatus = getDateStatus(item);
+      
       if (cardFilter === "closed") {
-        matchesCardFilter =
-          investorStatus?.toLowerCase() === "closed";
-      }
-      else if (cardFilter === "submitted") {
-        matchesCardFilter =
-        itemStatus?.toLowerCase() === "submitted";
-      }
-      else {
-        matchesCardFilter =
-          investorStatus?.toLowerCase() !== "closed" &&
-          itemStatus?.toLowerCase() !== "submitted" &&
-          getDateStatus(item) === cardFilter;
+        matchesCardFilter = investorStatus?.toLowerCase() === "closed" || 
+                            companyStatus?.toLowerCase() === "closed";
+      } else if (cardFilter === "partly-submitted") {
+        matchesCardFilter = effectiveStatus === "partly-submitted";
+      } else if (cardFilter === "submitted-pending-review") {
+        matchesCardFilter = effectiveStatus === "submitted-pending-review";
+      } else if (cardFilter === 're-submit requested') {
+        matchesCardFilter = investorStatus === 're-submit-requested';
+      } else if (cardFilter === "due-in-this-month") {
+        matchesCardFilter = effectiveStatus === "due-in-this-month";
+      } else if (cardFilter === "overdue") {
+        matchesCardFilter = effectiveStatus === "overdue";
+      } else {
+        matchesCardFilter = effectiveStatus === cardFilter;
       }
     }
-
+  
     return matchesSearch && matchesStatus && matchesCategory && matchesCardFilter;
   }) || [];
 
   const isOverdue = (item: ESGCapItem) => {
+    const companyStatus = (item.companyStatus || item.status || "").toLowerCase();
+    const investorStatus = (item.investorStatus || "").toLowerCase();
+  
+    // If closed, not overdue
+    if (companyStatus === "closed" || investorStatus === "closed") {
+      return false;
+    }
+  
+    // If already submitted, not overdue
+    if (companyStatus === "partly-submitted" || 
+        companyStatus === "submitted-pending-review" ) {
+      return false;
+    }
+  
     if (!item.targetDate) return false;
-
+  
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
+  
     const targetDate = new Date(item.targetDate);
     targetDate.setHours(0, 0, 0, 0);
-
-    return (
-      targetDate < today &&
-      item.investorStatus !== "closed" &&
-      !item.actualDate
-    );
+  
+    return targetDate < today;
   };
 
 
   const sortedItems = [...filteredItems].sort((a, b) => {
-    // 1. overdue items on top
+    // 1. Overdue items on top
     const aOverdue = isOverdue(a);
     const bOverdue = isOverdue(b);
-
+  
     if (aOverdue && !bOverdue) return -1;
     if (!aOverdue && bOverdue) return 1;
-
-    // 2. completed items at bottom
-    const aCompleted = a.investorStatus === "closed";
-    const bCompleted = b.investorStatus === "closed";
-
-    if (aCompleted && !bCompleted) return 1;
-    if (!aCompleted && bCompleted) return -1;
-
-    // 3. normal sorting
+  
+    // 2. Closed items at bottom
+    const aClosed = a.investorStatus === "closed" || a.companyStatus === "closed";
+    const bClosed = b.investorStatus === "closed" || b.companyStatus === "closed";
+  
+    if (aClosed && !bClosed) return 1;
+    if (!aClosed && bClosed) return -1;
+  
+    // 3. Sort by selected column
     if (!sortConfig) return 0;
-
-    if (
-      sortConfig.key === "targetDate" ||
-      sortConfig.key === "createdAt" ||
-      sortConfig.key === "actualDate"
-    ) {
-      const dateA = new Date(a[sortConfig.key] || 0).getTime();
-      const dateB = new Date(b[sortConfig.key] || 0).getTime();
-
+  
+    const aVal = a[sortConfig.key];
+    const bVal = b[sortConfig.key];
+  
+    // Handle null/undefined
+    if (aVal === undefined || aVal === null) return 1;
+    if (bVal === undefined || bVal === null) return -1;
+  
+    // Date fields
+    if (["targetDate", "createdAt", "actualDate", "lastReviewDate"].includes(sortConfig.key)) {
+      const dateA = new Date((aVal || 0) as string).getTime();
+      const dateB = new Date((bVal || 0) as string).getTime();
+      return sortConfig.direction === "asc" ? dateA - dateB : dateB - dateA;
+    }
+  
+    // Priority
+    if (sortConfig.key === "priority") {
+      const order = { High: 3, Medium: 2, Low: 1 };
+      const aPriority = order[aVal as keyof typeof order] || 0;
+      const bPriority = order[bVal as keyof typeof order] || 0;
+      return sortConfig.direction === "asc" ? aPriority - bPriority : bPriority - aPriority;
+    }
+  
+    // String comparison
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
       return sortConfig.direction === "asc"
-        ? dateA - dateB
-        : dateB - dateA;
+        ? aVal.localeCompare(bVal)
+        : bVal.localeCompare(aVal);
     }
-
-    if (a[sortConfig.key] < b[sortConfig.key]) {
-      return sortConfig.direction === "asc" ? -1 : 1;
+  
+    // Number comparison
+    if (typeof aVal === 'number' && typeof bVal === 'number') {
+      return sortConfig.direction === "asc" ? aVal - bVal : bVal - aVal;
     }
-
-    if (a[sortConfig.key] > b[sortConfig.key]) {
-      return sortConfig.direction === "asc" ? 1 : -1;
-    }
-
-    return 0;
+  
+    // Fallback
+    const aString = String(aVal);
+    const bString = String(bVal);
+    return sortConfig.direction === "asc"
+      ? aString.localeCompare(bString)
+      : bString.localeCompare(aString);
   });
 
   const requestSort = (key: keyof ESGCapItem) => {
@@ -737,31 +826,31 @@ const ESGCapPage = () => {
     }
   };
 
-  const toggleComparisonView = () => {
-    if (showComparisonView) {
-      setShowComparisonView(false);
-    } else if (originalPlan.length > 0) {
-      setShowComparisonView(true);
-    } else {
-      toast.warning("No previous version to compare with");
-    }
-  };
+  // const toggleComparisonView = () => {
+  //   if (showComparisonView) {
+  //     setShowComparisonView(false);
+  //   } else if (originalPlan.length > 0) {
+  //     setShowComparisonView(true);
+  //   } else {
+  //     toast.warning("No previous version to compare with");
+  //   }
+  // };
 
-  const shouldDisableAcceptButton = () => {
-    if (isPlanFinalized) return true;
-    if (!esgCap || !esgCap.founderPlanFinalStatus) return false;
-    if (user?.entityType === 2 && esgCap.founderPlanFinalStatus === true) {
-      return true;
-    }
-    if (user?.entityType === 1 && esgCap.investorPlanFinalStatus) {
-      return true;
-    }
-    return false;
-  };
+  // const shouldDisableAcceptButton = () => {
+  //   if (isPlanFinalized) return true;
+  //   if (!esgCap || !esgCap.founderPlanFinalStatus) return false;
+  //   if (user?.entityType === 2 && esgCap.founderPlanFinalStatus === true) {
+  //     return true;
+  //   }
+  //   if (user?.entityType === 1 && esgCap.investorPlanFinalStatus) {
+  //     return true;
+  //   }
+  //   return false;
+  // };
 
-  const shouldDisableRequestButton = () => {
-    return loading || !buttonEnabled || isPlanFinalized;
-  };
+  // const shouldDisableRequestButton = () => {
+  //   return loading || !buttonEnabled || isPlanFinalized;
+  // };
 
   // useEffect(() => {
   //   if(user && user.misCompanyId) {
@@ -853,6 +942,9 @@ const ESGCapPage = () => {
     getAuditLogs();
   }, []);
 
+  const userData = JSON.parse(localStorage.getItem('fandoro-user') || '{}');
+  const companyName = userData?.name || '';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <Loader show={loading} text={loadingMessage} />
@@ -876,15 +968,16 @@ const ESGCapPage = () => {
                 categoryFilter={categoryFilter}
                 setCategoryFilter={setCategoryFilter}
               />
-              {/* <div className="flex justify-end mb-2"> */}
-              {/* <Button
+              <div className="flex flex-wrap items-center justify-end gap-2 mb-3 md:mb-0">
+              <Button
                 variant="outline"
                 onClick={() => setAuditOpen(true)}
                 className="flex items-center gap-2" // comment for production
               >
                 <History className="w-4 h-4" />
                 Audit Logs
-              </Button> */}
+              </Button>
+             
               <Button
                 variant="outline"
                 onClick={() => setDocsDialogOpen(true)}
@@ -893,12 +986,21 @@ const ESGCapPage = () => {
                 <Folder className="w-4 h-4" />
                 Uploads
               </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => setDrawer(true)}
+                className="flex items-center gap-2 justify-start hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+              >
+                <FileDown className="h-4 w-4" /> Export 
+              </Button>
+              </div>
             </div>
             {/* Filters Section */}
 
 
             {/* Alerts Panel - MOVED OUTSIDE the filters container */}
-            {!isInvestorEmailExists && esgCap?.plan && esgCap.plan.length > 0 && (
+            {/* {!isInvestorEmailExists && esgCap?.plan && esgCap.plan.length > 0 && (
               <div className="mb-6">
                 <AlertsPanel
                   overdueItems={alerts.overdueItems}
@@ -907,13 +1009,14 @@ const ESGCapPage = () => {
                   finalPlan={esgCap?.finalPlan}
                 />
               </div>
-            )}
+            )} */}
 
             {/* {sortedItems.length > 0 && (
               <div className="mt-6 py-4"> */}
             <ESGCapScoring items={esgCap?.plan || []}
               onFilterChange={setCardFilter}
               activeFilter={cardFilter}
+              complianceScore={result?.overallScore}
             />
             {/* </div>
             )} */}
@@ -1005,13 +1108,14 @@ const ESGCapPage = () => {
           </CardContent>
         </Card>
       </UnifiedSidebarLayout>
-      {/* <AuditDrawer open={auditOpen} onClose={() => setAuditOpen(false)} logs={logs} /> */}
+      <AuditDrawer open={auditOpen} onClose={() => setAuditOpen(false)} logs={logs} />
       <AssessmentTypeDialog />
       <ESGCapDocumentsDialog
         open={docsDialogOpen}
         onClose={() => setDocsDialogOpen(false)}
         entityId={entityId}
       />
+      <ExportDrawer open={drawer} onClose={() => setDrawer(false)} items={esgCap?.plan || []} entityName={companyName} />
 
     </div>
   );

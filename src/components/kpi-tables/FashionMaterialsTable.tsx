@@ -233,7 +233,7 @@ export const FashionMaterialsTable = ({ formData, onInputChange, readOnly = fals
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="[&>th]:text-left">
                     <TableHead className="w-[250px]">Material Type</TableHead>
                     <TableHead className="w-[150px]">Value (meters)</TableHead>
                     <TableHead className="w-[100px]">Percentage (%)</TableHead>
@@ -292,7 +292,7 @@ export const FashionMaterialsTable = ({ formData, onInputChange, readOnly = fals
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="[&>th]:text-left">
                       <TableHead className="w-[250px]">Material Type</TableHead>
                       <TableHead className="w-[150px]">Value (MT)</TableHead>
                       <TableHead className="w-[100px]">Percentage (%)</TableHead>
@@ -375,7 +375,7 @@ export const FashionMaterialsTable = ({ formData, onInputChange, readOnly = fals
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="[&>th]:text-left">
                       <TableHead className="w-[250px]">Material Type</TableHead>
                       <TableHead className="w-[150px]">Value (MT)</TableHead>
                       <TableHead className="w-[100px]">Percentage (%)</TableHead>
@@ -390,7 +390,7 @@ export const FashionMaterialsTable = ({ formData, onInputChange, readOnly = fals
                       const materialMT = parseFloat(parseFormattedNumber(String(formData[`fashion_primary_pkg_${material.key}_mt`] || '0'))) || 0;
                       const autoPercentage = totalPrimary > 0 ? ((materialMT / totalPrimary) * 100).toFixed(2) : '-';
                       return (
-                        <TableRow key={material.key}>
+                        <TableRow key={material.key} className="[&>th]:text-left">
                           <TableCell className="font-medium text-sm">
                             <div className="flex items-center">
                               <CellNumberBadge kpiNumber={6} fieldLetter={fieldLetter} />
@@ -493,7 +493,7 @@ export const FashionMaterialsTable = ({ formData, onInputChange, readOnly = fals
               <div className="rounded-md border">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="[&>th]:text-left">
                       <TableHead className="w-[250px]">Material Type</TableHead>
                       <TableHead className="w-[150px]">Value (MT)</TableHead>
                       <TableHead className="w-[100px]">Percentage (%)</TableHead>
