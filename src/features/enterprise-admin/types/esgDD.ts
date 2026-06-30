@@ -1,4 +1,5 @@
 import { IDocumentValidation } from "../components/esg-cap/document-summary-review";
+import { CompletionIndicator } from "../components/esg-cap/useComplianceScore";
 
 export type FundingStage =
   | 'pre_seed'
@@ -170,6 +171,7 @@ export interface ESGCapItem {
   aiResponseRaw?: AiResponse;
   manualInsights?: AiResponse;
   aiInsights?: AiInsights;
+  completionIndicators:CompletionIndicator[];
   fileUploadedData: {
     filename: string;
     mimetype: string;
@@ -191,3 +193,24 @@ export interface RegulatoryRequirement {
   state?: string;
   applicableStages: FundingStage[];
 }
+
+// import { calculateComplianceScore, useComplianceScore } from '../components/esg-cap/useComplianceScore';
+// import { mapESGCapItems } from '../components/esg-cap/mapESGCapItem';
+// import ComplianceScoreCard from '../components/esg-cap/complianceScoreCard';
+
+// <ComplianceScoreCard score={
+//               {
+//                 overallScore: 29.2,
+//                 status: "Critical",
+//                 highPriorityRiskFlag: true,
+//                 summary: {
+//                   totalCSItems: 19,
+//                   completedItems: 6,
+//                   overdueItems: 11,
+//                   partlySubmittedItems: 0,
+//                   upcomingItems: 0,
+//                   resubmitRequiredItems: 0,
+//                   dueThisMonthItems:2
+//                 }
+//               }
+//             } />
