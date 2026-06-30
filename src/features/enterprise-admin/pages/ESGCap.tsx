@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { UnifiedSidebarLayout } from '@/components/layout/UnifiedSidebarLayout';
 import { useAuth } from '@/context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
@@ -37,6 +37,8 @@ import { httpClient } from '@/lib/httpClient';
 import AssessmentTypeDialog from '@/features/mis/company/Assessmenttypedialog';
 import ESGCapDocumentsDialog from '../components/esg-cap/ESGCapDocumentsDialog';
 import { ExportDrawer } from './ExportDrawer';
+import { calculateComplianceScore } from '../components/esg-cap/useComplianceScore';
+import { mapESGCapItems } from '../components/esg-cap/mapESGCapItem';
 
 interface PlanHistory {
   updateByUserId: string;
@@ -404,6 +406,20 @@ const ESGCapPage = () => {
     }
   }, []);
 
+  // useEffect(() => {
+  //   if (esgCap && esgCap.plan) {
+  //     const { overallScore, status, items, summary } = useComplianceScore(mapESGCapItems(esgCap.plan)); // actual deal close date
+  //     console.log("ESG CAP Compliance Score:", { overallScore, status, items, summary });
+  //   }
+  // }, [esgCap])
+
+  const result = useMemo(() => {
+    if (!esgCap?.plan) return null;
+    return calculateComplianceScore(mapESGCapItems(esgCap.plan));
+  }, [esgCap]);
+
+  console.log("ESG CAP Compliance Score:", result);
+
   const getUserEntityId = () => {
     try {
       const user = localStorage.getItem('fandoro-user');
@@ -737,8 +753,8 @@ const ESGCapPage = () => {
   
     // Date fields
     if (["targetDate", "createdAt", "actualDate", "lastReviewDate"].includes(sortConfig.key)) {
-      const dateA = new Date(aVal || 0).getTime();
-      const dateB = new Date(bVal || 0).getTime();
+      const dateA = new Date((aVal || 0) as string).getTime();
+      const dateB = new Date((bVal || 0) as string).getTime();
       return sortConfig.direction === "asc" ? dateA - dateB : dateB - dateA;
     }
   
@@ -1000,6 +1016,7 @@ const ESGCapPage = () => {
             <ESGCapScoring items={esgCap?.plan || []}
               onFilterChange={setCardFilter}
               activeFilter={cardFilter}
+              complianceScore={result?.overallScore}
             />
             {/* </div>
             )} */}

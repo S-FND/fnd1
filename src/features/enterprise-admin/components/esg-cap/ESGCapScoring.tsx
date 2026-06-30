@@ -6,9 +6,10 @@ interface ESGCapScoringProps {
   items: ESGCapItem[];
   onFilterChange?: (filterKey: string | null) => void;
   activeFilter?: string | null;
+  complianceScore?: number; // Optional prop for compliance score
 }
 
-export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterChange, activeFilter }) => {
+export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterChange, activeFilter,complianceScore }) => {
 
   // ✅ FILTER: Only include CP and CS items for card counting (exclude ESG_Roadmap)
   const filteredItems = items.filter(
@@ -166,7 +167,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
     : 0;
 
   const safeProgress = Math.max(0, Math.min(100, progressPercentage));
-  const complianceScore = Math.round(safeProgress);
+  // const complianceScore = Math.round(safeProgress);
 
   // ✅ Metrics using filteredItems (ONLY CP and CS)
   const dueThisMonthCount = filteredItems.filter(
@@ -234,7 +235,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
           <div className="grid grid-cols-7 gap-2">
             {/* 1. Compliance Score - STATIC */}
             <div className="text-center p-2 rounded-lg bg-green-50 cursor-default">
-              <div className="text-lg font-bold text-green-600">-</div>
+              <div className="text-lg font-bold text-green-600">{complianceScore !== undefined ? `${complianceScore} %` : '-'}</div>
               <div className="text-[10px] text-muted-foreground leading-tight">Compliance Score</div>
             </div>
 
