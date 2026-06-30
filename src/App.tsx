@@ -81,7 +81,13 @@ import VerifierApprovalsPage from './pages/VerifierApprovalsPage';
 import Scope3DataCollectionForm from './features/enterprise-admin/components/ghg/scope3/DataCollectionForm';
 import Scope4DataCollectionForm from './features/enterprise-admin/components/ghg/scope4/DataCollectionForm';
 import VerifierApprovalDetailPage from './pages/VerifierApprovalDetailPage';
+import CompanyDashboard from './features/mis/company/CompanyDashboard';
+import DataEntry from './features/mis/company/DataEntry';
+import FeatureKPIEntry from './features/mis/company/FeatureKPIEntry';
+import PreviewSubmission from './features/mis/company/PreviewSubmission';
+
 import ESGCapDetailsPage from './features/enterprise-admin/pages/ESGCapDetails';
+import Support from './features/mis/company/Support';
 
 function App() {
   return (
@@ -99,6 +105,17 @@ function App() {
         <Route path="/" element={<Login />} />
 
         {/* Company / Enterprise Admin Routes */}
+        <Route path="/mis/dashboard" element={<CompanyDashboard />} />
+        <Route path="/mis/data-entry" element={
+          <DataEntry />
+        } />
+        <Route path="/mis/kpi-entry" element={
+          <FeatureKPIEntry />
+        } />
+        <Route path="/mis/preview-submit" element={
+          <PreviewSubmission />
+        } />
+        <Route path="/mis/support" element={<Support />} />
         <Route path="/enhanced-dashboard" element={<EnhancedDashboard />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/company" element={<CompanyProfilePage />} />
@@ -112,6 +129,7 @@ function App() {
         <Route path="/esg-dd/cap" element={<ESGCapPage />} />
         <Route path="/esg-dd/irl" element={<IRLPage />} />
         <Route path="/esg-dd/advanced" element={<AdvancedIRLPage />}
+
         />
         <Route path="/ghg-accounting" element={<GHGAccountingPage />} />
         <Route path="/ghg-accounting/scope1/entry" element={<Scope1EntryPage />} />
@@ -121,7 +139,7 @@ function App() {
         <Route path="/ghg-accounting/scope2/define-source" element={<Scope2SourceTemplateForm />} />
         <Route path="/ghg-accounting/scope3/entry" element={<Scope3EntryPage />} />
         <Route path="/ghg-accounting/scope3/define-source" element={<Scope3SourceTemplateForm />} />
-         <Route path="/ghg-accounting/scope3/collect-data" element={<Scope3DataCollectionForm />} />
+        <Route path="/ghg-accounting/scope3/collect-data" element={<Scope3DataCollectionForm />} />
         <Route path="/ghg-accounting/scope4/entry" element={<Scope4EntryPage />} />
         <Route path="/ghg-accounting/scope4/define-source" element={<Scope4SourceTemplateForm />} />
         <Route path="/ghg-accounting/scope4/collect-data" element={<Scope4DataCollectionForm />} />
@@ -130,7 +148,7 @@ function App() {
 
         <Route path="/ghg-accounting/scope2/collect-data" element={<Scope2DataCollectionForm />} />
         <Route path="/verifier-approvals" element={<VerifierApprovalsPage />} />
-         <Route path="/verifier-approvals/:id" element={<VerifierApprovalDetailPage />} />
+        <Route path="/verifier-approvals/:id" element={<VerifierApprovalDetailPage />} />
 
 
         <Route path="/compliance" element={<Compliance />} />

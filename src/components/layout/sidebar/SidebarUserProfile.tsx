@@ -6,6 +6,7 @@ import { LogOut } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 interface UserProfile {
+  misCompanyId: any;
   name?: string;
   email?: string;
   role?: string;
@@ -29,10 +30,10 @@ export const SidebarUserProfile: React.FC<SidebarUserProfileProps> = ({ user }) 
       <div className="p-2 space-y-2">
         <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
           <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-            <span className="text-primary font-medium">{user.name?.charAt(0) || 'U'}</span>
+            <span className="text-primary font-medium">{user.misCompanyId?.charAt(0) || 'U'}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{user.name}</p>
+            <p className="text-sm font-medium truncate">{user.misCompanyId}</p>
             <p className="text-xs text-muted-foreground truncate">{user.email}</p>
           </div>
         </div>

@@ -66,6 +66,7 @@ export default function DocumentSummaryDialog({
   const [status, setStatus] = useState<"Accepted" | "Rejected" | null>(null);
   const [reason, setReason] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<{
     file: typeof files[0];
     idx: number;
@@ -99,6 +100,7 @@ export default function DocumentSummaryDialog({
   const handleDeleteConfirmed = async () => {
     if (!confirmDelete) return;
     const { file, idx } = confirmDelete;
+    setIsDeleting(true);
     setConfirmDelete(null);
     setDeleting(file.filename);
 
@@ -113,7 +115,7 @@ export default function DocumentSummaryDialog({
         }).toString();
         await httpClient.delete(`esgdd/escap/delete-file-esgcap?${queryParams}`);
       }
-
+      setIsDeleting(false);
       toast.success("Document deleted");
       window.location.reload();
       if (files.length === 1) {
@@ -123,6 +125,7 @@ export default function DocumentSummaryDialog({
         setSelectedIndex(newIndex);
       }
     } catch (error: any) {
+      setIsDeleting(false);
       console.error("Delete error:", error);
       toast.error(error?.message || "Failed to delete document");
     } finally {
@@ -191,11 +194,10 @@ export default function DocumentSummaryDialog({
             {files.map((file, idx) => (
               <div
                 key={idx}
-                className={`flex items-center justify-between p-3 rounded-lg cursor-pointer border ${
-                  idx === selectedIndex
+                className={`flex items-center justify-between p-3 rounded-lg cursor-pointer border ${idx === selectedIndex
                     ? "bg-blue-50 border-blue-400"
                     : "hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 <div onClick={() => setSelectedIndex(idx)} className="flex-1">
                   <div className="relative group max-w-[200px]">
@@ -312,19 +314,26 @@ export default function DocumentSummaryDialog({
                 ) : null}
               </>
             )}
-            {/* <div className="mt-6 border-t pt-4">
+            <div className="mt-6 border-t pt-4">
               <p className="font-semibold mb-2">Status</p>
               <div className="flex gap-4">
-                <span className={`px-3 py-1 rounded-full text-sm ${
-                  status === "Accepted" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                }`}>
-                  ✅ Accepted
-                </span>
-                <span className={`px-3 py-1 rounded-full text-sm ${
-                  status === "Rejected" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-500"
-                }`}>
-                  🔄 Re-Submit 
-                </span>
+                {status === "Accepted" && (
+                  <span className="px-3 py-1 rounded-full text-sm bg-green-100 text-green-700">
+                    ✅ Accepted
+                  </span>
+                )}
+
+                {status === "Rejected" && (
+                  <span className="px-3 py-1 rounded-full text-sm bg-red-100 text-red-700">
+                    🔄 Re-Submit
+                  </span>
+                )}
+
+                {!status && (
+                  <span className="px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-500">
+                    Pending
+                  </span>
+                )}
               </div>
               {status === "Rejected" && (
                 <textarea
@@ -340,7 +349,7 @@ export default function DocumentSummaryDialog({
                   Cancel
                 </button>
               </div>
-            </div> */}
+            </div>
           </div>
         </div>
       </div>
@@ -362,10 +371,14 @@ export default function DocumentSummaryDialog({
                 Cancel
               </button>
               <button
-                onClick={handleDeleteConfirmed}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                onClick={() => {
+                  if (isDeleting) return;
+                  handleDeleteConfirmed();
+                }}
+                disabled={isDeleting || !!deleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Delete Permanently
+                {isDeleting ? "Deleting..." : "Delete Permanently"}
               </button>
             </div>
           </div>

@@ -5,7 +5,7 @@ import { Navigate, Link } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Folder, FileDown } from 'lucide-react';
 import { ESGCapItem } from '../types/esgDD';
 import { ESGCapFilters } from '../components/esg-cap/ESGCapFilters';
 import { ESGCapTable } from '../components/esg-cap/ESGCapTable';
@@ -19,6 +19,7 @@ import { ESGCapPriority } from '../types/esgDD';
 import { cn } from '@/lib/utils';
 import { AlertsPanel } from '@/components/esg-cap/AlertsPanel';
 import { useESGCAPAlerts } from '@/hooks/useESGCAPAlerts';
+import { History } from "lucide-react";
 
 import {
   fetchEsgCap,
@@ -31,10 +32,13 @@ import { PageAccessContext } from '@/context/PageAccessContext';
 import Loader from '@/components/ui/loader';
 import { set } from 'date-fns';
 import { ESGCapScoring } from '../components/esg-cap/ESGCapScoring';
-import { calculateComplianceScore, useComplianceScore } from '../components/esg-cap/useComplianceScore';
+import AuditDrawer, { AuditLog } from '../components/esg-cap/AuditDrawer';
+import { httpClient } from '@/lib/httpClient';
+import AssessmentTypeDialog from '@/features/mis/company/Assessmenttypedialog';
+import ESGCapDocumentsDialog from '../components/esg-cap/ESGCapDocumentsDialog';
+import { ExportDrawer } from './ExportDrawer';
+import { calculateComplianceScore } from '../components/esg-cap/useComplianceScore';
 import { mapESGCapItems } from '../components/esg-cap/mapESGCapItem';
-import ComplianceScoreCard from '../components/esg-cap/complianceScoreCard';
-
 
 interface PlanHistory {
   updateByUserId: string;
@@ -89,7 +93,6 @@ const ComparePlanView = ({
     key: keyof ESGCapItem;
     direction: 'asc' | 'desc';
   } | null>(null);
-
   const requestSort = (key: keyof ESGCapItem) => {
     let direction: 'asc' | 'desc' = 'asc';
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -172,14 +175,23 @@ const ComparePlanView = ({
 
   const StatusBadge: React.FC<{ status: string; highlight?: boolean }> = ({ status, highlight }) => {
     const statusColor = {
-      completed: "bg-green-100 text-green-800",
-      in_progress: "bg-blue-100 text-blue-800",
-      delayed: "bg-red-100 text-red-800",
-      accepted: "bg-emerald-100 text-emerald-800",
-      in_review: "bg-gray-100 text-gray-800",
-      pending: "bg-amber-100 text-amber-800"
+      // ✅ New statuses
+      "closed": "bg-green-100 text-green-800",
+      "due-in-this-month": "bg-orange-100 text-orange-800",
+      "overdue": "bg-red-100 text-red-800",
+      "partly-submitted": "bg-blue-100 text-blue-800",
+      "re-submit-Requested": "bg-amber-100 text-amber-800",
+      "submitted-pending-review": "bg-purple-100 text-purple-800",
+      "upcoming": "bg-slate-100 text-slate-800",
+      // Legacy support
+      "completed": "bg-green-100 text-green-800",
+      "in_progress": "bg-blue-100 text-blue-800",
+      "delayed": "bg-red-100 text-red-800",
+      "accepted": "bg-emerald-100 text-emerald-800",
+      "in_review": "bg-gray-100 text-gray-800",
+      "pending": "bg-amber-100 text-amber-800"
     }[status] || "bg-gray-100 text-gray-800";
-
+  
     return <Badge className={`${statusColor} ${highlight ? "border-2 border-yellow-500" : ""}`}>{status}</Badge>;
   };
 
@@ -298,7 +310,10 @@ const ComparePlanView = ({
                 </TableCell>
 
                 <TableCell>
-                  <StatusBadge status={item.status} highlight={changedFields.status} />
+                  <StatusBadge
+                    status={item.companyStatus ?? item.status}
+                    highlight={changedFields.companyStatus}
+                  />
                 </TableCell>
 
                 <TableCell>
@@ -361,10 +376,12 @@ const ESGCapPage = () => {
   const [reloadData, setReloadData] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ESGCapItem | null>(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+  const [drawer, setDrawer] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
     new Set(["CP – Conditions Precedent", "CS – Conditions Subsequent", "ESG Roadmap", "Other Items"])
   );
-
+  const [assesmentTypeOpen, setAssessmentTypeOpen] = useState(false);
+  const [docsDialogOpen, setDocsDialogOpen] = useState(false);
   const toggleGroup = (groupName: string) => {
     setCollapsedGroups(prev => {
       const newSet = new Set(prev);
@@ -373,6 +390,10 @@ const ESGCapPage = () => {
       return newSet;
     });
   };
+  const [auditOpen, setAuditOpen] = useState(false);
+  const [selectedLog, setSelectedLog] = useState(null);
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [cardFilter, setCardFilter] = useState<string | null>(null);
 
   useEffect(() => {
     const userData = localStorage.getItem('fandoro-user');
@@ -419,7 +440,7 @@ const ESGCapPage = () => {
     if (!entityId) return;
 
     setLoading(true);
-    setLoadingMessage("Loading esg items ...")
+    setLoadingMessage("Loading")
     try {
       const data = await fetchEsgCap(entityId);
       if (data?.status) {
@@ -591,72 +612,178 @@ const ESGCapPage = () => {
   const alerts = useESGCAPAlerts(esgCap?.plan || [], originalPlan, esgCap?.finalPlan || false);
 
   const filteredItems = esgCap?.plan?.filter(item => {
-    const matchesSearch =
-      item.item?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
-      item.measures?.toLowerCase().includes(searchTerm?.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
-    const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter;
-
-    return matchesSearch && matchesStatus && matchesCategory;
+    const itemTitle = item?.item || '';
+    const itemMeasures = item?.measures || '';
+    const itemStatus = item?.status || '';
+    const itemCategory = item?.category || '';
+    const investorStatus = item?.investorStatus || '';
+    const companyStatus = item?.companyStatus || '';
+  
+    const matchesSearch = itemTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      itemMeasures.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || itemStatus === statusFilter;
+    const matchesCategory = categoryFilter === 'all' || itemCategory === categoryFilter;
+  
+    const getDateStatus = (item: ESGCapItem) => {
+      const investorStatus = (item.investorStatus || "").toLowerCase().trim();
+      const companyStatus = (item.companyStatus || item.status  || "").toLowerCase().trim();
+    
+      // 1. INVESTOR STATUS TAKES PRIORITY
+      if (investorStatus === "closed") {
+        return "closed";
+      }
+      if (investorStatus === "re-submit-requested" || investorStatus === "re-submit requested") {
+        return "re-submit-requested";
+      }
+      if (investorStatus === "partly-submitted" || investorStatus === "partly submitted") {
+        return "partly-submitted";
+      }
+    
+      // 2. submitted-pending-review: Company submitted + Investor under-review
+      if ((companyStatus === "submitted" || companyStatus === "submitted-pending-review") && 
+          (investorStatus === "under-review" || investorStatus === "under review")) {
+        return "submitted-pending-review";
+      }
+    
+      // 3. Check company status
+      if (companyStatus === "closed") return "closed";
+      if (companyStatus === "partly-submitted" || companyStatus === "partly submitted") return "partly-submitted";
+      if (companyStatus === "submitted" || companyStatus === "submitted") return "submitted";
+      if (companyStatus === "submitted-pending-review" || companyStatus === "submitted pending review") return "submitted-pending-review";
+      if (companyStatus === "due-in-this-month" || companyStatus === "due in this month") return "due-in-this-month";
+      if (companyStatus === "overdue") return "overdue";
+    
+      // 4. If no target date, return empty
+      if (!item.targetDate) return "";
+    
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const target = new Date(item.targetDate);
+      target.setHours(0, 0, 0, 0);
+    
+      // Check if due in current month
+      if (target.getMonth() === today.getMonth() && target.getFullYear() === today.getFullYear()) {
+        return "due-in-this-month";
+      }
+    
+      // Check if overdue
+      if (target < today) {
+        return "overdue";
+      }
+    
+      return "upcoming";
+    };
+  
+    let matchesCardFilter = true;
+    if (cardFilter) {
+      const effectiveStatus = getDateStatus(item);
+      
+      if (cardFilter === "closed") {
+        matchesCardFilter = investorStatus?.toLowerCase() === "closed" || 
+                            companyStatus?.toLowerCase() === "closed";
+      } else if (cardFilter === "partly-submitted") {
+        matchesCardFilter = effectiveStatus === "partly-submitted";
+      } else if (cardFilter === "submitted-pending-review") {
+        matchesCardFilter = effectiveStatus === "submitted-pending-review";
+      } else if (cardFilter === 're-submit requested') {
+        matchesCardFilter = investorStatus === 're-submit-requested';
+      } else if (cardFilter === "due-in-this-month") {
+        matchesCardFilter = effectiveStatus === "due-in-this-month";
+      } else if (cardFilter === "overdue") {
+        matchesCardFilter = effectiveStatus === "overdue";
+      } else {
+        matchesCardFilter = effectiveStatus === cardFilter;
+      }
+    }
+  
+    return matchesSearch && matchesStatus && matchesCategory && matchesCardFilter;
   }) || [];
 
   const isOverdue = (item: ESGCapItem) => {
+    const companyStatus = (item.companyStatus || item.status || "").toLowerCase();
+    const investorStatus = (item.investorStatus || "").toLowerCase();
+  
+    // If closed, not overdue
+    if (companyStatus === "closed" || investorStatus === "closed") {
+      return false;
+    }
+  
+    // If already submitted, not overdue
+    if (companyStatus === "partly-submitted" || 
+        companyStatus === "submitted-pending-review" ) {
+      return false;
+    }
+  
     if (!item.targetDate) return false;
-
+  
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
+  
     const targetDate = new Date(item.targetDate);
     targetDate.setHours(0, 0, 0, 0);
-
-    return (
-      targetDate < today &&
-      item.investorStatus !== "closed" &&
-      !item.actualDate
-    );
+  
+    return targetDate < today;
   };
-  ;
+
 
   const sortedItems = [...filteredItems].sort((a, b) => {
-    // 1. overdue items on top
+    // 1. Overdue items on top
     const aOverdue = isOverdue(a);
     const bOverdue = isOverdue(b);
-
+  
     if (aOverdue && !bOverdue) return -1;
     if (!aOverdue && bOverdue) return 1;
-
-    // 2. completed items at bottom
-    const aCompleted = a.investorStatus === "closed";
-    const bCompleted = b.investorStatus === "closed";
-
-    if (aCompleted && !bCompleted) return 1;
-    if (!aCompleted && bCompleted) return -1;
-
-    // 3. normal sorting
+  
+    // 2. Closed items at bottom
+    const aClosed = a.investorStatus === "closed" || a.companyStatus === "closed";
+    const bClosed = b.investorStatus === "closed" || b.companyStatus === "closed";
+  
+    if (aClosed && !bClosed) return 1;
+    if (!aClosed && bClosed) return -1;
+  
+    // 3. Sort by selected column
     if (!sortConfig) return 0;
-
-    if (
-      sortConfig.key === "targetDate" ||
-      sortConfig.key === "createdAt" ||
-      sortConfig.key === "actualDate"
-    ) {
-      const dateA = new Date(a[sortConfig.key] || 0).getTime();
-      const dateB = new Date(b[sortConfig.key] || 0).getTime();
-
+  
+    const aVal = a[sortConfig.key];
+    const bVal = b[sortConfig.key];
+  
+    // Handle null/undefined
+    if (aVal === undefined || aVal === null) return 1;
+    if (bVal === undefined || bVal === null) return -1;
+  
+    // Date fields
+    if (["targetDate", "createdAt", "actualDate", "lastReviewDate"].includes(sortConfig.key)) {
+      const dateA = new Date((aVal || 0) as string).getTime();
+      const dateB = new Date((bVal || 0) as string).getTime();
+      return sortConfig.direction === "asc" ? dateA - dateB : dateB - dateA;
+    }
+  
+    // Priority
+    if (sortConfig.key === "priority") {
+      const order = { High: 3, Medium: 2, Low: 1 };
+      const aPriority = order[aVal as keyof typeof order] || 0;
+      const bPriority = order[bVal as keyof typeof order] || 0;
+      return sortConfig.direction === "asc" ? aPriority - bPriority : bPriority - aPriority;
+    }
+  
+    // String comparison
+    if (typeof aVal === 'string' && typeof bVal === 'string') {
       return sortConfig.direction === "asc"
-        ? dateA - dateB
-        : dateB - dateA;
+        ? aVal.localeCompare(bVal)
+        : bVal.localeCompare(aVal);
     }
-
-    if (a[sortConfig.key] < b[sortConfig.key]) {
-      return sortConfig.direction === "asc" ? -1 : 1;
+  
+    // Number comparison
+    if (typeof aVal === 'number' && typeof bVal === 'number') {
+      return sortConfig.direction === "asc" ? aVal - bVal : bVal - aVal;
     }
-
-    if (a[sortConfig.key] > b[sortConfig.key]) {
-      return sortConfig.direction === "asc" ? 1 : -1;
-    }
-
-    return 0;
+  
+    // Fallback
+    const aString = String(aVal);
+    const bString = String(bVal);
+    return sortConfig.direction === "asc"
+      ? aString.localeCompare(bString)
+      : bString.localeCompare(aString);
   });
 
   const requestSort = (key: keyof ESGCapItem) => {
@@ -699,33 +826,37 @@ const ESGCapPage = () => {
     }
   };
 
-  const toggleComparisonView = () => {
-    if (showComparisonView) {
-      setShowComparisonView(false);
-    } else if (originalPlan.length > 0) {
-      setShowComparisonView(true);
-    } else {
-      toast.warning("No previous version to compare with");
-    }
-  };
+  // const toggleComparisonView = () => {
+  //   if (showComparisonView) {
+  //     setShowComparisonView(false);
+  //   } else if (originalPlan.length > 0) {
+  //     setShowComparisonView(true);
+  //   } else {
+  //     toast.warning("No previous version to compare with");
+  //   }
+  // };
 
-  const shouldDisableAcceptButton = () => {
-    if (isPlanFinalized) return true;
-    if (!esgCap || !esgCap.founderPlanFinalStatus) return false;
-    if (user?.entityType === 2 && esgCap.founderPlanFinalStatus === true) {
-      return true;
-    }
-    if (user?.entityType === 1 && esgCap.investorPlanFinalStatus) {
-      return true;
-    }
-    return false;
-  };
+  // const shouldDisableAcceptButton = () => {
+  //   if (isPlanFinalized) return true;
+  //   if (!esgCap || !esgCap.founderPlanFinalStatus) return false;
+  //   if (user?.entityType === 2 && esgCap.founderPlanFinalStatus === true) {
+  //     return true;
+  //   }
+  //   if (user?.entityType === 1 && esgCap.investorPlanFinalStatus) {
+  //     return true;
+  //   }
+  //   return false;
+  // };
 
-  const shouldDisableRequestButton = () => {
-    return loading || !buttonEnabled || isPlanFinalized;
-  };
+  // const shouldDisableRequestButton = () => {
+  //   return loading || !buttonEnabled || isPlanFinalized;
+  // };
 
-  logger.log('shouldDisableAcceptButton', shouldDisableAcceptButton());
+  // useEffect(() => {
+  //   if(user && user.misCompanyId) {
+  //     setAssessmentTypeOpen(true);
+  //   }
+  // }, [user]);
 
   if (isLoading) {
     return (
@@ -799,6 +930,20 @@ const ESGCapPage = () => {
       "Other Items": [],
     }
   );
+  const getAuditLogs = async () => {
+    let logs = await httpClient.get('audit');
+    console.log("audit logs ", logs);
+    if (logs?.status == 200) {
+      setLogs(logs.data['data']);
+    }
+  }
+
+  useEffect(() => {
+    getAuditLogs();
+  }, []);
+
+  const userData = JSON.parse(localStorage.getItem('fandoro-user') || '{}');
+  const companyName = userData?.name || '';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -814,22 +959,48 @@ const ESGCapPage = () => {
               </CardDescription>
             </CardHeader> */}
           <CardContent className="p-6">
-            {/* Filters Section */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-              <div className="w-full sm:w-auto">
-                <ESGCapFilters
-                  searchTerm={searchTerm}
-                  setSearchTerm={setSearchTerm}
-                  statusFilter={statusFilter}
-                  setStatusFilter={setStatusFilter}
-                  categoryFilter={categoryFilter}
-                  setCategoryFilter={setCategoryFilter}
-                />
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+              <ESGCapFilters
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+                categoryFilter={categoryFilter}
+                setCategoryFilter={setCategoryFilter}
+              />
+              <div className="flex flex-wrap items-center justify-end gap-2 mb-3 md:mb-0">
+              <Button
+                variant="outline"
+                onClick={() => setAuditOpen(true)}
+                className="flex items-center gap-2" // comment for production
+              >
+                <History className="w-4 h-4" />
+                Audit Logs
+              </Button>
+             
+              <Button
+                variant="outline"
+                onClick={() => setDocsDialogOpen(true)}
+                className="flex items-center gap-2 justify-start hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+              >
+                <Folder className="w-4 h-4" />
+                Uploads
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => setDrawer(true)}
+                className="flex items-center gap-2 justify-start hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+              >
+                <FileDown className="h-4 w-4" /> Export 
+              </Button>
               </div>
             </div>
+            {/* Filters Section */}
+
 
             {/* Alerts Panel - MOVED OUTSIDE the filters container */}
-            {!isInvestorEmailExists && esgCap?.plan && esgCap.plan.length > 0 && (
+            {/* {!isInvestorEmailExists && esgCap?.plan && esgCap.plan.length > 0 && (
               <div className="mb-6">
                 <AlertsPanel
                   overdueItems={alerts.overdueItems}
@@ -838,74 +1009,80 @@ const ESGCapPage = () => {
                   finalPlan={esgCap?.finalPlan}
                 />
               </div>
-            )}
+            )} */}
 
-            <ComplianceScoreCard score={
-              {
-                overallScore: 29.2,
-                status: "Critical",
-                highPriorityRiskFlag: true,
-                summary: {
-                  totalCSItems: 19,
-                  completedItems: 6,
-                  overdueItems: 11,
-                  partlySubmittedItems: 0,
-                  upcomingItems: 0,
-                  resubmitRequiredItems: 0,
-                  dueThisMonthItems:2
-                }
-              }
-            } />
-            {sortedItems.length > 0 && (
-              <div className="mt-6 py-4">
-                <ESGCapScoring items={sortedItems} />
-              </div>
-            )}
-            <div className="space-y-6">
-              {Object.entries(groupedItems)
-                .filter(([_, items]) => items.length > 0)
-                .map(([groupName, items]) => {
-                  const isCollapsed = collapsedGroups.has(groupName);
-                  return (
-                    <div key={groupName} className="border rounded-lg overflow-hidden bg-white">
-                      <div
-                        className="px-4 py-3 border-b bg-slate-50 cursor-pointer flex justify-between items-center hover:bg-slate-100"
-                        onClick={() => toggleGroup(groupName)}
-                      >
-                        <h2 className="text-lg font-semibold text-slate-800">{groupName}</h2>
-                        <span className="text-slate-500">{isCollapsed ? '▼' : '▶'}</span>
-                      </div>
-                      {/* Content - only shown when expanded */}
-                      {!isCollapsed && (
-                        <div className="overflow-x-auto">
-                          {showComparisonView ? (
-                            <ComparePlanView
-                              currentPlan={items}
-                              originalPlan={originalPlan.filter(original => {
-                                if (groupName === "CP – Conditions Precedent") return original.dealCondition === "CP";
-                                if (groupName === "CS – Conditions Subsequent") return original.dealCondition === "CS";
-                                if (groupName === "ESG Roadmap") return original.dealCondition === "ESG_Roadmap";
-                                return original.dealCondition !== "CP" && original.dealCondition !== "CS" && original.dealCondition !== "ESG_Roadmap";
-                              })}
-                              onRevertItem={handleRevertItem}
-                              onRevertField={handleRevertField}
-                              showComparisonView={showComparisonView}
-                            />
-                          ) : (
-                            <ESGCapTable
-                              sortedItems={items}
-                              sortConfig={sortConfig}
-                              requestSort={requestSort}
-                              onItemUpdate={handleUpdateItem}
-                              buttonEnabled={buttonEnabled}
-                              finalPlan={isPlanFinalized}
-                            />
-                          )}
+            {/* {sortedItems.length > 0 && (
+              <div className="mt-6 py-4"> */}
+            <ESGCapScoring items={esgCap?.plan || []}
+              onFilterChange={setCardFilter}
+              activeFilter={cardFilter}
+              complianceScore={result?.overallScore}
+            />
+            {/* </div>
+            )} */}
+            <div className="space-y-4  mt-4">
+              {filteredItems.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-lg border border-dashed">
+                  <p className="text-muted-foreground">No items match the current filters.</p>
+                  <Button
+                    variant="link"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setStatusFilter('all');
+                      setCategoryFilter('all');
+                      setCardFilter(null);
+                    }}
+                    className="mt-2"
+                  >
+                    Clear all filters
+                  </Button>
+                </div>
+              ) : (
+                Object.entries(groupedItems)
+                  .filter(([_, items]) => items.length > 0)
+                  .map(([groupName, items]) => {
+                    const isCollapsed = collapsedGroups.has(groupName);
+                    return (
+                      <div key={groupName} className="border rounded-lg overflow-hidden bg-white">
+                        <div
+                          className="px-4 py-3 border-b bg-slate-50 cursor-pointer flex justify-between items-center hover:bg-slate-100"
+                          onClick={() => toggleGroup(groupName)}
+                        >
+                          <h2 className="text-lg font-semibold text-slate-800">{groupName}</h2>
+                          <span className="text-slate-500">{isCollapsed ? '▼' : '▶'}</span>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
+                        {/* Content - only shown when expanded */}
+                        {!isCollapsed && (
+                          <div className="overflow-x-auto">
+                            {showComparisonView ? (
+                              <ComparePlanView
+                                currentPlan={items}
+                                originalPlan={originalPlan.filter(original => {
+                                  if (groupName === "CP – Conditions Precedent") return original.dealCondition === "CP";
+                                  if (groupName === "CS – Conditions Subsequent") return original.dealCondition === "CS";
+                                  if (groupName === "ESG Roadmap") return original.dealCondition === "ESG_Roadmap";
+                                  return original.dealCondition !== "CP" && original.dealCondition !== "CS" && original.dealCondition !== "ESG_Roadmap";
+                                })}
+                                onRevertItem={handleRevertItem}
+                                onRevertField={handleRevertField}
+                                showComparisonView={showComparisonView}
+                              />
+                            ) : (
+                              <ESGCapTable
+                                sortedItems={items}
+                                sortConfig={sortConfig}
+                                requestSort={requestSort}
+                                onItemUpdate={handleUpdateItem}
+                                buttonEnabled={buttonEnabled}
+                                finalPlan={isPlanFinalized}
+                              />
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+              )}
             </div>
 
             {/* Action Buttons */}
@@ -931,8 +1108,24 @@ const ESGCapPage = () => {
           </CardContent>
         </Card>
       </UnifiedSidebarLayout>
+      <AuditDrawer open={auditOpen} onClose={() => setAuditOpen(false)} logs={logs} />
+      <AssessmentTypeDialog />
+      <ESGCapDocumentsDialog
+        open={docsDialogOpen}
+        onClose={() => setDocsDialogOpen(false)}
+        entityId={entityId}
+      />
+      <ExportDrawer open={drawer} onClose={() => setDrawer(false)} items={esgCap?.plan || []} entityName={companyName} />
+
     </div>
   );
 };
 
 export default ESGCapPage;
+
+// isOpenStatus={assesmentTypeOpen}
+//         onClose={() => setAssessmentTypeOpen(false)}
+//         onProceed={(type: "mis" | "escap") => {
+//           console.log("Selected:", type);
+//           setAssessmentTypeOpen(false);
+//         }}

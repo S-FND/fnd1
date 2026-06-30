@@ -6,34 +6,11 @@ import { CategoryBadge } from './CategoryBadge';
 import { PriorityBadge } from './PriorityBadge';
 import { Badge } from '@/components/ui/badge';
 import { ESGCapRowActions } from './ESGCapRowActions';
-
-// ✅ Updated helper — returns proper status values
-const getEffectiveStatus = (item: ESGCapItem): ESGCapItem['status'] => {
-  if (!item.targetDate) return item.status;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const targetDate = new Date(item.targetDate);
-  targetDate.setHours(0, 0, 0, 0);
-
-  // If past due and not closed by investor → overdue
-  if (targetDate < today && item.investorStatus !== 'Closed' && !item.actualDate) {
-    return 'overdue';
-  }
-  
-  // If due within 1 month and not closed → due in <1 month
-  const oneMonthLater = new Date();
-  oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
-  oneMonthLater.setHours(0, 0, 0, 0);
-  
-  if (targetDate >= today && targetDate <= oneMonthLater && item.investorStatus !== 'Closed' && !item.actualDate) {
-    return 'due in <1 month';
-  }
-
-  return item.status;
-};
-
+import { useNavigate } from 'react-router-dom';
+import { getEffectiveStatus } from '@/utils/esgStatus';
+import { Check, Clock, Pencil, RotateCcw } from 'lucide-react';
+const normalizeStatus = (status?: string) =>
+  (status ?? "").trim().toLowerCase();
 interface ESGCapTableRowProps {
   item: any;
   index: number;
@@ -45,7 +22,7 @@ interface ESGCapTableRowProps {
 }
 
 const truncateText = (text: string, length = 50) =>
-  text && text.length > length ? text.slice(0, length) + '...' : text || '-';
+  text && text.length > length ? text.slice(0, length) + '...' : text || '';
 
 
 
@@ -67,97 +44,122 @@ export const ESGCapTableRow: React.FC<ESGCapTableRowProps> = ({ item, index, onU
 
   // Helper function
   const isOverdue = (item: ESGCapItem) => {
-    if (!item.targetDate) return false;
+  const isClosed = normalizeStatus(item.investorStatus) === "closed";
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  return (
+    getEffectiveStatus(item) === "overdue" &&
+    !isClosed &&
+    !item.actualDate
+  );
+};
 
-    const targetDate = new Date(item.targetDate);
-    targetDate.setHours(0, 0, 0, 0);
-
-    return (
-      targetDate < today &&
-      item.investorStatus !== "Closed" &&  // ✅ Capital C
-      !item.actualDate
-    );
-  };
+  // Helper to check if row should be highlighted for company (new)
+  const isCompanyHighlighted = item.highlights?.company === true;
 
   const rowClassName = `
   transition-colors
-  ${item.investorStatus === "Closed"
-      ? "bg-gray-300 text-gray-500"
-      : isOverdue(item)
-        ? "text-red-700"
-        : ""
-    }
+  ${normalizeStatus(item.investorStatus) === "closed"
+    ? "bg-gray-300 text-gray-500"
+    : isOverdue(item)
+      ? "text-red-700"
+      : ""
+  }
 `;
 
 const parseDisplayDate = (dateStr: string | undefined): string => {
-  if (!dateStr || dateStr === '—' || dateStr === '-') return '-';
-  
-  // Already ISO format YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-      const date = new Date(dateStr);
-      if (!isNaN(date.getTime())) {
-          return date.toLocaleDateString('en-GB', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
-          });
-      }
-  }
-  
-  // DD-MMM-YY format (e.g., "30-Dec-23")
-  const months: Record<string, string> = {
-      'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04', 'may': '05', 'jun': '06',
-      'jul': '07', 'aug': '08', 'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12'
-  };
-  const match = dateStr.match(/^(\d{1,2})-([a-zA-Z]{3})-(\d{2,4})$/);
-  if (match) {
-      const day = match[1].padStart(2, '0');
-      const month = months[match[2].toLowerCase()] || '01';
-      const year = match[3].length === 2 
-          ? (parseInt(match[3]) > 50 ? `19${match[3]}` : `20${match[3]}`) 
-          : match[3];
-      const isoDate = new Date(`${year}-${month}-${day}`);
-      if (!isNaN(isoDate.getTime())) {
-          return isoDate.toLocaleDateString('en-GB', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
-          });
-      }
-  }
-  
-  return '-';
+  if (!dateStr || dateStr === ' ' || dateStr === ' ') return ' ';
+
+  const date = new Date(dateStr);
+
+  if (isNaN(date.getTime())) return ' ';
+
+  return date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
 };
 
 // Add this helper function inside the component or outside
 const getInvestorStatusBadge = (status: string) => {
-  const statusMap: Record<string, { label: string; variant: "outline" | "default" | "secondary" | "destructive"; className?: string }> = {
-    "under review": { label: "Under Review", variant: "secondary", className: "bg-yellow-100 text-yellow-800 border-yellow-300" },
-    "reviewed with comments": { label: "Reviewed with Comments", variant: "outline", className: "bg-blue-100 text-blue-800 border-blue-300" },
-    "closed": { label: "Closed", variant: "default", className: "bg-green-600 text-white" },
-    "deferred": { label: "Deferred", variant: "secondary", className: "bg-gray-200 text-gray-700 border-gray-300" }
+  const statusMap: Record<string, { label: string; variant: "outline" | "default" | "secondary" | "destructive"; className?: string; icon?: React.ReactNode }> = {
+    "under-review": { 
+      label: "Under Review", 
+      variant: "outline", 
+      className: "bg-blue-100 text-blue-800 border-blue-300 px-2.5 py-1 whitespace-nowrap",
+      icon: <Clock className="h-3 w-3 mr-1" />
+    },
+    "under review": { 
+      label: "Under Review", 
+      variant: "outline", 
+      className: "bg-blue-100 text-blue-800 border-blue-300 px-2.5 py-1 whitespace-nowrap",
+      icon: <Clock className="h-3 w-3 mr-1" />
+    },
+    "reviewed with comments": { 
+      label: "Reviewed with Comments", 
+      variant: "outline", 
+      className: "bg-purple-100 text-purple-800 border-purple-300 px-2.5 py-1 whitespace-nowrap",
+      icon: <Pencil className="h-3 w-3 mr-1" />
+    },
+    "closed": { 
+      label: "Closed", 
+      variant: "default", 
+      className: "bg-green-600 text-white px-2.5 py-1 whitespace-nowrap",
+      icon: <Check className="h-3 w-3 mr-1" />
+    },
+    "deferred": { 
+      label: "Deferred", 
+      variant: "secondary", 
+      className: "bg-gray-200 text-gray-700 border-gray-300 px-2.5 py-1 whitespace-nowrap",
+      icon: null
+    },
+    "re-submit requested": { 
+      label: "Re-submit Requested", 
+      variant: "outline", 
+      className: "bg-amber-100 text-amber-800 border-amber-300 px-2.5 py-1 whitespace-nowrap",
+      icon: <RotateCcw className="h-3 w-3 mr-1" />
+    },
+    "re-submit-requested": { 
+      label: "Re-submit Requested", 
+      variant: "outline", 
+      className: "bg-amber-100 text-amber-800 border-amber-300 px-2.5 py-1 whitespace-nowrap",
+      icon: <RotateCcw className="h-3 w-3 mr-1" />
+    }
   };
-  const config = statusMap[status?.toLowerCase()] || { label: status || '-', variant: "outline", className: "bg-gray-100 text-gray-600" };
-  return <Badge variant={config.variant} className={config.className}>{config.label}</Badge>;
+  const config = statusMap[status?.toLowerCase()] || { label: status || '', variant: "outline", className: "bg-gray-100 text-gray-600",icon: null };
+  return <Badge variant={config.variant} className={config.className}>{config.icon} {config.label}</Badge>;
 };
+  const navigate = useNavigate();
 
+  const handleEdit = () => {
+    navigate(`/esg-dd/cap/${item?.reportId}?itemName=${encodeURIComponent(item?.item || "")}`);
+  };
 
   if (compact) {
     return (
-      <TableRow className={rowClassName}>
-        <TableCell className="text-center font-medium" style={{ padding: "0.3rem" }}>{index + 1}</TableCell>
+      <TableRow className={rowClassName} >
+        {/* <TableCell className="text-center font-medium" style={{ padding: "0.3rem" }}>{index + 1}</TableCell> */}
+        <TableCell
+          className={`text-center font-medium ${
+            isCompanyHighlighted ? "border-l-4 border-green-500" : ""
+          }`}
+          style={{ padding: "0.3rem" }}
+        >
+          {index + 1}
+        </TableCell>
 
         {/* Item column with expand/collapse */}
-        <TableCell className="font-medium text-left" style={{ padding: "0.3rem" }}>
+        {/* <TableCell className="font-medium text-left" style={{ padding: "0.3rem" }}>
           {showFullItem ? item.item : truncateText(item.item, 50)}
           {item.item && item.item.length > 50 && (
             <button onClick={() => setShowFullItem(!showFullItem)} className="ml-2 text-blue-600 underline text-xs">
               {showFullItem ? "View less" : "View full"}
             </button>
           )}
+        </TableCell> */}
+
+        <TableCell className="font-medium max-w-xs text-left" onClick={handleEdit} style={{ cursor: "pointer",padding: "0.3rem" }}>
+          {item.item || ' '}
         </TableCell>
 
         <TableCell style={{ padding: "0.3rem" }}>
@@ -199,11 +201,17 @@ const getInvestorStatusBadge = (status: string) => {
 
         {/*  Status */}
         <TableCell>
-            {item.status ? <StatusBadge status={item.status} /> : '—'}
+          {effectiveStatus ? (
+            <StatusBadge status={effectiveStatus} />
+          ) : (
+            <span className="text-muted-foreground">
+              {item.status || ""}
+            </span>
+          )}
         </TableCell>
         {/* Investor  Status */}
         <TableCell style={{ padding: "0.3rem" }}>
-          {item.investorStatus ? getInvestorStatusBadge(item.investorStatus) : '-'}
+          {item.investorStatus ? getInvestorStatusBadge(item.investorStatus) : ' '}
         </TableCell>
 
         <TableCell style={{ padding: "0.3rem" }}>{item.actualDate ? new Date(item.actualDate).toLocaleDateString('en-GB', {
@@ -211,7 +219,7 @@ const getInvestorStatusBadge = (status: string) => {
           month: 'short',
           year: 'numeric',
         })
-          : '-'}</TableCell>
+          : ' '}</TableCell>
 
         {/* Progress Percentage */}
         {/* <TableCell className="font-medium" style={{ padding: "0.3rem" }}>{item.progressPercentage ? `${item.progressPercentage}%` : '-'}</TableCell> */}
@@ -309,7 +317,7 @@ const getInvestorStatusBadge = (status: string) => {
       </TableCell>
 
       {/* 10. Timeline Month */}
-      <TableCell style={{ padding: "0.3rem" }}>{item.timelineMonth || '-'}</TableCell>
+      <TableCell style={{ padding: "0.3rem" }}>{item.timelineMonth || ''}</TableCell>
 
       {/* 11. Target Date */}
       <TableCell style={{ padding: "0.3rem" }}>{item.targetDate ? new Date(item.actualDate).toLocaleDateString('en-GB', {
@@ -340,9 +348,15 @@ const getInvestorStatusBadge = (status: string) => {
       </TableCell>
 
       {/* 14. Status */}
-      <TableCell style={{ padding: "0.3rem" }}>
-        <StatusBadge status={effectiveStatus} />
-      </TableCell>
+      <TableCell>
+          {effectiveStatus ? (
+            <StatusBadge status={effectiveStatus} />
+          ) : (
+            <span className="text-muted-foreground">
+              {item.status || ""}
+            </span>
+          )}
+        </TableCell>
 
       {/* 15. Current Status Update */}
       <TableCell style={{ padding: "0.3rem" }}>
@@ -403,7 +417,7 @@ const getInvestorStatusBadge = (status: string) => {
       </TableCell>
 
       {/* 20. Assigned To */}
-      <TableCell style={{ padding: "0.3rem" }}>{item.assignedTo || '-'}</TableCell>
+      <TableCell style={{ padding: "0.3rem" }}>{item.assignedTo || ''}</TableCell>
 
       {/* 21. Remarks
       <TableCell style={{ padding: "0.3rem" }}>

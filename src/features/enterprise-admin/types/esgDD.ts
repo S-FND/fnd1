@@ -22,12 +22,13 @@ export type ESGDDReportType = 'manual' | 'automated' | 'uploaded';
 
 export type ESGCapStatus = 'in_review' | 'accepted' | 'pending' | 'in_progress' | 'completed' | 'delayed';
 
-type CAPStatus = 
-  | "upcoming"
-  | "due in <1 month"
+export type CAPStatus = 
+  | "due-in-this-month"
+  | "closed"
   | "overdue"
-  | "submitted"
-  | "request to re-submit";
+  | "partly-submitted"
+  | "submitted-pending-review"
+  | "";
 
 export type ESGCapPriority = 'high' | 'medium' | 'low';
 
@@ -147,6 +148,7 @@ export interface ESGCapItem {
   recommendation?: string;
   priority: ESGCapPriority;
   status: CAPStatus;
+  companyStatus: CAPStatus;
   investorStatus: string;
   deadline?: string;    // This might be your targetDate
   targetDate?: string;  // Alternative to deadline
@@ -177,7 +179,8 @@ export interface ESGCapItem {
     s3Link: string;
     status: 'Accepted' | 'Rejected' | 'Pending';
     aiSummary: IDocumentValidation;
-  }[]
+  }[];
+  investmentDate?:Date;
 }
 
 export interface RegulatoryRequirement {
@@ -190,3 +193,24 @@ export interface RegulatoryRequirement {
   state?: string;
   applicableStages: FundingStage[];
 }
+
+// import { calculateComplianceScore, useComplianceScore } from '../components/esg-cap/useComplianceScore';
+// import { mapESGCapItems } from '../components/esg-cap/mapESGCapItem';
+// import ComplianceScoreCard from '../components/esg-cap/complianceScoreCard';
+
+// <ComplianceScoreCard score={
+//               {
+//                 overallScore: 29.2,
+//                 status: "Critical",
+//                 highPriorityRiskFlag: true,
+//                 summary: {
+//                   totalCSItems: 19,
+//                   completedItems: 6,
+//                   overdueItems: 11,
+//                   partlySubmittedItems: 0,
+//                   upcomingItems: 0,
+//                   resubmitRequiredItems: 0,
+//                   dueThisMonthItems:2
+//                 }
+//               }
+//             } />

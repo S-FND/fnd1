@@ -81,9 +81,22 @@ export const getNavigationItems = (role: string): NavigationItem[] => {
             ]
           },
       
-          { name: "Automated Assessment", href: "/esg-dd/automated", icon: FileText },
+          { name: "Automated Assessment", href: "https://startups.fandoro.ai/", icon: FileText },
           { name: "ESG CAP", href: "/esg-dd/cap", icon: FileText },
-          { name: "ESG DD Reports", href: "/esg-dd/reports", icon: FileText }
+          // { name: "IRL Assessment", href: "/esg-dd/irl", icon: FileText },
+          { name: "ESG DD Reports", href: "/esg-dd/reports", icon: FileText },
+        ]
+      },
+      {
+        name: "MIS",
+        href: "/mis/dashboard",
+        icon: FileSearch,
+        featureId: 'mis',
+        submenu: [
+          { name: "Dashboard", href: "/mis/dashboard", icon: FileSearch },
+          { name: "KPI Entry", href: "/mis/kpi-entry", icon: FileText },
+          { name: "Preview & Submit", href: "/mis/preview-submit", icon: FileText },
+          
         ]
       },
       {
