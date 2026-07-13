@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils';
 import { AlertsPanel } from '@/components/esg-cap/AlertsPanel';
 import { useESGCAPAlerts } from '@/hooks/useESGCAPAlerts';
 import { History } from "lucide-react";
-
+import { useSearchParams } from 'react-router-dom';
 import {
   fetchEsgCap,
   esgddChangePlan,
@@ -37,9 +37,7 @@ import { httpClient } from '@/lib/httpClient';
 import AssessmentTypeDialog from '@/features/mis/company/Assessmenttypedialog';
 import ESGCapDocumentsDialog from '../components/esg-cap/ESGCapDocumentsDialog';
 import { ExportDrawer } from './ExportDrawer';
-import { calculateComplianceScore } from '../components/esg-cap/useComplianceScore';
-import { mapESGCapItems } from '../components/esg-cap/mapESGCapItem';
-
+import { ComplianceScoreEngine, PlanItem, PlanJson } from '../components/esg-cap/compliance-score-engine';
 interface PlanHistory {
   updateByUserId: string;
   status: string;
@@ -73,6 +71,19 @@ interface ESGCapData {
   finalAcceptance?: FinalAcceptance;
   founderPlanFinalStatus?: boolean;
   investorPlanFinalStatus?: boolean;
+}
+
+export interface ParseStats {
+  csItems: number;
+  cpItems: number;
+  roadmapItems: number;
+  applicableItems: number | null;
+}
+
+interface ParseState {
+  parsed: PlanJson | null;
+  error: string | null;
+  stats: ParseStats;
 }
 
 // Add this component for comparison view
@@ -362,9 +373,18 @@ const ESGCapPage = () => {
   const { user, isAuthenticated, isAuthenticatedStatus } = useAuth();
   const [loading, setLoading] = useState(false);
   const [esgCap, setEsgCap] = useState<ESGCapData | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Initialize from URL (with fallbacks)
+  const initialSearch = searchParams.get('search') || '';
+  const initialStatus = searchParams.get('status') || 'all';
+  const initialCategory = searchParams.get('category') || 'all';
+  const initialCardFilter = searchParams.get('cardFilter') || null;
+
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [statusFilter, setStatusFilter] = useState(initialStatus);
+  const [categoryFilter, setCategoryFilter] = useState(initialCategory);
+  const [cardFilter, setCardFilter] = useState(initialCardFilter);
   const [sortConfig, setSortConfig] = useState<{ key: keyof ESGCapItem; direction: 'asc' | 'desc' } | null>(
     { key: 'targetDate', direction: 'asc' }
   );
@@ -393,8 +413,6 @@ const ESGCapPage = () => {
   const [auditOpen, setAuditOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
   const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [cardFilter, setCardFilter] = useState<string | null>(null);
-
   useEffect(() => {
     const userData = localStorage.getItem('fandoro-user');
     const user = JSON.parse(userData);
@@ -406,6 +424,15 @@ const ESGCapPage = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchTerm) params.set('search', searchTerm);
+    if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
+    if (categoryFilter && categoryFilter !== 'all') params.set('category', categoryFilter);
+    if (cardFilter) params.set('cardFilter', cardFilter);
+    setSearchParams(params, { replace: true });
+  }, [searchTerm, statusFilter, categoryFilter, cardFilter]);
+
   // useEffect(() => {
   //   if (esgCap && esgCap.plan) {
   //     const { overallScore, status, items, summary } = useComplianceScore(mapESGCapItems(esgCap.plan)); // actual deal close date
@@ -413,10 +440,39 @@ const ESGCapPage = () => {
   //   }
   // }, [esgCap])
 
-  const result = useMemo(() => {
-    if (!esgCap?.plan) return null;
-    return calculateComplianceScore(mapESGCapItems(esgCap.plan));
-  }, [esgCap]);
+  function parseInput(text: string): ParseState {
+    const empty: ParseStats = { csItems: 0, cpItems: 0, roadmapItems: 0, applicableItems: null };
+    if (!text.trim()) return { parsed: null, error: null, stats: empty };
+    try {
+      const raw = JSON.parse(text);
+      const plan: PlanItem[] = Array.isArray(raw) ? raw : Array.isArray(raw?.plan) ? raw.plan : [];
+      let cs = 0,
+        cp = 0,
+        rm = 0;
+      for (const p of plan) {
+        if (p?.dealCondition === "CS") cs++;
+        else if (p?.dealCondition === "CP") cp++;
+        else if (p?.dealCondition === "Roadmap") rm++;
+      }
+      return {
+        parsed: Array.isArray(raw) ? { plan } : (raw as PlanJson),
+        error: null,
+        stats: { csItems: cs, cpItems: cp, roadmapItems: rm, applicableItems: null },
+      };
+    } catch (e) {
+      return { parsed: null, error: (e as Error).message, stats: empty };
+    }
+  }
+  
+    const result = useMemo(() => {
+      if (!esgCap?.plan) return null;
+      const engine = new ComplianceScoreEngine();
+      const parse =  parseInput(JSON.stringify({ plan: esgCap.plan }));
+      const r = engine.calculateComplianceScore(parse.parsed);
+      return r;
+      // console.log("retur result => ",r);
+      // return calculateComplianceScore(mapESGCapItems(planData.plan));
+    }, [esgCap]);
 
   console.log("ESG CAP Compliance Score:", result);
 
@@ -1016,7 +1072,7 @@ const ESGCapPage = () => {
             <ESGCapScoring items={esgCap?.plan || []}
               onFilterChange={setCardFilter}
               activeFilter={cardFilter}
-              complianceScore={result?.overallScore}
+              complianceScore={result?.overallComplianceScore}
             />
             {/* </div>
             )} */}
