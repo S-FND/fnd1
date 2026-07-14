@@ -5,20 +5,12 @@ import {
     Upload,
     Plus,
     Send,
-    Paperclip,
     FileText,
     Download,
     Eye,
     CheckCircle2,
-    Clock,
-    AlertCircle,
     MessageSquare,
-    Building2,
-    ShieldCheck,
-    Activity,
-    ChevronDown,
     Info,
-    X,
     UserPlus,
     ClipboardCheck,
     Loader2,
@@ -30,36 +22,17 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogDescription,
 } from '@/components/ui/dialog';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from '@/components/ui/command';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { useAuth } from '@/context/AuthContext';
-// import { machineDDCapItems } from '@/features/machine-dd/data/mockMachineDD';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import UnifiedSidebarLayout from '@/components/layout/UnifiedSidebarLayout';
 import { logger } from '@/hooks/logger';
-import Loader from '@/components/ui/loader';
 import { fetchEsgCap, updatePlan, esgddChangePlan, editFinalizedPlan } from '../services/esgdd';
 import { DocumentUploadModal } from '../components/esg-cap/DocumentUploadModal';
 import DocumentSummaryDialog from '../components/esg-cap/document-summary-review';
@@ -71,7 +44,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-
+import { useNavigate } from "react-router-dom";
 const SectionCard: React.FC<{
     title: string;
     subtitle?: string;
@@ -336,7 +309,7 @@ const ESGCapDetailsPage: React.FC = () => {
     const [isDownloadOpen, setIsDownloadOpen] = useState(false);
     const [selectedFiles, setSelectedFiles] = useState<any[]>([]);
     const [reopenAttachments, setReopenAttachments] = useState(false);
-
+    const navigate = useNavigate();
     const openAttachments = (mode: 'upload' | 'view') => {
         setAttachmentsMode(mode);
         setAttachmentsOpen(true);
@@ -555,13 +528,13 @@ const ESGCapDetailsPage: React.FC = () => {
                                 {/* <Button variant="outline">
                                     <Download className="h-4 w-4" /> Export
                                 </Button> */}
-                                <Link
-                                    to="/esg-dd/cap"
+                                <button
+                                    onClick={() => navigate(-1)}
                                     className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
-                                >
+                                    >
                                     <ArrowLeft className="mr-1 h-4 w-4" />
                                     Back
-                                </Link>
+                                </button>
                             </div>
                         </div>
                     </div>
