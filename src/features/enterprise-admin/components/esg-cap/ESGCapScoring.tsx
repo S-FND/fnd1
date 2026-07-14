@@ -9,7 +9,7 @@ interface ESGCapScoringProps {
   complianceScore?: number; // Optional prop for compliance score
 }
 
-export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterChange, activeFilter,complianceScore }) => {
+export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterChange, activeFilter, complianceScore }) => {
 
   // ✅ FILTER: Only include CP and CS items for card counting (exclude ESG_Roadmap)
   const filteredItems = items.filter(
@@ -74,10 +74,10 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
     if (companyStatus === 'submitted' || companyStatus === 'submitted') {
       return 'submitted';
     }
-    if ((companyStatus === 'submitted' || companyStatus === 'submitted-pending-review') && 
+    if ((companyStatus === 'submitted' || companyStatus === 'submitted-pending-review') &&
       (investorStatus === 'under-review' || investorStatus === 'under review')) {
-    return 'submitted-pending-review';
-  }
+      return 'submitted-pending-review';
+    }
     if (companyStatus === 're-submit-required' || companyStatus === 're-submit required') {
       return 're-submit-requested';
     }
@@ -192,12 +192,12 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
   const submittedPendingReviewCount = filteredItems.filter(
     item => {
       const companyStatus = normalize(item.companyStatus ?? item.status);
-      console.log('companyStatus',companyStatus);
+      console.log('companyStatus', companyStatus);
       const investorStatus = normalize(item.investorStatus);
       // Company has submitted AND investor hasn't closed it yet
       return (companyStatus === 'submitted') &&
-      (investorStatus === "under-review" ||
-        investorStatus === "under review");
+        (investorStatus === "under-review" ||
+          investorStatus === "under review");
     }
   ).length;
 
@@ -228,6 +228,25 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
     }
   };
 
+  const getComplianceRating = (score: number = 0) => {
+    if (score >= 85) {
+      return { grade: "AA", label: "On Track", color: "text-green-600" };
+    }
+    if (score >= 70) {
+      return { grade: "A", label: "Stable", color: "text-emerald-600" };
+    }
+    if (score >= 55) {
+      return { grade: "BB", label: "Needs Attention", color: "text-yellow-600" };
+    }
+    if (score >= 40) {
+      return { grade: "B", label: "At Risk", color: "text-orange-600" };
+    }
+
+    return { grade: "C", label: "Critical", color: "text-red-600" };
+  };
+
+  const complianceRating = getComplianceRating(complianceScore ?? 0);
+
   return (
     <div className="space-y-4">
       <Card>
@@ -235,8 +254,35 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
           <div className="grid grid-cols-7 gap-2">
             {/* 1. Compliance Score - STATIC */}
             <div className="text-center p-2 rounded-lg bg-green-50 cursor-default">
-              <div className="text-lg font-bold text-green-600">{complianceScore !== undefined ? `${complianceScore} %` : '-'}</div>
-              <div className="text-[10px] text-muted-foreground leading-tight">Compliance Score</div>
+              <div className="flex flex-col items-center p-0 rounded-lg bg-green-50 cursor-default">
+                {/* Top row: left (grade+label) | divider | right (score) */}
+                <div className="flex items-center w-full">
+                  {/* Left: grade + label stacked & centered */}
+                  <div className="flex-1 flex flex-col items-center justify-center pr-2">
+                    <div className={`text-xm font-bold ${complianceRating.color}`}>
+                      {complianceRating.grade}
+                    </div>
+                    <div className={`text-[10px] ${complianceRating.color} truncate max-w-[70px]`}>
+                      {complianceRating.label}
+                    </div>
+                  </div>
+
+                  {/* Vertical divider */}
+                  <div className="w-px h-10 bg-gray-200" />
+
+                  {/* Right: score */}
+                  <div className="flex-1 flex items-center justify-center pl-2">
+                    <div className="text-2xl font-bold text-green-600">
+                      {complianceScore?.toFixed(1)}%
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom label */}
+                <div className="text-[10px] text-muted-foreground mt-2">
+                  Compliance Score
+                </div>
+              </div>
             </div>
 
             {/* 2. Due This Month - CLICKABLE TOGGLE */}
