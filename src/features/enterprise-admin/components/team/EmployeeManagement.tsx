@@ -271,7 +271,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
       const response :any = await updateEmployee(completePayload);
       logger.log('API Response:', response);
 
-      if (response && (response.status === true || response._id)) {
+      if (response?.[0]?.status) {
         toast.success('Employee updated successfully');
         refreshData();
         setIsEditDialogOpen(false);
@@ -438,6 +438,7 @@ const EmployeeManagement = ({ employees, locations, refreshData, loading }: {
           setIsAssignmentDialogOpen(false);
         }
       }
+      await refreshData();
     } catch (err) {
       logger.error(err);
       toast.error("Failed to update features");

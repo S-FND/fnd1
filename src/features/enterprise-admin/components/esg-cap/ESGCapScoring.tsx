@@ -262,13 +262,11 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                     <div className={`text-xm font-bold ${complianceRating.color}`}>
                       {complianceRating.grade}
                     </div>
-                    <div className={`text-[10px] ${complianceRating.color} truncate max-w-[70px]`}>
-                      {complianceRating.label}
-                    </div>
+                    
                   </div>
 
                   {/* Vertical divider */}
-                  <div className="w-px h-10 bg-gray-200" />
+                  <div className="w-px h-5 bg-gray-200" />
 
                   {/* Right: score */}
                   <div className="flex-1 flex items-center justify-center pl-2">
@@ -279,7 +277,10 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                 </div>
 
                 {/* Bottom label */}
-                <div className="text-[10px] text-muted-foreground mt-2">
+                <div className="text-[10px] text-muted-foreground mt-0">
+                <div className={`text-[10px] ${complianceRating.color} truncate`}>
+                      {complianceRating.label}
+                    </div>
                   Compliance Score
                 </div>
               </div>
