@@ -276,6 +276,16 @@ const ESGCapDocumentsDialog: React.FC<ESGCapDocumentsDialogProps> = ({
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ['B', 'KB', 'MB', 'GB'][i];
   };
 
+  const displayFilename = (name?: string) => {
+    if (!name) return "—";
+  
+    // Remove path if present
+    const fileName = name.split("/").pop() || name;
+  
+    // Remove numeric timestamp prefix like 1783665905612_
+    return fileName.replace(/^\d+_/, "");
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -374,8 +384,8 @@ const ESGCapDocumentsDialog: React.FC<ESGCapDocumentsDialogProps> = ({
                         <TableCell className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <FileText className="h-4 w-4 text-blue-600 shrink-0" />
-                            <span className="font-medium truncate max-w-[200px]" title={doc.filename}>
-                              {doc.filename}
+                            <span className="font-medium truncate max-w-[200px]" title={displayFilename(doc.filename)}>
+                              {displayFilename(doc.filename)}
                             </span>
                           </div>
                           {doc.size && (
