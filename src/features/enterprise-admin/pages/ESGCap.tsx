@@ -425,13 +425,41 @@ const ESGCapPage = () => {
   }, []);
 
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (searchTerm) params.set('search', searchTerm);
-    if (statusFilter && statusFilter !== 'all') params.set('status', statusFilter);
-    if (categoryFilter && categoryFilter !== 'all') params.set('category', categoryFilter);
-    if (cardFilter) params.set('cardFilter', cardFilter);
+    const params = new URLSearchParams(searchParams);
+  
+    if (searchTerm) {
+      params.set("search", searchTerm);
+    } else {
+      params.delete("search");
+    }
+  
+    if (statusFilter && statusFilter !== "all") {
+      params.set("status", statusFilter);
+    } else {
+      params.delete("status");
+    }
+  
+    if (categoryFilter && categoryFilter !== "all") {
+      params.set("category", categoryFilter);
+    } else {
+      params.delete("category");
+    }
+  
+    if (cardFilter) {
+      params.set("cardFilter", cardFilter);
+    } else {
+      params.delete("cardFilter");
+    }
+  
     setSearchParams(params, { replace: true });
-  }, [searchTerm, statusFilter, categoryFilter, cardFilter]);
+  }, [
+    searchTerm,
+    statusFilter,
+    categoryFilter,
+    cardFilter,
+    searchParams,
+    setSearchParams,
+  ]);
 
   // useEffect(() => {
   //   if (esgCap && esgCap.plan) {
