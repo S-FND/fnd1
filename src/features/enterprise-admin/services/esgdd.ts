@@ -121,3 +121,21 @@ export const editFinalizedPlan = async (payload: any) => {
   });
   return response.data;
 };
+
+export const fetchComplianceSnapshots = async (entityId: string, year?: number) => {
+  try {
+    let url = `${API_URL}/esgdd/escap/compliance-snapshot/${entityId}`;
+    if (year) {
+      url += `?year=${year}`;
+    }
+    const response = await axios.get(url, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("fandoro-token")}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    logger.error("Error fetching compliance snapshots:", error);
+    throw error;
+  }
+};

@@ -1,15 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { ESGCapItem } from '../../types/esgDD';
-
+import { ComplianceGraphModal } from './ComplianceGraphModal';
 interface ESGCapScoringProps {
   items: ESGCapItem[];
   onFilterChange?: (filterKey: string | null) => void;
   activeFilter?: string | null;
-  complianceScore?: number; // Optional prop for compliance score
+  complianceScore?: number;
+  entityId: string;
 }
 
-export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterChange, activeFilter, complianceScore }) => {
+export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterChange, activeFilter, complianceScore, entityId }) => {
+
+  const [modalOpen, setModalOpen] = useState(false);
 
   // ✅ FILTER: Only include CP and CS items for card counting (exclude ESG_Roadmap)
   const filteredItems = items.filter(
@@ -248,12 +251,13 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
   const complianceRating = getComplianceRating(complianceScore ?? 0);
 
   return (
+    <>
     <div className="space-y-4">
       <Card>
         <CardContent className="py-3">
           <div className="grid grid-cols-7 gap-2">
             {/* 1. Compliance Score - STATIC */}
-            <div className="text-center p-2 rounded-lg bg-green-50 cursor-default">
+            <div className="text-center p-2 rounded-lg bg-green-50 cursor-default" onClick={() => setModalOpen(true)}>
               <div className="flex flex-col items-center p-0 rounded-lg bg-green-50 cursor-default">
                 {/* Top row: left (grade+label) | divider | right (score) */}
                 <div className="flex items-center w-full">
@@ -343,5 +347,11 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
         </CardContent>
       </Card>
     </div>
+      <ComplianceGraphModal
+        entityId={entityId}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+      />
+  </>
   );
 };
