@@ -232,16 +232,16 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
   };
 
   const getComplianceRating = (score: number = 0) => {
-    if (score >= 85) {
+    if (score >= 81) {
       return { grade: "AA", label: "On Track", color: "text-green-600" };
     }
-    if (score >= 70) {
+    if (score >= 61) {
       return { grade: "A", label: "Stable", color: "text-emerald-600" };
     }
-    if (score >= 55) {
+    if (score >= 41) {
       return { grade: "BB", label: "Needs Attention", color: "text-yellow-600" };
     }
-    if (score >= 40) {
+    if (score >= 21) {
       return { grade: "B", label: "At Risk", color: "text-orange-600" };
     }
 
