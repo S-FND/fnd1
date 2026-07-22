@@ -32,25 +32,25 @@ interface Props {
 }
 
 const getStatusColor = (score: number) => {
-    if (score >= 85)
+    if (score >= 81)
         return {
             badge: "bg-green-600",
             progress: "bg-green-500"
         };
 
-    if (score >= 70)
+    if (score >= 61)
         return {
             badge: "bg-blue-600",
             progress: "bg-blue-500"
         };
 
-    if (score >= 55)
+    if (score >= 41)
         return {
             badge: "bg-yellow-500",
             progress: "bg-yellow-500"
         };
 
-    if (score >= 40)
+    if (score >= 21)
         return {
             badge: "bg-orange-500",
             progress: "bg-orange-500"
