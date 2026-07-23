@@ -176,10 +176,11 @@ const FeatureKPIEntry = () => {
   const periodToCheck = isAnnual ? 'FY' : currentQuarter;
   const yearToCheck = isAnnual ? currentFY : currentYear;
   const periodLocked = !isPeriodEditable(periodToCheck, yearToCheck);
-  let unlockIds: string[] = ['NEWME','SUPTAILS','RIPPLR','ILUVIA','GOODBUG','TERRACTIV','SAMMMMBT'];
-  // const readOnly = user && (user.misCompanyId == 'NEWME' || unlockIds.includes(user.misCompanyId)) ? false : isCompanyReadOnly || periodLocked; 
+  let unlockIds: string[] = ['NEWME', 'SUPTAILS', 'RIPPLR', 'ILUVIA', 'GOODBUG', 'TERRACTIV', 'SAMMMMBT'];
+  // const readOnly = user && (user.misCompanyId == 'NEWME' || unlockIds.includes(user.misCompanyId)) ? false : isCompanyReadOnly || periodLocked;
   // We can comment this because the feature isn't ready yet to handle closed submissions.
-  const readOnly = true
+  const readOnly = true;
+
 
   // Handle quarter change - update URL and redirect if needed
   const handleQuarterChange = useCallback((newQuarter: string) => {
@@ -1504,7 +1505,7 @@ const FeatureKPIEntry = () => {
       <div className={readOnly ? 'pointer-events-none text-left opacity-75' : ''}>
         {/* Custom feature tables */}
         {featureKey === 'businessInformation' ? (
-          <BusinessInformationTable formData={formData} onInputChange={handleInputChange} historicalData={historicalData}  />
+          <BusinessInformationTable formData={formData} onInputChange={handleInputChange} historicalData={historicalData} />
         ) : featureKey === 'sourcingFulfillment' ? (
           <SourcingFulfilmentTable formData={formData} onInputChange={handleInputChange} />
         ) : featureKey === 'fashionMaterials' ? (
