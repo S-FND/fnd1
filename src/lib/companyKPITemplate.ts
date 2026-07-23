@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import { supabase } from '@/integrations/supabase/client';
 import { QUARTERLY_FEATURES, ANNUAL_FEATURES } from '@/hooks/useCompanyFeatures';
 import { getFeatureKPIs } from '@/lib/featureKPITemplate';
+import { httpClient } from './httpClient';
 
 export interface DownloadTemplateOptions {
   companyId: string;
@@ -16,16 +17,16 @@ export const downloadCompanyKPITemplate = async (options: DownloadTemplateOption
   const { companyId, companyName, year, type } = options;
 
   // 1. Fetch enabled features for this company
-  const { data: featuresData } = await supabase
-    .from('company_feature_settings')
-    .select('feature_key, feature_type')
-    .eq('company_id', companyId)
-    .eq('enabled', true);
-
-  const enabledFeatures = (featuresData || []).map(f => ({
-    key: f.feature_key,
-    type: f.feature_type,
-  }));
+  const { data: featuresData } = await httpClient.get(
+    `mis/company-feature-settings?companyId=${companyId}`
+  );
+  
+  const enabledFeatures = (featuresData || [])
+    .filter((f: any) => f.enabled)
+    .map((f: any) => ({
+      key: f.feature_key,
+      type: f.feature_type,
+    }));
 
   // 2. Determine which features to include based on type filter
   let featuresToInclude: { key: string; label: string; type: string }[] = [];
