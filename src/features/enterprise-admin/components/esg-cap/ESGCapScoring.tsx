@@ -257,8 +257,8 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
         <CardContent className="py-3">
           <div className="grid grid-cols-7 gap-2">
             {/* 1. Compliance Score - STATIC */}
-            <div className="text-center p-2 rounded-lg bg-green-50 cursor-default" onClick={() => setModalOpen(true)}>
-              <div className="flex flex-col items-center p-0 rounded-lg bg-green-50 cursor-default">
+            <div className="text-center p-2 rounded-lg bg-green-50 cursor-default cursor-pointer" onClick={() => setModalOpen(true)}>
+              <div className="flex flex-col items-center p-0 rounded-lg bg-green-50 cursor-default cursor-pointer">
                 {/* Top row: left (grade+label) | divider | right (score) */}
                 <div className="flex items-center w-full">
                   {/* Left: grade + label stacked & centered */}
