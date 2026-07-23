@@ -1,15 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { ESGCapItem } from '../../types/esgDD';
-
+import { ComplianceGraphModal } from './ComplianceGraphModal';
 interface ESGCapScoringProps {
   items: ESGCapItem[];
   onFilterChange?: (filterKey: string | null) => void;
   activeFilter?: string | null;
-  complianceScore?: number; // Optional prop for compliance score
+  complianceScore?: number;
+  entityId: string;
 }
 
-export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterChange, activeFilter, complianceScore }) => {
+export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterChange, activeFilter, complianceScore, entityId }) => {
+
+  const [modalOpen, setModalOpen] = useState(false);
 
   // ✅ FILTER: Only include CP and CS items for card counting (exclude ESG_Roadmap)
   const filteredItems = items.filter(
@@ -229,16 +232,16 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
   };
 
   const getComplianceRating = (score: number = 0) => {
-    if (score >= 85) {
+    if (score >= 81) {
       return { grade: "AA", label: "On Track", color: "text-green-600" };
     }
-    if (score >= 70) {
+    if (score >= 61) {
       return { grade: "A", label: "Stable", color: "text-emerald-600" };
     }
-    if (score >= 55) {
+    if (score >= 41) {
       return { grade: "BB", label: "Needs Attention", color: "text-yellow-600" };
     }
-    if (score >= 40) {
+    if (score >= 21) {
       return { grade: "B", label: "At Risk", color: "text-orange-600" };
     }
 
@@ -248,13 +251,14 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
   const complianceRating = getComplianceRating(complianceScore ?? 0);
 
   return (
+    <>
     <div className="space-y-4">
       <Card>
         <CardContent className="py-3">
           <div className="grid grid-cols-7 gap-2">
             {/* 1. Compliance Score - STATIC */}
-            <div className="text-center p-2 rounded-lg bg-green-50 cursor-default">
-              <div className="flex flex-col items-center p-0 rounded-lg bg-green-50 cursor-default">
+            <div className="text-center p-2 rounded-lg bg-green-50 cursor-default cursor-pointer" onClick={() => setModalOpen(true)}>
+              <div className="flex flex-col items-center p-0 rounded-lg bg-green-50 cursor-default cursor-pointer">
                 {/* Top row: left (grade+label) | divider | right (score) */}
                 <div className="flex items-center w-full">
                   {/* Left: grade + label stacked & centered */}
@@ -343,5 +347,11 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
         </CardContent>
       </Card>
     </div>
+      <ComplianceGraphModal
+        entityId={entityId}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+      />
+  </>
   );
 };

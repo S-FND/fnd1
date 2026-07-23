@@ -34,7 +34,8 @@ export const financialYearOptions = [
   '2022-23',
   '2023-24',
   '2024-25',
-  '2025-26'
+  '2025-26',
+  '2026-27'
 ];
 
 export const listedOnOptions = [

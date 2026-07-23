@@ -28,6 +28,7 @@ import {
 } from '@/lib/companyKPITemplate';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { httpClient } from '@/lib/httpClient';
 
 interface UploadKPITemplateDialogProps {
   open: boolean;
@@ -109,38 +110,46 @@ export const UploadKPITemplateDialog = ({
 
   const handleUpload = async () => {
     if (parsedEntries.length === 0) {
-      toast.error('No valid entries to upload');
+      toast.error("No valid entries to upload");
       return;
     }
-
-    setStep('uploading');
+  
+    setStep("uploading");
     setIsProcessing(true);
-
+  
     try {
-      // Simulate progress
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => Math.min(prev + 10, 90));
       }, 200);
+      const entries = parsedEntries.map(entry => ({
+        ...entry,
+        companyId,
+        year,
+        kpi_id: entry.kpiId
+      }));
 
-      const result = await saveKPIEntriesFromTemplate(parsedEntries, companyId, year);
-      
+      const { data } = await httpClient.post(
+        "mis/kpi-entries/upsert",
+        { entries }
+      );
+  
       clearInterval(progressInterval);
       setUploadProgress(100);
-      setUploadResult({ success: result.success, failed: result.failed });
-      setStep('complete');
-
-      if (result.success > 0) {
-        const quarterBreakdown = Object.entries(result.byQuarter)
-          .filter(([_, count]) => count > 0)
-          .map(([q, count]) => `${q}: ${count}`)
-          .join(', ');
-        toast.success(`Successfully uploaded ${result.success} KPI entries (${quarterBreakdown})`);
-        onSuccess?.();
-      }
+  
+      setUploadResult({
+        success: data.length ?? entries.length,
+        failed: 0,
+      });
+  
+      setStep("complete");
+  
+      toast.success(`Successfully uploaded ${entries.length} KPI entries`);
+      onSuccess?.();
+  
     } catch (error) {
-      toast.error('Failed to upload entries');
+      toast.error("Failed to upload entries");
       console.error(error);
-      setStep('preview');
+      setStep("preview");
     } finally {
       setIsProcessing(false);
     }

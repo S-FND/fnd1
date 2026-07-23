@@ -868,7 +868,7 @@ const DataEntry = () => {
       <UploadKPITemplateDialog
         open={showUploadDialog}
         onOpenChange={setShowUploadDialog}
-        companyId={companyId}
+        companyId={user?.company_id}
         quarter={selectedQuarter}
         year={selectedYear}
         onSuccess={handleUploadSuccess}

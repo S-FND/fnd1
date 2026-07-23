@@ -1101,6 +1101,7 @@ const ESGCapPage = () => {
               onFilterChange={setCardFilter}
               activeFilter={cardFilter}
               complianceScore={result?.overallComplianceScore}
+              entityId={entityId || ''}
             />
             {/* </div>
             )} */}
