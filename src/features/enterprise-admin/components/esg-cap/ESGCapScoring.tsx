@@ -260,8 +260,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
             <div className="text-center p-2 rounded-lg bg-green-50 cursor-default cursor-pointer" onClick={() => setModalOpen(true)}>
               <div className="flex flex-col items-center p-0 rounded-lg bg-green-50 cursor-default cursor-pointer">
                 {/* Top row: left (grade+label) | divider | right (score) */}
-                <div className="flex items-center w-full">
-                  {/* Left: grade + label stacked & centered */}
+                {/* <div className="flex items-center w-full">
                   <div className="flex-1 flex flex-col items-center justify-center pr-2">
                     <div className={`text-xm font-bold ${complianceRating.color}`}>
                       {complianceRating.grade}
@@ -269,15 +268,19 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                     
                   </div>
 
-                  {/* Vertical divider */}
                   <div className="w-px h-5 bg-gray-200" />
 
-                  {/* Right: score */}
                   <div className="flex-1 flex items-center justify-center pl-2">
                     <div className="text-2xl font-bold text-green-600">
                       {complianceScore?.toFixed(1)}%
                     </div>
                   </div>
+                </div> */}
+
+                <div className="flex-1 flex flex-col items-center justify-center pr-2">
+                    <div className={`text-xm font-bold ${complianceRating.color}`}>
+                      {complianceRating.grade}
+                    </div>
                 </div>
 
                 {/* Bottom label */}
