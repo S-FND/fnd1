@@ -109,6 +109,7 @@ export const UploadKPITemplateDialog = ({
   };
 
   const handleUpload = async () => {
+    console.log('object______Hit this',);
     if (parsedEntries.length === 0) {
       toast.error("No valid entries to upload");
       return;
@@ -128,11 +129,26 @@ export const UploadKPITemplateDialog = ({
         kpi_id: entry.kpiId
       }));
 
+      const formData = new FormData();
+
+      formData.append("file", selectedFile!);
+      formData.append("companyId", companyId);
+      formData.append("quarter", quarter);
+      formData.append("year", String(year));
+      formData.append("entries", JSON.stringify(entries));
+
+      for (const [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
       const { data } = await httpClient.post(
         "mis/kpi-entries/upsert",
-        { entries }
-      );
-  
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );  
       clearInterval(progressInterval);
       setUploadProgress(100);
   
