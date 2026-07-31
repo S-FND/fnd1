@@ -29,9 +29,6 @@ export const employeeStrengthOptions = [
 ];
 
 export const financialYearOptions = [
-  '2020-21',
-  '2021-22',
-  '2022-23',
   '2023-24',
   '2024-25',
   '2025-26',

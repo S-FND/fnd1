@@ -5,7 +5,7 @@ import { Navigate, Link } from 'react-router-dom';
 import { useRouteProtection } from '@/hooks/useRouteProtection';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Folder, FileDown } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Folder, FileDown, Bell } from 'lucide-react';
 import { ESGCapItem } from '../types/esgDD';
 import { ESGCapFilters } from '../components/esg-cap/ESGCapFilters';
 import { ESGCapTable } from '../components/esg-cap/ESGCapTable';
@@ -38,6 +38,7 @@ import AssessmentTypeDialog from '@/features/mis/company/Assessmenttypedialog';
 import ESGCapDocumentsDialog from '../components/esg-cap/ESGCapDocumentsDialog';
 import { ExportDrawer } from './ExportDrawer';
 import { ComplianceScoreEngine, PlanItem, PlanJson } from '../components/esg-cap/compliance-score-engine';
+import { useNavigate } from 'react-router-dom';
 interface PlanHistory {
   updateByUserId: string;
   status: string;
@@ -402,6 +403,22 @@ const ESGCapPage = () => {
   );
   const [assesmentTypeOpen, setAssessmentTypeOpen] = useState(false);
   const [docsDialogOpen, setDocsDialogOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const navigate = useNavigate();
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const response: any = await httpClient.get('notification');
+        if (response.status === 200 && response.data?.data) {
+          const unread = response.data.data.filter((n: any) => !n.isRead).length;
+          setUnreadCount(unread);
+        }
+      } catch (error) {
+        console.error('Failed to fetch unread count:', error);
+      }
+    };
+    fetchUnreadCount();
+  }, []);
   const toggleGroup = (groupName: string) => {
     setCollapsedGroups(prev => {
       const newSet = new Set(prev);
@@ -702,16 +719,16 @@ const ESGCapPage = () => {
     const itemCategory = item?.category || '';
     const investorStatus = item?.investorStatus || '';
     const companyStatus = item?.companyStatus || '';
-  
+
     const matchesSearch = itemTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
       itemMeasures.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || itemStatus === statusFilter;
     const matchesCategory = categoryFilter === 'all' || itemCategory === categoryFilter;
-  
+
     const getDateStatus = (item: ESGCapItem) => {
       const investorStatus = (item.investorStatus || "").toLowerCase().trim();
-      const companyStatus = (item.companyStatus || item.status  || "").toLowerCase().trim();
-    
+      const companyStatus = (item.companyStatus || item.status || "").toLowerCase().trim();
+
       // 1. INVESTOR STATUS TAKES PRIORITY
       if (investorStatus === "closed") {
         return "closed";
@@ -722,13 +739,13 @@ const ESGCapPage = () => {
       if (investorStatus === "partly-submitted" || investorStatus === "partly submitted") {
         return "partly-submitted";
       }
-    
+
       // 2. submitted-pending-review: Company submitted + Investor under-review
-      if ((companyStatus === "submitted" || companyStatus === "submitted-pending-review") && 
-          (investorStatus === "under-review" || investorStatus === "under review")) {
+      if ((companyStatus === "submitted" || companyStatus === "submitted-pending-review") &&
+        (investorStatus === "under-review" || investorStatus === "under review")) {
         return "submitted-pending-review";
       }
-    
+
       // 3. Check company status
       if (companyStatus === "closed") return "closed";
       if (companyStatus === "partly-submitted" || companyStatus === "partly submitted") return "partly-submitted";
@@ -736,35 +753,35 @@ const ESGCapPage = () => {
       if (companyStatus === "submitted-pending-review" || companyStatus === "submitted pending review") return "submitted-pending-review";
       if (companyStatus === "due-in-this-month" || companyStatus === "due in this month") return "due-in-this-month";
       if (companyStatus === "overdue") return "overdue";
-    
+
       // 4. If no target date, return empty
       if (!item.targetDate) return "";
-    
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const target = new Date(item.targetDate);
       target.setHours(0, 0, 0, 0);
-    
+
       // Check if due in current month
       if (target.getMonth() === today.getMonth() && target.getFullYear() === today.getFullYear()) {
         return "due-in-this-month";
       }
-    
+
       // Check if overdue
       if (target < today) {
         return "overdue";
       }
-    
+
       return "upcoming";
     };
-  
+
     let matchesCardFilter = true;
     if (cardFilter) {
       const effectiveStatus = getDateStatus(item);
-      
+
       if (cardFilter === "closed") {
-        matchesCardFilter = investorStatus?.toLowerCase() === "closed" || 
-                            companyStatus?.toLowerCase() === "closed";
+        matchesCardFilter = investorStatus?.toLowerCase() === "closed" ||
+          companyStatus?.toLowerCase() === "closed";
       } else if (cardFilter === "partly-submitted") {
         matchesCardFilter = effectiveStatus === "partly-submitted";
       } else if (cardFilter === "submitted-pending-review") {
@@ -779,33 +796,33 @@ const ESGCapPage = () => {
         matchesCardFilter = effectiveStatus === cardFilter;
       }
     }
-  
+
     return matchesSearch && matchesStatus && matchesCategory && matchesCardFilter;
   }) || [];
 
   const isOverdue = (item: ESGCapItem) => {
     const companyStatus = (item.companyStatus || item.status || "").toLowerCase();
     const investorStatus = (item.investorStatus || "").toLowerCase();
-  
+
     // If closed, not overdue
     if (companyStatus === "closed" || investorStatus === "closed") {
       return false;
     }
-  
+
     // If already submitted, not overdue
-    if (companyStatus === "partly-submitted" || 
-        companyStatus === "submitted-pending-review" ) {
+    if (companyStatus === "partly-submitted" ||
+      companyStatus === "submitted-pending-review") {
       return false;
     }
-  
+
     if (!item.targetDate) return false;
-  
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-  
+
     const targetDate = new Date(item.targetDate);
     targetDate.setHours(0, 0, 0, 0);
-  
+
     return targetDate < today;
   };
 
@@ -814,34 +831,34 @@ const ESGCapPage = () => {
     // 1. Overdue items on top
     const aOverdue = isOverdue(a);
     const bOverdue = isOverdue(b);
-  
+
     if (aOverdue && !bOverdue) return -1;
     if (!aOverdue && bOverdue) return 1;
-  
+
     // 2. Closed items at bottom
     const aClosed = a.investorStatus === "closed" || a.companyStatus === "closed";
     const bClosed = b.investorStatus === "closed" || b.companyStatus === "closed";
-  
+
     if (aClosed && !bClosed) return 1;
     if (!aClosed && bClosed) return -1;
-  
+
     // 3. Sort by selected column
     if (!sortConfig) return 0;
-  
+
     const aVal = a[sortConfig.key];
     const bVal = b[sortConfig.key];
-  
+
     // Handle null/undefined
     if (aVal === undefined || aVal === null) return 1;
     if (bVal === undefined || bVal === null) return -1;
-  
+
     // Date fields
     if (["targetDate", "createdAt", "actualDate", "lastReviewDate"].includes(sortConfig.key)) {
       const dateA = new Date((aVal || 0) as string).getTime();
       const dateB = new Date((bVal || 0) as string).getTime();
       return sortConfig.direction === "asc" ? dateA - dateB : dateB - dateA;
     }
-  
+
     // Priority
     if (sortConfig.key === "priority") {
       const order = { High: 3, Medium: 2, Low: 1 };
@@ -849,14 +866,14 @@ const ESGCapPage = () => {
       const bPriority = order[bVal as keyof typeof order] || 0;
       return sortConfig.direction === "asc" ? aPriority - bPriority : bPriority - aPriority;
     }
-  
+
     // String comparison
     if (typeof aVal === 'string' && typeof bVal === 'string') {
       return sortConfig.direction === "asc"
         ? aVal.localeCompare(bVal)
         : bVal.localeCompare(aVal);
     }
-  
+
     // Number comparison
     if (typeof aVal === 'number' && typeof bVal === 'number') {
       return sortConfig.direction === "asc" ? aVal - bVal : bVal - aVal;
@@ -1053,31 +1070,54 @@ const ESGCapPage = () => {
                 setCategoryFilter={setCategoryFilter}
               />
               <div className="flex flex-wrap items-center justify-end gap-2 mb-3 md:mb-0">
-              <Button
-                variant="outline"
-                onClick={() => setAuditOpen(true)}
-                className="flex items-center gap-2" // comment for production
-              >
-                <History className="w-4 h-4" />
-                Audit Logs
-              </Button>
-             
-              <Button
-                variant="outline"
-                onClick={() => setDocsDialogOpen(true)}
-                className="flex items-center gap-2 justify-start hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
-              >
-                <Folder className="w-4 h-4" />
-                Uploads
-              </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/notifications')}
+                  className="group relative px-3 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                >
+                  <Bell className="w-4 h-4" />
+                  <span className="ml-2 hidden group-hover:inline whitespace-nowrap">
+                    Notifications
+                  </span>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                      {unreadCount}
+                    </span>
+                  )}
+                </Button>
 
-              <Button
-                variant="outline"
-                onClick={() => setDrawer(true)}
-                className="flex items-center gap-2 justify-start hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
-              >
-                <FileDown className="h-4 w-4" /> Export 
-              </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setAuditOpen(true)}
+                  className="group px-3 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                >
+                  <History className="w-4 h-4" />
+                  <span className="ml-2 hidden group-hover:inline whitespace-nowrap">
+                    Audit Logs
+                  </span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => setDocsDialogOpen(true)}
+                  className="group px-3 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                >
+                  <Folder className="w-4 h-4" />
+                  <span className="ml-2 hidden group-hover:inline whitespace-nowrap">
+                    Uploads
+                  </span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => setDrawer(true)}
+                  className="group px-3 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300"
+                >
+                  <FileDown className="w-4 h-4" />
+                  <span className="ml-2 hidden group-hover:inline whitespace-nowrap">
+                    Export
+                  </span>
+                </Button>
               </div>
             </div>
             {/* Filters Section */}

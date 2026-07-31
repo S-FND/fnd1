@@ -88,6 +88,7 @@ import PreviewSubmission from './features/mis/company/PreviewSubmission';
 
 import ESGCapDetailsPage from './features/enterprise-admin/pages/ESGCapDetails';
 import Support from './features/mis/company/Support';
+import NotificationsPage from './pages/Notifications';
 
 function App() {
   return (
@@ -115,6 +116,7 @@ function App() {
         <Route path="/mis/preview-submit" element={
           <PreviewSubmission />
         } />
+        <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/mis/support" element={<Support />} />
         <Route path="/enhanced-dashboard" element={<EnhancedDashboard />} />
         <Route path="/dashboard" element={<Dashboard />} />
