@@ -244,8 +244,105 @@ export const DocumentUploadModal = ({
             {/* Show validation results only if not skipped */}
             {!skipValidation && validationResult && (
               <div className="space-y-4">
-                {/* ... your validation UI blocks (unchanged) ... */}
-                {/* I'm omitting the full UI for brevity – keep your existing rendering */}
+                {/* STATUS */}
+                {/* <div className={`p-4 rounded-md border ${validationResult.valid
+                    ? "bg-green-50 border-green-200"
+                    : "bg-red-50 border-red-200"
+                  }`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    {validationResult.valid ? (
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 text-red-600" />
+                    )}
+                    <p className="font-semibold">
+                      {validationResult.valid ? "Validation Passed" : "Validation Failed"}
+                    </p>
+                  </div>
+
+                  <div className="text-sm space-y-1">
+                    <p><strong>Overall Score:</strong> {validationResult.overallScore}%</p>
+                    <p><strong>Improvement Needed:</strong> {validationResult.improvementPercentage}%</p>
+                    <p><strong>Confidence:</strong> {validationResult.confidence}%</p>
+                  </div>
+                </div> */}
+
+                {/* SCORE */}
+                {/* <div className="p-3 border rounded-md">
+                  <p className="text-sm font-medium mb-2">Score Breakdown</p>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    {Object.entries(validationResult.scores).map(([key, value]) => (
+                      <div key={key} className="flex justify-between">
+                        <span className="capitalize">{key}</span>
+                        <span className="font-medium">{value}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div> */}
+
+                {/* MISSING */}
+                {/* {validationResult.missingSections?.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium mb-2 text-red-600">
+                      Missing Sections
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {validationResult.missingSections.map((s, i) => (
+                        <span key={i} className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-md">
+                          {s.replace(/_/g, " ")}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )} */}
+
+                {/* ISSUES */}
+                {/* {validationResult.issues?.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium mb-2">Issues</p>
+                    <ul className="text-xs list-disc pl-5 space-y-1">
+                      {validationResult.issues.map((i, idx) => (
+                        <li key={idx}>{i}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )} */}
+
+                {/* IMPROVEMENTS */}
+                {validationResult.suggestedImprovements?.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium mb-2">Suggested Improvements</p>
+                    <div className="space-y-2">
+                      {validationResult.suggestedImprovements.map((item, idx) => (
+                        <div key={idx} className="border rounded-md p-2 text-xs bg-muted">
+                          <div className="flex justify-between">
+                            <span className="font-medium">
+                              {item.section.replace(/_/g, " ")}
+                            </span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded ${item.priority === "high"
+                                ? "bg-red-100 text-red-700"
+                                : item.priority === "medium"
+                                  ? "bg-yellow-100 text-yellow-700"
+                                  : "bg-gray-100 text-gray-700"
+                              }`}>
+                              {item.priority}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-muted-foreground">
+                            {item.suggestion}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* SUMMARY */}
+                {validationResult.summary && (
+                  <div className="p-3 bg-muted rounded-md text-xs">
+                    <strong>Summary:</strong> {validationResult.summary}
+                  </div>
+                )}
               </div>
             )}
 
