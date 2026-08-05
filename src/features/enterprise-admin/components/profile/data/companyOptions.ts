@@ -46,25 +46,38 @@ export const listedOnOptions = [
   'Other International Exchange'
 ];
 
+// export const industryOptions = [
+//   'Technology',
+//   'Healthcare',
+//   'Finance & Banking',
+//   'Manufacturing',
+//   'Retail & E-commerce',
+//   'Real Estate',
+//   'Education',
+//   'Transportation',
+//   'Logistics & Transportation',
+//   'Energy & Utilities',
+//   'Agriculture',
+//   'Hospitality & Tourism',
+//   'Media & Entertainment',
+//   'Telecommunications',
+//   'Construction',
+//   'Pharmaceutical',
+//   'Automotive',
+//   'Food & Beverage',
+//   'Consulting',
+//   'Other'
+// ];
+
 export const industryOptions = [
-  'Technology',
-  'Healthcare',
-  'Finance & Banking',
-  'Manufacturing',
-  'Retail & E-commerce',
-  'Real Estate',
-  'Education',
-  'Transportation',
-  'Logistics & Transportation',
-  'Energy & Utilities',
-  'Agriculture',
-  'Hospitality & Tourism',
-  'Media & Entertainment',
-  'Telecommunications',
-  'Construction',
-  'Pharmaceutical',
-  'Automotive',
+  'CleanTech',
+  'DeepTech',
+  'EdTech',
+  'Entertainment',
+  'Fashion & Lifestyle',
+  'FinTech',
   'Food & Beverage',
-  'Consulting',
-  'Other'
+  'HealthTech',
+  'Manufacturing',
+  'Platform Enablers'
 ];
