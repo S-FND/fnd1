@@ -279,7 +279,7 @@ const CompanyDashboard = () => {
 
     setProgressCards([
       {
-        label: 'Overall Rank',
+        label: 'Responsiveness Score',
         value: overallPct,
         icon: <Trophy className="w-4 h-4 text-amber-600" />,
         color: 'border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/10',
