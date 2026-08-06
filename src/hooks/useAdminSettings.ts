@@ -91,7 +91,7 @@ export const useAdminSettings = () => {
   // explicitly publishes a new period (typically after JFM 2026 submissions close).
   const getPublishedPeriod = (): { year: number; quarter: string } => {
     const raw = getSetting('published_score_period');
-    if (!raw) return { year: 2025, quarter: 'FY' };
+    if (!raw) return { year: 2026, quarter: 'Q1' };
     try {
       const parsed = JSON.parse(raw);
       const y = Number(parsed?.year);
