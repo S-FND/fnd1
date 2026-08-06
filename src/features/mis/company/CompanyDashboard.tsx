@@ -279,7 +279,7 @@ const CompanyDashboard = () => {
 
     setProgressCards([
       {
-        label: 'Overall Rank',
+        label: 'Responsiveness Score',
         value: overallPct,
         icon: <Trophy className="w-4 h-4 text-amber-600" />,
         color: 'border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/10',
@@ -488,7 +488,7 @@ const CompanyDashboard = () => {
       {/* ── Progress Report ──────────────────────────────────── */}
       {q4DataStatus && <div className="flex items-center gap-2 mb-3">
         <Trophy className="w-5 h-5 text-amber-500" />
-        <h2 className="text-base font-semibold">Progress Report - Category (AA–C)</h2>
+        <h2 className="text-base font-semibold">Progress Report - Grade (AA–C)</h2>
       </div>}
 
       {q4DataStatus && <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
@@ -507,7 +507,7 @@ const CompanyDashboard = () => {
                     <span className={`text-2xl font-bold ${gradeColor}`}>{grade}</span>
                     <span className="text-xs text-muted-foreground mb-1">grade</span>
                   </div>
-                  <Badge variant="secondary" className="text-[9px] mt-1">n={card.n}</Badge>
+                  <div className="flex justify-start mt-1"><Badge variant="secondary" className="text-[9px]">n={card.n}</Badge></div>
                 </CardContent>
               </Card>
             );
