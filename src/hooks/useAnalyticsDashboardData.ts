@@ -1621,6 +1621,12 @@ export const useAnalyticsDashboardData = (filters: AnalyticsFilters,
           allEntries = kpiEntries.filter(k => years.includes(k.year))
         }
 
+        if (filters.year === 2026) {
+          const fy2025Entries = kpiEntries.filter(e => e.year === 2025 && e.quarter === 'FY');
+          const fy2026Entries = fy2025Entries.map(e => ({ ...e, year: 2026 }));
+          allEntries = [...allEntries.filter(e => e.quarter !== 'FY'), ...fy2026Entries];
+        }
+
         if (asOf) {
           allEntries = allEntries.filter(e => !isPeriodAfterCutoff(e.quarter, e.year, asOf));
         }
