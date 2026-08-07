@@ -308,7 +308,7 @@ export const ESGScoreDetailDialog = ({ open, onOpenChange, scoreType, companyId,
           const isNA = metric === 'Environment Score' && (!currentCo || !currentCo.hasEnvironmentFeature);
           return {
             metric,
-            data: [{ period: `AY ${year}`, company: Math.round(value * 10) / 10, industryAvg: indResult.avg, revenueAvg: revResult.avg }],
+            data: [{ period: `${period === 'annual' ? 'AY' : quarter} ${year}`, company: Math.round(value * 10) / 10, industryAvg: indResult.avg, revenueAvg: revResult.avg }],
             n,
             isNA,
             sectorN: indResult.count,
@@ -426,7 +426,7 @@ export const ESGScoreDetailDialog = ({ open, onOpenChange, scoreType, companyId,
         const revResult = computeGroupAvg(annualPercMap, combinedRawData, metric, 'revenue', revenueStage);
         return {
             metric,
-            data: [{ period: `AY ${year}`, company: value, industryAvg: indResult.avg, revenueAvg: revResult.avg }],
+            data: [{ period: `${period === 'annual' ? 'AY' : quarter} ${year}`, company: value, industryAvg: indResult.avg, revenueAvg: revResult.avg }],
             n,
             isNA: false,
             sectorN: indResult.count,
