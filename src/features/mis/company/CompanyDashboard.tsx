@@ -239,7 +239,8 @@ const CompanyDashboard = () => {
     year: publishedYear,
   }, kpiEntries,features);
 
-  const { rankings, isLoading: isRankingsLoading } = usePortfolioRankings(publishedYear, publishedQuarter);
+  const { rankings, isLoading: isRankingsLoading } = usePortfolioRankings(publishedYear, publishedQuarter, publishedQuarter === 'FY' ? 'annual' : 'quarterly');
+  console.log('CompanyDashboard: rankings:', rankings, 'isRankingsLoading:', isRankingsLoading);
   const quarterlyStatus = useQuarterlyDataStatus(companyId, selectedYear);
   const { quarters, overallPercentage, totalFilled, totalAssigned, isLoading } = allQuartersProgress;
   const { completenessPercentile, consistencyPercentile, timelinessPercentile, isLoading: isPeerLoading } = peerComparison;
@@ -804,6 +805,8 @@ const CompanyDashboard = () => {
         dashboardViewMode={'category'}
         kpiEntries={kpiEntries}
         features={features}
+        period={publishedQuarter === 'FY' ? 'annual' : 'quarterly'}
+        quarter={publishedQuarter}
       />
 
     </UnifiedSidebarLayout>
