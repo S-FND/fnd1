@@ -35,6 +35,8 @@ interface ESGScoreDetailDialogProps {
   dashboardViewMode?: 'percentile' | 'category';
   kpiEntries:{ companyId: string; kpi_id: string; value: string | null; quarter: string; year: number }[];
   features:{ companyId: string; feature_key: string, enabled: boolean }[]
+  period?: 'quarterly' | 'annual';
+  quarter?: 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'FY' | string;
 }
 
 const getGradeFromValue = (value: number): { grade: string; color: string } => {
@@ -187,7 +189,7 @@ function computeGovPercentiles(allCompanies: CompanyRawMetrics[]): Map<string, R
   return result;
 }
 
-export const ESGScoreDetailDialog = ({ open, onOpenChange, scoreType, companyId, year, dashboardViewMode = 'percentile',kpiEntries,features }: ESGScoreDetailDialogProps) => {
+export const ESGScoreDetailDialog = ({ open, onOpenChange, scoreType, companyId, year, dashboardViewMode = 'percentile',kpiEntries,features,period,quarter }: ESGScoreDetailDialogProps) => {
   // debugger;
   const isCategoryView = dashboardViewMode === 'category';
   // Force annual view for all score types (quarterly toggle removed from composite)
@@ -306,7 +308,7 @@ export const ESGScoreDetailDialog = ({ open, onOpenChange, scoreType, companyId,
           const isNA = metric === 'Environment Score' && (!currentCo || !currentCo.hasEnvironmentFeature);
           return {
             metric,
-            data: [{ period: `AY ${year}`, company: Math.round(value * 10) / 10, industryAvg: indResult.avg, revenueAvg: revResult.avg }],
+            data: [{ period: `${period === 'annual' ? 'AY' : quarter} ${year}`, company: Math.round(value * 10) / 10, industryAvg: indResult.avg, revenueAvg: revResult.avg }],
             n,
             isNA,
             sectorN: indResult.count,
@@ -424,7 +426,7 @@ export const ESGScoreDetailDialog = ({ open, onOpenChange, scoreType, companyId,
         const revResult = computeGroupAvg(annualPercMap, combinedRawData, metric, 'revenue', revenueStage);
         return {
             metric,
-            data: [{ period: `AY ${year}`, company: value, industryAvg: indResult.avg, revenueAvg: revResult.avg }],
+            data: [{ period: `${period === 'annual' ? 'AY' : quarter} ${year}`, company: value, industryAvg: indResult.avg, revenueAvg: revResult.avg }],
             n,
             isNA: false,
             sectorN: indResult.count,
@@ -450,7 +452,7 @@ export const ESGScoreDetailDialog = ({ open, onOpenChange, scoreType, companyId,
         {/* Annual view badge — no toggle for any score type */}
         <div className="flex gap-2 mb-4">
           <Badge variant="outline" className="ml-auto text-xs">
-            Annual • {year}
+            {period === 'annual' ? 'Annual' : quarter} • {year}
           </Badge>
         </div>
 

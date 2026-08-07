@@ -33,6 +33,7 @@ export interface CompanyProfileRaw {
   companyId: string;
   revenueStage: string;
   industry: string;
+  company_id:string;
 }
 
 export interface KpiEntryRaw {
@@ -146,10 +147,11 @@ const calculatePercentile = (_value: number, _allValues: number[], rank: number,
 };
 
 // ─── Hook ───
-export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4') => {
+export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4', period: 'quarterly' | 'annual' = 'quarterly') => {
   const [rankings, setRankings] = useState<CompanyRanking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { asOf } = useAsOf();
+  let selectedPeriod = period == 'annual' && year == 2025 ? ['Q1', 'Q2', 'Q3', 'Q4', 'FY'] : [quarter];
 
   // useEffect(() => {
   //   const fetch = async () => {
@@ -372,17 +374,17 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
       setIsLoading(true);
       try {
         // 1. Fetch all data in parallel from NestJS MongoDB backend
-       
 
-        let profilesRes=await httpClient.get<CompanyProfileRaw[]>('mis/company-profiles');
-        let entriesRes=await httpClient.get<KpiEntryRaw[]>(`mis/kpi-entries?year=${year}`);
-        let featuresRes=await httpClient.get<FeatureSettingRaw[]>('mis/company-feature-settings?enabled=true');
+
+        let profilesRes = await httpClient.get<CompanyProfileRaw[]>('mis/company-profiles');
+        let entriesRes = await httpClient.get<KpiEntryRaw[]>(`mis/kpi-entries?year=${year}`);
+        let featuresRes = await httpClient.get<FeatureSettingRaw[]>('mis/company-feature-settings?enabled=true');
         console.log('Fetched data:', { profiles: profilesRes.data, entries: entriesRes.data, features: featuresRes.data });
-        
+
         const profilesData = profilesRes.data;
         const allEntries = entriesRes.data;
         const allFeatures = featuresRes.data;
-        
+
         // 2. Build profile lookup: companyId → { revenue_stage, industry }
         const profileMap: Record<string, { revenue_stage: string; industry: string }> = {};
         for (const p of profilesData) {
@@ -394,7 +396,7 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
 
         // 3. Build company list from mockCompanies (invested only)
         const companies = mockCompanies
-          .filter(c => c.investmentStatus === 'Invested')
+          .filter(c => c.investmentStatus === 'Invested' && profilesData.find(p => p.company_id == c.id))
           .map(c => ({
             companyId: c.id,
             industry: profileMap[c.id]?.industry || c.industry || '',
@@ -413,12 +415,12 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
           featureMap[f.companyId].add(f.feature_key);
         }
 
-        console.log('Processed data:', { companies, typedEntries, featureMap }); 
+        console.log('Processed data:', { companies, typedEntries, featureMap });
         // 6. Compute raw scores per company (completeness, consistency, timeliness)
         const raw = companies.map(company => {
           const cEntries = typedEntries.filter(e => e.companyId === company.companyId);
           const enabled = featureMap[company.companyId] || new Set();
-
+          
           const qFeats = enabled.size > 0
             ? ALL_QUARTERLY_FEATURES.filter(k => enabled.has(k))
             : ALL_QUARTERLY_FEATURES;
@@ -426,7 +428,12 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
             ? ALL_ANNUAL_FEATURES.filter(k => enabled.has(k))
             : ALL_ANNUAL_FEATURES;
 
-          const totalKPIs = getTotalKPICount(qFeats) * 4 + getTotalKPICount(aFeats);
+          console.log(`Start Company ${company.companyId} - Q Features: ${qFeats}, A Features: ${aFeats}`);
+          console.log(`Company  ${company.companyId} - getTotalKPICount(qFeats): ${getTotalKPICount(qFeats)}, getTotalKPICount(aFeats): ${getTotalKPICount(aFeats)}`);
+
+          // const totalKPIs = getTotalKPICount(qFeats) * 4 + getTotalKPICount(aFeats);
+          const totalKPIs = period === 'annual' ? getTotalKPICount(qFeats) * (year == 2025 ? 4 : 1) + (year == 2025 ? getTotalKPICount(aFeats) : 0) : getTotalKPICount(qFeats);
+          console.log(`Company ${company.companyId} - totalKPIs: ${totalKPIs}`);
 
           let totalFilled = 0;
           let adjustedTotalKPIs = totalKPIs;
@@ -438,16 +445,35 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
           const socAFeats = aFeats.filter(k => SOCIAL_ANNUAL_FEATURES.includes(k));
           const govQFeats = qFeats.filter(k => GOV_QUARTERLY_FEATURES.includes(k));
           const govAFeats = aFeats.filter(k => GOV_ANNUAL_FEATURES.includes(k));
+          console.log('envAFeats :: ', envAFeats)
+          console.log('envQFeats ::', envQFeats)
+          console.log("getTotalKPICount(envAFeats,true):: =>", getTotalKPICount(envAFeats))
+          console.log("getTotalKPICount(envQFeats,true):: =>", getTotalKPICount(envQFeats))
 
-          let envTotal = getTotalKPICount(envQFeats) * 4 + getTotalKPICount(envAFeats);
+          // let envTotal = getTotalKPICount(envQFeats) * 4 + getTotalKPICount(envAFeats);
+          // let envFilled = 0;
+          // let socTotal = getTotalKPICount(socQFeats) * 4 + getTotalKPICount(socAFeats);
+          // let socFilled = 0;
+          // let govTotal = getTotalKPICount(govQFeats) * 4 + getTotalKPICount(govAFeats);
+          // let govFilled = 0;
+          // let envTotal = getTotalKPICount(envQFeats) * 4 + getTotalKPICount(envAFeats);
+          // let envTotal = period === 'annual' ? getTotalKPICount(envQFeats,true) * (year == 2025 ? 4 : 1) + getTotalKPICount(envAFeats,true) : getTotalKPICount(envQFeats,true) + getTotalKPICount(envAFeats,true);
+          let envTotal = period === 'annual' ? getTotalKPICount(envQFeats) * (year == 2025 ? 4 : 1) + (year == 2025 ? getTotalKPICount(envAFeats) : 0) : getTotalKPICount(envQFeats);
+
           let envFilled = 0;
-          let socTotal = getTotalKPICount(socQFeats) * 4 + getTotalKPICount(socAFeats);
+          // let socTotal = getTotalKPICount(socQFeats) * 4 + getTotalKPICount(socAFeats);
+          // let socTotal = period === 'annual' ? getTotalKPICount(socQFeats) * (year == 2025 ? 4 : 1) + getTotalKPICount(socAFeats) : getTotalKPICount(socQFeats) + getTotalKPICount(socAFeats);
+          let socTotal = period === 'annual' ? getTotalKPICount(socQFeats) * (year == 2025 ? 4 : 1) + (year == 2025 ? getTotalKPICount(socAFeats) : 0) : getTotalKPICount(socQFeats);
+
           let socFilled = 0;
-          let govTotal = getTotalKPICount(govQFeats) * 4 + getTotalKPICount(govAFeats);
+          // let govTotal = getTotalKPICount(govQFeats) * 4 + getTotalKPICount(govAFeats);
+          // let govTotal = period === 'annual' ? getTotalKPICount(govQFeats) * (year == 2025 ? 4 : 1) + getTotalKPICount(govAFeats) : getTotalKPICount(govQFeats) + getTotalKPICount(govAFeats);
+          let govTotal = period === 'annual' ? getTotalKPICount(govQFeats) * (year == 2025 ? 4 : 1) + (year == 2025 ? getTotalKPICount(govAFeats) : 0) : getTotalKPICount(govQFeats);
           let govFilled = 0;
 
           // 6a. Completeness — per period, skip excluded quarters
-          for (const p of ['Q1', 'Q2', 'Q3', 'Q4', 'FY']) {
+          // for (const p of ['Q1', 'Q2', 'Q3', 'Q4', 'FY']) {
+          for (const p of selectedPeriod) {
             if (isCompanyExcluded(company.companyId, p, year)) {
               if (p !== 'FY') {
                 adjustedTotalKPIs -= getTotalKPICount(qFeats);
@@ -470,7 +496,8 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
               govFilled += countFilledKPIs(govQFeats, pEntries);
             }
           }
-
+          console.log('totalFilled :: ', totalFilled)
+          console.log('adjustedTotalKPIs :: ', adjustedTotalKPIs)
           const completionPct = adjustedTotalKPIs > 0
             ? r2((totalFilled / adjustedTotalKPIs) * 100)
             : 0;
@@ -516,14 +543,34 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
             : 0;
 
           // 6c. Timeliness — first submission per period, capped at March 3 of next year
+          let timelineYearObj = {
+            2025: {
+              TIMELINESS_CUTOFF: new Date(2026, 2, 3, 23, 59, 59).getTime(),
+              feb4: new Date(2026, 1, 4).getTime(),
+              feb20: new Date(2026, 1, 20).getTime(),
+              feb24: new Date(2026, 1, 24).getTime()
+            },
+            2026: {
+              TIMELINESS_CUTOFF: new Date(2026, 6, 19, 23, 59, 59).getTime(),
+              feb4: new Date(2026, 5, 30).getTime(),
+              feb20: new Date(2026, 6, 10).getTime(),
+              feb24: new Date(2026, 6, 15).getTime()
+            }
+          }
           const deadlineYear = year + 1;
-          const TIMELINESS_CUTOFF = new Date(deadlineYear, 2, 3, 23, 59, 59).getTime();
-          const feb4 = new Date(deadlineYear, 1, 4).getTime();
-          const feb20 = new Date(deadlineYear, 1, 20).getTime();
-          const feb24 = new Date(deadlineYear, 1, 24).getTime();
+          // const TIMELINESS_CUTOFF = new Date(deadlineYear, 2, 3, 23, 59, 59).getTime();
+          // const feb4 = new Date(deadlineYear, 1, 4).getTime();
+          // const feb20 = new Date(deadlineYear, 1, 20).getTime();
+          // const feb24 = new Date(deadlineYear, 1, 24).getTime();
+
+          const TIMELINESS_CUTOFF = timelineYearObj[year]?.TIMELINESS_CUTOFF;
+          const feb4 = timelineYearObj[year]?.feb4;
+          const feb20 = timelineYearObj[year]?.feb20;
+          const feb24 = timelineYearObj[year]?.feb24;
 
           const firstSubmissionPerPeriod: number[] = [];
-          for (const p of ['Q1', 'Q2', 'Q3', 'Q4', 'FY']) {
+          // for (const p of ['Q1', 'Q2', 'Q3', 'Q4', 'FY']) {
+          for (const p of selectedPeriod) {
             if (isCompanyExcluded(company.companyId, p, year)) continue;
             const periodSubs = cEntries
               .filter(e => e.quarter === p && e.submitted_at)

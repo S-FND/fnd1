@@ -214,7 +214,8 @@ export interface AnalyticsDashboardData {
 
 // ──── Helpers ────
 const parseNum = (val: string | null | undefined): number => {
-  if (!val || val === '' || val === 'N/A' || val === 'NA') return 0;
+  // if (!val || val === '' || val === 'N/A' || val === 'NA') return 0;
+  if (!val || val === '') return 0
   const parsed = parseFloat(val);
   return isNaN(parsed) ? 0 : parsed;
 };
@@ -1618,6 +1619,12 @@ export const useAnalyticsDashboardData = (filters: AnalyticsFilters,
 
         if (years && years.length > 0) {
           allEntries = kpiEntries.filter(k => years.includes(k.year))
+        }
+
+        if (filters.year === 2026) {
+          const fy2025Entries = kpiEntries.filter(e => e.year === 2025 && e.quarter === 'FY');
+          const fy2026Entries = fy2025Entries.map(e => ({ ...e, year: 2026 }));
+          allEntries = [...allEntries.filter(e => e.quarter !== 'FY'), ...fy2026Entries];
         }
 
         if (asOf) {
