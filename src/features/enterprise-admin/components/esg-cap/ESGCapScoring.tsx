@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { ESGCapItem } from '../../types/esgDD';
 import { ComplianceGraphModal } from './ComplianceGraphModal';
@@ -11,7 +11,6 @@ interface ESGCapScoringProps {
 }
 
 export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterChange, activeFilter, complianceScore, entityId }) => {
-
   const [modalOpen, setModalOpen] = useState(false);
 
   // ✅ FILTER: Only include CP and CS items for card counting (exclude ESG_Roadmap)
@@ -250,111 +249,572 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
 
   const complianceRating = getComplianceRating(complianceScore ?? 0);
 
+  const csItems = filteredItems.filter(
+    item => item.dealCondition === 'CS'
+  );
+
+  // Get submit date for a CS item
+  const getSubmitDate = (item: any): Date | null => {
+    // 1. Get latest uploadedAt from completionIndicators
+    const uploadedDates = (item.completionIndicators || [])
+      .map(indicator => indicator.uploadedAt)
+      .filter(Boolean)
+      .map(date => new Date(date as string))
+      .filter(date => !isNaN(date.getTime()));
+
+    if (uploadedDates.length > 0) {
+      return new Date(
+        Math.max(...uploadedDates.map(date => date.getTime()))
+      );
+    }
+
+    // 2. If no uploadedAt and company is submitted,
+    //    use item's createdAt
+    if (normalize(item.companyStatus) === 'submitted') {
+      if (item.createdAt) {
+        const createdDate = new Date(item.createdAt);
+
+        if (!isNaN(createdDate.getTime())) {
+          return createdDate;
+        }
+      }
+    }
+
+    return null;
+  };
+
+  const getMonthDifference = (
+    startDate: Date,
+    endDate: Date
+  ): number => {
+    return (
+      (endDate.getFullYear() - startDate.getFullYear()) * 12 +
+      (endDate.getMonth() - startDate.getMonth())
+    );
+  };
+
+  const getCSCount = (
+    priority: 'High' | 'Medium' | 'Low',
+    type:
+      | 'ontime'
+      | 'buffer1'
+      | 'buffer2'
+      | 'buffer3'
+      | 'under3'
+      | 'over3'
+  ) => {
+    return csItems.filter(item => {
+
+      if ((item.priority || 'Medium') !== priority) {
+        return false;
+      }
+
+      if (!item.targetDate) {
+        return false;
+      }
+
+      const targetDate = new Date(item.targetDate);
+
+      if (isNaN(targetDate.getTime())) {
+        return false;
+      }
+
+      const submitDate = getSubmitDate(item);
+
+      // -----------------------------------------
+      // SUBMITTED
+      // -----------------------------------------
+      if (submitDate) {
+        const months = getMonthDifference(
+          targetDate,
+          submitDate
+        );
+
+        switch (type) {
+          case 'ontime':
+            return months <= 0;
+
+          case 'buffer1':
+            return months === 1;
+
+          case 'buffer2':
+            return months === 2;
+
+          case 'buffer3':
+            return months === 3;
+
+          case 'under3':
+            return false;
+
+          case 'over3':
+            return months > 3;
+
+          default:
+            return false;
+        }
+      }
+
+      // -----------------------------------------
+      // NOT SUBMITTED
+      // -----------------------------------------
+      const today = new Date();
+
+      const months = getMonthDifference(
+        targetDate,
+        today
+      );
+
+      // Not submitted and target date is still within
+      // the next 3 months
+      if (months <= 0) {
+        return type === "under3";
+      }
+
+      // Not submitted and overdue <= 3 months
+      if (months > 0 && months <= 3) {
+        return type === "under3";
+      }
+
+      // Not submitted and overdue > 3 months
+      if (months > 3) {
+        return type === "over3";
+      }
+
+      return false;
+    }).length;
+  };
+
+  // const debugCSItems = csItems.map(item => {
+  //   const submitDate = getSubmitDate(item);
+
+  //   if (!item.targetDate) {
+  //     return {
+  //       item: item.item,
+  //       priority: item.priority,
+  //       targetDate: null,
+  //       submitDate,
+  //       result: "NO TARGET DATE",
+  //     };
+  //   }
+
+  //   const targetDate = new Date(item.targetDate);
+
+  //   const endDate = submitDate || new Date();
+
+  //   const months = getMonthDifference(targetDate, endDate);
+
+  //   let category = "";
+
+  //   if (submitDate) {
+  //     if (months <= 0) category = "Completed in Time";
+  //     else if (months === 1) category = "Buffer 1";
+  //     else if (months === 2) category = "Buffer 2";
+  //     else if (months === 3) category = "Buffer 3";
+  //     else category = ">3 Buffer";
+  //   } else {
+  //     if (months > 3) category = "Not completed >3 Buffer";
+  //     else category = "NOT CLASSIFIED";
+  //   }
+
+  //   return {
+  //     item: item.item,
+  //     priority: item.priority,
+  //     targetDate: item.targetDate,
+  //     submitDate: submitDate?.toISOString() || null,
+  //     companyStatus: item.companyStatus,
+  //     createdAt: item.createdAt,
+  //     months,
+  //     category,
+  //   };
+  // });
+
+  // console.table(debugCSItems);
+
+  const [animatedCSCount, setAnimatedCSCount] = useState(0);
+
+  useEffect(() => {
+    const target = csItems.length;
+    let current = 0;
+
+    const duration = 800;
+    const startTime = performance.now();
+
+    const animate = (time: number) => {
+      const progress = Math.min(
+        (time - startTime) / duration,
+        1
+      );
+
+      current = Math.floor(target * progress);
+      setAnimatedCSCount(current);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [csItems.length]);
+
+  const getPriorityTotal = (
+    priority: "High" | "Medium" | "Low"
+  ) => {
+    return csItems.filter(
+      item => (item.priority || "Medium") === priority
+    ).length;
+  };
+
   return (
     <>
-    <div className="space-y-4">
-      <Card>
-        <CardContent className="py-3">
-          <div className="grid grid-cols-7 gap-2">
-            {/* 1. Compliance Score - STATIC */}
-            <div className="text-center p-2 rounded-lg bg-green-50 cursor-default cursor-pointer" onClick={() => setModalOpen(true)}>
-              <div className="flex flex-col items-center p-0 rounded-lg bg-green-50 cursor-default cursor-pointer">
-                {/* Top row: left (grade+label) | divider | right (score) */}
-                {/* <div className="flex items-center w-full">
-                  <div className="flex-1 flex flex-col items-center justify-center pr-2">
-                    <div className={`text-xm font-bold ${complianceRating.color}`}>
-                      {complianceRating.grade}
-                    </div>
-                    
-                  </div>
+      <div className="space-y-4">
 
-                  <div className="w-px h-5 bg-gray-200" />
+        {/* ========================= UPPER SECTION ========================= */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-stretch">
 
-                  <div className="flex-1 flex items-center justify-center pl-2">
-                    <div className="text-2xl font-bold text-green-600">
-                      {complianceScore?.toFixed(1)}%
-                    </div>
-                  </div>
-                </div> */}
-
-                <div className="flex-1 flex flex-col items-center justify-center pr-2">
-                    <div className={`text-xm font-bold ${complianceRating.color}`}>
-                      {complianceRating.grade}
-                    </div>
+          {/* Compliance Score */}
+          <Card className="md:col-span-3 h-full border-2 border-green-100">
+            <CardContent className="p-3 h-full">
+              <div
+                className="h-full min-h-[130px] rounded-lg bg-green-50
+                 cursor-pointer flex flex-col items-center justify-center"
+                onClick={() => setModalOpen(true)}
+              >
+                <div
+                  className={`text-7xl font-bold leading-none ${complianceRating.color}`}
+                >
+                  {complianceRating.grade}
                 </div>
 
-                {/* Bottom label */}
-                <div className="text-[10px] text-muted-foreground mt-0">
-                <div className={`text-[10px] ${complianceRating.color} truncate`}>
-                      {complianceRating.label}
-                    </div>
+                <div
+                  className={`mt-1 text-xs font-medium ${complianceRating.color}`}
+                >
+                  {complianceRating.label}
+                </div>
+
+                <div className="w-10 h-px bg-green-200 my-3" />
+
+                <div className="mt-1 text-[15px] font-bold text-muted-foreground">
                   Compliance Score
                 </div>
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            {/* 2. Due This Month - CLICKABLE TOGGLE */}
-            <div
-              className={getCardClass('due-in-this-month', "bg-orange-50")}
-              onClick={() => handleFilterToggle('due-in-this-month')}
-            >
-              <div className="text-lg font-bold text-orange-600">{dueThisMonthCount}</div>
-              <div className="text-[10px] text-orange-600 font-medium leading-tight">Due in this Month</div>
-            </div>
 
-            {/* 3. Overdue - CLICKABLE TOGGLE */}
-            <div
-              className={getCardClass('overdue', "bg-red-50")}
-              onClick={() => handleFilterToggle('overdue')}
-            >
-              <div className="text-lg font-bold text-red-600">{overdueCount}</div>
-              <div className="text-[10px] text-red-600 font-medium leading-tight">Overdue</div>
-            </div>
+          {/* CS Items */}
+          <Card className="md:col-span-9 border border-emerald-100 shadow-sm">
+            <CardContent className="p-4">
 
-            {/* 4. Partly Submitted - CLICKABLE TOGGLE */}
-            <div
-              className={getCardClass('partly-submitted', "bg-blue-50")}
-              onClick={() => handleFilterToggle('partly-submitted')}
-            >
-              <div className="text-lg font-bold text-blue-600">{partlySubmittedCount}</div>
-              <div className="text-[10px] text-blue-600 font-medium leading-tight">Partly Submitted</div>
-            </div>
+              {/* Table */}
+              <div className="overflow-hidden rounded-xl border border-slate-100">
 
-            {/* 5. Re-submit Requested - CLICKABLE TOGGLE */}
-            <div
-              className={getCardClass('re-submit-requested', "bg-amber-50")}
-              onClick={() => handleFilterToggle('re-submit-requested')}
-            >
-              <div className="text-lg font-bold text-amber-600">{resubmitRequestedCount}</div>
-              <div className="text-[10px] text-amber-600 font-medium leading-tight">Re-submit Requested</div>
-            </div>
+              {/* Header */}
+              <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.6fr_0.8fr] items-center bg-emerald-50/70 px-3 py-2.5">
 
-            {/* 6. Submitted Pending Review - CLICKABLE TOGGLE */}
-            <div
-              className={getCardClass('submitted-pending-review', "bg-purple-50")}
-              onClick={() => handleFilterToggle('submitted-pending-review')}
-            >
-              <div className="text-lg font-bold text-purple-600">{submittedPendingReviewCount}</div>
-              <div className="text-[10px] text-purple-600 font-medium leading-tight">Submitted Pending Review</div>
-            </div>
+                <div className="text-[10px] font-semibold uppercase tracking-wide ">
+                  Priority
+                </div>
 
-            {/* 7. Closed - CLICKABLE TOGGLE */}
-            <div
-              className={getCardClass('closed', "bg-green-50")}
-              onClick={() => handleFilterToggle('closed')}
-            >
-              <div className="text-lg font-bold text-green-600">{closedCount}</div>
-              <div className="text-[10px] text-green-600 font-medium leading-tight">Closed</div>
+                <div className="text-center text-[10px] font-semibold uppercase tracking-wide ">
+                  Completed in Time
+                </div>
+
+                <div className="text-center text-[10px] font-semibold uppercase tracking-wide ">
+                ⁠ Completed in Buffer Time
+                </div>
+
+                <div className="text-center text-[10px] font-semibold uppercase tracking-wide ">
+                  Not Completed / Completed After Buffer Time
+                </div>
+
+                <div className="text-center text-[10px] font-semibold uppercase tracking-wide ">
+                  Total
+                </div>
+
+              </div>
+
+
+              {/* HIGH */}
+              <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.6fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5">
+
+                <div className="text-xs font-bold text-red-600">
+                  High
+                </div>
+
+                <div className="text-center text-xs font-semibold">
+                  {getCSCount("High", "ontime")}
+                </div>
+
+                <div className="text-center text-xs font-semibold">
+                  {getCSCount("High", "buffer1") +
+                  getCSCount("High", "buffer2") +
+                  getCSCount("High", "buffer3")}
+                </div>
+
+                {/* HIGH */}
+                <div className="text-center text-xs font-bold text-red-600">
+                  {getCSCount("High", "under3") +
+                  getCSCount("High", "over3")}
+                </div>
+
+                <div className="text-center text-xs font-bold">
+                  {getCSCount("High", "ontime") +
+                  getCSCount("High", "buffer1") +
+                  getCSCount("High", "buffer2") +
+                  getCSCount("High", "buffer3") +
+                  getCSCount("High", "under3") +
+                  getCSCount("High", "over3")}
+                </div>
+
+              </div>
+
+
+              {/* MEDIUM */}
+              <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.6fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5">
+
+                <div className="text-xs font-bold text-amber-600">
+                  Medium
+                </div>
+
+                <div className="text-center text-xs font-semibold">
+                  {getCSCount("Medium", "ontime")}
+                </div>
+
+                <div className="text-center text-xs font-semibold">
+                  {getCSCount("Medium", "buffer1") +
+                  getCSCount("Medium", "buffer2") +
+                  getCSCount("Medium", "buffer3")}
+                </div>
+
+                <div className="text-center text-xs font-bold text-red-600">
+                  {getCSCount("Medium", "under3") +
+                  getCSCount("Medium", "over3")}
+                </div>
+
+                <div className="text-center text-xs font-bold">
+                  {getCSCount("Medium", "ontime") +
+                  getCSCount("Medium", "buffer1") +
+                  getCSCount("Medium", "buffer2") +
+                  getCSCount("Medium", "buffer3") +
+                  getCSCount("Medium", "under3") +
+                  getCSCount("Medium", "over3")}
+                </div>
+
+              </div>
+
+
+              {/* LOW */}
+              <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.6fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5">
+
+                <div className="text-xs font-bold text-slate-500">
+                  Low
+                </div>
+
+                <div className="text-center text-xs font-semibold">
+                  {getCSCount("Low", "ontime")}
+                </div>
+
+                <div className="text-center text-xs font-semibold">
+                  {getCSCount("Low", "buffer1") +
+                  getCSCount("Low", "buffer2") +
+                  getCSCount("Low", "buffer3")}
+                </div>
+
+                <div className="text-center text-xs font-bold text-red-600">
+                  {getCSCount("Low", "under3") +
+                  getCSCount("Low", "over3")}
+                </div>
+
+                <div className="text-center text-xs font-bold">
+                  {getCSCount("Low", "ontime") +
+                  getCSCount("Low", "buffer1") +
+                  getCSCount("Low", "buffer2") +
+                  getCSCount("Low", "buffer3") +
+                  getCSCount("Low", "under3") +
+                  getCSCount("Low", "over3")}
+                </div>
+
+              </div>
+
+
+              {/* TOTAL */}
+              <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.6fr_0.8fr] items-center border-t border-emerald-200 bg-emerald-50 px-3 py-2.5">
+
+                <div className="text-xs font-bold text-emerald-700">
+                  Total
+                </div>
+
+                <div className="text-center text-xs font-bold text-emerald-700">
+                  {getCSCount("High", "ontime") +
+                  getCSCount("Medium", "ontime") +
+                  getCSCount("Low", "ontime")}
+                </div>
+
+                <div className="text-center text-xs font-bold text-emerald-700">
+                  {
+                    getCSCount("High", "buffer1") +
+                    getCSCount("High", "buffer2") +
+                    getCSCount("High", "buffer3") +
+                    getCSCount("Medium", "buffer1") +
+                    getCSCount("Medium", "buffer2") +
+                    getCSCount("Medium", "buffer3") +
+                    getCSCount("Low", "buffer1") +
+                    getCSCount("Low", "buffer2") +
+                    getCSCount("Low", "buffer3")
+                  }
+                </div>
+
+                <div className="text-center text-xs font-bold text-red-600">
+                  {getCSCount("High", "under3") +
+                  getCSCount("High", "over3") +
+                  getCSCount("Medium", "under3") +
+                  getCSCount("Medium", "over3") +
+                  getCSCount("Low", "under3") +
+                  getCSCount("Low", "over3")}
+                </div>
+
+                <div className="flex justify-center">
+                  <span className="rounded-full bg-emerald-200 px-3 py-1 text-xs font-bold text-emerald-800">
+                    {csItems.length}
+                  </span>
+                </div>
+
+              </div>
+
+              </div>
+
+            </CardContent>
+          </Card>
+
+        </div>
+
+
+        {/* =====================================
+            DOWN PART - EXISTING BOXES
+            ===================================== */}
+        <Card>
+          <CardContent className="py-3">
+            <div className="grid grid-cols-6 gap-2">
+
+              {/* Due This Month */}
+              <div
+                className={getCardClass(
+                  'due-in-this-month',
+                  "bg-orange-50"
+                )}
+                onClick={() =>
+                  handleFilterToggle('due-in-this-month')
+                }
+              >
+                <div className="text-lg font-bold text-orange-600">
+                  {dueThisMonthCount}
+                </div>
+                <div className="text-[10px] text-orange-600 font-medium leading-tight">
+                  Due in this Month
+                </div>
+              </div>
+
+              {/* Overdue */}
+              <div
+                className={getCardClass(
+                  'overdue',
+                  "bg-red-50"
+                )}
+                onClick={() =>
+                  handleFilterToggle('overdue')
+                }
+              >
+                <div className="text-lg font-bold text-red-600">
+                  {overdueCount}
+                </div>
+                <div className="text-[10px] text-red-600 font-medium leading-tight">
+                  Overdue
+                </div>
+              </div>
+
+              {/* Partly Submitted */}
+              <div
+                className={getCardClass(
+                  'partly-submitted',
+                  "bg-blue-50"
+                )}
+                onClick={() =>
+                  handleFilterToggle('partly-submitted')
+                }
+              >
+                <div className="text-lg font-bold text-blue-600">
+                  {partlySubmittedCount}
+                </div>
+                <div className="text-[10px] text-blue-600 font-medium leading-tight">
+                  Partly Submitted
+                </div>
+              </div>
+
+              {/* Re-submit Requested */}
+              <div
+                className={getCardClass(
+                  're-submit-requested',
+                  "bg-amber-50"
+                )}
+                onClick={() =>
+                  handleFilterToggle('re-submit-requested')
+                }
+              >
+                <div className="text-lg font-bold text-amber-600">
+                  {resubmitRequestedCount}
+                </div>
+                <div className="text-[10px] text-amber-600 font-medium leading-tight">
+                  Re-submit Requested
+                </div>
+              </div>
+
+              {/* Submitted Pending Review */}
+              <div
+                className={getCardClass(
+                  'submitted-pending-review',
+                  "bg-purple-50"
+                )}
+                onClick={() =>
+                  handleFilterToggle('submitted-pending-review')
+                }
+              >
+                <div className="text-lg font-bold text-purple-600">
+                  {submittedPendingReviewCount}
+                </div>
+                <div className="text-[10px] text-purple-600 font-medium leading-tight">
+                  Submitted Pending Review
+                </div>
+              </div>
+
+              {/* Closed */}
+              <div
+                className={getCardClass(
+                  'closed',
+                  "bg-green-50"
+                )}
+                onClick={() =>
+                  handleFilterToggle('closed')
+                }
+              >
+                <div className="text-lg font-bold text-green-600">
+                  {closedCount}
+                </div>
+                <div className="text-[10px] text-green-600 font-medium leading-tight">
+                  Closed
+                </div>
+              </div>
+
             </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+          </CardContent>
+        </Card>
+
+      </div>
+
       <ComplianceGraphModal
         entityId={entityId}
         open={modalOpen}
         onOpenChange={setModalOpen}
       />
-  </>
+    </>
   );
 };
