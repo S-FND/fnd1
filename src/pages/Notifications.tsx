@@ -118,6 +118,7 @@ interface Notification {
     isRead: boolean;
     redirectUrl: string;
     createdAt: string;
+    changedFields?: string[];
 }
 
 const NotificationsPage = () => {
@@ -199,6 +200,13 @@ const NotificationsPage = () => {
         );
     }
 
+    const formatFieldName = (field: string) => {
+        return field
+            .replace(/([A-Z])/g, ' $1')
+            .replace(/^./, (str) => str.toUpperCase())
+            .trim();
+    };
+
     return (
         <UnifiedSidebarLayout>
             <div className=" mx-auto p-6">
@@ -267,9 +275,25 @@ const NotificationsPage = () => {
                                                 )}
                                             </div>
 
-                                            <p className="mt-1 text-left text-sm text-gray-600 line-clamp-3 break-words">
+                                            {/* <p className="mt-1 text-left text-sm text-gray-600 line-clamp-3 break-words">
                                                 {notif.description}
-                                            </p>
+                                            </p> */}
+
+                                            {notif.changedFields && notif.changedFields.length > 0 && (
+                                                <div className="mt-3">
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {notif.changedFields.map((field) => (
+                                                            <Badge
+                                                                key={field}
+                                                                variant="outline"
+                                                                className="text-xs bg-amber-50 text-amber-700 border-amber-200"
+                                                            >
+                                                                {formatFieldName(field)}
+                                                            </Badge>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
 
                                             <div className="mt-2 flex items-center gap-1 text-xs text-gray-500">
                                                 <Clock className="h-3 w-3" />
