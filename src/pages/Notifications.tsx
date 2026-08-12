@@ -176,8 +176,13 @@ const NotificationsPage = () => {
         if (!notification.isRead) {
             markAsRead(notification._id);
         }
+    
         if (notification.redirectUrl) {
-            navigate(notification.redirectUrl);
+            navigate(notification.redirectUrl, {
+                state: {
+                    changedFields: notification.changedFields || [],
+                },
+            });
         }
     };
 
@@ -286,7 +291,7 @@ const NotificationsPage = () => {
                                                             <Badge
                                                                 key={field}
                                                                 variant="outline"
-                                                                className="text-xs bg-amber-50 text-amber-700 border-amber-200"
+                                                                className="text-xs bg-green-50 text-green-700 border-green-200"
                                                             >
                                                                 {formatFieldName(field)}
                                                             </Badge>

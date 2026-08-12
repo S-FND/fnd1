@@ -44,7 +44,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 const SectionCard: React.FC<{
     title: string;
     subtitle?: string;
@@ -278,6 +278,7 @@ const ESGCapDetailsPage: React.FC = () => {
             const payload = {
                 entityId,
                 updatedPlan,
+                bypassNotification: true,
             };
 
             editFinalizedPlan(payload)
@@ -309,7 +310,11 @@ const ESGCapDetailsPage: React.FC = () => {
     const [isDownloadOpen, setIsDownloadOpen] = useState(false);
     const [selectedFiles, setSelectedFiles] = useState<any[]>([]);
     const [reopenAttachments, setReopenAttachments] = useState(false);
+    const location = useLocation();
     const navigate = useNavigate();
+
+    const changedFields: string[] =
+        location.state?.changedFields || [];
     const openAttachments = (mode: 'upload' | 'view') => {
         setAttachmentsMode(mode);
         setAttachmentsOpen(true);
@@ -490,44 +495,140 @@ const ESGCapDetailsPage: React.FC = () => {
         );
     }
 
+    const ChangedField = ({
+        field,
+        children,
+    }: {
+        field: string;
+        children: React.ReactNode;
+    }) => {
+        const changed = changedFields.includes(field);
+    
+        return (
+            <div
+                className={cn(
+                    "rounded-lg transition-all",
+                    changed && "border-2 border-green-600 bg-green-100 p-3"
+                )}
+            >
+                {/* {changed && (
+                    <div className="mb-2">
+                        <Badge className="bg-amber-500 text-white">
+                            Changed
+                        </Badge>
+                    </div>
+                )} */}
+    
+                {children}
+            </div>
+        );
+    };
+    
     return (
         <UnifiedSidebarLayout>
             <div className="min-h-screen bg-[hsl(220_25%_97%)] dark:bg-background">
-                <div className="mx-auto max-w-[1440px] px-6 py-8 space-y-6">
+            <div className="mx-auto max-w-[1440px] px-6 py-8 space-y-6">
+    
                     {/* Header */}
                     <div>
-
                         <div className="mt-3 flex flex-wrap items-start justify-between gap-4 item">
-                            <div>
-                                <h5 className="text-3xl font-bold text-left tracking-tight">{capItem?.item}</h5>
-                                {/* <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{capItem?.description}</p> */}
+    
+                            <div className="flex-1">
+    
+                                {/* Item */}
+                                <ChangedField field="item">
+                                    <h5 className="text-3xl font-bold text-left tracking-tight">
+                                        {capItem?.item}
+                                    </h5>
+                                </ChangedField>
+    
+                                {/* Meta Fields */}
                                 <div className="mt-4 flex flex-wrap items-center gap-2">
-                                    <MetaPill label={capItem?.dealCondition || ""} tone="slate" />
-                                    <MetaPill label={capItem?.priority ? `${capItem.priority.charAt(0).toUpperCase()}${capItem.priority.slice(1)} Priority` : ""} />
-                                    <MetaPill label={capItem?.targetDate ? `Due ${new Date(capItem.targetDate).toLocaleDateString()}` : ""} tone="blue" />
-                                    <MetaPill label={capItem?.category ? `${capItem.category.charAt(0).toUpperCase()}${capItem.category.slice(1)}` : ""} />
-                                    <MetaPill
-                                        label={(capItem?.companyStatus ?? capItem?.status ?? "").replaceAll("_", " ")}
-                                        tone={
-                                            (capItem?.companyStatus ?? capItem?.status) === "completed" ||
-                                                (capItem?.companyStatus ?? capItem?.status) === "accepted"
-                                                ? "green"
-                                                : (capItem?.companyStatus ?? capItem?.status) === "pending"
+    
+                                    <ChangedField field="dealCondition">
+                                        <MetaPill
+                                            label={capItem?.dealCondition || ""}
+                                            tone="slate"
+                                        />
+                                    </ChangedField>
+    
+                                    <ChangedField field="priority">
+                                        <MetaPill
+                                            label={
+                                                capItem?.priority
+                                                    ? `${capItem.priority.charAt(0).toUpperCase()}${capItem.priority.slice(1)}`
+                                                    : ""
+                                            }
+                                        />
+                                    </ChangedField>
+    
+                                    <ChangedField field="targetDate">
+                                        <MetaPill
+                                            label={
+                                                capItem?.targetDate
+                                                    ? `Due ${new Date(
+                                                          capItem.targetDate
+                                                      ).toLocaleDateString()}`
+                                                    : ""
+                                            }
+                                            tone="blue"
+                                        />
+                                    </ChangedField>
+    
+                                    <ChangedField field="category">
+                                        <MetaPill
+                                            label={
+                                                capItem?.category
+                                                    ? `${capItem.category.charAt(0).toUpperCase()}${capItem.category.slice(1)}`
+                                                    : ""
+                                            }
+                                        />
+                                    </ChangedField>
+    
+                                    <ChangedField field="status">
+                                        <MetaPill
+                                            label={(
+                                                capItem?.companyStatus ??
+                                                capItem?.status ??
+                                                ""
+                                            ).replaceAll("_", " ")}
+                                            tone={
+                                                (
+                                                    capItem?.companyStatus ??
+                                                    capItem?.status
+                                                ) === "completed" ||
+                                                (
+                                                    capItem?.companyStatus ??
+                                                    capItem?.status
+                                                ) === "accepted"
+                                                    ? "green"
+                                                    : (
+                                                          capItem?.companyStatus ??
+                                                          capItem?.status
+                                                      ) === "pending"
                                                     ? "amber"
-                                                    : (capItem?.companyStatus ?? capItem?.status) === "in_review" ||
-                                                        (capItem?.companyStatus ?? capItem?.status) === "in_progress"
-                                                        ? "blue"
-                                                        : (capItem?.companyStatus ?? capItem?.status) === "delayed"
-                                                            ? "red"
-                                                            : "slate"
-                                        }
-                                    />
+                                                    : (
+                                                          capItem?.companyStatus ??
+                                                          capItem?.status
+                                                      ) === "in_review" ||
+                                                      (
+                                                          capItem?.companyStatus ??
+                                                          capItem?.status
+                                                      ) === "in_progress"
+                                                    ? "blue"
+                                                    : (
+                                                          capItem?.companyStatus ??
+                                                          capItem?.status
+                                                      ) === "delayed"
+                                                    ? "red"
+                                                    : "slate"
+                                            }
+                                        />
+                                    </ChangedField>
                                 </div>
                             </div>
+    
                             <div className="flex gap-2">
-                                {/* <Button variant="outline">
-                                    <Download className="h-4 w-4" /> Export
-                                </Button> */}
                                 <button
                                     onClick={() => navigate(-1)}
                                     className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
@@ -538,7 +639,7 @@ const ESGCapDetailsPage: React.FC = () => {
                             </div>
                         </div>
                     </div>
-
+    
                     {/* Company Actions */}
                     <div className="relative text-left">
                         <SectionCard
@@ -553,181 +654,237 @@ const ESGCapDetailsPage: React.FC = () => {
                             }
                         >
                             <div className="space-y-6">
+    
                                 {/* Primary Actions */}
                                 <div>
                                     <div className="mb-3 text-center text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                                         Primary Actions
                                     </div>
+    
                                     <div className="grid gap-3 sm:grid-cols-2">
                                         <Button
                                             size="lg"
-                                            onClick={() => openAttachments('upload')}
+                                            onClick={() => openAttachments("upload")}
                                             className="h-11 rounded-xl bg-emerald-600 text-white shadow-sm transition hover:bg-emerald-700 hover:shadow-md"
                                         >
-                                            <Upload className="h-4 w-4" /> Upload Document
+                                            <Upload className="h-4 w-4" />
+                                            Upload Document
                                         </Button>
+    
                                         <Button
                                             size="lg"
                                             variant="secondary"
-                                            onClick={() => setShowUpdateNotes((v) => !v)}
+                                            onClick={() =>
+                                                setShowUpdateNotes((v) => !v)
+                                            }
                                             className="h-11 rounded-xl"
                                         >
-                                            <Plus className="h-4 w-4" /> {showUpdateNotes ? 'Hide Update Notes' : 'Add Update'}
+                                            <Plus className="h-4 w-4" />
+                                            {showUpdateNotes
+                                                ? "Hide Update Notes"
+                                                : "Add Update"}
                                         </Button>
                                     </div>
                                 </div>
-
-                                {/* Update Notes (collapsible) */}
-                                <div
-                                    className={cn(
-                                        'grid overflow-hidden transition-all duration-300 ease-in-out',
-                                        showUpdateNotes ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-                                    )}
-                                >
-                                    <div className="min-h-0">
-                                        <label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                                            Update Notes
-                                        </label>
-                                        <Textarea
-                                            className="mt-2 min-h-[140px] rounded-lg bg-muted/40 text-[15px] leading-relaxed transition focus-visible:ring-2 focus-visible:ring-[#1E3A8A]/40"
-                                            placeholder="Open text box for status updates, blocker notes, audit remarks, etc."
-                                            value={updateText}
-                                            onChange={(e) => setUpdateText(e.target.value)}
-                                        />
+    
+                                {/* Update Notes */}
+                                <ChangedField field="updateNote">
+                                    <div
+                                        className={cn(
+                                            "grid overflow-hidden transition-all duration-300 ease-in-out",
+                                            showUpdateNotes
+                                                ? "grid-rows-[1fr] opacity-100"
+                                                : "grid-rows-[0fr] opacity-0"
+                                        )}
+                                    >
+                                        <div className="min-h-0">
+                                            <label className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                                                Update Notes
+                                            </label>
+    
+                                            <Textarea
+                                                className="mt-2 min-h-[140px] rounded-lg bg-muted/40 text-[15px] leading-relaxed transition focus-visible:ring-2 focus-visible:ring-[#1E3A8A]/40"
+                                                placeholder="Open text box for status updates, blocker notes, audit remarks, etc."
+                                                value={updateText}
+                                                onChange={(e) =>
+                                                    setUpdateText(e.target.value)
+                                                }
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-
-                                {/* Update Notes (only if exists) */}
-                                {capItem?.updateNote && capItem?.comment === 'Plan-Update' && (
+                                </ChangedField>
+    
+                                {/* Existing Update Notes */}
+                                {capItem?.updateNote &&
+                                    capItem?.comment === "Plan-Update" && (
+                                        <ChangedField field="updateNote">
+                                            <div className="rounded-xl border bg-muted/30 p-5">
+                                                <div className="grid gap-5 lg:grid-cols-[260px_1fr] lg:items-start">
+    
+                                                    <div>
+                                                        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                                            <FileText className="h-4 w-4 text-[#1E3A8A]" />
+                                                            Update Notes
+                                                        </div>
+    
+                                                        <p className="mt-1 text-xs text-muted-foreground">
+                                                            Operational updates recorded for CAP item
+                                                        </p>
+                                                    </div>
+    
+                                                    <div>
+                                                        <Textarea
+                                                            disabled
+                                                            value={updateText}
+                                                            onChange={(e) =>
+                                                                setUpdateText(
+                                                                    e.target.value
+                                                                )
+                                                            }
+                                                            className="min-h-[100px] bg-transparent border-0 focus-visible:ring-0"
+                                                            placeholder="Update notes..."
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </ChangedField>
+                                    )}
+    
+                                {/* Assigned To */}
+                                <ChangedField field="assignedTo">
                                     <div className="rounded-xl border bg-muted/30 p-5">
                                         <div className="grid gap-5 lg:grid-cols-[260px_1fr] lg:items-start">
+    
                                             <div>
                                                 <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                                                    <FileText className="h-4 w-4 text-[#1E3A8A]" /> Update Notes
+                                                    <UserPlus className="h-4 w-4 text-[#1E3A8A]" />
+                                                    Assigned To
                                                 </div>
+    
                                                 <p className="mt-1 text-xs text-muted-foreground">
-                                                    Operational updates recorded for this CAP item
+                                                    Operational owner responsible for CAP execution
                                                 </p>
                                             </div>
-
+    
                                             <div>
-                                                <div className="flex min-h-[48px] flex-wrap items-center gap-2 rounded-lg border bg-card p-2">
-                                                    <Textarea
-                                                        disabled
-                                                        value={updateText}
-                                                        onChange={(e) => setUpdateText(e.target.value)}
-                                                        className="min-h-[100px] bg-transparent border-0 focus-visible:ring-0"
-                                                        placeholder="Update notes..."
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Assigned To */}
-                                <div className="rounded-xl border bg-muted/30 p-5">
-                                    <div className="grid gap-5 lg:grid-cols-[260px_1fr] lg:items-start">
-                                        <div>
-                                            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                                                <UserPlus className="h-4 w-4 text-[#1E3A8A]" /> Assigned To
-                                            </div>
-                                            <p className="mt-1 text-xs text-muted-foreground">
-                                                Operational owner responsible for CAP execution
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <div className="flex min-h-[48px] flex-wrap items-center gap-2 rounded-lg border bg-card p-2">
                                                 <Input
                                                     placeholder="Assigned To"
                                                     value={assigneeText}
-                                                    onChange={(e) => setAssigneeText(e.target.value)}
+                                                    onChange={(e) =>
+                                                        setAssigneeText(
+                                                            e.target.value
+                                                        )
+                                                    }
                                                     className="h-9"
                                                 />
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-
+                                </ChangedField>
+    
                                 {/* Request Change */}
-                                <div className="rounded-xl border bg-muted/30 p-5">
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div>
-                                            <div className="relative group flex items-center gap-1 w-fit">
-                                                <div className="text-sm font-semibold text-foreground">
-                                                    Request Change
-                                                </div>
-
-                                                <Info className="w-4 h-4 text-muted-foreground cursor-pointer" />
-
-                                                <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block z-50">
-                                                    <div className="inline-block w-fit whitespace-nowrap rounded-md bg-white text-black text-xs px-3 py-2 shadow-lg">
-                                                        Make request changes for CAP items like timeline, completion indicators, CP/CS status, etc.
+                                <ChangedField field="requestChange">
+                                    <div className="rounded-xl border bg-muted/30 p-5">
+    
+                                        <div className="flex items-start justify-between gap-4">
+    
+                                            <div>
+                                                <div className="relative group flex items-center gap-1 w-fit">
+                                                    <div className="text-sm font-semibold text-foreground">
+                                                        Request Change
+                                                    </div>
+    
+                                                    <Info className="w-4 h-4 text-muted-foreground cursor-pointer" />
+    
+                                                    <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 hidden group-hover:block z-50">
+                                                        <div className="inline-block w-fit whitespace-nowrap rounded-md bg-white text-black text-xs px-3 py-2 shadow-lg">
+                                                            Make request changes for CAP items like timeline, completion indicators, CP/CS status, etc.
+                                                        </div>
                                                     </div>
                                                 </div>
+    
+                                                {capItem?.comment ===
+                                                    "Change-Request" && (
+                                                    <div className="mt-2 space-y-2">
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="border-amber-300 bg-amber-50 text-amber-700"
+                                                        >
+                                                            Change Requested
+                                                        </Badge>
+    
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {capItem?.requestChange ||
+                                                                "Triggers reviewer feedback workflow without modifying structured CAP fields"}
+                                                        </p>
+                                                    </div>
+                                                )}
                                             </div>
-                                            {capItem?.comment === 'Change-Request' && (
-                                                <div className="mt-2 space-y-2">
-                                                    <Badge
-                                                        variant="outline"
-                                                        className="border-amber-300 bg-amber-50 text-amber-700"
-                                                    >
-                                                        Change Requested
-                                                    </Badge>
-
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {capItem?.requestChange ||
-                                                            'Triggers reviewer feedback workflow without modifying structured CAP fields'}
-                                                    </p>
-                                                </div>
-                                            )}
-
-                                        </div>
-                                        <Switch checked={requestChange} onCheckedChange={(v) => setRequestChange(!!v)} />
-                                    </div>
-                                    <div
-                                        className={cn(
-                                            'grid overflow-hidden transition-all duration-300 ease-in-out',
-                                            requestChange ? 'mt-4 grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-                                        )}
-                                    >
-                                        <div className="min-h-0">
-                                            <Textarea
-                                                placeholder="Reviewer feedback or change description…"
-                                                value={changeNote}
-                                                onChange={(e) => setChangeNote(e.target.value)}
-                                                className="min-h-[120px] rounded-lg bg-card"
+    
+                                            <Switch
+                                                checked={requestChange}
+                                                onCheckedChange={(v) =>
+                                                    setRequestChange(!!v)
+                                                }
                                             />
                                         </div>
+    
+                                        <div
+                                            className={cn(
+                                                "grid overflow-hidden transition-all duration-300 ease-in-out",
+                                                requestChange
+                                                    ? "mt-4 grid-rows-[1fr] opacity-100"
+                                                    : "grid-rows-[0fr] opacity-0"
+                                            )}
+                                        >
+                                            <div className="min-h-0">
+                                                <Textarea
+                                                    placeholder="Reviewer feedback or change description…"
+                                                    value={changeNote}
+                                                    onChange={(e) =>
+                                                        setChangeNote(
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    className="min-h-[120px] rounded-lg bg-card"
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-
-                                {/* Submit (visible only on changes) */}
+                                </ChangedField>
+    
+                                {/* Submit */}
                                 {(() => {
-                                    const initialAssignee = capItem?.assignedTo || '';
-
-                                    const assigneeChanged = assigneeText.trim() !== initialAssignee.trim();
-
+                                    const initialAssignee =
+                                        capItem?.assignedTo || "";
+    
+                                    const assigneeChanged =
+                                        assigneeText.trim() !==
+                                        initialAssignee.trim();
+    
                                     const hasChanges =
                                         updateText.trim().length > 0 ||
-                                        (requestChange && changeNote.trim().length > 0) ||
+                                        (requestChange &&
+                                            changeNote.trim().length > 0) ||
                                         assigneeChanged;
-
-                                    // if (!hasChanges) return null;
-
+    
                                     return (
                                         <div className="flex items-center justify-between gap-3 rounded-xl border border-[#1E3A8A]/20 bg-[#1E3A8A]/5 p-4">
                                             <div className="text-xs text-muted-foreground">
                                                 You have unsaved changes. Review before submitting.
                                             </div>
-
+    
                                             <Button
                                                 size="lg"
                                                 onClick={handleSubmit}
                                                 disabled={isSubmitting}
                                                 className="h-11 rounded-xl bg-[#1E3A8A] text-white hover:bg-[#1E3A8A]/90"
                                             >
-                                                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                                                {isSubmitting ? (
+                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                ) : (
+                                                    <Send className="h-4 w-4" />
+                                                )}
                                                 Submit for Review
                                             </Button>
                                         </div>
@@ -735,69 +892,87 @@ const ESGCapDetailsPage: React.FC = () => {
                                 })()}
                             </div>
                         </SectionCard>
-                        {/* Investor Actions */}
+    
+                        {/* Investor / Fireside Actions */}
                         <SectionCard
-                            title={!isInvestorEmailExists ? "Investor Action" : "Fireside Action"}
+                            title={
+                                !isInvestorEmailExists
+                                    ? "Investor Action"
+                                    : "Fireside Action"
+                            }
                             subtitle="Internal review and reviewer thread"
                             icon={<MessageSquare className="h-4 w-4" />}
                             variant="muted"
                         >
                             <div className="grid gap-8 lg:grid-cols-2">
-                                <div>
-                                    <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{!isInvestorEmailExists ? "Investor Status" : "Fireside Status"}</div>
-                                    {(() => {
-                                        return (
-                                            <div className="mt-4 flex items-center gap-3 rounded-lg border bg-card p-4">
-                                                {/* <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 border-emerald-500 bg-emerald-500 text-white">
-                                                <CheckCircle2 className="h-4 w-4" />
-                                            </span> */}
-                                                <div>
-                                                    <div className="text-sm font-semibold">{capItem?.investorStatus}</div>
-                                                    {/* <div className="text-xs text-muted-foreground">{capItem?.lastReviewDate}</div> */}
-                                                </div>
-                                            </div>
-                                        );
-                                    })()}
-                                </div>
-                                <div>
-                                    <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                        Review Comment
-                                    </div>
-
-                                    <div className="mt-4">
-                                        <div className="flex gap-3">
-                                            <Avatar className="h-9 w-9">
-                                                {/* <AvatarFallback>
-                                                {(capItem?.assignedTo || "NA")
-                                                    .split(" ")
-                                                    .map((n) => n[0])
-                                                    .join("")}
-                                            </AvatarFallback> */}
-                                            </Avatar>
-
-                                            <div className="flex-1 rounded-lg border bg-muted/30 p-3">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="text-xs text-muted-foreground">
-                                                        <p className="mt-1 text-sm text-foreground/90">
-                                                            {capItem?.reviewRemarks || ""}
-                                                        </p>
-                                                    </div>
+    
+                                {/* Investor Status */}
+                                <ChangedField field="investorStatus">
+                                    <div>
+                                        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                            {!isInvestorEmailExists
+                                                ? "Investor Status"
+                                                : "Fireside Status"}
+                                        </div>
+    
+                                        <div className="mt-4 flex items-center gap-3 rounded-lg border bg-card p-4">
+                                            <div>
+                                                <div className="text-sm font-semibold">
+                                                    {capItem?.investorStatus}
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                </ChangedField>
+    
+                                {/* Review Comment */}
+                                <ChangedField field="reviewRemarks">
+                                    <div>
+                                        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                            Review Comment
+                                        </div>
+    
+                                        <div className="mt-4">
+                                            <div className="flex gap-3">
+                                                <Avatar className="h-9 w-9" />
+    
+                                                <div className="flex-1 rounded-lg border bg-muted/30 p-3">
+                                                    <p className="mt-1 text-sm text-foreground/90">
+                                                        {capItem?.reviewRemarks || ""}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </ChangedField>
                             </div>
                         </SectionCard>
-
+    
                         {/* Reference Details */}
-                        <SectionCard title="Reference Details" subtitle="Finding context and corrective measures" icon={<Info className="h-4 w-4" />}>
+                        <SectionCard
+                            title="Reference Details"
+                            subtitle="Finding context and corrective measures"
+                            icon={<Info className="h-4 w-4" />}
+                        >
                             <div className="space-y-6 text-left">
-                                <Field label="Issue & Related Finding" value={capItem?.issue} />
-                                <Field label="Measures & Corrective Actions" value={capItem?.measures} />
+    
+                                <ChangedField field="issue">
+                                    <Field
+                                        label="Issue & Related Finding"
+                                        value={capItem?.issue}
+                                    />
+                                </ChangedField>
+    
+                                <ChangedField field="measures">
+                                    <Field
+                                        label="Measures & Corrective Actions"
+                                        value={capItem?.measures}
+                                    />
+                                </ChangedField>
+    
                             </div>
                         </SectionCard>
-
+    
                         {/* Completion Tracking */}
                         <SectionCard
                             title="Completion Tracking"
@@ -805,404 +980,692 @@ const ESGCapDetailsPage: React.FC = () => {
                             icon={<CheckCircle2 className="h-4 w-4" />}
                         >
                             <div className="space-y-6">
-
-                                {(capItem?.completionIndicators || []).map((i: any, idx: number) => {
-
-                                    const uploadedFile = capItem?.fileUploadedData?.find(
-                                        (f: any) =>
-                                            f?.indicatorLabel?.trim()?.toLowerCase() ===
-                                            i?.indicatorLabel?.trim()?.toLowerCase() &&
-                                            f?.s3Link
-                                    );
-
-                                    const hasFileUpload = !!uploadedFile;
-                                    const uploadStatus = uploadedFile?.status;
-
-                                    // Read response and note directly from the completionIndicators item
-                                    const indicatorResponseFromBackend = i?.indicatorResponse; // 'yes' or 'no' or undefined
-                                    const indicatorNoteFromBackend = i?.indicatorNote;
-
-                                    const isNo = indicatorResponseFromBackend === 'no';
-                                    const isYesWithFile = indicatorResponseFromBackend === 'yes' && hasFileUpload;
-
-                                    return (
-                                        <div key={idx} className="space-y-4">
-
-                                            {/* ROW */}
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                                                {/* LEFT */}
-                                                <div className="rounded-lg border bg-card p-3">
-
-                                                    <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                                        Completion Indicator
-                                                    </div>
-
-                                                    <div className="mt-1 text-sm font-medium">
-                                                        {i.indicatorLabel || ' '}
-                                                    </div>
-
-                                                    {/* BADGES */}
-                                                    <div className="mt-2 flex flex-wrap gap-2">
-                                                        {isYesWithFile && (
-                                                            <>
-                                                                <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                                                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                                                                    Document Uploaded
-                                                                </Badge>
-
-                                                                {uploadStatus && (
-                                                                    <Badge
-                                                                        className={`border ${uploadStatus === "Accepted"
-                                                                                ? "bg-green-100 text-green-700 border-green-300"
-                                                                                : uploadStatus === "Rejected"
-                                                                                    ? "bg-red-100 text-red-700 border-red-300"
-                                                                                    : uploadStatus === "Pending"
+    
+                                {(capItem?.completionIndicators || []).map(
+                                    (i: any, idx: number) => {
+    
+                                        const uploadedFile =
+                                            capItem?.fileUploadedData?.find(
+                                                (f: any) =>
+                                                    f?.indicatorLabel
+                                                        ?.trim()
+                                                        ?.toLowerCase() ===
+                                                        i?.indicatorLabel
+                                                            ?.trim()
+                                                            ?.toLowerCase() &&
+                                                    f?.s3Link
+                                            );
+    
+                                        const hasFileUpload = !!uploadedFile;
+                                        const uploadStatus =
+                                            uploadedFile?.status;
+    
+                                        const indicatorResponseFromBackend =
+                                            i?.indicatorResponse;
+    
+                                        const indicatorNoteFromBackend =
+                                            i?.indicatorNote;
+    
+                                        const isNo =
+                                            indicatorResponseFromBackend === "no";
+    
+                                        const isYesWithFile =
+                                            indicatorResponseFromBackend ===
+                                                "yes" && hasFileUpload;
+    
+                                        return (
+                                            <div
+                                                key={idx}
+                                                className="space-y-4"
+                                            >
+    
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    
+                                                    {/* Completion Indicator */}
+                                                    <ChangedField
+                                                        field={`completionIndicators.${idx}.indicatorLabel`}
+                                                    >
+                                                        <div className="rounded-lg border bg-card p-3">
+    
+                                                            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                                                Completion Indicator
+                                                            </div>
+    
+                                                            <div className="mt-1 text-sm font-medium">
+                                                                {i.indicatorLabel ||
+                                                                    " "}
+                                                            </div>
+    
+                                                            <div className="mt-2 flex flex-wrap gap-2">
+    
+                                                                {isYesWithFile && (
+                                                                    <>
+                                                                        <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                                                                            Document Uploaded
+                                                                        </Badge>
+    
+                                                                        {uploadStatus && (
+                                                                            <Badge
+                                                                                className={`border ${
+                                                                                    uploadStatus ===
+                                                                                    "Accepted"
+                                                                                        ? "bg-green-100 text-green-700 border-green-300"
+                                                                                        : uploadStatus ===
+                                                                                          "Rejected"
+                                                                                        ? "bg-red-100 text-red-700 border-red-300"
+                                                                                        : uploadStatus ===
+                                                                                          "Pending"
                                                                                         ? "bg-yellow-100 text-yellow-700 border-yellow-300"
                                                                                         : "bg-gray-100 text-gray-700 border-gray-300"
-                                                                            }`}
-                                                                    >
-                                                                        {uploadStatus === "Rejected" ? "Re-submit" : uploadStatus}
+                                                                                }`}
+                                                                            >
+                                                                                {uploadStatus ===
+                                                                                "Rejected"
+                                                                                    ? "Re-submit"
+                                                                                    : uploadStatus}
+                                                                            </Badge>
+                                                                        )}
+                                                                    </>
+                                                                )}
+    
+                                                                {isNo && (
+                                                                    <Badge className="bg-amber-50 text-amber-700 border border-amber-200">
+                                                                        Response Uploaded
                                                                     </Badge>
                                                                 )}
-                                                            </>
-                                                        )}
-
-                                                        {isNo && (
-                                                            <div className="flex flex-wrap items-center gap-2">
-                                                                <Badge className="bg-amber-50 text-amber-700 border border-amber-200">
-                                                                    Response Uploaded
-                                                                </Badge>
-                                                                {/* {indicatorNoteFromBackend && (
-                                                        <span className="text-xs text-muted-foreground">
-                                                            Note: {indicatorNoteFromBackend}
-                                                        </span>
-                                                        )} */}
                                                             </div>
-                                                        )}
-                                                    </div>
+                                                        </div>
+                                                    </ChangedField>
+    
+                                                    {/* Guidance */}
+                                                    <ChangedField
+                                                        field={`completionIndicators.${idx}.guidanceResources`}
+                                                    >
+                                                        <div className="rounded-lg border bg-card p-3">
+    
+                                                            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                                                Guidance & Resources
+                                                            </div>
+    
+                                                            <div className="mt-1 text-sm text-muted-foreground whitespace-pre-wrap">
+                                                                {i.guidanceResources ||
+                                                                    " "}
+                                                            </div>
+                                                        </div>
+                                                    </ChangedField>
                                                 </div>
-
-                                                {/* RIGHT */}
-                                                <div className="rounded-lg border bg-card p-3">
-                                                    <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                                        Guidance & Resources
+    
+                                                {/* Indicator Response */}
+                                                <ChangedField
+                                                    field={`completionIndicators.${idx}.indicatorResponse`}
+                                                >
+                                                    <div className="rounded-lg border bg-card p-3">
+                                                        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                                            Indicator Response
+                                                        </div>
+    
+                                                        <div className="mt-1 text-sm font-medium">
+                                                            {i.indicatorResponse ||
+                                                                " "}
+                                                        </div>
                                                     </div>
-
-                                                    <div className="mt-1 text-sm text-muted-foreground whitespace-pre-wrap">
-                                                        {i.guidanceResources || ' '}
+                                                </ChangedField>
+    
+                                                {/* Indicator Note */}
+                                                <ChangedField
+                                                    field={`completionIndicators.${idx}.indicatorNote`}
+                                                >
+                                                    <div className="rounded-lg border bg-card p-3">
+                                                        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                                            Indicator Note
+                                                        </div>
+    
+                                                        <div className="mt-1 text-sm text-muted-foreground whitespace-pre-wrap">
+                                                            {indicatorNoteFromBackend ||
+                                                                " "}
+                                                        </div>
                                                     </div>
-                                                </div>
-
+                                                </ChangedField>
+    
+                                                {idx <
+                                                    capItem?.completionIndicators
+                                                        ?.length -
+                                                        1 && <Separator />}
                                             </div>
-
-                                            {/* SEPARATOR */}
-                                            {idx < capItem?.completionIndicators?.length - 1 && (
-                                                <Separator />
-                                            )}
-                                        </div>
-                                    );
-                                })}
+                                        );
+                                    }
+                                )}
                             </div>
-
-                            {/* FOOTER META */}
+    
+                            {/* Footer Meta */}
                             <Separator className="my-6" />
+    
                             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                                <Field label="Submission Date" value={latestUploadedAt
-                                    ? new Date(latestUploadedAt).toLocaleDateString('en-GB', {
-                                        day: '2-digit',
-                                        month: 'short',
-                                        year: 'numeric',
-                                    })
-                                    : ' '} />
-                                <Field label="Target Date" value={capItem?.targetDate ? new Date(capItem?.targetDate).toLocaleDateString('en-GB', {
-                                    day: '2-digit',
-                                    month: 'short',
-                                    year: 'numeric',
-                                }) : ' '} />
-                                <Field label="Actual Completion" value={capItem?.actualDate ? new Date(capItem?.actualDate).toLocaleDateString('en-GB', {
-                                    day: '2-digit',
-                                    month: 'short',
-                                    year: 'numeric',
-                                }) : ' '} />
-                                <Field label="Last Review Date" value={capItem?.lastReviewDate ? new Date(capItem?.lastReviewDate).toLocaleDateString('en-GB', {
-                                    day: '2-digit',
-                                    month: 'short',
-                                    year: 'numeric',
-                                }) : ' '} />
-                                <Field label="Closure Verified By" value={capItem?.closureVerifiedBy || ''} />
+    
+                                <ChangedField field="uploadedAt">
+                                    <Field
+                                        label="Submission Date"
+                                        value={
+                                            latestUploadedAt
+                                                ? new Date(
+                                                      latestUploadedAt
+                                                  ).toLocaleDateString("en-GB", {
+                                                      day: "2-digit",
+                                                      month: "short",
+                                                      year: "numeric",
+                                                  })
+                                                : " "
+                                        }
+                                    />
+                                </ChangedField>
+    
+                                <ChangedField field="targetDate">
+                                    <Field
+                                        label="Target Date"
+                                        value={
+                                            capItem?.targetDate
+                                                ? new Date(
+                                                      capItem.targetDate
+                                                  ).toLocaleDateString("en-GB", {
+                                                      day: "2-digit",
+                                                      month: "short",
+                                                      year: "numeric",
+                                                  })
+                                                : " "
+                                        }
+                                    />
+                                </ChangedField>
+    
+                                <ChangedField field="actualDate">
+                                    <Field
+                                        label="Actual Completion"
+                                        value={
+                                            capItem?.actualDate
+                                                ? new Date(
+                                                      capItem.actualDate
+                                                  ).toLocaleDateString("en-GB", {
+                                                      day: "2-digit",
+                                                      month: "short",
+                                                      year: "numeric",
+                                                  })
+                                                : " "
+                                        }
+                                    />
+                                </ChangedField>
+    
+                                <ChangedField field="lastReviewDate">
+                                    <Field
+                                        label="Last Review Date"
+                                        value={
+                                            capItem?.lastReviewDate
+                                                ? new Date(
+                                                      capItem.lastReviewDate
+                                                  ).toLocaleDateString("en-GB", {
+                                                      day: "2-digit",
+                                                      month: "short",
+                                                      year: "numeric",
+                                                  })
+                                                : " "
+                                        }
+                                    />
+                                </ChangedField>
+    
+                                <ChangedField field="closureVerifiedBy">
+                                    <Field
+                                        label="Closure Verified By"
+                                        value={
+                                            capItem?.closureVerifiedBy || ""
+                                        }
+                                    />
+                                </ChangedField>
                             </div>
                         </SectionCard>
-
-                        {/* Attachments & Evidence (Modal) */}
-                        <Dialog open={attachmentsOpen} onOpenChange={setAttachmentsOpen}>
-                            <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
+    
+                        {/* Attachments & Evidence */}
+                        <Dialog
+                            open={attachmentsOpen}
+                            onOpenChange={setAttachmentsOpen}
+                        >
+                            <DialogContent
+                                className="max-w-4xl max-h-[85vh] overflow-y-auto"
+                                onInteractOutside={(e) => e.preventDefault()}
+                            >
                                 <DialogHeader>
-                                    <DialogTitle>Attachments & Evidence</DialogTitle>
+                                    <DialogTitle>
+                                        Attachments & Evidence
+                                    </DialogTitle>
                                 </DialogHeader>
-
-                                {/* Completion Indicators list with per‑indicator Upload button */}
+    
+                                {/* Completion Indicators */}
                                 <div className="mb-6">
-                                    <h3 className="text-sm font-semibold mb-2">Completion Indicators</h3>
+                                    <h3 className="text-sm font-semibold mb-2">
+                                        Completion Indicators
+                                    </h3>
+    
                                     <div className="space-y-2">
                                         {(capItem?.deliverable
-                                            ? capItem?.deliverable.includes("##")
-                                                ? capItem?.deliverable.split("##").filter(Boolean)
-                                                : [capItem?.deliverable].filter(Boolean)
+                                            ? capItem.deliverable.includes("##")
+                                                ? capItem.deliverable
+                                                      .split("##")
+                                                      .filter(Boolean)
+                                                : [capItem.deliverable].filter(
+                                                      Boolean
+                                                  )
                                             : []
                                         ).map((rawLabel: string) => {
+    
                                             const label = rawLabel.trim();
-                                            const response = indicatorResponse[label];
-                                            console.log(`Label: "${label}", Response:`, indicatorResponse[label], "Note:", indicatorNotes[label]);
+    
+                                            const response =
+                                                indicatorResponse[label];
+    
                                             return (
-                                                <div key={label} className="rounded-lg border p-3">
-                                                    <div className="text-sm font-medium mb-3">{label}</div>
-
-                                                    {/* 2-column layout */}
-                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-
-                                                        {/* LEFT: YES / NO */}
-                                                        <div className="flex gap-4 items-center">
-                                                            <label className="flex items-center gap-2 text-sm">
-                                                                <input
-                                                                    type="radio"
-                                                                    name={`indicator-${label}`}
-                                                                    checked={response === 'yes'}
-                                                                    onChange={() =>
-                                                                        setIndicatorResponse((prev) => ({
-                                                                            ...prev,
-                                                                            [label]: 'yes',
-                                                                        }))
-                                                                    }
-                                                                />
-                                                                Yes
-                                                            </label>
-
-                                                            <label className="flex items-center gap-2 text-sm">
-                                                                <input
-                                                                    type="radio"
-                                                                    name={`indicator-${label}`}
-                                                                    checked={response === 'no'}
-                                                                    onChange={() =>
-                                                                        setIndicatorResponse((prev) => ({
-                                                                            ...prev,
-                                                                            [label]: 'no',
-                                                                        }))
-                                                                    }
-                                                                />
-                                                                No
-                                                            </label>
+                                                <ChangedField
+                                                    key={label}
+                                                    field={`completionIndicators.${label}`}
+                                                >
+                                                    <div className="rounded-lg border p-3">
+    
+                                                        <div className="text-sm font-medium mb-3">
+                                                            {label}
                                                         </div>
-
-                                                        {/* RIGHT: CONDITIONAL UI */}
-                                                        <div className="flex flex-col gap-2">
-
-                                                            {response === 'yes' && (
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="outline"
-                                                                    onClick={() => {
-                                                                        selectedIndicatorRef.current = label;
-                                                                        setCurrentIndicatorResponse(indicatorResponse[label] || 'yes');
-                                                                        setCurrentIndicatorNote(indicatorNotes[label] || '');
-                                                                        setUploadModalOpen(true);
-                                                                    }}
-                                                                    className="w-fit"
-                                                                >
-                                                                    <Upload className="h-3 w-3 mr-1" />
-                                                                    Upload Document
-                                                                </Button>
-                                                            )}
-
-                                                            {response === 'no' && (
-                                                                <div className="flex flex-col gap-2">
-                                                                    <Textarea
-                                                                        placeholder="Provide Details..."
-                                                                        value={indicatorNotes[label] || ''}
-                                                                        onChange={(e) =>
-                                                                            setIndicatorNotes((prev) => ({ ...prev, [label]: e.target.value }))
+    
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+    
+                                                            {/* YES / NO */}
+                                                            <div className="flex gap-4 items-center">
+    
+                                                                <label className="flex items-center gap-2 text-sm">
+                                                                    <input
+                                                                        type="radio"
+                                                                        name={`indicator-${label}`}
+                                                                        checked={
+                                                                            response ===
+                                                                            "yes"
                                                                         }
-                                                                        className="min-h-[80px]"
+                                                                        onChange={() =>
+                                                                            setIndicatorResponse(
+                                                                                (
+                                                                                    prev
+                                                                                ) => ({
+                                                                                    ...prev,
+                                                                                    [label]:
+                                                                                        "yes",
+                                                                                })
+                                                                            )
+                                                                        }
                                                                     />
+                                                                    Yes
+                                                                </label>
+    
+                                                                <label className="flex items-center gap-2 text-sm">
+                                                                    <input
+                                                                        type="radio"
+                                                                        name={`indicator-${label}`}
+                                                                        checked={
+                                                                            response ===
+                                                                            "no"
+                                                                        }
+                                                                        onChange={() =>
+                                                                            setIndicatorResponse(
+                                                                                (
+                                                                                    prev
+                                                                                ) => ({
+                                                                                    ...prev,
+                                                                                    [label]:
+                                                                                        "no",
+                                                                                })
+                                                                            )
+                                                                        }
+                                                                    />
+                                                                    No
+                                                                </label>
+                                                            </div>
+    
+                                                            {/* Conditional */}
+                                                            <div className="flex flex-col gap-2">
+    
+                                                                {response ===
+                                                                    "yes" && (
                                                                     <Button
                                                                         size="sm"
                                                                         variant="outline"
-                                                                        onClick={async () => {
-                                                                            try {
-                                                                                // Build FormData without a file
-                                                                                const formData = new FormData();
-                                                                                formData.append("itemTitle", capItem?.item || capItem?.issue);
-                                                                                formData.append("itemDescription", capItem?.measures || "");
-                                                                                formData.append("itemTheme", "Policy");
-                                                                                formData.append("itemCategory", capItem?.category);
-                                                                                formData.append("itemPolicy", capItem?.deliverable || "");
-                                                                                formData.append("itemResource", capItem?.resource || "");
-                                                                                formData.append("itemSourceType", capItem?.sourceType || "");
-                                                                                formData.append("indicatorLabel", label);
-                                                                                formData.append("indicatorResponse", "no");
-                                                                                formData.append("indicatorNote", indicatorNotes[label] || "");
-
-                                                                                await httpClient.post("esgdd/escap/upload-file/esgcap", formData);
-                                                                                toast.success("Indicator response saved");
-                                                                                await loadData(); // refresh to show saved status
-                                                                            } catch (error) {
-                                                                                console.error(error);
-                                                                                toast.error("Failed to save response");
-                                                                            }
+                                                                        onClick={() => {
+                                                                            selectedIndicatorRef.current =
+                                                                                label;
+    
+                                                                            setCurrentIndicatorResponse(
+                                                                                indicatorResponse[
+                                                                                    label
+                                                                                ] ||
+                                                                                    "yes"
+                                                                            );
+    
+                                                                            setCurrentIndicatorNote(
+                                                                                indicatorNotes[
+                                                                                    label
+                                                                                ] ||
+                                                                                    ""
+                                                                            );
+    
+                                                                            setUploadModalOpen(
+                                                                                true
+                                                                            );
                                                                         }}
                                                                         className="w-fit"
                                                                     >
-                                                                        Save Response
+                                                                        <Upload className="h-3 w-3 mr-1" />
+                                                                        Upload Document
                                                                     </Button>
-                                                                </div>
-                                                            )}
+                                                                )}
+    
+                                                                {response ===
+                                                                    "no" && (
+                                                                    <div className="flex flex-col gap-2">
+    
+                                                                        <Textarea
+                                                                            placeholder="Provide Details..."
+                                                                            value={
+                                                                                indicatorNotes[
+                                                                                    label
+                                                                                ] ||
+                                                                                ""
+                                                                            }
+                                                                            onChange={(
+                                                                                e
+                                                                            ) =>
+                                                                                setIndicatorNotes(
+                                                                                    (
+                                                                                        prev
+                                                                                    ) => ({
+                                                                                        ...prev,
+                                                                                        [label]:
+                                                                                            e
+                                                                                                .target
+                                                                                                .value,
+                                                                                    })
+                                                                                )
+                                                                            }
+                                                                            className="min-h-[80px]"
+                                                                        />
+    
+                                                                        <Button
+                                                                            size="sm"
+                                                                            variant="outline"
+                                                                            onClick={async () => {
+                                                                                try {
+                                                                                    const formData =
+                                                                                        new FormData();
+    
+                                                                                    formData.append(
+                                                                                        "itemTitle",
+                                                                                        capItem?.item ||
+                                                                                            capItem?.issue
+                                                                                    );
+    
+                                                                                    formData.append(
+                                                                                        "itemDescription",
+                                                                                        capItem?.measures ||
+                                                                                            ""
+                                                                                    );
+    
+                                                                                    formData.append(
+                                                                                        "itemTheme",
+                                                                                        "Policy"
+                                                                                    );
+    
+                                                                                    formData.append(
+                                                                                        "itemCategory",
+                                                                                        capItem?.category
+                                                                                    );
+    
+                                                                                    formData.append(
+                                                                                        "itemPolicy",
+                                                                                        capItem?.deliverable ||
+                                                                                            ""
+                                                                                    );
+    
+                                                                                    formData.append(
+                                                                                        "itemResource",
+                                                                                        capItem?.resource ||
+                                                                                            ""
+                                                                                    );
+    
+                                                                                    formData.append(
+                                                                                        "itemSourceType",
+                                                                                        capItem?.sourceType ||
+                                                                                            ""
+                                                                                    );
+    
+                                                                                    formData.append(
+                                                                                        "indicatorLabel",
+                                                                                        label
+                                                                                    );
+    
+                                                                                    formData.append(
+                                                                                        "indicatorResponse",
+                                                                                        "no"
+                                                                                    );
+    
+                                                                                    formData.append(
+                                                                                        "indicatorNote",
+                                                                                        indicatorNotes[
+                                                                                            label
+                                                                                        ] ||
+                                                                                            ""
+                                                                                    );
+    
+                                                                                    await httpClient.post(
+                                                                                        "esgdd/escap/upload-file/esgcap",
+                                                                                        formData
+                                                                                    );
+    
+                                                                                    toast.success(
+                                                                                        "Indicator response saved"
+                                                                                    );
+    
+                                                                                    await loadData();
+                                                                                } catch (error) {
+                                                                                    console.error(
+                                                                                        error
+                                                                                    );
+    
+                                                                                    toast.error(
+                                                                                        "Failed to save response"
+                                                                                    );
+                                                                                }
+                                                                            }}
+                                                                            className="w-fit"
+                                                                        >
+                                                                            Save Response
+                                                                        </Button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
+                                                </ChangedField>
                                             );
                                         })}
                                     </div>
                                 </div>
-
+    
                                 <Separator className="my-4" />
-
-                                {/* Uploaded files table (existing code, unchanged) */}
+    
+                                {/* Uploaded Files */}
                                 <div className="overflow-hidden rounded-lg border">
                                     <table className="w-full text-sm">
                                         <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
                                             <tr>
-                                                <th className="px-4 py-3 text-left font-medium">Indicator</th>
-                                                <th className="px-4 py-3 text-left font-medium">File / Note</th>
-                                                <th className="px-4 py-3 text-center font-medium">Actions</th>
+                                                <th className="px-4 py-3 text-left font-medium">
+                                                    Indicator
+                                                </th>
+                                                <th className="px-4 py-3 text-left font-medium">
+                                                    File / Note
+                                                </th>
+                                                <th className="px-4 py-3 text-center font-medium">
+                                                    Actions
+                                                </th>
                                             </tr>
                                         </thead>
+    
                                         <tbody>
-                                            {capItem?.fileUploadedData?.map((file: any, idx: number) => {
-
-                                                // NO response row
-                                                if (file?.indicatorResponse === "no") {
-                                                    return null;
+                                            {capItem?.fileUploadedData?.map(
+                                                (file: any, idx: number) => {
+    
+                                                    if (
+                                                        file?.indicatorResponse ===
+                                                        "no"
+                                                    ) {
+                                                        return null;
+                                                    }
+    
+                                                    return (
+                                                        <tr
+                                                            key={`file-${idx}`}
+                                                        >
+    
+                                                            <td className="px-4 py-3">
+                                                                <ChangedField
+                                                                    field={`fileUploadedData.${idx}.indicatorLabel`}
+                                                                >
+                                                                    <div className="text-sm font-medium">
+                                                                        {file?.indicatorLabel ||
+                                                                            " "}
+                                                                    </div>
+                                                                </ChangedField>
+                                                            </td>
+    
+                                                            <td className="px-4 py-3 max-w-[220px]">
+                                                                <ChangedField
+                                                                    field={`fileUploadedData.${idx}.filename`}
+                                                                >
+                                                                    <div className="flex items-center gap-2">
+                                                                        <FileText className="h-4 w-4 text-blue-600 shrink-0" />
+    
+                                                                        <span
+                                                                            className="font-medium truncate block max-w-[180px] cursor-pointer"
+                                                                            title={
+                                                                                file.filename ||
+                                                                                " "
+                                                                            }
+                                                                        >
+                                                                            {file.filename ||
+                                                                                " "}
+                                                                        </span>
+                                                                    </div>
+                                                                </ChangedField>
+                                                            </td>
+    
+                                                            <td className="px-4 py-3 text-right">
+                                                                <div className="flex justify-end gap-2">
+    
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        onClick={() => {
+                                                                            setAttachmentsOpen(
+                                                                                false
+                                                                            );
+    
+                                                                            setReopenAttachments(
+                                                                                true
+                                                                            );
+    
+                                                                            const docsForSameIndicator =
+                                                                                capItem?.fileUploadedData.filter(
+                                                                                    (
+                                                                                        f: any
+                                                                                    ) =>
+                                                                                        f.indicatorLabel ===
+                                                                                        file.indicatorLabel
+                                                                                );
+    
+                                                                            setSelectedFiles(
+                                                                                docsForSameIndicator.length
+                                                                                    ? docsForSameIndicator
+                                                                                    : [
+                                                                                          file,
+                                                                                      ]
+                                                                            );
+    
+                                                                            setIsDownloadOpen(
+                                                                                true
+                                                                            );
+                                                                        }}
+                                                                    >
+                                                                        <Eye className="h-4 w-4" />
+                                                                    </Button>
+    
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        onClick={() => {
+                                                                            const link =
+                                                                                document.createElement(
+                                                                                    "a"
+                                                                                );
+    
+                                                                            link.href =
+                                                                                file.s3Link;
+    
+                                                                            link.download =
+                                                                                file.filename;
+    
+                                                                            link.click();
+                                                                        }}
+                                                                    >
+                                                                        <Download className="h-4 w-4" />
+                                                                    </Button>
+    
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="text-red-600 hover:text-red-700"
+                                                                        disabled={
+                                                                            deleting ===
+                                                                            file.filename
+                                                                        }
+                                                                        onClick={() =>
+                                                                            handleDeleteDocument(
+                                                                                file,
+                                                                                idx
+                                                                            )
+                                                                        }
+                                                                    >
+                                                                        {deleting ===
+                                                                        file.filename ? (
+                                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                                        ) : (
+                                                                            <Trash2 className="h-4 w-4" />
+                                                                        )}
+                                                                    </Button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
                                                 }
-
-                                                return (
-                                                    <tr key={`file-${idx}`}>
-
-                                                        {/* Indicator */}
-                                                        <td className="px-4 py-3">
-                                                            <div className="text-sm font-medium">
-                                                                {file?.indicatorLabel || ' '}
-                                                            </div>
-                                                        </td>
-
-                                                        {/* File */}
-                                                        <td className="px-4 py-3 max-w-[220px]">
-                                                            <div className="flex items-center gap-2">
-                                                                <FileText className="h-4 w-4 text-blue-600 shrink-0" />
-
-                                                                <span
-                                                                    className="font-medium truncate block max-w-[180px] cursor-pointer"
-                                                                    title={file.filename || " "}
-                                                                >
-                                                                    {file.filename || " "}
-                                                                </span>
-                                                            </div>
-                                                        </td>
-
-                                                        {/* Actions */}
-                                                        <td className="px-4 py-3 text-right">
-                                                            <div className="flex justify-end gap-2">
-
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    onClick={() => {
-                                                                        // Close the attachments modal first
-                                                                        setAttachmentsOpen(false);
-                                                                        // Remember to reopen it later
-                                                                        setReopenAttachments(true);
-                                                                        // Prepare files and open summary dialog
-                                                                        const docsForSameIndicator = capItem?.fileUploadedData.filter(
-                                                                            (f: any) => f.indicatorLabel === file.indicatorLabel
-                                                                        );
-                                                                        setSelectedFiles(docsForSameIndicator.length ? docsForSameIndicator : [file]);
-                                                                        setIsDownloadOpen(true);
-                                                                    }}
-                                                                >
-                                                                    <Eye className="h-4 w-4" />
-                                                                </Button>
-
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    onClick={() => {
-                                                                        const link = document.createElement('a');
-                                                                        link.href = file.s3Link;
-                                                                        link.download = file.filename;
-                                                                        link.click();
-                                                                    }}
-                                                                >
-                                                                    <Download className="h-4 w-4" />
-                                                                </Button>
-
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="sm"
-                                                                    className="text-red-600 hover:text-red-700"
-                                                                    disabled={deleting === file.filename}
-                                                                    onClick={() => handleDeleteDocument(file, idx)}
-                                                                >
-                                                                    {deleting === file.filename ? (
-                                                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                                                    ) : (
-                                                                        <Trash2 className="h-4 w-4" />
-                                                                    )}
-                                                                </Button>
-
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
+                                            )}
                                         </tbody>
                                     </table>
                                 </div>
                             </DialogContent>
                         </Dialog>
                     </div>
-
-                    {/* Timeline */}
-                    {/* <SectionCard title="Timeline Activity" subtitle="Chronological record of changes" icon={<Activity className="h-4 w-4" />}>
-          <ol className="space-y-0">
-            {activity.map((a, i) => {
-              const Icon = a.icon;
-              return (
-                <li key={i} className="relative flex gap-4 pb-6 last:pb-0">
-                  {i < activity.length - 1 && <span className="absolute left-[15px] top-8 h-full w-px bg-border" />}
-                  <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted', a.color)}>
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <div>
-                    <div className="text-sm">
-                      <span className="font-medium">{a.user}</span>{' '}
-                      <span className="text-muted-foreground">{a.text}</span>
-                    </div>
-                    <div className="text-xs text-muted-foreground">{a.time}</div>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-        </SectionCard> */}
                 </div>
             </div>
+    
+            {/* Document Upload Modal */}
             <DocumentUploadModal
                 open={uploadModalOpen}
                 onOpenChange={(open) => {
                     setUploadModalOpen(open);
+    
                     if (!open) {
                         setUploadDocumentType(null);
                         setCurrentIndicatorResponse(null);
-                        setCurrentIndicatorNote('');
+                        setCurrentIndicatorNote("");
                     }
                 }}
                 checklistItemId={capItem?._id}
@@ -1216,30 +1679,41 @@ const ESGCapDetailsPage: React.FC = () => {
                 setReloadData={(reload) => reload && loadData()}
                 indicatorLabel={selectedIndicatorRef.current}
             />
-
+    
+            {/* Document Summary */}
             <DocumentSummaryDialog
                 open={isDownloadOpen}
                 files={selectedFiles}
                 onClose={() => {
                     setIsDownloadOpen(false);
                     setSelectedFiles([]);
+    
                     if (reopenAttachments) {
                         setAttachmentsOpen(true);
                         setReopenAttachments(false);
                     }
                 }}
             />
-
-            {/* Custom Delete Confirmation Modal */}
+    
+            {/* Delete Confirmation */}
             {confirmDelete && (
-                <Dialog open={!!confirmDelete} onOpenChange={(open) => !open && setConfirmDelete(null)}>
+                <Dialog
+                    open={!!confirmDelete}
+                    onOpenChange={(open) =>
+                        !open && setConfirmDelete(null)
+                    }
+                >
                     <DialogContent className="max-w-md">
+    
                         <DialogHeader>
-                            <DialogTitle>Confirm Delete</DialogTitle>
+                            <DialogTitle>
+                                Confirm Delete
+                            </DialogTitle>
                         </DialogHeader>
-
+    
                         <p className="text-sm text-gray-600">
-                            Are you sure you want to delete{" "}?
+                            Are you sure you want to delete{" "}
+    
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -1247,19 +1721,24 @@ const ESGCapDetailsPage: React.FC = () => {
                                             {confirmDelete?.file.filename}
                                         </strong>
                                     </TooltipTrigger>
-
+    
                                     <TooltipContent className="max-w-sm break-all">
                                         {confirmDelete?.file.filename}
                                     </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
                         </p>
-
+    
                         <div className="flex justify-end gap-3 mt-4">
-                            <Button variant="outline" onClick={() => setConfirmDelete(null)}>
+                            <Button
+                                variant="outline"
+                                onClick={() =>
+                                    setConfirmDelete(null)
+                                }
+                            >
                                 Cancel
                             </Button>
-
+    
                             <Button
                                 variant="destructive"
                                 onClick={handleDeleteConfirmed}
