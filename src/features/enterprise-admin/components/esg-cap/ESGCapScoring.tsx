@@ -539,7 +539,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                   </div>
 
                   <div className="text-center text-[10px] font-semibold text-emerald-600">
-                    Completed in Time
+                    Completed in Time ssss
                   </div>
 
                   <div className="text-center text-[10px] font-semibold text-lime-600">

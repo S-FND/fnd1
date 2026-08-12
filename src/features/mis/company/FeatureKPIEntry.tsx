@@ -177,9 +177,9 @@ const FeatureKPIEntry = () => {
   const yearToCheck = isAnnual ? currentFY : currentYear;
   const periodLocked = !isPeriodEditable(periodToCheck, yearToCheck);
   let unlockIds: string[] = ['NEWME', 'SUPTAILS', 'RIPPLR', 'ILUVIA', 'GOODBUG', 'TERRACTIV', 'SAMMMMBT'];
-  // const readOnly = user && (user.misCompanyId == 'NEWME' || unlockIds.includes(user.misCompanyId)) ? false : isCompanyReadOnly || periodLocked;
+  const readOnly = user && (user.misCompanyId == 'NEWME' || unlockIds.includes(user.misCompanyId)) ? false : isCompanyReadOnly || periodLocked;
   // We can comment this because the feature isn't ready yet to handle closed submissions.
-  const readOnly = true;
+  // const readOnly = true;
 
 
   // Handle quarter change - update URL and redirect if needed
