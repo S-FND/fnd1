@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { ESGCapItem } from '../../types/esgDD';
 import { ComplianceGraphModal } from './ComplianceGraphModal';
+import { getEffectiveStatus } from '@/utils/esgStatus';
 interface ESGCapScoringProps {
   items: ESGCapItem[];
   onFilterChange?: (filterKey: string | null) => void;
@@ -11,7 +12,6 @@ interface ESGCapScoringProps {
 }
 
 export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterChange, activeFilter, complianceScore, entityId }) => {
-  console.log('items----->', items);
   const [modalOpen, setModalOpen] = useState(false);
 
   // ✅ FILTER: Only include CP and CS items for card counting (exclude ESG_Roadmap)
@@ -294,6 +294,148 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
     );
   };
 
+  const getCSCategory = (item: ESGCapItem) => {
+    const CUTOFF_DATE = new Date('2026-06-30T23:59:59.999');
+  
+    if (!item.targetDate) {
+      return null;
+    }
+  
+    const targetDate = new Date(item.targetDate);
+  
+    if (isNaN(targetDate.getTime())) {
+      return null;
+    }
+    const rawStatus = getEffectiveStatus(item);
+    const companyStatus = normalize(rawStatus);
+    // =====================================================
+    // GET LATEST uploadedAt
+    // =====================================================
+  
+    const uploadedDates = (item.completionIndicators || [])
+      .map(indicator => indicator.uploadedAt)
+      .filter(Boolean)
+      .map(date => new Date(date as string))
+      .filter(date => !isNaN(date.getTime()));
+  
+    const updatedDate =
+      uploadedDates.length > 0
+        ? new Date(
+            Math.max(
+              ...uploadedDates.map(date => date.getTime())
+            )
+          )
+        : null;
+  
+    // =====================================================
+    // TARGET DATE <= 30 JUNE 2026
+    // =====================================================
+  
+    if (targetDate <= CUTOFF_DATE) {
+  
+      // ---------------------------------------------------
+      // uploadedAt EXISTS
+      // ---------------------------------------------------
+  
+      if (updatedDate) {
+  
+        // Uploaded on or before target date
+        if (
+          (companyStatus === 'submitted' || companyStatus === 'closed') &&
+          updatedDate <= targetDate
+        ) {
+          return 'ontime';
+        }
+  
+        // Uploaded after target date
+        const months = getMonthDifference(
+          targetDate,
+          updatedDate
+        );
+  
+        if (months === 1) return 'buffer1';
+        if (months === 2) return 'buffer2';
+        if (months === 3) return 'buffer3';
+        if (months > 3) return 'over3';
+  
+        return null;
+      }
+  
+      // ---------------------------------------------------
+      // uploadedAt DOES NOT EXIST
+      // ---------------------------------------------------
+  
+      // Old target + submitted = On Time
+      if ((companyStatus === 'submitted' || companyStatus === 'closed')) {
+        return 'ontime';
+      }
+  
+      // ---------------------------------------------------
+      // NOT COMPLETED
+      // ---------------------------------------------------
+  
+      const today = new Date();
+  
+      const months = getMonthDifference(
+        targetDate,
+        today
+      );
+  
+      if (months <= 3) {
+        return 'under3';
+      }
+  
+      return 'over3';
+    }
+  
+    // =====================================================
+    // TARGET DATE > 30 JUNE 2026
+    // =====================================================
+  
+    const submitDate = getSubmitDate(item);
+  
+    if (submitDate) {
+  
+      // Submitted on or before target
+      if (
+        (companyStatus === 'submitted' || companyStatus === 'closed') &&
+        submitDate <= targetDate
+      ) {
+        return 'ontime';
+      }
+  
+      // Submitted after target
+      const months = getMonthDifference(
+        targetDate,
+        submitDate
+      );
+  
+      if (months === 1) return 'buffer1';
+      if (months === 2) return 'buffer2';
+      if (months === 3) return 'buffer3';
+      if (months > 3) return 'over3';
+  
+      return null;
+    }
+  
+    // =====================================================
+    // NOT SUBMITTED
+    // =====================================================
+  
+    const today = new Date();
+  
+    const months = getMonthDifference(
+      targetDate,
+      today
+    );
+  
+    if (months <= 3) {
+      return 'under3';
+    }
+  
+    return 'over3';
+  };
+
   const getCSCount = (
     priority: 'High' | 'Medium' | 'Low',
     type:
@@ -305,130 +447,13 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
       | 'over3'
   ) => {
     return csItems.filter(item => {
-
       if ((item.priority || 'Medium') !== priority) {
         return false;
       }
-
-      if (!item.targetDate) {
-        return false;
-      }
-
-      const targetDate = new Date(item.targetDate);
-
-      if (isNaN(targetDate.getTime())) {
-        return false;
-      }
-
-      const submitDate = getSubmitDate(item);
-
-      // -----------------------------------------
-      // SUBMITTED
-      // -----------------------------------------
-      if (submitDate) {
-        const months = getMonthDifference(
-          targetDate,
-          submitDate
-        );
-
-        switch (type) {
-          case 'ontime':
-            return months <= 0;
-
-          case 'buffer1':
-            return months === 1;
-
-          case 'buffer2':
-            return months === 2;
-
-          case 'buffer3':
-            return months === 3;
-
-          case 'under3':
-            return false;
-
-          case 'over3':
-            return months > 3;
-
-          default:
-            return false;
-        }
-      }
-
-      // -----------------------------------------
-      // NOT SUBMITTED
-      // -----------------------------------------
-      const today = new Date();
-
-      const months = getMonthDifference(
-        targetDate,
-        today
-      );
-
-      // Target date has not passed
-      if (months <= 0) {
-        return false;
-      }
-
-      // Not submitted + overdue <= 3 months
-      if (type === 'under3') {
-        return months >= 1 && months <= 3;
-      }
-
-      // Not submitted + overdue > 3 months
-      if (type === 'over3') {
-        return months > 3;
-      }
-
-      return false;
+  
+      return getCSCategory(item) === type;
     }).length;
   };
-
-  // const debugCSItems = csItems.map(item => {
-  //   const submitDate = getSubmitDate(item);
-
-  //   if (!item.targetDate) {
-  //     return {
-  //       item: item.item,
-  //       priority: item.priority,
-  //       targetDate: null,
-  //       submitDate,
-  //       result: "NO TARGET DATE",
-  //     };
-  //   }
-
-  //   const targetDate = new Date(item.targetDate);
-
-  //   const endDate = submitDate || new Date();
-
-  //   const months = getMonthDifference(targetDate, endDate);
-
-  //   let category = "";
-
-  //   if (submitDate) {
-  //     if (months <= 0) category = "Completed in Time";
-  //     else if (months === 1) category = "Buffer 1";
-  //     else if (months === 2) category = "Buffer 2";
-  //     else if (months === 3) category = "Buffer 3";
-  //     else category = ">3 Buffer";
-  //   } else {
-  //     if (months > 3) category = "Not completed >3 Buffer";
-  //     else category = "NOT CLASSIFIED";
-  //   }
-
-  //   return {
-  //     item: item.item,
-  //     priority: item.priority,
-  //     targetDate: item.targetDate,
-  //     submitDate: submitDate?.toISOString() || null,
-  //     companyStatus: item.companyStatus,
-  //     createdAt: item.createdAt,
-  //     months,
-  //     category,
-  //   };
-  // });
-
-  // console.table(debugCSItems);
 
   const [animatedCSCount, setAnimatedCSCount] = useState(0);
 
@@ -505,234 +530,181 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
           <Card className="md:col-span-9 border border-emerald-100 shadow-sm">
             <CardContent className="p-4">
 
-              {/* Header */}
-              {/* <div className="flex items-center justify-between mb-1">
-                <div>
-                  <h3 className="text-sm font-bold text-slate-800">
-                    CS Items
-                  </h3>
-                  <p className="text-[11px] text-slate-500">
-                    Compliance & sustainability performance
-                  </p>
-                </div>
-
-                <div className="rounded-full bg-emerald-200 px-2 py-1">
-                  <span className="text-[11px] text-emerald-700">
-                    <span
-                      key={csItems.length}
-                      className="inline-block font-bold animate-in fade-in zoom-in duration-300"
-                    >
-                      {animatedCSCount}
-                    </span>
-                  </span>
-                </div>
-              </div> */}
-
               {/* Table */}
-              <div className="overflow-hidden rounded-xl border border-emerald-100">
+              <div className="overflow-hidden rounded-xl border border-slate-100">
 
-                {/* Header */}
-                <div className="grid grid-cols-[0.8fr_1fr_1fr_1fr_1fr_1fr_1fr_0.8fr] items-center bg-emerald-50/70 px-3 py-2.5">
+              {/* Header */}
+              <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.6fr_0.8fr] items-center bg-emerald-50/70 px-3 py-2.5">
 
-                  <div className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
-                    Priority
-                  </div>
-
-                  <div className="text-center text-[10px] font-semibold text-emerald-600">
-                    Completed in Time ssss
-                  </div>
-
-                  <div className="text-center text-[10px] font-semibold text-lime-600">
-                    Completed within 1 Buffer Time
-                  </div>
-
-                  <div className="text-center text-[10px] font-semibold text-yellow-600">
-                    Completed within 2 Buffer Time
-                  </div>
-
-                  <div className="text-center text-[10px] font-semibold text-orange-600">
-                    Completed within 3 Buffer Time
-                  </div>
-
-                  <div className="text-center text-[10px] font-semibold text-amber-600">
-                    Not completed &lt;3 Buffer Time
-                  </div>
-
-                  <div className="text-center text-[10px] font-semibold text-red-600">
-                    Not completed &gt;3 Buffer Time
-                  </div>
-
-                  <div className="text-center text-[10px] font-bold text-emerald-700">
-                    Total
-                  </div>
-
+                <div className="text-[10px] font-semibold uppercase tracking-wide ">
+                  Priority
                 </div>
 
+                <div className="text-center text-[10px] font-semibold uppercase tracking-wide ">
+                  Completed in Time
+                </div>
+
+                <div className="text-center text-[10px] font-semibold uppercase tracking-wide ">
+                ⁠ Completed in Buffer Time
+                </div>
+
+                <div className="text-center text-[10px] font-semibold uppercase tracking-wide ">
+                  Not Completed / Completed After Buffer Time
+                </div>
+
+                <div className="text-center text-[10px] font-semibold uppercase tracking-wide ">
+                  Total
+                </div>
+
+              </div>
+
+
+              {/* HIGH */}
+              <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.6fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5">
+
+                <div className="text-xs font-bold text-red-600">
+                  High
+                </div>
+
+                <div className="text-center text-xs font-semibold">
+                  {getCSCount("High", "ontime")}
+                </div>
+
+                <div className="text-center text-xs font-semibold">
+                  {getCSCount("High", "buffer1") +
+                  getCSCount("High", "buffer2") +
+                  getCSCount("High", "buffer3")}
+                </div>
 
                 {/* HIGH */}
-                <div className="grid grid-cols-[0.8fr_1fr_1fr_1fr_1fr_1fr_1fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5 hover:bg-emerald-50/30">
-
-                  <div className="text-xs font-bold text-red-600">
-                    High
-                  </div>
-
-                  <div className="text-center text-xs font-semibold">
-                    {getCSCount("High", "ontime")}
-                  </div>
-
-                  <div className="text-center text-xs font-semibold">
-                    {getCSCount("High", "buffer1")}
-                  </div>
-
-                  <div className="text-center text-xs font-semibold">
-                    {getCSCount("High", "buffer2")}
-                  </div>
-
-                  <div className="text-center text-xs font-semibold">
-                    {getCSCount("High", "buffer3")}
-                  </div>
-
-                  <div className="text-center text-xs font-semibold">
-                    {getCSCount("High", "under3")}
-                  </div>
-
-                  <div className="text-center text-xs font-bold text-red-600">
-                    {getCSCount("High", "over3")}
-                  </div>
-
-                  <div className="text-center text-xs font-bold">
-                    {getPriorityTotal("High")}
-                  </div>
-
+                <div className="text-center text-xs font-bold text-red-600">
+                  {getCSCount("High", "under3") +
+                  getCSCount("High", "over3")}
                 </div>
 
-
-                {/* MEDIUM */}
-                <div className="grid grid-cols-[0.8fr_1fr_1fr_1fr_1fr_1fr_1fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5 hover:bg-emerald-50/30">
-
-                  <div className="text-xs font-bold text-amber-600">
-                    Medium
-                  </div>
-
-                  <div className="text-center text-xs font-semibold">
-                    {getCSCount("Medium", "ontime")}
-                  </div>
-
-                  <div className="text-center text-xs font-semibold">
-                    {getCSCount("Medium", "buffer1")}
-                  </div>
-
-                  <div className="text-center text-xs font-semibold">
-                    {getCSCount("Medium", "buffer2")}
-                  </div>
-
-                  <div className="text-center text-xs font-semibold">
-                    {getCSCount("Medium", "buffer3")}
-                  </div>
-
-                  <div className="text-center text-xs font-semibold">
-                    {getCSCount("Medium", "under3")}
-                  </div>
-
-                  <div className="text-center text-xs font-bold text-red-600">
-                    {getCSCount("Medium", "over3")}
-                  </div>
-
-                  <div className="text-center text-xs font-bold">
-                    {getPriorityTotal("Medium")}
-                  </div>
-
+                <div className="text-center text-xs font-bold">
+                  {getCSCount("High", "ontime") +
+                  getCSCount("High", "buffer1") +
+                  getCSCount("High", "buffer2") +
+                  getCSCount("High", "buffer3") +
+                  getCSCount("High", "under3") +
+                  getCSCount("High", "over3")}
                 </div>
 
+              </div>
 
-                {/* LOW */}
-                <div className="grid grid-cols-[0.8fr_1fr_1fr_1fr_1fr_1fr_1fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5 hover:bg-emerald-50/30">
 
-                  <div className="text-xs font-bold text-slate-500">
-                    Low
-                  </div>
+              {/* MEDIUM */}
+              <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.6fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5">
 
-                  <div className="text-center text-xs font-semibold">
-                    {getCSCount("Low", "ontime")}
-                  </div>
-
-                  <div className="text-center text-xs font-semibold">
-                    {getCSCount("Low", "buffer1")}
-                  </div>
-
-                  <div className="text-center text-xs font-semibold">
-                    {getCSCount("Low", "buffer2")}
-                  </div>
-
-                  <div className="text-center text-xs font-semibold">
-                    {getCSCount("Low", "buffer3")}
-                  </div>
-
-                  <div className="text-center text-xs font-semibold">
-                    {getCSCount("Low", "under3")}
-                  </div>
-
-                  <div className="text-center text-xs font-bold text-red-600">
-                    {getCSCount("Low", "over3")}
-                  </div>
-
-                  <div className="text-center text-xs font-bold">
-                    {getPriorityTotal("Low")}
-                  </div>
-
+                <div className="text-xs font-bold text-amber-600">
+                  Medium
                 </div>
 
-                {/* TOTAL */}
-                <div className="grid grid-cols-[0.8fr_1fr_1fr_1fr_1fr_1fr_1fr_0.8fr] items-center border-t border-emerald-200 bg-emerald-50 px-3 py-2.5">
-
-                  <div className="text-xs font-bold text-emerald-700">
-                    Total
-                  </div>
-
-                  <div className="text-center text-xs font-bold text-emerald-700">
-                    {getCSCount("High", "ontime") +
-                      getCSCount("Medium", "ontime") +
-                      getCSCount("Low", "ontime")}
-                  </div>
-
-                  <div className="text-center text-xs font-bold text-emerald-700">
-                    {getCSCount("High", "buffer1") +
-                      getCSCount("Medium", "buffer1") +
-                      getCSCount("Low", "buffer1")}
-                  </div>
-
-                  <div className="text-center text-xs font-bold text-emerald-700">
-                    {getCSCount("High", "buffer2") +
-                      getCSCount("Medium", "buffer2") +
-                      getCSCount("Low", "buffer2")}
-                  </div>
-
-                  <div className="text-center text-xs font-bold text-emerald-700">
-                    {getCSCount("High", "buffer3") +
-                      getCSCount("Medium", "buffer3") +
-                      getCSCount("Low", "buffer3")}
-                  </div>
-
-                  <div className="text-center text-xs font-bold text-emerald-700">
-                    {getCSCount("High", "under3") +
-                      getCSCount("Medium", "under3") +
-                      getCSCount("Low", "under3")}
-                  </div>
-
-                  <div className="text-center text-xs font-bold text-red-600">
-                    {getCSCount("High", "over3") +
-                      getCSCount("Medium", "over3") +
-                      getCSCount("Low", "over3")}
-                  </div>
-
-                  {/* Overall Total */}
-                  <div className="flex justify-center">
-                    <span className="rounded-full bg-emerald-200 px-3 py-1 text-xs font-bold text-emerald-800">
-                      {animatedCSCount}
-                    </span>
-                  </div>
-
+                <div className="text-center text-xs font-semibold">
+                  {getCSCount("Medium", "ontime")}
                 </div>
+
+                <div className="text-center text-xs font-semibold">
+                  {getCSCount("Medium", "buffer1") +
+                  getCSCount("Medium", "buffer2") +
+                  getCSCount("Medium", "buffer3")}
+                </div>
+
+                <div className="text-center text-xs font-bold text-red-600">
+                  {getCSCount("Medium", "under3") +
+                  getCSCount("Medium", "over3")}
+                </div>
+
+                <div className="text-center text-xs font-bold">
+                  {getCSCount("Medium", "ontime") +
+                  getCSCount("Medium", "buffer1") +
+                  getCSCount("Medium", "buffer2") +
+                  getCSCount("Medium", "buffer3") +
+                  getCSCount("Medium", "under3") +
+                  getCSCount("Medium", "over3")}
+                </div>
+
+              </div>
+
+
+              {/* LOW */}
+              <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.6fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5">
+
+                <div className="text-xs font-bold text-slate-500">
+                  Low
+                </div>
+
+                <div className="text-center text-xs font-semibold">
+                  {getCSCount("Low", "ontime")}
+                </div>
+
+                <div className="text-center text-xs font-semibold">
+                  {getCSCount("Low", "buffer1") +
+                  getCSCount("Low", "buffer2") +
+                  getCSCount("Low", "buffer3")}
+                </div>
+
+                <div className="text-center text-xs font-bold text-red-600">
+                  {getCSCount("Low", "under3") +
+                  getCSCount("Low", "over3")}
+                </div>
+
+                <div className="text-center text-xs font-bold">
+                  {getCSCount("Low", "ontime") +
+                  getCSCount("Low", "buffer1") +
+                  getCSCount("Low", "buffer2") +
+                  getCSCount("Low", "buffer3") +
+                  getCSCount("Low", "under3") +
+                  getCSCount("Low", "over3")}
+                </div>
+
+              </div>
+
+
+              {/* TOTAL */}
+              <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.6fr_0.8fr] items-center border-t border-emerald-200 bg-emerald-50 px-3 py-2.5">
+
+                <div className="text-xs font-bold text-emerald-700">
+                  Total
+                </div>
+
+                <div className="text-center text-xs font-bold text-emerald-700">
+                  {getCSCount("High", "ontime") +
+                  getCSCount("Medium", "ontime") +
+                  getCSCount("Low", "ontime")}
+                </div>
+
+                <div className="text-center text-xs font-bold text-emerald-700">
+                  {
+                    getCSCount("High", "buffer1") +
+                    getCSCount("High", "buffer2") +
+                    getCSCount("High", "buffer3") +
+                    getCSCount("Medium", "buffer1") +
+                    getCSCount("Medium", "buffer2") +
+                    getCSCount("Medium", "buffer3") +
+                    getCSCount("Low", "buffer1") +
+                    getCSCount("Low", "buffer2") +
+                    getCSCount("Low", "buffer3")
+                  }
+                </div>
+
+                <div className="text-center text-xs font-bold text-red-600">
+                  {getCSCount("High", "under3") +
+                  getCSCount("High", "over3") +
+                  getCSCount("Medium", "under3") +
+                  getCSCount("Medium", "over3") +
+                  getCSCount("Low", "under3") +
+                  getCSCount("Low", "over3")}
+                </div>
+
+                <div className="flex justify-center">
+                  <span className="rounded-full bg-emerald-200 px-3 py-1 text-xs font-bold text-emerald-800">
+                    {csItems.length}
+                  </span>
+                </div>
+
+              </div>
 
               </div>
 
