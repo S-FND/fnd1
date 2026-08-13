@@ -50,6 +50,7 @@ export interface CompletionIndicator {
   guidanceResources?:   string;
   fileUploadUrl?:       string;
   reviewedOn?:          string | null;
+  uploadedAt?:          string | null;
 }
 
 export interface PlanItem {

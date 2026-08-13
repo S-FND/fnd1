@@ -1556,7 +1556,6 @@ export const useAnalyticsDashboardData = (filters: AnalyticsFilters,
   kpiEntries: { companyId: string; kpi_id: string; value: string | null; quarter: string; year: number }[],
   featureRows:{ companyId: string; feature_key: string, enabled: boolean }[]
 ) => {
-  // debugger;
   const { asOf } = useAsOf();
   const [data, setData] = useState<AnalyticsDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(false);

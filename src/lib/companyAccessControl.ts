@@ -16,7 +16,7 @@
  * Annual (FY) 2026 stays locked too — the user does not want annual
  * 2026 data filling opened yet.
  */
-export const OPEN_QUARTER = 'Q1';
+export const OPEN_QUARTER = 'Q2';
 export const OPEN_YEAR = 2026;
 
 /**

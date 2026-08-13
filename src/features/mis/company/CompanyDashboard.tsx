@@ -28,7 +28,10 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
-  Lock
+  Lock,
+  Minus,
+  TrendingDown,
+  TrendingUp
 } from 'lucide-react';
 import { isPeriodEditable } from '@/lib/companyAccessControl';
 import { usePortfolioRankings } from '@/hooks/usePortfolioRankings';
@@ -150,7 +153,9 @@ const CompanyDashboard = () => {
 
   // ── Derived / computed state ──────────────────────────────
   const [progressCards, setProgressCards] = useState<ProgressCard[]>([]);
+  const [prevProgressCards, setPrevProgressCards] = useState<ProgressCard[]>([]);
   const [esgCards, setEsgCards] = useState<EsgCard[]>([]);
+  const [prevEsgCards, setPrevEsgCards] = useState<EsgCard[]>([]);
   const [recommendationsRaw, setRecommendationsRaw] = useState<any[]>([]);
   const [kpiEntries, setKpiEntries] = useState<{ companyId: string; kpi_id: string; value: string | null; quarter: string; year: number }[]>();
   const [features, setFeatures] = useState<{ companyId: string; feature_key: string, enabled: boolean }[]>();
@@ -158,7 +163,7 @@ const CompanyDashboard = () => {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const [q4DataStatus,setQ4DataStatus]=useState(false);
+  const [q4DataStatus, setQ4DataStatus] = useState(false);
 
   // ── Data hooks ────────────────────────────────────────────
   const { getPublishedPeriod, loading: settingsLoading } = useAdminSettings();
@@ -171,6 +176,8 @@ const CompanyDashboard = () => {
 
   const allQuartersProgress = useAllQuartersProgress(companyId, selectedYear, 0, true);
   const peerComparison = usePeerComparison(companyId, publishedQuarter, publishedYear);
+
+  const prevPeerComparison = usePeerComparison(companyId, 'Q4', 2025);
 
 
   const getAllKpiEntries = async () => {
@@ -219,12 +226,12 @@ const CompanyDashboard = () => {
     return () => { cancelled = true; };  // cleanup if component unmounts mid-fetch
   }, []);
 
-  useEffect(()=>{
-    if(companyId && kpiEntries && kpiEntries.length>0){
-      let q4CompanyDataStatus=kpiEntries.filter(k => k.year == 2025 && k.quarter == 'Q4' && k.companyId == companyId );
-      setQ4DataStatus(q4CompanyDataStatus.length>0?true:false)
+  useEffect(() => {
+    if (companyId && kpiEntries && kpiEntries.length > 0) {
+      let q4CompanyDataStatus = kpiEntries.filter(k => k.year == 2025 && k.quarter == 'Q4' && k.companyId == companyId);
+      setQ4DataStatus(q4CompanyDataStatus.length > 0 ? true : false)
     }
-  },[companyId,kpiEntries])
+  }, [companyId, kpiEntries])
 
 
   const analyticsData = useAnalyticsDashboardData({
@@ -232,19 +239,27 @@ const CompanyDashboard = () => {
     quarter: publishedQuarter,
     year: publishedYear,
     companyId,
-  }, kpiEntries,features);
+  }, kpiEntries, features);
 
   const allCompaniesData = useAnalyticsDashboardData({
     period: 'annual',
     year: publishedYear,
-  }, kpiEntries,features);
+  }, kpiEntries, features);
+
+  const prevAllCompaniesData = useAnalyticsDashboardData({
+    period: 'annual',
+    quarter: 'Q4',
+    year: 2025,
+  }, kpiEntries, features);
 
   const { rankings, isLoading: isRankingsLoading } = usePortfolioRankings(publishedYear, publishedQuarter, publishedQuarter === 'FY' ? 'annual' : 'quarterly');
   console.log('CompanyDashboard: rankings:', rankings, 'isRankingsLoading:', isRankingsLoading);
+  const { rankings: prevRankings, isLoading: prevIsRankingsLoading } = usePortfolioRankings(2025, 'Q4', 'quarterly');
+
   const quarterlyStatus = useQuarterlyDataStatus(companyId, selectedYear);
   const { quarters, overallPercentage, totalFilled, totalAssigned, isLoading } = allQuartersProgress;
   const { completenessPercentile, consistencyPercentile, timelinessPercentile, isLoading: isPeerLoading } = peerComparison;
-
+  const { completenessPercentile: prevCompletenessPercentile, consistencyPercentile: prevConsistencyPercentile, timelinessPercentile: prevTimelinessPercentile, isLoading: prevIsPeerLoading } = prevPeerComparison;
   const hasAnyQuarterData =
     quarterlyStatus.Q1.hasData ||
     quarterlyStatus.Q2.hasData ||
@@ -309,6 +324,60 @@ const CompanyDashboard = () => {
       },
     ]);
   }, [isPeerLoading, rankings, companyId, completenessPercentile, consistencyPercentile, timelinessPercentile]);
+
+
+  useEffect(() => {
+    if (prevIsPeerLoading || prevRankings.length === 0) return;
+
+    const myRanking = prevRankings.find(r => r.companyId === companyId);
+    if (!myRanking) {
+      console.warn('[ProgressCards] companyId not found in rankings:', companyId, prevRankings.map(r => r.companyId));
+      return;
+    }
+
+    const myAvgScore = Math.round((myRanking.completionPct + myRanking.consistencyPct + myRanking.timelinessScore) / 3 * 10) / 10;
+    const allAvgScores = rankings.map(r =>
+      Math.round((r.completionPct + r.consistencyPct + r.timelinessScore) / 3 * 10) / 10
+    );
+    const sortedAvg = [...allAvgScores].sort((a, b) => a - b);
+    let overallIdx = sortedAvg.findIndex(v => v >= myAvgScore);
+    if (overallIdx === -1) overallIdx = sortedAvg.length - 1;
+    const overallPct = sortedAvg.length <= 1
+      ? 99
+      : Math.max(1, Math.min(99, Math.round(((overallIdx + 1) / sortedAvg.length) * 99)));
+    const n = rankings.length;
+
+    setPrevProgressCards([
+      {
+        label: 'Responsiveness Score',
+        value: overallPct,
+        icon: <Trophy className="w-4 h-4 text-amber-600" />,
+        color: 'border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/10',
+        n,
+      },
+      {
+        label: 'Completeness',
+        value: prevCompletenessPercentile,
+        icon: <ClipboardList className="w-4 h-4 text-emerald-600" />,
+        color: 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20',
+        n,
+      },
+      {
+        label: 'Consistency',
+        value: prevConsistencyPercentile,
+        icon: <BarChart3 className="w-4 h-4 text-blue-600" />,
+        color: 'border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/10',
+        n,
+      },
+      {
+        label: 'Timeliness',
+        value: prevTimelinessPercentile,
+        icon: <Calendar className="w-4 h-4 text-purple-600" />,
+        color: 'border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/10',
+        n,
+      },
+    ]);
+  }, [isPeerLoading, prevRankings, companyId, prevCompletenessPercentile, prevConsistencyPercentile, prevTimelinessPercentile]);
 
   // ── Effect: ESG Score cards + Recommendations ─────────────
   useEffect(() => {
@@ -386,6 +455,100 @@ const CompanyDashboard = () => {
       },
     ]);
   }, [allCompaniesData.data, allCompaniesData.isLoading, companyId, companyName]);
+
+  useEffect(() => {
+    if (prevAllCompaniesData.isLoading || !prevAllCompaniesData.data) return;
+
+    const allAd = prevAllCompaniesData.data;
+    const allRawData = allAd?.quarterlyCombinedRawData || allAd?.companyRawData || [];
+    if (allRawData.length === 0) return;
+
+    const companyData = allRawData.find((c: any) => c.companyId === companyId);
+
+    // debug — remove once confirmed working
+    // console.log('[ESGCards] companyId:', companyId);
+    // console.log('[ESGCards] matched companyData:', companyData);
+    // console.log('[ESGCards] allRawData ids:', allRawData.map((c: any) => c.companyId));
+
+    if (!companyData) return;
+
+    setRecommendationsRaw(allRawData);
+
+    const submitting = allRawData.filter((c: any) => Object.keys(c.kpis).length > 0);
+    const envEligible = submitting.filter((c: any) => c.hasEnvironmentFeature);
+    const companyHasEnvFeature = companyData?.hasEnvironmentFeature !== false;
+    const companyBrand = companyData.brand || companyName || '';
+
+    // debug — remove once confirmed working
+    // console.log('[ESGCards] companyBrand:', companyBrand);
+    // console.log('[ESGCards] esgPctileMap keys:', [...assignPercentiles(submitting, 'esgCompositeScore').keys()]);
+
+    const esgPctile = assignPercentiles(submitting, 'esgCompositeScore').get(companyBrand) ?? 1;
+    const envPctile = assignPercentiles(envEligible, 'circularEconomyIndex').get(companyBrand) ?? 1;
+    const socPctile = assignPercentiles(submitting, 'socialScore').get(companyBrand) ?? 1;
+    const govPctile = assignPercentiles(submitting, 'governanceScore').get(companyBrand) ?? 1;
+
+    // debug — remove once confirmed working
+    // console.log('[ESGCards] percentiles:', { esgPctile, envPctile, socPctile, govPctile });
+
+    setPrevEsgCards([
+      {
+        label: 'ESG Composite Score',
+        value: companyData.insights?.esgCompositeScore ?? 0,
+        percentile: esgPctile,
+        icon: <BarChart3 className="w-4 h-4 text-emerald-600" />,
+        color: 'border-emerald-300 dark:border-emerald-700 bg-emerald-50/50 dark:bg-emerald-950/20',
+        clickType: 'composite',
+        n: submitting.length,
+      },
+      {
+        label: 'Environment Score',
+        value: companyData.insights?.circularEconomyIndex ?? 0,
+        percentile: envPctile,
+        icon: <Leaf className="w-4 h-4 text-amber-600" />,
+        color: 'border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/10',
+        clickType: 'environment',
+        n: envEligible.length,
+        isEnvNA: !companyHasEnvFeature,
+      },
+      {
+        label: 'Social Score',
+        value: companyData.insights?.socialScore ?? 0,
+        percentile: socPctile,
+        icon: <UsersRound className="w-4 h-4 text-blue-600" />,
+        color: 'border-blue-200 dark:border-blue-800 bg-blue-50/30 dark:bg-blue-950/10',
+        clickType: 'social',
+        n: submitting.length,
+      },
+      {
+        label: 'Governance Score',
+        value: companyData.insights?.governanceScore ?? 0,
+        percentile: govPctile,
+        icon: <Shield className="w-4 h-4 text-purple-600" />,
+        color: 'border-purple-200 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/10',
+        clickType: 'governance',
+        n: submitting.length,
+      },
+    ]);
+  }, [prevAllCompaniesData.data, prevAllCompaniesData.isLoading, companyId, companyName]);
+
+  useEffect(() => {
+    if (esgCards) {
+      console.log('esgCards :: ', esgCards)
+    }
+    if (prevEsgCards) {
+      console.log('prevEsgCards :: ', prevEsgCards)
+    }
+  }, [esgCards, prevEsgCards])
+
+  useEffect(() => {
+    if (progressCards) {
+      console.log('progressCards :: ', progressCards)
+    }
+    if (prevEsgCards) {
+      console.log('prevProgressCards :: ', prevProgressCards)
+    }
+  }, [prevProgressCards, progressCards])
 
   // ── Handlers ──────────────────────────────────────────────
   const handleQuarterAction = (_quarterKey: string, _action: 'view' | 'edit' | 'add') => {
@@ -495,18 +658,33 @@ const CompanyDashboard = () => {
       {q4DataStatus && <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         {isPeerLoading || progressCards.length === 0
           ? [1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)
-          : progressCards.map(card => {
+          : progressCards.map((card, index) => {
             const { grade, color: gradeColor } = getGrade(card.value);
+            const trend = card.value > prevProgressCards[index]?.value ? 'up' : (card.value == prevProgressCards[index]?.value ? 'stable' : 'down')
             return (
               <Card key={card.label} className={`${card.color} transition-all hover:shadow-md`}>
                 <CardContent className="pt-3 pb-2">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-[11px] font-medium text-muted-foreground">{card.label}</p>
+                    {/* <p className="text-[11px] font-medium text-muted-foreground">{card.label}</p> */}
+                    <p className={`${index === 0 ? "text-sm" : "text-[11px]"} font-medium text-muted-foreground`}>
+                      {card.label}
+                    </p>
                     {card.icon}
                   </div>
                   <div className="flex items-end gap-2">
                     <span className={`text-2xl font-bold ${gradeColor}`}>{grade}</span>
                     <span className="text-xs text-muted-foreground mb-1">grade</span>
+                    {trend === "up" && (
+                      <TrendingUp className="w-4 h-4 text-green-500 mb-1" />
+                    )}
+
+                    {trend === "down" && (
+                      <TrendingDown className="w-4 h-4 text-red-500 mb-1" />
+                    )}
+
+                    {trend === "stable" && (
+                      <Minus className="w-4 h-4 text-muted-foreground mb-1" />
+                    )}
                   </div>
                   <div className="flex justify-start mt-1"><Badge variant="secondary" className="text-[9px]">n={card.n}</Badge></div>
                 </CardContent>
@@ -520,8 +698,10 @@ const CompanyDashboard = () => {
       {q4DataStatus && <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         {allCompaniesData.isLoading || esgCards.length === 0
           ? [1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)
-          : esgCards.map(card => {
+          : esgCards.map((card, index) => {
             const { grade, color: gradeColor } = getGrade(card.percentile);
+            const trend = card.percentile > prevEsgCards[index]?.percentile ? 'up' : (card.percentile == prevEsgCards[index]?.percentile ? 'stable' : 'down')
+
             return (
               <Card
                 key={card.label}
@@ -537,7 +717,10 @@ const CompanyDashboard = () => {
               >
                 <CardContent className="pt-3 pb-2">
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-[11px] font-medium text-muted-foreground">{card.label}</p>
+                    {/* <p className="text-[11px] font-medium text-muted-foreground">{card.label}</p> */}
+                    <p className={`${index === 0 ? "text-sm" : "text-[11px]"} font-medium text-muted-foreground`}>
+                      {card.label}
+                    </p>
                     {card.icon}
                   </div>
                   {card.isEnvNA ? (
@@ -549,6 +732,17 @@ const CompanyDashboard = () => {
                     <div className="flex items-end gap-2">
                       <span className={`text-2xl font-bold ${gradeColor}`}>{grade}</span>
                       <span className="text-xs text-muted-foreground mb-1">grade</span>
+                      {trend === "up" && (
+                        <TrendingUp className="w-4 h-4 text-green-500 mb-1" />
+                      )}
+
+                      {trend === "down" && (
+                        <TrendingDown className="w-4 h-4 text-red-500 mb-1" />
+                      )}
+
+                      {trend === "stable" && (
+                        <Minus className="w-4 h-4 text-muted-foreground mb-1" />
+                      )}
                     </div>
                   )}
                   <div className="flex items-center justify-between mt-1">
@@ -630,10 +824,10 @@ const CompanyDashboard = () => {
                     <div
                       key={q.key}
                       className={`relative rounded-lg border-2 transition-all ${isDisabled
-                          ? 'border-dashed border-border bg-muted/30 cursor-not-allowed opacity-60'
-                          : isSelected
-                            ? 'border-primary bg-primary/5 cursor-pointer'
-                            : 'border-border hover:border-primary/50 cursor-pointer'
+                        ? 'border-dashed border-border bg-muted/30 cursor-not-allowed opacity-60'
+                        : isSelected
+                          ? 'border-primary bg-primary/5 cursor-pointer'
+                          : 'border-border hover:border-primary/50 cursor-pointer'
                         }`}
                       onClick={() => { if (!isDisabled) setSelectedQuarter(q.key); }}
                       aria-disabled={isDisabled}
