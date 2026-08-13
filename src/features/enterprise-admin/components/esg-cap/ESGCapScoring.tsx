@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { ESGCapItem } from '../../types/esgDD';
 import { ComplianceGraphModal } from './ComplianceGraphModal';
+import { getEffectiveStatus } from '@/utils/esgStatus';
 interface ESGCapScoringProps {
   items: ESGCapItem[];
   onFilterChange?: (filterKey: string | null) => void;
@@ -293,23 +294,6 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
     );
   };
 
-  const getUpdatedDate = (item: any): Date | null => {
-    const uploadedDates = (item.completionIndicators || [])
-      .map((indicator: any) => indicator.uploadedAt)
-      .filter(Boolean)
-      .map((date: string) => new Date(date))
-      .filter((date: Date) => !isNaN(date.getTime()));
-  
-    if (uploadedDates.length === 0) {
-      return null;
-    }
-  
-    // Latest uploadedAt
-    return new Date(
-      Math.max(...uploadedDates.map(date => date.getTime()))
-    );
-  };
-
   const getCSCategory = (item: ESGCapItem) => {
     const CUTOFF_DATE = new Date('2026-06-30T23:59:59.999');
   
@@ -322,107 +306,121 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
     if (isNaN(targetDate.getTime())) {
       return null;
     }
+    const rawStatus = getEffectiveStatus(item);
+    const companyStatus = normalize(rawStatus);
+    // =====================================================
+    // GET LATEST uploadedAt
+    // =====================================================
   
-    const companyStatus = normalize(item.companyStatus);
-    const investorStatus = normalize(item.investorStatus);
+    const uploadedDates = (item.completionIndicators || [])
+      .map(indicator => indicator.uploadedAt)
+      .filter(Boolean)
+      .map(date => new Date(date as string))
+      .filter(date => !isNaN(date.getTime()));
   
-    // uploadedAt from completionIndicators
-    const updatedDate = getUpdatedDate(item);
+    const updatedDate =
+      uploadedDates.length > 0
+        ? new Date(
+            Math.max(
+              ...uploadedDates.map(date => date.getTime())
+            )
+          )
+        : null;
   
-    /*
-     * =====================================================
-     * TARGET <= 30 JUNE 2026
-     * =====================================================
-     */
+    // =====================================================
+    // TARGET DATE <= 30 JUNE 2026
+    // =====================================================
+  
     if (targetDate <= CUTOFF_DATE) {
-
+  
+      // ---------------------------------------------------
       // uploadedAt EXISTS
+      // ---------------------------------------------------
+  
       if (updatedDate) {
-    
-        // Uploaded on/before target date
+  
+        // Uploaded on or before target date
         if (
-          companyStatus === 'submitted' &&
-          // investorStatus === 'closed' &&
+          (companyStatus === 'submitted' || companyStatus === 'closed') &&
           updatedDate <= targetDate
         ) {
           return 'ontime';
         }
-    
+  
         // Uploaded after target date
         const months = getMonthDifference(
           targetDate,
           updatedDate
         );
-    
+  
         if (months === 1) return 'buffer1';
         if (months === 2) return 'buffer2';
         if (months === 3) return 'buffer3';
         if (months > 3) return 'over3';
-    
+  
         return null;
       }
-    
-      // =====================================================
-      // NO uploadedAt
-      // =====================================================
-      // Target is <= 30 June 2026, therefore count as On Time
-      if (
-        companyStatus === 'submitted'
-        // && investorStatus === 'closed'
-      ) {
+  
+      // ---------------------------------------------------
+      // uploadedAt DOES NOT EXIST
+      // ---------------------------------------------------
+  
+      // Old target + submitted = On Time
+      if ((companyStatus === 'submitted' || companyStatus === 'closed')) {
         return 'ontime';
       }
-    
-      return null;
+  
+      // ---------------------------------------------------
+      // NOT COMPLETED
+      // ---------------------------------------------------
+  
+      const today = new Date();
+  
+      const months = getMonthDifference(
+        targetDate,
+        today
+      );
+  
+      if (months <= 3) {
+        return 'under3';
+      }
+  
+      return 'over3';
     }
   
-    /*
-     * =====================================================
-     * TARGET AFTER 30 JUNE 2026
-     * =====================================================
-     */
+    // =====================================================
+    // TARGET DATE > 30 JUNE 2026
+    // =====================================================
   
     const submitDate = getSubmitDate(item);
   
     if (submitDate) {
   
+      // Submitted on or before target
       if (
-        companyStatus === 'submitted' &&
-        investorStatus === 'closed' &&
+        (companyStatus === 'submitted' || companyStatus === 'closed') &&
         submitDate <= targetDate
       ) {
         return 'ontime';
       }
   
+      // Submitted after target
       const months = getMonthDifference(
         targetDate,
         submitDate
       );
   
-      if (months === 1) {
-        return 'buffer1';
-      }
-  
-      if (months === 2) {
-        return 'buffer2';
-      }
-  
-      if (months === 3) {
-        return 'buffer3';
-      }
-  
-      if (months > 3) {
-        return 'over3';
-      }
+      if (months === 1) return 'buffer1';
+      if (months === 2) return 'buffer2';
+      if (months === 3) return 'buffer3';
+      if (months > 3) return 'over3';
   
       return null;
     }
   
-    /*
-     * =====================================================
-     * NOT COMPLETED
-     * =====================================================
-     */
+    // =====================================================
+    // NOT SUBMITTED
+    // =====================================================
   
     const today = new Date();
   
@@ -456,52 +454,6 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
       return getCSCategory(item) === type;
     }).length;
   };
-
-  // const debugCSItems = csItems.map(item => {
-  //   const submitDate = getSubmitDate(item);
-
-  //   if (!item.targetDate) {
-  //     return {
-  //       item: item.item,
-  //       priority: item.priority,
-  //       targetDate: null,
-  //       submitDate,
-  //       result: "NO TARGET DATE",
-  //     };
-  //   }
-
-  //   const targetDate = new Date(item.targetDate);
-
-  //   const endDate = submitDate || new Date();
-
-  //   const months = getMonthDifference(targetDate, endDate);
-
-  //   let category = "";
-
-  //   if (submitDate) {
-  //     if (months <= 0) category = "Completed in Time";
-  //     else if (months === 1) category = "Buffer 1";
-  //     else if (months === 2) category = "Buffer 2";
-  //     else if (months === 3) category = "Buffer 3";
-  //     else category = ">3 Buffer";
-  //   } else {
-  //     if (months > 3) category = "Not completed >3 Buffer";
-  //     else category = "NOT CLASSIFIED";
-  //   }
-
-  //   return {
-  //     item: item.item,
-  //     priority: item.priority,
-  //     targetDate: item.targetDate,
-  //     submitDate: submitDate?.toISOString() || null,
-  //     companyStatus: item.companyStatus,
-  //     createdAt: item.createdAt,
-  //     months,
-  //     category,
-  //   };
-  // });
-
-  // console.table(debugCSItems);
 
   const [animatedCSCount, setAnimatedCSCount] = useState(0);
 
