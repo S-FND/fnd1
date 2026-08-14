@@ -108,6 +108,25 @@ const Field: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, va
     </div>
 );
 
+const ChangedField: React.FC<{
+    field: string;
+    changedFields: string[];
+    children: React.ReactNode;
+}> = ({ field, changedFields, children }) => {
+    const changed = changedFields.includes(field);
+
+    return (
+        <div
+            className={cn(
+                "rounded-lg transition-all",
+                changed && "border-2 border-green-600 bg-green-100 p-3"
+            )}
+        >
+            {children}
+        </div>
+    );
+};
+
 
 
 const ESGCapDetailsPage: React.FC = () => {
@@ -494,35 +513,6 @@ const ESGCapDetailsPage: React.FC = () => {
             </UnifiedSidebarLayout>
         );
     }
-
-    const ChangedField = ({
-        field,
-        children,
-    }: {
-        field: string;
-        children: React.ReactNode;
-    }) => {
-        const changed = changedFields.includes(field);
-    
-        return (
-            <div
-                className={cn(
-                    "rounded-lg transition-all",
-                    changed && "border-2 border-green-600 bg-green-100 p-3"
-                )}
-            >
-                {/* {changed && (
-                    <div className="mb-2">
-                        <Badge className="bg-amber-500 text-white">
-                            Changed
-                        </Badge>
-                    </div>
-                )} */}
-    
-                {children}
-            </div>
-        );
-    };
     
     return (
         <UnifiedSidebarLayout>
@@ -536,7 +526,7 @@ const ESGCapDetailsPage: React.FC = () => {
                             <div className="flex-1">
     
                                 {/* Item */}
-                                <ChangedField field="item">
+                                <ChangedField field="item" changedFields={changedFields}>
                                     <h5 className="text-3xl font-bold text-left tracking-tight">
                                         {capItem?.item}
                                     </h5>
@@ -545,14 +535,14 @@ const ESGCapDetailsPage: React.FC = () => {
                                 {/* Meta Fields */}
                                 <div className="mt-4 flex flex-wrap items-center gap-2">
     
-                                    <ChangedField field="dealCondition">
+                                    <ChangedField field="dealCondition" changedFields={changedFields}>
                                         <MetaPill
                                             label={capItem?.dealCondition || ""}
                                             tone="slate"
                                         />
                                     </ChangedField>
     
-                                    <ChangedField field="priority">
+                                    <ChangedField field="priority" changedFields={changedFields}>
                                         <MetaPill
                                             label={
                                                 capItem?.priority
@@ -562,7 +552,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                         />
                                     </ChangedField>
     
-                                    <ChangedField field="targetDate">
+                                    <ChangedField field="targetDate" changedFields={changedFields}>
                                         <MetaPill
                                             label={
                                                 capItem?.targetDate
@@ -575,7 +565,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                         />
                                     </ChangedField>
     
-                                    <ChangedField field="category">
+                                    <ChangedField field="category" changedFields={changedFields}>
                                         <MetaPill
                                             label={
                                                 capItem?.category
@@ -585,7 +575,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                         />
                                     </ChangedField>
     
-                                    <ChangedField field="status">
+                                    <ChangedField field="status" changedFields={changedFields}>
                                         <MetaPill
                                             label={(
                                                 capItem?.companyStatus ??
@@ -688,7 +678,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                 </div>
     
                                 {/* Update Notes */}
-                                <ChangedField field="updateNote">
+                                <ChangedField field="updateNote" changedFields={changedFields}>
                                     <div
                                         className={cn(
                                             "grid overflow-hidden transition-all duration-300 ease-in-out",
@@ -717,7 +707,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                 {/* Existing Update Notes */}
                                 {capItem?.updateNote &&
                                     capItem?.comment === "Plan-Update" && (
-                                        <ChangedField field="updateNote">
+                                        <ChangedField field="updateNote" changedFields={changedFields}>
                                             <div className="rounded-xl border bg-muted/30 p-5">
                                                 <div className="grid gap-5 lg:grid-cols-[260px_1fr] lg:items-start">
     
@@ -751,7 +741,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                     )}
     
                                 {/* Assigned To */}
-                                <ChangedField field="assignedTo">
+                                <ChangedField field="assignedTo" changedFields={changedFields}>
                                     <div className="rounded-xl border bg-muted/30 p-5">
                                         <div className="grid gap-5 lg:grid-cols-[260px_1fr] lg:items-start">
     
@@ -783,7 +773,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                 </ChangedField>
     
                                 {/* Request Change */}
-                                <ChangedField field="requestChange">
+                                <ChangedField field="requestChange" changedFields={changedFields}>
                                     <div className="rounded-xl border bg-muted/30 p-5">
     
                                         <div className="flex items-start justify-between gap-4">
@@ -907,7 +897,7 @@ const ESGCapDetailsPage: React.FC = () => {
                             <div className="grid gap-8 lg:grid-cols-2">
     
                                 {/* Investor Status */}
-                                <ChangedField field="investorStatus">
+                                <ChangedField field="investorStatus" changedFields={changedFields}>
                                     <div>
                                         <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                                             {!isInvestorEmailExists
@@ -926,7 +916,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                 </ChangedField>
     
                                 {/* Review Comment */}
-                                <ChangedField field="reviewRemarks">
+                                <ChangedField field="reviewRemarks" changedFields={changedFields}>
                                     <div>
                                         <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                                             Review Comment
@@ -956,14 +946,14 @@ const ESGCapDetailsPage: React.FC = () => {
                         >
                             <div className="space-y-6 text-left">
     
-                                <ChangedField field="issue">
+                                <ChangedField field="issue" changedFields={changedFields}>
                                     <Field
                                         label="Issue & Related Finding"
                                         value={capItem?.issue}
                                     />
                                 </ChangedField>
     
-                                <ChangedField field="measures">
+                                <ChangedField field="measures" changedFields={changedFields}>
                                     <Field
                                         label="Measures & Corrective Actions"
                                         value={capItem?.measures}
@@ -1023,7 +1013,7 @@ const ESGCapDetailsPage: React.FC = () => {
     
                                                     {/* Completion Indicator */}
                                                     <ChangedField
-                                                        field={`completionIndicators.${idx}.indicatorLabel`}
+                                                        field={`completionIndicators.${idx}.indicatorLabel`} changedFields={changedFields}
                                                     >
                                                         <div className="rounded-lg border bg-card p-3">
     
@@ -1080,7 +1070,7 @@ const ESGCapDetailsPage: React.FC = () => {
     
                                                     {/* Guidance */}
                                                     <ChangedField
-                                                        field={`completionIndicators.${idx}.guidanceResources`}
+                                                        field={`completionIndicators.${idx}.guidanceResources`} changedFields={changedFields}
                                                     >
                                                         <div className="rounded-lg border bg-card p-3">
     
@@ -1098,7 +1088,7 @@ const ESGCapDetailsPage: React.FC = () => {
     
                                                 {/* Indicator Response */}
                                                 <ChangedField
-                                                    field={`completionIndicators.${idx}.indicatorResponse`}
+                                                    field={`completionIndicators.${idx}.indicatorResponse`} changedFields={changedFields}
                                                 >
                                                     <div className="rounded-lg border bg-card p-3">
                                                         <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -1114,7 +1104,7 @@ const ESGCapDetailsPage: React.FC = () => {
     
                                                 {/* Indicator Note */}
                                                 <ChangedField
-                                                    field={`completionIndicators.${idx}.indicatorNote`}
+                                                    field={`completionIndicators.${idx}.indicatorNote`} changedFields={changedFields}
                                                 >
                                                     <div className="rounded-lg border bg-card p-3">
                                                         <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -1143,7 +1133,7 @@ const ESGCapDetailsPage: React.FC = () => {
     
                             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
     
-                                <ChangedField field="uploadedAt">
+                                <ChangedField field="uploadedAt" changedFields={changedFields}>
                                     <Field
                                         label="Submission Date"
                                         value={
@@ -1160,7 +1150,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                     />
                                 </ChangedField>
     
-                                <ChangedField field="targetDate">
+                                <ChangedField field="targetDate" changedFields={changedFields}>
                                     <Field
                                         label="Target Date"
                                         value={
@@ -1177,7 +1167,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                     />
                                 </ChangedField>
     
-                                <ChangedField field="actualDate">
+                                <ChangedField field="actualDate" changedFields={changedFields}>
                                     <Field
                                         label="Actual Completion"
                                         value={
@@ -1194,7 +1184,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                     />
                                 </ChangedField>
     
-                                <ChangedField field="lastReviewDate">
+                                <ChangedField field="lastReviewDate" changedFields={changedFields}>
                                     <Field
                                         label="Last Review Date"
                                         value={
@@ -1211,7 +1201,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                     />
                                 </ChangedField>
     
-                                <ChangedField field="closureVerifiedBy">
+                                <ChangedField field="closureVerifiedBy" changedFields={changedFields}>
                                     <Field
                                         label="Closure Verified By"
                                         value={
@@ -1263,7 +1253,7 @@ const ESGCapDetailsPage: React.FC = () => {
                                             return (
                                                 <ChangedField
                                                     key={label}
-                                                    field={`completionIndicators.${label}`}
+                                                    field={`completionIndicators.${label}`} changedFields={changedFields}
                                                 >
                                                     <div className="rounded-lg border p-3">
     
@@ -1528,7 +1518,7 @@ const ESGCapDetailsPage: React.FC = () => {
     
                                                             <td className="px-4 py-3">
                                                                 <ChangedField
-                                                                    field={`fileUploadedData.${idx}.indicatorLabel`}
+                                                                    field={`fileUploadedData.${idx}.indicatorLabel`} changedFields={changedFields}
                                                                 >
                                                                     <div className="text-sm font-medium">
                                                                         {file?.indicatorLabel ||
@@ -1539,7 +1529,7 @@ const ESGCapDetailsPage: React.FC = () => {
     
                                                             <td className="px-4 py-3 max-w-[220px]">
                                                                 <ChangedField
-                                                                    field={`fileUploadedData.${idx}.filename`}
+                                                                    field={`fileUploadedData.${idx}.filename`} changedFields={changedFields}
                                                                 >
                                                                     <div className="flex items-center gap-2">
                                                                         <FileText className="h-4 w-4 text-blue-600 shrink-0" />

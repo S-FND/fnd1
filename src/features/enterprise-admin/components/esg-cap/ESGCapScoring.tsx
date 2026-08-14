@@ -455,40 +455,6 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
     }).length;
   };
 
-  const [animatedCSCount, setAnimatedCSCount] = useState(0);
-
-  useEffect(() => {
-    const target = csItems.length;
-    let current = 0;
-
-    const duration = 800;
-    const startTime = performance.now();
-
-    const animate = (time: number) => {
-      const progress = Math.min(
-        (time - startTime) / duration,
-        1
-      );
-
-      current = Math.floor(target * progress);
-      setAnimatedCSCount(current);
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-
-    requestAnimationFrame(animate);
-  }, [csItems.length]);
-
-  const getPriorityTotal = (
-    priority: "High" | "Medium" | "Low"
-  ) => {
-    return csItems.filter(
-      item => (item.priority || "Medium") === priority
-    ).length;
-  };
-
   return (
     <>
       <div className="space-y-4">
@@ -533,178 +499,248 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
               {/* Table */}
               <div className="overflow-hidden rounded-xl border border-slate-100">
 
-              {/* Header */}
-              <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.6fr_0.8fr] items-center bg-emerald-50/70 px-3 py-2.5">
+                {/* =========================================================
+                    HEADER
+                ========================================================= */}
+                <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.2fr_1.8fr_0.8fr] items-center bg-emerald-50/70 px-3 py-2.5">
 
-                <div className="text-[10px] font-semibold uppercase tracking-wide ">
-                  Priority
+                  {/* Priority */}
+                  <div className="text-[10px] font-semibold uppercase tracking-wide">
+                    Priority
+                  </div>
+
+                  {/* Completed in Time */}
+                  <div className="text-center text-[10px] font-semibold uppercase tracking-wide">
+                    Completed in Time
+                  </div>
+
+                  {/* Completed in Buffer Time */}
+                  <div className="text-center text-[10px] font-semibold uppercase tracking-wide">
+                    Completed in Buffer Time
+                  </div>
+
+                  {/* Upcoming */}
+                  <div className="text-center text-[10px] font-semibold uppercase tracking-wide">
+                    Upcoming
+                  </div>
+
+                  {/* Not Completed / Completed After Buffer Time */}
+                  <div className="text-center text-[10px] font-semibold uppercase tracking-wide">
+                    Not Completed / Completed After Buffer Time
+                  </div>
+
+                  {/* Total */}
+                  <div className="text-center text-[10px] font-semibold uppercase tracking-wide">
+                    Total
+                  </div>
+
                 </div>
 
-                <div className="text-center text-[10px] font-semibold uppercase tracking-wide ">
-                  Completed in Time
+
+                {/* =========================================================
+                    HIGH
+                ========================================================= */}
+                <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.2fr_1.8fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5">
+
+                  {/* Priority */}
+                  <div className="text-xs font-bold text-red-600">
+                    High
+                  </div>
+
+                  {/* Completed in Time */}
+                  <div className="text-center text-xs font-semibold">
+                    {getCSCount("High", "ontime")}
+                  </div>
+
+                  {/* Completed in Buffer Time */}
+                  <div className="text-center text-xs font-semibold">
+                    {getCSCount("High", "buffer1") +
+                      getCSCount("High", "buffer2") +
+                      getCSCount("High", "buffer3")}
+                  </div>
+
+                  {/* Upcoming */}
+                  <div className="text-center text-xs font-bold text-green-600">
+                    {getCSCount("High", "under3")}
+                  </div>
+
+                  {/* Not Completed / Completed After Buffer Time */}
+                  <div className="text-center text-xs font-bold text-red-600">
+                    {getCSCount("High", "over3")}
+                  </div>
+
+                  {/* Total */}
+                  <div className="text-center text-xs font-bold">
+                    {getCSCount("High", "ontime") +
+                      getCSCount("High", "buffer1") +
+                      getCSCount("High", "buffer2") +
+                      getCSCount("High", "buffer3") +
+                      getCSCount("High", "under3") +
+                      getCSCount("High", "over3")}
+                  </div>
+
                 </div>
 
-                <div className="text-center text-[10px] font-semibold uppercase tracking-wide ">
-                ⁠ Completed in Buffer Time
+
+                {/* =========================================================
+                    MEDIUM
+                ========================================================= */}
+                <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.2fr_1.8fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5">
+
+                  {/* Priority */}
+                  <div className="text-xs font-bold text-amber-600">
+                    Medium
+                  </div>
+
+                  {/* Completed in Time */}
+                  <div className="text-center text-xs font-semibold">
+                    {getCSCount("Medium", "ontime")}
+                  </div>
+
+                  {/* Completed in Buffer Time */}
+                  <div className="text-center text-xs font-semibold">
+                    {getCSCount("Medium", "buffer1") +
+                      getCSCount("Medium", "buffer2") +
+                      getCSCount("Medium", "buffer3")}
+                  </div>
+
+                  {/* Upcoming */}
+                  <div className="text-center text-xs font-bold text-green-600">
+                    {getCSCount("Medium", "under3")}
+                  </div>
+
+                  {/* Not Completed / Completed After Buffer Time */}
+                  <div className="text-center text-xs font-bold text-red-600">
+                    {getCSCount("Medium", "over3")}
+                  </div>
+
+                  {/* Total */}
+                  <div className="text-center text-xs font-bold">
+                    {getCSCount("Medium", "ontime") +
+                      getCSCount("Medium", "buffer1") +
+                      getCSCount("Medium", "buffer2") +
+                      getCSCount("Medium", "buffer3") +
+                      getCSCount("Medium", "under3") +
+                      getCSCount("Medium", "over3")}
+                  </div>
+
                 </div>
 
-                <div className="text-center text-[10px] font-semibold uppercase tracking-wide ">
-                  Not Completed / Completed After Buffer Time
+
+                {/* =========================================================
+                    LOW
+                ========================================================= */}
+                <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.2fr_1.8fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5">
+
+                  {/* Priority */}
+                  <div className="text-xs font-bold text-slate-500">
+                    Low
+                  </div>
+
+                  {/* Completed in Time */}
+                  <div className="text-center text-xs font-semibold">
+                    {getCSCount("Low", "ontime")}
+                  </div>
+
+                  {/* Completed in Buffer Time */}
+                  <div className="text-center text-xs font-semibold">
+                    {getCSCount("Low", "buffer1") +
+                      getCSCount("Low", "buffer2") +
+                      getCSCount("Low", "buffer3")}
+                  </div>
+
+                  {/* Upcoming */}
+                  <div className="text-center text-xs font-bold text-green-600">
+                    {getCSCount("Low", "under3")}
+                  </div>
+
+                  {/* Not Completed / Completed After Buffer Time */}
+                  <div className="text-center text-xs font-bold text-red-600">
+                    {getCSCount("Low", "over3")}
+                  </div>
+
+                  {/* Total */}
+                  <div className="text-center text-xs font-bold">
+                    {getCSCount("Low", "ontime") +
+                      getCSCount("Low", "buffer1") +
+                      getCSCount("Low", "buffer2") +
+                      getCSCount("Low", "buffer3") +
+                      getCSCount("Low", "under3") +
+                      getCSCount("Low", "over3")}
+                  </div>
+
                 </div>
 
-                <div className="text-center text-[10px] font-semibold uppercase tracking-wide ">
-                  Total
+
+                {/* =========================================================
+                    TOTAL
+                ========================================================= */}
+                <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.2fr_1.8fr_0.8fr] items-center border-t border-emerald-200 bg-emerald-50 px-3 py-2.5">
+
+                  {/* Priority */}
+                  <div className="text-xs font-bold text-emerald-700">
+                    Total
+                  </div>
+
+                  {/* Completed in Time */}
+                  <div className="text-center text-xs font-bold text-emerald-700">
+                    {getCSCount("High", "ontime") +
+                      getCSCount("Medium", "ontime") +
+                      getCSCount("Low", "ontime")}
+                  </div>
+
+                  {/* Completed in Buffer Time */}
+                  <div className="text-center text-xs font-bold text-emerald-700">
+                    {getCSCount("High", "buffer1") +
+                      getCSCount("High", "buffer2") +
+                      getCSCount("High", "buffer3") +
+                      getCSCount("Medium", "buffer1") +
+                      getCSCount("Medium", "buffer2") +
+                      getCSCount("Medium", "buffer3") +
+                      getCSCount("Low", "buffer1") +
+                      getCSCount("Low", "buffer2") +
+                      getCSCount("Low", "buffer3")}
+                  </div>
+
+                  {/* Upcoming */}
+                  <div className="text-center text-xs font-bold text-green-600">
+                    {getCSCount("High", "under3") +
+                      getCSCount("Medium", "under3") +
+                      getCSCount("Low", "under3")}
+                  </div>
+
+                  {/* Not Completed / Completed After Buffer Time */}
+                  <div className="text-center text-xs font-bold text-red-600">
+                    {getCSCount("High", "over3") +
+                      getCSCount("Medium", "over3") +
+                      getCSCount("Low", "over3")}
+                  </div>
+
+                  {/* Total */}
+                  <div className="flex justify-center">
+                    <span className="rounded-full bg-emerald-200 px-3 py-1 text-xs font-bold text-emerald-800">
+                      {getCSCount("High", "ontime") +
+                        getCSCount("High", "buffer1") +
+                        getCSCount("High", "buffer2") +
+                        getCSCount("High", "buffer3") +
+                        getCSCount("High", "under3") +
+                        getCSCount("High", "over3") +
+                        getCSCount("Medium", "ontime") +
+                        getCSCount("Medium", "buffer1") +
+                        getCSCount("Medium", "buffer2") +
+                        getCSCount("Medium", "buffer3") +
+                        getCSCount("Medium", "under3") +
+                        getCSCount("Medium", "over3") +
+                        getCSCount("Low", "ontime") +
+                        getCSCount("Low", "buffer1") +
+                        getCSCount("Low", "buffer2") +
+                        getCSCount("Low", "buffer3") +
+                        getCSCount("Low", "under3") +
+                        getCSCount("Low", "over3")}
+                    </span>
+                  </div>
+
                 </div>
-
-              </div>
-
-
-              {/* HIGH */}
-              <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.6fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5">
-
-                <div className="text-xs font-bold text-red-600">
-                  High
-                </div>
-
-                <div className="text-center text-xs font-semibold">
-                  {getCSCount("High", "ontime")}
-                </div>
-
-                <div className="text-center text-xs font-semibold">
-                  {getCSCount("High", "buffer1") +
-                  getCSCount("High", "buffer2") +
-                  getCSCount("High", "buffer3")}
-                </div>
-
-                {/* HIGH */}
-                <div className="text-center text-xs font-bold text-red-600">
-                  {getCSCount("High", "under3") +
-                  getCSCount("High", "over3")}
-                </div>
-
-                <div className="text-center text-xs font-bold">
-                  {getCSCount("High", "ontime") +
-                  getCSCount("High", "buffer1") +
-                  getCSCount("High", "buffer2") +
-                  getCSCount("High", "buffer3") +
-                  getCSCount("High", "under3") +
-                  getCSCount("High", "over3")}
-                </div>
-
-              </div>
-
-
-              {/* MEDIUM */}
-              <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.6fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5">
-
-                <div className="text-xs font-bold text-amber-600">
-                  Medium
-                </div>
-
-                <div className="text-center text-xs font-semibold">
-                  {getCSCount("Medium", "ontime")}
-                </div>
-
-                <div className="text-center text-xs font-semibold">
-                  {getCSCount("Medium", "buffer1") +
-                  getCSCount("Medium", "buffer2") +
-                  getCSCount("Medium", "buffer3")}
-                </div>
-
-                <div className="text-center text-xs font-bold text-red-600">
-                  {getCSCount("Medium", "under3") +
-                  getCSCount("Medium", "over3")}
-                </div>
-
-                <div className="text-center text-xs font-bold">
-                  {getCSCount("Medium", "ontime") +
-                  getCSCount("Medium", "buffer1") +
-                  getCSCount("Medium", "buffer2") +
-                  getCSCount("Medium", "buffer3") +
-                  getCSCount("Medium", "under3") +
-                  getCSCount("Medium", "over3")}
-                </div>
-
-              </div>
-
-
-              {/* LOW */}
-              <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.6fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5">
-
-                <div className="text-xs font-bold text-slate-500">
-                  Low
-                </div>
-
-                <div className="text-center text-xs font-semibold">
-                  {getCSCount("Low", "ontime")}
-                </div>
-
-                <div className="text-center text-xs font-semibold">
-                  {getCSCount("Low", "buffer1") +
-                  getCSCount("Low", "buffer2") +
-                  getCSCount("Low", "buffer3")}
-                </div>
-
-                <div className="text-center text-xs font-bold text-red-600">
-                  {getCSCount("Low", "under3") +
-                  getCSCount("Low", "over3")}
-                </div>
-
-                <div className="text-center text-xs font-bold">
-                  {getCSCount("Low", "ontime") +
-                  getCSCount("Low", "buffer1") +
-                  getCSCount("Low", "buffer2") +
-                  getCSCount("Low", "buffer3") +
-                  getCSCount("Low", "under3") +
-                  getCSCount("Low", "over3")}
-                </div>
-
-              </div>
-
-
-              {/* TOTAL */}
-              <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.6fr_0.8fr] items-center border-t border-emerald-200 bg-emerald-50 px-3 py-2.5">
-
-                <div className="text-xs font-bold text-emerald-700">
-                  Total
-                </div>
-
-                <div className="text-center text-xs font-bold text-emerald-700">
-                  {getCSCount("High", "ontime") +
-                  getCSCount("Medium", "ontime") +
-                  getCSCount("Low", "ontime")}
-                </div>
-
-                <div className="text-center text-xs font-bold text-emerald-700">
-                  {
-                    getCSCount("High", "buffer1") +
-                    getCSCount("High", "buffer2") +
-                    getCSCount("High", "buffer3") +
-                    getCSCount("Medium", "buffer1") +
-                    getCSCount("Medium", "buffer2") +
-                    getCSCount("Medium", "buffer3") +
-                    getCSCount("Low", "buffer1") +
-                    getCSCount("Low", "buffer2") +
-                    getCSCount("Low", "buffer3")
-                  }
-                </div>
-
-                <div className="text-center text-xs font-bold text-red-600">
-                  {getCSCount("High", "under3") +
-                  getCSCount("High", "over3") +
-                  getCSCount("Medium", "under3") +
-                  getCSCount("Medium", "over3") +
-                  getCSCount("Low", "under3") +
-                  getCSCount("Low", "over3")}
-                </div>
-
-                <div className="flex justify-center">
-                  <span className="rounded-full bg-emerald-200 px-3 py-1 text-xs font-bold text-emerald-800">
-                    {csItems.length}
-                  </span>
-                </div>
-
-              </div>
 
               </div>
 
