@@ -519,14 +519,14 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                     Completed in Buffer Time
                   </div>
 
-                  {/* Upcoming */}
-                  <div className="text-center text-[10px] font-semibold uppercase tracking-wide">
-                    Upcoming
-                  </div>
-
                   {/* Not Completed / Completed After Buffer Time */}
                   <div className="text-center text-[10px] font-semibold uppercase tracking-wide">
                     Not Completed / Completed After Buffer Time
+                  </div>
+
+                  {/* Upcoming */}
+                  <div className="text-center text-[10px] font-semibold uppercase tracking-wide">
+                    Upcoming
                   </div>
 
                   {/* Total */}
@@ -559,14 +559,14 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                       getCSCount("High", "buffer3")}
                   </div>
 
-                  {/* Upcoming */}
-                  <div className="text-center text-xs font-bold text-green-600">
-                    {getCSCount("High", "under3")}
-                  </div>
-
                   {/* Not Completed / Completed After Buffer Time */}
                   <div className="text-center text-xs font-bold text-red-600">
                     {getCSCount("High", "over3")}
+                  </div>
+
+                  {/* Upcoming */}
+                  <div className="text-center text-xs font-bold text-gray-600">
+                    {getCSCount("High", "under3")}
                   </div>
 
                   {/* Total */}
@@ -604,14 +604,14 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                       getCSCount("Medium", "buffer3")}
                   </div>
 
-                  {/* Upcoming */}
-                  <div className="text-center text-xs font-bold text-green-600">
-                    {getCSCount("Medium", "under3")}
-                  </div>
-
                   {/* Not Completed / Completed After Buffer Time */}
                   <div className="text-center text-xs font-bold text-red-600">
                     {getCSCount("Medium", "over3")}
+                  </div>
+
+                  {/* Upcoming */}
+                  <div className="text-center text-xs font-bold text-gray-600">
+                    {getCSCount("Medium", "under3")}
                   </div>
 
                   {/* Total */}
@@ -649,14 +649,14 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                       getCSCount("Low", "buffer3")}
                   </div>
 
-                  {/* Upcoming */}
-                  <div className="text-center text-xs font-bold text-green-600">
-                    {getCSCount("Low", "under3")}
-                  </div>
-
                   {/* Not Completed / Completed After Buffer Time */}
                   <div className="text-center text-xs font-bold text-red-600">
                     {getCSCount("Low", "over3")}
+                  </div>
+
+                  {/* Upcoming */}
+                  <div className="text-center text-xs font-bold text-gray-600">
+                    {getCSCount("Low", "under3")}
                   </div>
 
                   {/* Total */}
@@ -702,18 +702,18 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                       getCSCount("Low", "buffer3")}
                   </div>
 
-                  {/* Upcoming */}
-                  <div className="text-center text-xs font-bold text-green-600">
-                    {getCSCount("High", "under3") +
-                      getCSCount("Medium", "under3") +
-                      getCSCount("Low", "under3")}
-                  </div>
-
                   {/* Not Completed / Completed After Buffer Time */}
                   <div className="text-center text-xs font-bold text-red-600">
                     {getCSCount("High", "over3") +
                       getCSCount("Medium", "over3") +
                       getCSCount("Low", "over3")}
+                  </div>
+
+                   {/* Upcoming */}
+                   <div className="text-center text-xs font-bold text-gray-600">
+                    {getCSCount("High", "under3") +
+                      getCSCount("Medium", "under3") +
+                      getCSCount("Low", "under3")}
                   </div>
 
                   {/* Total */}
