@@ -246,11 +246,14 @@ const CompanyDashboard = () => {
     year: publishedYear,
   }, kpiEntries, features);
 
+  console.log('allCompaniesData :: ',allCompaniesData)
+
   const prevAllCompaniesData = useAnalyticsDashboardData({
     period: 'annual',
     quarter: 'Q4',
     year: 2025,
   }, kpiEntries, features);
+  console.log('prevAllCompaniesData :: ',prevAllCompaniesData)
 
   const { rankings, isLoading: isRankingsLoading } = usePortfolioRankings(publishedYear, publishedQuarter, publishedQuarter === 'FY' ? 'annual' : 'quarterly');
   console.log('CompanyDashboard: rankings:', rankings, 'isRankingsLoading:', isRankingsLoading);
@@ -660,36 +663,45 @@ const CompanyDashboard = () => {
           ? [1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)
           : progressCards.map((card, index) => {
             const { grade, color: gradeColor } = getGrade(card.value);
-            const trend = card.value > prevProgressCards[index]?.value ? 'up' : (card.value == prevProgressCards[index]?.value ? 'stable' : 'down')
-            return (
-              <Card key={card.label} className={`${card.color} transition-all hover:shadow-md`}>
-                <CardContent className="pt-3 pb-2">
-                  <div className="flex items-center justify-between mb-1">
-                    {/* <p className="text-[11px] font-medium text-muted-foreground">{card.label}</p> */}
-                    <p className={`${index === 0 ? "text-sm" : "text-[11px]"} font-medium text-muted-foreground`}>
-                      {card.label}
-                    </p>
-                    {card.icon}
-                  </div>
-                  <div className="flex items-end gap-2">
-                    <span className={`text-2xl font-bold ${gradeColor}`}>{grade}</span>
-                    <span className="text-xs text-muted-foreground mb-1">grade</span>
-                    {trend === "up" && (
-                      <TrendingUp className="w-4 h-4 text-green-500 mb-1" />
-                    )}
+            let gradeOrder = ['AA', 'A', 'BB', 'B', 'C'];
+            const { grade: prevGrade, color: prevGradeColor } = getGrade(prevProgressCards[index]?.value);
+            const currentGradeIndex = gradeOrder.indexOf(grade);
+            const previousGradeIndex = gradeOrder.indexOf(prevGrade);
 
-                    {trend === "down" && (
-                      <TrendingDown className="w-4 h-4 text-red-500 mb-1" />
-                    )}
+            const trend =
+              currentGradeIndex < previousGradeIndex
+                ? 'up'
+                : currentGradeIndex === previousGradeIndex
+                  ? 'stable'
+                  : 'down'; return (
+                    <Card key={card.label} className={`${card.color} transition-all hover:shadow-md`}>
+                      <CardContent className="pt-3 pb-2">
+                        <div className="flex items-center justify-between mb-1">
+                          {/* <p className="text-[11px] font-medium text-muted-foreground">{card.label}</p> */}
+                          <p className={`${index === 0 ? "text-sm" : "text-[11px]"} font-medium text-muted-foreground`}>
+                            {card.label}
+                          </p>
+                          {card.icon}
+                        </div>
+                        <div className="flex items-end gap-2">
+                          <span className={`text-2xl font-bold ${gradeColor}`}>{grade}</span>
+                          <span className="text-xs text-muted-foreground mb-1">grade</span>
+                          {trend === "up" && (
+                            <TrendingUp className="w-4 h-4 text-green-500 mb-1" />
+                          )}
 
-                    {trend === "stable" && (
-                      <Minus className="w-4 h-4 text-muted-foreground mb-1" />
-                    )}
-                  </div>
-                  <div className="flex justify-start mt-1"><Badge variant="secondary" className="text-[9px]">n={card.n}</Badge></div>
-                </CardContent>
-              </Card>
-            );
+                          {trend === "down" && (
+                            <TrendingDown className="w-4 h-4 text-red-500 mb-1" />
+                          )}
+
+                          {trend === "stable" && (
+                            <Minus className="w-4 h-4 text-muted-foreground mb-1" />
+                          )}
+                        </div>
+                        <div className="flex justify-start mt-1"><Badge variant="secondary" className="text-[9px]">n={card.n}</Badge></div>
+                      </CardContent>
+                    </Card>
+                  );
           })
         }
       </div>}
@@ -700,8 +712,17 @@ const CompanyDashboard = () => {
           ? [1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)
           : esgCards.map((card, index) => {
             const { grade, color: gradeColor } = getGrade(card.percentile);
-            const trend = card.percentile > prevEsgCards[index]?.percentile ? 'up' : (card.percentile == prevEsgCards[index]?.percentile ? 'stable' : 'down')
+            let gradeOrder = ['AA', 'A', 'BB', 'B', 'C'];
+            const { grade: prevGrade, color: prevGradeColor } = getGrade(prevProgressCards[index]?.value);
+            const currentGradeIndex = gradeOrder.indexOf(grade);
+            const previousGradeIndex = gradeOrder.indexOf(prevGrade);
 
+            const trend =
+              currentGradeIndex < previousGradeIndex
+                ? 'up'
+                : currentGradeIndex === previousGradeIndex
+                  ? 'stable'
+                  : 'down';
             return (
               <Card
                 key={card.label}
