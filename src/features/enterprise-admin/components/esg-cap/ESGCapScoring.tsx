@@ -38,76 +38,6 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
   // 🔥 Helper: Normalize status for consistent comparison
   const normalize = (s?: string) => (s ?? '').trim().toLowerCase();
 
-  // Helper: Check if target date is in current month
-  const isInCurrentMonth = (targetDate?: string): boolean => {
-    if (!targetDate) return false;
-    const today = new Date();
-    const target = new Date(targetDate);
-    return target.getMonth() === today.getMonth() &&
-      target.getFullYear() === today.getFullYear();
-  };
-
-  // 🔥 FIXED: Get effective status - INVESTOR STATUS TAKES PRIORITY
-  const getEffectiveCompanyStatus = (item: ESGCapItem): string => {
-    const companyStatus = normalize(item.companyStatus ?? item.status);
-    const investorStatus = normalize(item.investorStatus);
-
-    // 🔥 1. INVESTOR STATUS TAKES PRIORITY - CHECK FIRST
-    if (investorStatus === 'closed') {
-      return 'closed';
-    }
-    if (investorStatus === 're-submit-requested' || investorStatus === 're-submit requested') {
-      return 're-submit-requested';
-    }
-    if (investorStatus === 'partly-submitted' || investorStatus === 'partly submitted') {
-      return 'partly-submitted';
-    }
-    if ((companyStatus === 'submitted' || companyStatus === 'submitted-pending-review') &&
-      (investorStatus === 'under-review' || investorStatus === 'under review')) {
-      return 'submitted-pending-review';
-    }
-
-    // 2. Check company status (only if investor status is not closed or overriding)
-    if (companyStatus === 'closed') {
-      return 'closed';
-    }
-    if (companyStatus === 'partly-submitted' || companyStatus === 'partly submitted') {
-      return 'partly-submitted';
-    }
-    if (companyStatus === 'submitted' || companyStatus === 'submitted') {
-      return 'submitted';
-    }
-    if ((companyStatus === 'submitted' || companyStatus === 'submitted-pending-review') &&
-      (investorStatus === 'under-review' || investorStatus === 'under review')) {
-      return 'submitted-pending-review';
-    }
-    if (companyStatus === 're-submit-required' || companyStatus === 're-submit required') {
-      return 're-submit-requested';
-    }
-    if (companyStatus === 'overdue') {
-      return 'overdue';
-    }
-
-    // 3. If no target date, return empty
-    if (!item.targetDate) return '';
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const target = new Date(item.targetDate);
-    target.setHours(0, 0, 0, 0);
-
-    if (target.getMonth() === today.getMonth() &&
-      target.getFullYear() === today.getFullYear()) {
-      return 'due-in-this-month';
-    }
-
-    if (target < today) {
-      return 'overdue';
-    }
-
-    return 'upcoming';
-  };
-
   // 🔥 FIXED: Get investor status - INVESTOR STATUS TAKES PRIORITY
   const getInvestorStatus = (item: ESGCapItem): string => {
     const investorStatus = normalize(item.investorStatus);
@@ -148,7 +78,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
     }
 
     // 4. Return the effective status
-    return getEffectiveCompanyStatus(item);
+    return getEffectiveStatus(item);
   };
 
   // Check if item is closed
@@ -156,32 +86,16 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
     return getInvestorStatus(item) === 'closed';
   };
 
-  // Completed weightage for compliance score
-  const completedWeightage = filteredItems
-    .filter(isClosed)
-    .reduce((sum, item) => {
-      const priority = item.priority || 'Medium';
-      const weight = priorityWeights[priority] || priorityWeights.Medium;
-      return sum + (baseWeight * weight);
-    }, 0);
-
-  const progressPercentage = totalWeightage > 0
-    ? (completedWeightage / totalWeightage) * 100
-    : 0;
-
-  const safeProgress = Math.max(0, Math.min(100, progressPercentage));
-  // const complianceScore = Math.round(safeProgress);
-
   // ✅ Metrics using filteredItems (ONLY CP and CS)
   const dueThisMonthCount = filteredItems.filter(
     item => {
-      const effectiveStatus = getEffectiveCompanyStatus(item);
+      const effectiveStatus = getEffectiveStatus(item);
       return effectiveStatus === 'due-in-this-month' && !isClosed(item);
     }
   ).length;
 
   const overdueCount = filteredItems.filter(
-    item => getEffectiveCompanyStatus(item) === 'overdue' && !isClosed(item)
+    item => getEffectiveStatus(item) === 'overdue' && !isClosed(item)
   ).length;
 
   const partlySubmittedCount = filteredItems.filter(
@@ -306,8 +220,12 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
     if (isNaN(targetDate.getTime())) {
       return null;
     }
-    const rawStatus = getEffectiveStatus(item);
-    const companyStatus = normalize(rawStatus);
+  
+    // IMPORTANT:
+    // Do NOT use investor status here.
+    // Only company status is considered.
+    const companyStatus = normalize(item.companyStatus ?? item.status);
+  
     // =====================================================
     // GET LATEST uploadedAt
     // =====================================================
@@ -321,11 +239,15 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
     const updatedDate =
       uploadedDates.length > 0
         ? new Date(
-            Math.max(
-              ...uploadedDates.map(date => date.getTime())
-            )
+            Math.max(...uploadedDates.map(date => date.getTime()))
           )
         : null;
+  
+    // =====================================================
+    // GET SUBMIT DATE
+    // =====================================================
+  
+    const submitDate = getSubmitDate(item);
   
     // =====================================================
     // TARGET DATE <= 30 JUNE 2026
@@ -334,39 +256,56 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
     if (targetDate <= CUTOFF_DATE) {
   
       // ---------------------------------------------------
-      // uploadedAt EXISTS
+      // Submitted / Closed + uploaded date
       // ---------------------------------------------------
   
-      if (updatedDate) {
+      if (
+        updatedDate &&
+        (companyStatus === 'submitted' || companyStatus === 'closed')
+      ) {
   
-        // Uploaded on or before target date
-        if (
-          (companyStatus === 'submitted' || companyStatus === 'closed') &&
-          updatedDate <= targetDate
-        ) {
-          return 'ontime';
-        }
-  
-        // Uploaded after target date
+        // Same month or before target month = ON TIME
+        //
+        // Example:
+        // Target  : 24 June
+        // Uploaded: 26 June
+        // Month difference = 0
+        //
+        // Business rule => ON TIME
         const months = getMonthDifference(
           targetDate,
           updatedDate
         );
   
-        if (months === 1) return 'buffer1';
-        if (months === 2) return 'buffer2';
-        if (months === 3) return 'buffer3';
-        if (months > 3) return 'over3';
+        if (months <= 0) {
+          return 'ontime';
+        }
   
-        return null;
+        if (months === 1) {
+          return 'buffer1';
+        }
+  
+        if (months === 2) {
+          return 'buffer2';
+        }
+  
+        if (months === 3) {
+          return 'buffer3';
+        }
+  
+        if (months > 3) {
+          return 'over3';
+        }
       }
   
       // ---------------------------------------------------
-      // uploadedAt DOES NOT EXIST
+      // No uploadedAt but submitted/closed
       // ---------------------------------------------------
   
-      // Old target + submitted = On Time
-      if ((companyStatus === 'submitted' || companyStatus === 'closed')) {
+      if (
+        !updatedDate &&
+        (companyStatus === 'submitted' || companyStatus === 'closed')
+      ) {
         return 'ontime';
       }
   
@@ -375,9 +314,18 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
       // ---------------------------------------------------
   
       const today = new Date();
+      today.setHours(0, 0, 0, 0);
+  
+      const cleanTargetDate = new Date(targetDate);
+      cleanTargetDate.setHours(0, 0, 0, 0);
+  
+      // Target is still in future
+      if (cleanTargetDate > today) {
+        return 'upcoming';
+      }
   
       const months = getMonthDifference(
-        targetDate,
+        cleanTargetDate,
         today
       );
   
@@ -392,11 +340,9 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
     // TARGET DATE > 30 JUNE 2026
     // =====================================================
   
-    const submitDate = getSubmitDate(item);
-  
     if (submitDate) {
   
-      // Submitted on or before target
+      // Submitted on/before target
       if (
         (companyStatus === 'submitted' || companyStatus === 'closed') &&
         submitDate <= targetDate
@@ -410,10 +356,27 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
         submitDate
       );
   
-      if (months === 1) return 'buffer1';
-      if (months === 2) return 'buffer2';
-      if (months === 3) return 'buffer3';
-      if (months > 3) return 'over3';
+      // IMPORTANT:
+      // Same calendar month = ON TIME
+      if (months <= 0) {
+        return 'ontime';
+      }
+  
+      if (months === 1) {
+        return 'buffer1';
+      }
+  
+      if (months === 2) {
+        return 'buffer2';
+      }
+  
+      if (months === 3) {
+        return 'buffer3';
+      }
+  
+      if (months > 3) {
+        return 'over3';
+      }
   
       return null;
     }
@@ -423,9 +386,19 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
     // =====================================================
   
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
   
+    const cleanTargetDate = new Date(targetDate);
+    cleanTargetDate.setHours(0, 0, 0, 0);
+  
+    // FUTURE TARGET DATE
+    if (cleanTargetDate > today) {
+      return 'upcoming';
+    }
+  
+    // TARGET DATE PASSED
     const months = getMonthDifference(
-      targetDate,
+      cleanTargetDate,
       today
     );
   
@@ -445,6 +418,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
       | 'buffer3'
       | 'under3'
       | 'over3'
+      | 'upcoming'
   ) => {
     return csItems.filter(item => {
       if ((item.priority || 'Medium') !== priority) {
@@ -454,6 +428,75 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
       return getCSCategory(item) === type;
     }).length;
   };
+
+  // const debugCSItems = csItems.map(item => {
+  //   const targetDate = item.targetDate
+  //     ? new Date(item.targetDate)
+  //     : null;
+  
+  //   const uploadedDates = (item.completionIndicators || [])
+  //     .map(indicator => indicator.uploadedAt)
+  //     .filter(Boolean)
+  //     .map(date => new Date(date as string))
+  //     .filter(date => !isNaN(date.getTime()));
+  
+  //   const updatedDate =
+  //     uploadedDates.length > 0
+  //       ? new Date(
+  //           Math.max(
+  //             ...uploadedDates.map(date => date.getTime())
+  //           )
+  //         )
+  //       : null;
+  
+  //   const submitDate = getSubmitDate(item);
+  
+  //   const today = new Date();
+  
+  //   today.setHours(0, 0, 0, 0);
+  
+  //   const monthsFromToday =
+  //     targetDate && !isNaN(targetDate.getTime())
+  //       ? getMonthDifference(today, targetDate)
+  //       : null;
+  
+  //   const monthsFromTarget =
+  //     targetDate &&
+  //     !isNaN(targetDate.getTime()) &&
+  //     submitDate
+  //       ? getMonthDifference(targetDate, submitDate)
+  //       : null;
+  
+  //   return {
+  //     item: item.item,
+  //     priority: item.priority,
+  
+  //     // Dates
+  //     today: today.toISOString().split('T')[0],
+  //     targetDate:
+  //       targetDate && !isNaN(targetDate.getTime())
+  //         ? targetDate.toISOString().split('T')[0]
+  //         : null,
+  
+  //     latestUploadedAt:
+  //       updatedDate?.toISOString() || null,
+  
+  //     submitDate:
+  //       submitDate?.toISOString() || null,
+  
+  //     // Status
+  //     companyStatus: normalize(item.companyStatus),
+  
+  //     // Calculations
+  //     monthsFromToday,
+  //     monthsFromTarget,
+  
+  //     // Final result
+  //     category: getCSCategory(item),
+  //   };
+  // });
+  
+  // console.table(debugCSItems);
 
   return (
     <>
@@ -519,14 +562,14 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                     Completed in Buffer Time
                   </div>
 
-                  {/* Upcoming */}
-                  <div className="text-center text-[10px] font-semibold uppercase tracking-wide">
-                    Upcoming
-                  </div>
-
                   {/* Not Completed / Completed After Buffer Time */}
                   <div className="text-center text-[10px] font-semibold uppercase tracking-wide">
                     Not Completed / Completed After Buffer Time
+                  </div>
+
+                  {/* Upcoming */}
+                  <div className="text-center text-[10px] font-semibold uppercase tracking-wide">
+                    Upcoming
                   </div>
 
                   {/* Total */}
@@ -559,14 +602,14 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                       getCSCount("High", "buffer3")}
                   </div>
 
-                  {/* Upcoming */}
-                  <div className="text-center text-xs font-bold text-green-600">
-                    {getCSCount("High", "under3")}
-                  </div>
-
                   {/* Not Completed / Completed After Buffer Time */}
                   <div className="text-center text-xs font-bold text-red-600">
                     {getCSCount("High", "over3")}
+                  </div>
+
+                  {/* Upcoming */}
+                  <div className="text-center text-xs font-bold text-gray-600">
+                    {getCSCount("High", "upcoming")}
                   </div>
 
                   {/* Total */}
@@ -576,7 +619,8 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                       getCSCount("High", "buffer2") +
                       getCSCount("High", "buffer3") +
                       getCSCount("High", "under3") +
-                      getCSCount("High", "over3")}
+                      getCSCount("High", "over3") +
+                      getCSCount("High", "upcoming")}
                   </div>
 
                 </div>
@@ -604,14 +648,14 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                       getCSCount("Medium", "buffer3")}
                   </div>
 
-                  {/* Upcoming */}
-                  <div className="text-center text-xs font-bold text-green-600">
-                    {getCSCount("Medium", "under3")}
-                  </div>
-
                   {/* Not Completed / Completed After Buffer Time */}
                   <div className="text-center text-xs font-bold text-red-600">
                     {getCSCount("Medium", "over3")}
+                  </div>
+
+                  {/* Upcoming */}
+                  <div className="text-center text-xs font-bold text-gray-600">
+                    {getCSCount("Medium", "upcoming")}
                   </div>
 
                   {/* Total */}
@@ -621,7 +665,8 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                       getCSCount("Medium", "buffer2") +
                       getCSCount("Medium", "buffer3") +
                       getCSCount("Medium", "under3") +
-                      getCSCount("Medium", "over3")}
+                      getCSCount("Medium", "over3") +
+                      getCSCount("High", "upcoming")}
                   </div>
 
                 </div>
@@ -649,14 +694,14 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                       getCSCount("Low", "buffer3")}
                   </div>
 
-                  {/* Upcoming */}
-                  <div className="text-center text-xs font-bold text-green-600">
-                    {getCSCount("Low", "under3")}
-                  </div>
-
                   {/* Not Completed / Completed After Buffer Time */}
                   <div className="text-center text-xs font-bold text-red-600">
                     {getCSCount("Low", "over3")}
+                  </div>
+
+                  {/* Upcoming */}
+                  <div className="text-center text-xs font-bold text-gray-600">
+                    {getCSCount("Low", "upcoming")}
                   </div>
 
                   {/* Total */}
@@ -666,7 +711,8 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                       getCSCount("Low", "buffer2") +
                       getCSCount("Low", "buffer3") +
                       getCSCount("Low", "under3") +
-                      getCSCount("Low", "over3")}
+                      getCSCount("Low", "over3") +
+                      getCSCount("High", "upcoming")}
                   </div>
 
                 </div>
@@ -702,18 +748,18 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                       getCSCount("Low", "buffer3")}
                   </div>
 
-                  {/* Upcoming */}
-                  <div className="text-center text-xs font-bold text-green-600">
-                    {getCSCount("High", "under3") +
-                      getCSCount("Medium", "under3") +
-                      getCSCount("Low", "under3")}
-                  </div>
-
                   {/* Not Completed / Completed After Buffer Time */}
                   <div className="text-center text-xs font-bold text-red-600">
                     {getCSCount("High", "over3") +
                       getCSCount("Medium", "over3") +
                       getCSCount("Low", "over3")}
+                  </div>
+
+                   {/* Upcoming */}
+                   <div className="text-center text-xs font-bold text-gray-600">
+                    {getCSCount("High", "upcoming") +
+                      getCSCount("Medium", "upcoming") +
+                      getCSCount("Low", "upcoming")}
                   </div>
 
                   {/* Total */}
@@ -725,18 +771,21 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                         getCSCount("High", "buffer3") +
                         getCSCount("High", "under3") +
                         getCSCount("High", "over3") +
+                        getCSCount("High", "upcoming") +
                         getCSCount("Medium", "ontime") +
                         getCSCount("Medium", "buffer1") +
                         getCSCount("Medium", "buffer2") +
                         getCSCount("Medium", "buffer3") +
                         getCSCount("Medium", "under3") +
                         getCSCount("Medium", "over3") +
+                        getCSCount("Medium", "upcoming") +
                         getCSCount("Low", "ontime") +
                         getCSCount("Low", "buffer1") +
                         getCSCount("Low", "buffer2") +
                         getCSCount("Low", "buffer3") +
                         getCSCount("Low", "under3") +
-                        getCSCount("Low", "over3")}
+                        getCSCount("Low", "over3") +
+                        getCSCount("Low", "upcoming")}
                     </span>
                   </div>
 
