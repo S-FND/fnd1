@@ -2839,7 +2839,7 @@ function sumAggregations(items: AggregationMetrics[]): AggregationMetrics {
 /** Safe division: returns 0 when denominator is 0 (instead of Infinity or NaN) */
 const safeDiv = (num: number, den: number): number => den === 0 ? 0 : num / den;
 
-export function deriveInsights(agg: AggregationMetrics, industry?: string, hasFashionPackaging?: boolean): InsightMetrics {
+export function deriveInsights(agg: AggregationMetrics, industry?: string, hasFashionPackaging?: boolean, brand?: string): InsightMetrics {
   const totalEmployees = agg.totalEmployment;
   const totalPlastic = agg.primaryPlasticVirgin + agg.primaryPlasticRecycled + agg.secondaryPlasticVirgin + agg.secondaryPlasticRecycled + agg.fashionPlasticPrimaryRecyclable + agg.fashionPlasticPrimaryNonRecyclable + agg.fashionPlasticSecondaryRecyclable + agg.fashionPlasticSecondaryNonRecyclable;
 
@@ -2864,6 +2864,9 @@ export function deriveInsights(agg: AggregationMetrics, industry?: string, hasFa
   const socialPayParity = socialFemaleWages > 0 && socialFemaleCount > 0 && socialMaleWages > 0 && socialMaleCount > 0
     ? Math.min(100, ((socialFemaleWages / socialFemaleCount) / (socialMaleWages / socialMaleCount)) * 100)
     : 0;
+  if (brand == 'Terractive') {
+    console.log('supplierCocInPlaceVal :: ',supplierCocInPlaceVal)
+  }
   const socialScore = Math.min(100,
     Math.min(100, supplierCocInPlaceVal) * 0.10 +
     Math.min(100, supplierCocTrainingVal) * 0.10 +
@@ -3317,7 +3320,7 @@ export const useAnalyticsDashboardData = (filters: AnalyticsFilters,
           const aggregation = buildAggregation(kpis);
           const hasFashionPkg = fashionPkgCompanyIds.has(company.id);
           // //console.log(`Company ${company.name} (${company.id}) - `);
-          
+
           const insights = deriveInsights(aggregation, company.industry, hasFashionPkg);
           const obj = {
             companyId: company.id,
@@ -3456,11 +3459,11 @@ export const useAnalyticsDashboardData = (filters: AnalyticsFilters,
                 combinedKpis[k] = v;
               }
             });
-            
+
             const aggregation = buildAggregation(combinedKpis);
             const hasFashionPkg = fashionPkgCompanyIds.has(company.id);
-            
-            const insights = deriveInsights(aggregation, company.industry, hasFashionPkg);
+
+            const insights = deriveInsights(aggregation, company.industry, hasFashionPkg, company.brand);
             return {
               companyId: company.id,
               companyName: company.name,

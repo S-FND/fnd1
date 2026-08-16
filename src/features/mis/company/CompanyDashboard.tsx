@@ -135,6 +135,23 @@ const assignPercentiles = (pool: any[], key: string): Map<string, number> => {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+
+// const assignPercentiles = (companies: CompanyScore[]): (CompanyScore & { percentile: number })[] => {
+//   if (companies.length === 0) return [];
+//   if (companies.length === 1) return [{ ...companies[0], percentile: 99 }];
+
+//   // Sort ascending by score, then by brand alphabetically for deterministic tie-breaking
+//   const sorted = [...companies].sort((a, b) => {
+//     const diff = a.score - b.score;
+//     return diff !== 0 ? diff : a.brand.localeCompare(b.brand);
+//   });
+//   const n = sorted.length;
+
+//   return sorted.map((c, idx) => {
+//     const percentile = Math.round(((idx + 1) / n) * 99);
+//     return { ...c, percentile: Math.max(1, Math.min(99, percentile)) };
+//   });
+// };
 const CompanyDashboard = () => {
   const { user, effectiveCompanyId } = useAuth();
   const companyName = user?.misCompanyId;
@@ -248,9 +265,11 @@ const CompanyDashboard = () => {
 
   console.log('allCompaniesData :: ',allCompaniesData)
 
+  
+
   const prevAllCompaniesData = useAnalyticsDashboardData({
-    period: 'annual',
-    quarter: 'Q4',
+    period: 'quarterly',
+    quarter:'Q4',
     year: 2025,
   }, kpiEntries, features);
   console.log('prevAllCompaniesData :: ',prevAllCompaniesData)
@@ -485,7 +504,8 @@ const CompanyDashboard = () => {
     // debug — remove once confirmed working
     // console.log('[ESGCards] companyBrand:', companyBrand);
     // console.log('[ESGCards] esgPctileMap keys:', [...assignPercentiles(submitting, 'esgCompositeScore').keys()]);
-
+    console.log('submitting',submitting)
+    console.log(`assignPercentiles(submitting, 'socialScore') :: `,assignPercentiles(submitting, 'socialScore'))
     const esgPctile = assignPercentiles(submitting, 'esgCompositeScore').get(companyBrand) ?? 1;
     const envPctile = assignPercentiles(envEligible, 'circularEconomyIndex').get(companyBrand) ?? 1;
     const socPctile = assignPercentiles(submitting, 'socialScore').get(companyBrand) ?? 1;
@@ -713,7 +733,7 @@ const CompanyDashboard = () => {
           : esgCards.map((card, index) => {
             const { grade, color: gradeColor } = getGrade(card.percentile);
             let gradeOrder = ['AA', 'A', 'BB', 'B', 'C'];
-            const { grade: prevGrade, color: prevGradeColor } = getGrade(prevProgressCards[index]?.value);
+            const { grade: prevGrade, color: prevGradeColor } = getGrade(prevEsgCards[index]?.percentile);
             const currentGradeIndex = gradeOrder.indexOf(grade);
             const previousGradeIndex = gradeOrder.indexOf(prevGrade);
 
