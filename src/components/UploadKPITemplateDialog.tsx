@@ -109,7 +109,6 @@ export const UploadKPITemplateDialog = ({
   };
 
   const handleUpload = async () => {
-    console.log('object______Hit this',);
     if (parsedEntries.length === 0) {
       toast.error("No valid entries to upload");
       return;
@@ -122,49 +121,50 @@ export const UploadKPITemplateDialog = ({
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => Math.min(prev + 10, 90));
       }, 200);
+  
+      // 🔥 Map to the exact DTO expected by the backend
       const entries = parsedEntries.map(entry => ({
-        ...entry,
-        companyId,
-        year,
-        kpi_id: entry.kpiId
+        company_id: companyId,
+        kpi_id: entry.kpiId,           // use the correct key from parsed data
+        value: entry.value,            // must be a string
+        quarter: entry.quarter,        // 👈 use the parsed quarter (not the prop!)
+        year: year                     // use the prop year (or entry.year if provided)
       }));
-
-      const formData = new FormData();
-
-      formData.append("file", selectedFile!);
-      formData.append("companyId", companyId);
-      formData.append("quarter", quarter);
-      formData.append("year", String(year));
-      formData.append("entries", JSON.stringify(entries));
-
-      for (const [key, value] of formData.entries()) {
-        console.log(key, value);
+  
+      // Remove any entries where quarter is missing
+      const validEntries = entries.filter(e => e.quarter);
+      if (validEntries.length === 0) {
+        toast.error("No entries with a valid quarter found");
+        setStep("preview");
+        return;
       }
+  
+      const formData = new FormData();
+      formData.append("file", selectedFile!);
+      formData.append("entries", JSON.stringify(validEntries));
+  
       const { data } = await httpClient.post(
         "mis/kpi-entries/upsert",
         formData,
         {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+          headers: { "Content-Type": "multipart/form-data" },
         }
-      );  
+      );
+  
       clearInterval(progressInterval);
       setUploadProgress(100);
   
       setUploadResult({
-        success: data.length ?? entries.length,
+        success: data?.length ?? validEntries.length,
         failed: 0,
       });
   
       setStep("complete");
-  
-      toast.success(`Successfully uploaded ${entries.length} KPI entries`);
+      toast.success(`Successfully uploaded ${validEntries.length} KPI entries`);
       onSuccess?.();
-  
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Upload error:", error.response?.data || error.message);
       toast.error("Failed to upload entries");
-      console.error(error);
       setStep("preview");
     } finally {
       setIsProcessing(false);

@@ -28,6 +28,7 @@ import {
 } from '@/lib/featureKPITemplate';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { httpClient } from '@/lib/httpClient';
 
 interface UploadFeatureTemplateDialogProps {
   open: boolean;
@@ -108,36 +109,92 @@ export const UploadFeatureTemplateDialog = ({
     }
   };
 
+  // const handleUpload = async () => {
+  //   if (parsedEntries.length === 0) {
+  //     toast.error('No valid entries to upload');
+  //     return;
+  //   }
+
+  //   setStep('uploading');
+  //   setIsProcessing(true);
+
+  //   try {
+  //     // Simulate progress
+  //     const progressInterval = setInterval(() => {
+  //       setUploadProgress(prev => Math.min(prev + 10, 90));
+  //     }, 200);
+
+  //     const result = await saveFeatureEntriesFromTemplate(parsedEntries, companyId, quarter, year);
+      
+  //     clearInterval(progressInterval);
+  //     setUploadProgress(100);
+  //     setUploadResult(result);
+  //     setStep('complete');
+
+  //     if (result.success > 0) {
+  //       toast.success(`Successfully uploaded ${result.success} KPI entries`);
+  //       onSuccess?.();
+  //     }
+  //   } catch (error) {
+  //     toast.error('Failed to upload entries');
+  //     console.error(error);
+  //     setStep('preview');
+  //   } finally {
+  //     setIsProcessing(false);
+  //   }
+  // };
+
   const handleUpload = async () => {
     if (parsedEntries.length === 0) {
-      toast.error('No valid entries to upload');
+      toast.error("No valid entries to upload");
       return;
     }
-
-    setStep('uploading');
+  
+    setStep("uploading");
     setIsProcessing(true);
-
+  
     try {
-      // Simulate progress
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => Math.min(prev + 10, 90));
       }, 200);
-
-      const result = await saveFeatureEntriesFromTemplate(parsedEntries, companyId, quarter, year);
-      
+  
+      // 🔧 Map to the exact DTO format expected by the backend
+      const entries = parsedEntries.map(entry => ({
+        company_id: companyId,
+        kpi_id: entry.kpiKey,              // 'kpiKey' is returned by parseFeatureTemplateUpload
+        value: entry.value,
+        quarter: quarter,                  // from component props
+        year: year                         // from component props
+      }));
+  
+      const formData = new FormData();
+      formData.append("file", selectedFile!);
+      formData.append("entries", JSON.stringify(entries));
+  
+      const { data } = await httpClient.post(
+        "mis/kpi-entries/upsert",
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+  
       clearInterval(progressInterval);
       setUploadProgress(100);
-      setUploadResult(result);
-      setStep('complete');
-
-      if (result.success > 0) {
-        toast.success(`Successfully uploaded ${result.success} KPI entries`);
-        onSuccess?.();
-      }
-    } catch (error) {
-      toast.error('Failed to upload entries');
-      console.error(error);
-      setStep('preview');
+  
+      setUploadResult({
+        success: data?.length ?? entries.length,
+        failed: 0,
+      });
+  
+      setStep("complete");
+      toast.success(`Successfully uploaded ${entries.length} KPI entries`);
+      onSuccess?.();
+    } catch (error: any) {
+      // 🧪 Optionally log the error response for debugging
+      console.error("Upload error:", error.response?.data || error.message);
+      toast.error("Failed to upload entries");
+      setStep("preview");
     } finally {
       setIsProcessing(false);
     }
