@@ -94,6 +94,11 @@ interface EsgCard {
   isEnvNA?: boolean;
 }
 
+interface CompanyScore {
+  brand: string;
+  score: number;
+}
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const QUARTERS_INFO = [
@@ -263,20 +268,22 @@ const CompanyDashboard = () => {
     year: publishedYear,
   }, kpiEntries, features);
 
-  console.log('allCompaniesData :: ',allCompaniesData)
+  console.log('allCompaniesData :: ', allCompaniesData)
 
-  
+
 
   const prevAllCompaniesData = useAnalyticsDashboardData({
     period: 'quarterly',
     quarter:'Q4',
     year: 2025,
   }, kpiEntries, features);
-  console.log('prevAllCompaniesData :: ',prevAllCompaniesData)
-
+  console.log('prevAllCompaniesData :: ', prevAllCompaniesData)
+  console.log('publishedQuarter :: ', publishedQuarter)
   const { rankings, isLoading: isRankingsLoading } = usePortfolioRankings(publishedYear, publishedQuarter, publishedQuarter === 'FY' ? 'annual' : 'quarterly');
-  console.log('CompanyDashboard: rankings:', rankings, 'isRankingsLoading:', isRankingsLoading);
+  console.log('CompanyDashboard: current rankings:', rankings, 'isRankingsLoading:', isRankingsLoading);
   const { rankings: prevRankings, isLoading: prevIsRankingsLoading } = usePortfolioRankings(2025, 'Q4', 'quarterly');
+  console.log('CompanyDashboard: previous rankings:', prevRankings, 'isRankingsLoading:', isRankingsLoading);
+
 
   const quarterlyStatus = useQuarterlyDataStatus(companyId, selectedYear);
   const { quarters, overallPercentage, totalFilled, totalAssigned, isLoading } = allQuartersProgress;
@@ -304,15 +311,29 @@ const CompanyDashboard = () => {
     }
 
     const myAvgScore = Math.round((myRanking.completionPct + myRanking.consistencyPct + myRanking.timelinessScore) / 3 * 10) / 10;
+    console.log("current myAvgScore :: ", myAvgScore)
     const allAvgScores = rankings.map(r =>
       Math.round((r.completionPct + r.consistencyPct + r.timelinessScore) / 3 * 10) / 10
     );
+
+    const allAvgScoresByBrand = rankings.map(r => {
+      return {brand:r.brand,
+      score:Math.round((r.completionPct + r.consistencyPct + r.timelinessScore) / 3 * 10) / 10}
+    });
+
+    let percetiles=assignPercentilesV1(allAvgScoresByBrand)
+    console.log('Current percetiles :: ',percetiles)
+    console.log('current allAvgScores :: ', allAvgScores)
     const sortedAvg = [...allAvgScores].sort((a, b) => a - b);
+    console.log("current sortedAvg :: ", sortedAvg)
     let overallIdx = sortedAvg.findIndex(v => v >= myAvgScore);
+    console.log("current overallIdx :: ", overallIdx)
     if (overallIdx === -1) overallIdx = sortedAvg.length - 1;
+    console.log("current overallIdx :: ", overallIdx)
     const overallPct = sortedAvg.length <= 1
       ? 99
       : Math.max(1, Math.min(99, Math.round(((overallIdx + 1) / sortedAvg.length) * 99)));
+    console.log("current overallPct :: ", overallPct)
     const n = rankings.length;
 
     setProgressCards([
@@ -347,6 +368,22 @@ const CompanyDashboard = () => {
     ]);
   }, [isPeerLoading, rankings, companyId, completenessPercentile, consistencyPercentile, timelinessPercentile]);
 
+  const assignPercentilesV1 = (companies: CompanyScore[]): (CompanyScore & { percentile: number })[] => {
+    if (companies.length === 0) return [];
+    if (companies.length === 1) return [{ ...companies[0], percentile: 99 }];
+  
+    // Sort ascending by score, then by brand alphabetically for deterministic tie-breaking
+    const sorted = [...companies].sort((a, b) => {
+      const diff = a.score - b.score;
+      return diff !== 0 ? diff : a.brand.localeCompare(b.brand);
+    });
+    const n = sorted.length;
+  
+    return sorted.map((c, idx) => {
+      const percentile = Math.round(((idx + 1) / n) * 99);
+      return { ...c, percentile: Math.max(1, Math.min(99, percentile)) };
+    });
+  };
 
   useEffect(() => {
     if (prevIsPeerLoading || prevRankings.length === 0) return;
@@ -358,15 +395,32 @@ const CompanyDashboard = () => {
     }
 
     const myAvgScore = Math.round((myRanking.completionPct + myRanking.consistencyPct + myRanking.timelinessScore) / 3 * 10) / 10;
+    console.log("Previous myAvgScore :: ", myAvgScore)
+    const allAvgScoresByBrand = rankings.map(r => {
+      return {brand:r.brand,
+      score:Math.round((r.completionPct + r.consistencyPct + r.timelinessScore) / 3 * 10) / 10}
+    });
+    console.log('Previous allAvgScoresByBrand :: ',allAvgScoresByBrand)
+    let percetiles=assignPercentilesV1(allAvgScoresByBrand)
+    console.log('previous percetiles :: ',percetiles)
+
     const allAvgScores = rankings.map(r =>
       Math.round((r.completionPct + r.consistencyPct + r.timelinessScore) / 3 * 10) / 10
     );
+
+   
+    console.log('Previous allAvgScores :: ', allAvgScores)
     const sortedAvg = [...allAvgScores].sort((a, b) => a - b);
+
+    console.log("Previous sortedAvg :: ", sortedAvg)
     let overallIdx = sortedAvg.findIndex(v => v >= myAvgScore);
+    console.log("Previous overallIdx :: ", overallIdx)
     if (overallIdx === -1) overallIdx = sortedAvg.length - 1;
+    console.log("Previous overallIdx :: ", overallIdx)
     const overallPct = sortedAvg.length <= 1
       ? 99
       : Math.max(1, Math.min(99, Math.round(((overallIdx + 1) / sortedAvg.length) * 99)));
+    console.log("Previous overallPct :: ", overallPct)
     const n = rankings.length;
 
     setPrevProgressCards([
@@ -504,8 +558,8 @@ const CompanyDashboard = () => {
     // debug — remove once confirmed working
     // console.log('[ESGCards] companyBrand:', companyBrand);
     // console.log('[ESGCards] esgPctileMap keys:', [...assignPercentiles(submitting, 'esgCompositeScore').keys()]);
-    console.log('submitting',submitting)
-    console.log(`assignPercentiles(submitting, 'socialScore') :: `,assignPercentiles(submitting, 'socialScore'))
+    // console.log('submitting',submitting)
+    // console.log(`assignPercentiles(submitting, 'socialScore') :: `,assignPercentiles(submitting, 'socialScore'))
     const esgPctile = assignPercentiles(submitting, 'esgCompositeScore').get(companyBrand) ?? 1;
     const envPctile = assignPercentiles(envEligible, 'circularEconomyIndex').get(companyBrand) ?? 1;
     const socPctile = assignPercentiles(submitting, 'socialScore').get(companyBrand) ?? 1;
