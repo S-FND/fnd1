@@ -3227,7 +3227,7 @@ export const useAnalyticsDashboardData = (filters: AnalyticsFilters,
             .filter(r => r.feature_key === 'waterDetailed' || r.feature_key === 'waterManagement')
             .map(r => r.companyId)
         );
-        // //console.log('Companies with fashionMaterials feature:', Array.from(fashionPkgCompanyIds));
+        console.log('Companies with fashionMaterials feature:', Array.from(fashionPkgCompanyIds));
         // //console.log('Companies with primarySecondaryPackaging feature:', Array.from(stdPkgCompanyIds));
         // //console.log('Companies with sourcingFulfillment feature:', Array.from(sourcingCompanyIds));
         // //console.log('Companies with waterDetailed or waterManagement features:', Array.from(waterDetailedCompanyIds));
@@ -3237,13 +3237,13 @@ export const useAnalyticsDashboardData = (filters: AnalyticsFilters,
           envFeatureCompanyIds.has(companyId);
 
         allEntries = allEntries.filter(e => {
-          if (e.kpi_id.startsWith('food_pkg_') && !stdPkgCompanyIds.has(e.companyId)) return false;
+          if (e.kpi_id?.startsWith('food_pkg_') && !stdPkgCompanyIds.has(e.companyId)) return false;
           return true;
         });
 
         let filteredCompanies = mockCompanies.filter(c => c.investmentStatus === 'Invested');
         if (filters.year && filters.year == 2025) {
-          filteredCompanies = filteredCompanies.filter(c => !['company-44', 'company-45'].includes(c.id))
+          filteredCompanies = filteredCompanies.filter(c => !['company-44', 'company-45','company-222','company-223','company-224'].includes(c.id))
         }
         // Need to do filters after calculation
         // if (filters.industry) filteredCompanies = filteredCompanies.filter(c => c.industry === filters.industry);
@@ -3755,6 +3755,7 @@ export const useAnalyticsDashboardData = (filters: AnalyticsFilters,
           });
         }
       } catch (err) {
+        console.log("error :: ",err)
         if (!cancelled) {
           setError(err instanceof Error ? err : new Error(String(err)));
         }
@@ -3770,6 +3771,10 @@ export const useAnalyticsDashboardData = (filters: AnalyticsFilters,
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtersKey, asOfKey, kpiEntriesKey, featuresKey]);
+
+  useEffect(()=>{
+    console.log("error useEffect :: ",error)
+  },[error])
 
   return { data, isLoading, error };
 };
