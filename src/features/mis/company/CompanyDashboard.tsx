@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useInsertionEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { CompletionRing } from '@/components/CompletionRing';
@@ -44,6 +44,8 @@ import { useAnalyticsDashboardData } from '@/hooks/useAnalyticsDashboardData';
 import { useAdminSettings } from '@/hooks/useAdminSettings';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { httpClient } from '@/lib/httpClient';
+import { useComparePeriods } from '@/hooks/periodComparision';
+import { mockCompanies } from '@/data/mockData';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -81,6 +83,7 @@ interface ProgressCard {
   icon: React.ReactNode;
   color: string;
   n: number;
+  trend?:string;
 }
 
 interface EsgCard {
@@ -92,6 +95,12 @@ interface EsgCard {
   clickType: 'composite' | 'environment' | 'social' | 'governance';
   n: number;
   isEnvNA?: boolean;
+  trend?:string;
+}
+
+interface CompanyScore {
+  brand: string;
+  score: number;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -135,6 +144,23 @@ const assignPercentiles = (pool: any[], key: string): Map<string, number> => {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+
+// const assignPercentiles = (companies: CompanyScore[]): (CompanyScore & { percentile: number })[] => {
+//   if (companies.length === 0) return [];
+//   if (companies.length === 1) return [{ ...companies[0], percentile: 99 }];
+
+//   // Sort ascending by score, then by brand alphabetically for deterministic tie-breaking
+//   const sorted = [...companies].sort((a, b) => {
+//     const diff = a.score - b.score;
+//     return diff !== 0 ? diff : a.brand.localeCompare(b.brand);
+//   });
+//   const n = sorted.length;
+
+//   return sorted.map((c, idx) => {
+//     const percentile = Math.round(((idx + 1) / n) * 99);
+//     return { ...c, percentile: Math.max(1, Math.min(99, percentile)) };
+//   });
+// };
 const CompanyDashboard = () => {
   const { user, effectiveCompanyId } = useAuth();
   const companyName = user?.misCompanyId;
@@ -246,15 +272,22 @@ const CompanyDashboard = () => {
     year: publishedYear,
   }, kpiEntries, features);
 
+  console.log('allCompaniesData :: ', allCompaniesData)
+
+
+
   const prevAllCompaniesData = useAnalyticsDashboardData({
-    period: 'annual',
+    period: 'quarterly',
     quarter: 'Q4',
     year: 2025,
   }, kpiEntries, features);
-
+  console.log('prevAllCompaniesData :: ', prevAllCompaniesData)
+  console.log('publishedQuarter :: ', publishedQuarter)
   const { rankings, isLoading: isRankingsLoading } = usePortfolioRankings(publishedYear, publishedQuarter, publishedQuarter === 'FY' ? 'annual' : 'quarterly');
-  console.log('CompanyDashboard: rankings:', rankings, 'isRankingsLoading:', isRankingsLoading);
+  console.log('CompanyDashboard: current rankings:', rankings, 'isRankingsLoading:', isRankingsLoading);
   const { rankings: prevRankings, isLoading: prevIsRankingsLoading } = usePortfolioRankings(2025, 'Q4', 'quarterly');
+  console.log('CompanyDashboard: previous rankings:', prevRankings, 'isRankingsLoading:', isRankingsLoading);
+
 
   const quarterlyStatus = useQuarterlyDataStatus(companyId, selectedYear);
   const { quarters, overallPercentage, totalFilled, totalAssigned, isLoading } = allQuartersProgress;
@@ -282,15 +315,31 @@ const CompanyDashboard = () => {
     }
 
     const myAvgScore = Math.round((myRanking.completionPct + myRanking.consistencyPct + myRanking.timelinessScore) / 3 * 10) / 10;
+    console.log("current myAvgScore :: ", myAvgScore)
     const allAvgScores = rankings.map(r =>
       Math.round((r.completionPct + r.consistencyPct + r.timelinessScore) / 3 * 10) / 10
     );
+
+    const allAvgScoresByBrand = rankings.map(r => {
+      return {
+        brand: r.brand,
+        score: Math.round((r.completionPct + r.consistencyPct + r.timelinessScore) / 3 * 10) / 10
+      }
+    });
+
+    let percetiles = assignPercentilesV1(allAvgScoresByBrand)
+    console.log('Current percetiles :: ', percetiles)
+    console.log('current allAvgScores :: ', allAvgScores)
     const sortedAvg = [...allAvgScores].sort((a, b) => a - b);
+    console.log("current sortedAvg :: ", sortedAvg)
     let overallIdx = sortedAvg.findIndex(v => v >= myAvgScore);
+    console.log("current overallIdx :: ", overallIdx)
     if (overallIdx === -1) overallIdx = sortedAvg.length - 1;
+    console.log("current overallIdx :: ", overallIdx)
     const overallPct = sortedAvg.length <= 1
       ? 99
       : Math.max(1, Math.min(99, Math.round(((overallIdx + 1) / sortedAvg.length) * 99)));
+    console.log("current overallPct :: ", overallPct)
     const n = rankings.length;
 
     setProgressCards([
@@ -325,6 +374,22 @@ const CompanyDashboard = () => {
     ]);
   }, [isPeerLoading, rankings, companyId, completenessPercentile, consistencyPercentile, timelinessPercentile]);
 
+  const assignPercentilesV1 = (companies: CompanyScore[]): (CompanyScore & { percentile: number })[] => {
+    if (companies.length === 0) return [];
+    if (companies.length === 1) return [{ ...companies[0], percentile: 99 }];
+
+    // Sort ascending by score, then by brand alphabetically for deterministic tie-breaking
+    const sorted = [...companies].sort((a, b) => {
+      const diff = a.score - b.score;
+      return diff !== 0 ? diff : a.brand.localeCompare(b.brand);
+    });
+    const n = sorted.length;
+
+    return sorted.map((c, idx) => {
+      const percentile = Math.round(((idx + 1) / n) * 99);
+      return { ...c, percentile: Math.max(1, Math.min(99, percentile)) };
+    });
+  };
 
   useEffect(() => {
     if (prevIsPeerLoading || prevRankings.length === 0) return;
@@ -336,15 +401,34 @@ const CompanyDashboard = () => {
     }
 
     const myAvgScore = Math.round((myRanking.completionPct + myRanking.consistencyPct + myRanking.timelinessScore) / 3 * 10) / 10;
+    console.log("Previous myAvgScore :: ", myAvgScore)
+    const allAvgScoresByBrand = rankings.map(r => {
+      return {
+        brand: r.brand,
+        score: Math.round((r.completionPct + r.consistencyPct + r.timelinessScore) / 3 * 10) / 10
+      }
+    });
+    console.log('Previous allAvgScoresByBrand :: ', allAvgScoresByBrand)
+    let percetiles = assignPercentilesV1(allAvgScoresByBrand)
+    console.log('previous percetiles :: ', percetiles)
+
     const allAvgScores = rankings.map(r =>
       Math.round((r.completionPct + r.consistencyPct + r.timelinessScore) / 3 * 10) / 10
     );
+
+
+    console.log('Previous allAvgScores :: ', allAvgScores)
     const sortedAvg = [...allAvgScores].sort((a, b) => a - b);
+
+    console.log("Previous sortedAvg :: ", sortedAvg)
     let overallIdx = sortedAvg.findIndex(v => v >= myAvgScore);
+    console.log("Previous overallIdx :: ", overallIdx)
     if (overallIdx === -1) overallIdx = sortedAvg.length - 1;
+    console.log("Previous overallIdx :: ", overallIdx)
     const overallPct = sortedAvg.length <= 1
       ? 99
       : Math.max(1, Math.min(99, Math.round(((overallIdx + 1) / sortedAvg.length) * 99)));
+    console.log("Previous overallPct :: ", overallPct)
     const n = rankings.length;
 
     setPrevProgressCards([
@@ -482,7 +566,8 @@ const CompanyDashboard = () => {
     // debug — remove once confirmed working
     // console.log('[ESGCards] companyBrand:', companyBrand);
     // console.log('[ESGCards] esgPctileMap keys:', [...assignPercentiles(submitting, 'esgCompositeScore').keys()]);
-
+    // console.log('submitting',submitting)
+    // console.log(`assignPercentiles(submitting, 'socialScore') :: `,assignPercentiles(submitting, 'socialScore'))
     const esgPctile = assignPercentiles(submitting, 'esgCompositeScore').get(companyBrand) ?? 1;
     const envPctile = assignPercentiles(envEligible, 'circularEconomyIndex').get(companyBrand) ?? 1;
     const socPctile = assignPercentiles(submitting, 'socialScore').get(companyBrand) ?? 1;
@@ -549,6 +634,106 @@ const CompanyDashboard = () => {
       console.log('prevProgressCards :: ', prevProgressCards)
     }
   }, [prevProgressCards, progressCards])
+
+  const { rankingCards, esgCards: esgCardCompare, isLoading: compareLoading } = useComparePeriods(
+    {
+      "period": "annual",
+      "quarter": "Q4",
+      "year": 2025,
+      "cumulative": false,
+      "periodType": "quarterly"
+    },
+    {
+      "period": "annual",
+      "quarter": "Q1",
+      "year": 2026,
+      "cumulative": false,
+      "periodType": "quarterly"
+    },
+    false,
+    {
+      "period": "annual",
+      "quarter": "Q1",
+      "year": 2026,
+      "cumulative": false
+    },
+    companyId
+  );
+
+  // Maps progressCards label -> rankingCards key
+const RANKING_KEY_BY_LABEL: Record<string, string> = {
+  'Responsiveness Score': 'overall',
+  'Completeness': 'completeness',
+  'Consistency': 'consistency',
+  'Timeliness': 'timeliness',
+};
+
+// Maps esgCards label -> esgCardCompare key
+const ESG_KEY_BY_LABEL: Record<string, string> = {
+  'ESG Composite Score': 'esgCompositeScore',
+  'Environment Score': 'circularEconomyIndex',
+  'Social Score': 'socialScore',
+  'Governance Score': 'governanceScore',
+};
+
+useEffect(() => {
+  if (!rankingCards || rankingCards.length === 0 || !rankingCards[0].companies || rankingCards[0].companies.length === 0) return;
+  if (!esgCardCompare || esgCardCompare.length === 0 || !esgCardCompare[0].companies || esgCardCompare[0].companies.length === 0) return;
+  let companyData=mockCompanies.find(m=> m.id == companyId);
+  if(!companyData){
+    return ;
+  }
+  const companyBrand = companyData?.brand;
+  if (!companyBrand) return;
+
+  // ── Update progressCards (Responsiveness Score group) ──
+  setProgressCards(prev =>
+    prev.map(card => {
+      const rankingKey = RANKING_KEY_BY_LABEL[card.label];
+      const matchingCard = rankingCards.find(rc => rc.key === rankingKey);
+      const companyEntry = matchingCard?.companies.find(c => c.brand === companyBrand);
+
+      if (!companyEntry) return card; // no data for this company/metric — leave card unchanged
+
+      return {
+        ...card,
+        trend: companyEntry.trend,        // 'up' | 'down' | 'stable' | 'new'
+        category: companyEntry.categoryB, // current grade band (AA/A/BB/B/C)
+        prevCategory: companyEntry.categoryA,
+        prevValue: companyEntry.scoreA,
+        prevPercentile: companyEntry.percentileA,
+      };
+    })
+  );
+
+  // ── Update esgCards (ESG Composite / Environment / Social / Governance) ──
+  setEsgCards(prev =>
+    prev.map(card => {
+      const esgKey = ESG_KEY_BY_LABEL[card.label];
+      const matchingCard = esgCardCompare.find(ec => ec.key === esgKey);
+      const companyEntry = matchingCard?.companies.find(c => c.brand === companyBrand);
+
+      if (!companyEntry) return card;
+
+      return {
+        ...card,
+        trend: companyEntry.trend,
+        category: companyEntry.categoryB,
+        prevCategory: companyEntry.categoryA,
+        prevValue: companyEntry.scoreA,
+        prevPercentile: companyEntry.percentileA,
+      };
+    })
+  );
+}, [rankingCards, esgCardCompare, companyId]);
+
+  useEffect(()=>{
+    if(!rankingCards || rankingCards.length == 0 || !rankingCards[0].companies ||  rankingCards[0].companies.length == 0) return ;
+    if(!esgCardCompare || esgCardCompare.length == 0 || !esgCardCompare[0].companies ||  esgCardCompare[0].companies.length == 0) return ;
+  },[rankingCards,esgCardCompare,progressCards,esgCards])
+
+  console.log('rankingCards :: ',rankingCards)
+  console.log("esgCardCompare :: ",esgCardCompare)
 
   // ── Handlers ──────────────────────────────────────────────
   const handleQuarterAction = (_quarterKey: string, _action: 'view' | 'edit' | 'add') => {
@@ -660,36 +845,45 @@ const CompanyDashboard = () => {
           ? [1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)
           : progressCards.map((card, index) => {
             const { grade, color: gradeColor } = getGrade(card.value);
-            const trend = card.value > prevProgressCards[index]?.value ? 'up' : (card.value == prevProgressCards[index]?.value ? 'stable' : 'down')
-            return (
-              <Card key={card.label} className={`${card.color} transition-all hover:shadow-md`}>
-                <CardContent className="pt-3 pb-2">
-                  <div className="flex items-center justify-between mb-1">
-                    {/* <p className="text-[11px] font-medium text-muted-foreground">{card.label}</p> */}
-                    <p className={`${index === 0 ? "text-sm" : "text-[11px]"} font-medium text-muted-foreground`}>
-                      {card.label}
-                    </p>
-                    {card.icon}
-                  </div>
-                  <div className="flex items-end gap-2">
-                    <span className={`text-2xl font-bold ${gradeColor}`}>{grade}</span>
-                    <span className="text-xs text-muted-foreground mb-1">grade</span>
-                    {trend === "up" && (
-                      <TrendingUp className="w-4 h-4 text-green-500 mb-1" />
-                    )}
+            let gradeOrder = ['AA', 'A', 'BB', 'B', 'C'];
+            const { grade: prevGrade, color: prevGradeColor } = getGrade(prevProgressCards[index]?.value);
+            const currentGradeIndex = gradeOrder.indexOf(grade);
+            const previousGradeIndex = gradeOrder.indexOf(prevGrade);
 
-                    {trend === "down" && (
-                      <TrendingDown className="w-4 h-4 text-red-500 mb-1" />
-                    )}
+            const trend =
+              currentGradeIndex < previousGradeIndex
+                ? 'up'
+                : currentGradeIndex === previousGradeIndex
+                  ? 'stable'
+                  : 'down'; return (
+                    <Card key={card.label} className={`${card.color} transition-all hover:shadow-md`}>
+                      <CardContent className="pt-3 pb-2">
+                        <div className="flex items-center justify-between mb-1">
+                          {/* <p className="text-[11px] font-medium text-muted-foreground">{card.label}</p> */}
+                          <p className={`${index === 0 ? "text-sm" : "text-[11px]"} font-medium text-muted-foreground`}>
+                            {card.label}
+                          </p>
+                          {card.icon}
+                        </div>
+                        <div className="flex items-end gap-2">
+                          <span className={`text-2xl font-bold ${gradeColor}`}>{grade}</span>
+                          <span className="text-xs text-muted-foreground mb-1">grade</span>
+                          {card.trend === "up" && (
+                            <TrendingUp className="w-4 h-4 text-green-500 mb-1" />
+                          )}
 
-                    {trend === "stable" && (
-                      <Minus className="w-4 h-4 text-muted-foreground mb-1" />
-                    )}
-                  </div>
-                  <div className="flex justify-start mt-1"><Badge variant="secondary" className="text-[9px]">n={card.n}</Badge></div>
-                </CardContent>
-              </Card>
-            );
+                          {card.trend === "down" && (
+                            <TrendingDown className="w-4 h-4 text-red-500 mb-1" />
+                          )}
+
+                          {card.trend === "stable" && (
+                            <Minus className="w-4 h-4 text-muted-foreground mb-1" />
+                          )}
+                        </div>
+                        <div className="flex justify-start mt-1"><Badge variant="secondary" className="text-[9px]">n={card.n}</Badge></div>
+                      </CardContent>
+                    </Card>
+                  );
           })
         }
       </div>}
@@ -700,8 +894,17 @@ const CompanyDashboard = () => {
           ? [1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)
           : esgCards.map((card, index) => {
             const { grade, color: gradeColor } = getGrade(card.percentile);
-            const trend = card.percentile > prevEsgCards[index]?.percentile ? 'up' : (card.percentile == prevEsgCards[index]?.percentile ? 'stable' : 'down')
+            let gradeOrder = ['AA', 'A', 'BB', 'B', 'C'];
+            const { grade: prevGrade, color: prevGradeColor } = getGrade(prevEsgCards[index]?.percentile);
+            const currentGradeIndex = gradeOrder.indexOf(grade);
+            const previousGradeIndex = gradeOrder.indexOf(prevGrade);
 
+            const trend =
+              currentGradeIndex < previousGradeIndex
+                ? 'up'
+                : currentGradeIndex === previousGradeIndex
+                  ? 'stable'
+                  : 'down';
             return (
               <Card
                 key={card.label}
@@ -732,15 +935,15 @@ const CompanyDashboard = () => {
                     <div className="flex items-end gap-2">
                       <span className={`text-2xl font-bold ${gradeColor}`}>{grade}</span>
                       <span className="text-xs text-muted-foreground mb-1">grade</span>
-                      {trend === "up" && (
+                      {card.trend === "up" && (
                         <TrendingUp className="w-4 h-4 text-green-500 mb-1" />
                       )}
 
-                      {trend === "down" && (
+                      {card.trend === "down" && (
                         <TrendingDown className="w-4 h-4 text-red-500 mb-1" />
                       )}
 
-                      {trend === "stable" && (
+                      {card.trend === "stable" && (
                         <Minus className="w-4 h-4 text-muted-foreground mb-1" />
                       )}
                     </div>
