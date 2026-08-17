@@ -811,7 +811,7 @@ const FeatureKPIEntry = () => {
       }));
 
       if (entries.length > 0) {
-        const dataCreate = await httpClient.post('msi/kpi-entries/upsert', { entries, onConflict: 'company_id,kpi_id,quarter,year' });
+        const dataCreate = await httpClient.post('mis/kpi-entries/upsert', { entries, onConflict: 'company_id,kpi_id,quarter,year' });
 
         // if (error) throw error;
       }
@@ -891,7 +891,7 @@ const FeatureKPIEntry = () => {
       //   .eq('company_id', companyId)
       //   .eq('quarter', isAnnual ? 'FY' : currentQuarter)
       //   .eq('year', isAnnual ? currentFY : currentYear);
-      const data: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`msi/kpi-entries?companyId=${companyId}&quarter=${isAnnual ? 'FY' : currentQuarter}&year=${isAnnual ? currentFY : currentYear}`);
+      const data: { data: { kpi_id: string; value: string | null }[]; error?: any } = await httpClient.get(`mis/kpi-entries?companyId=${companyId}&quarter=${isAnnual ? 'FY' : currentQuarter}&year=${isAnnual ? currentFY : currentYear}`);
 
       if (data) {
         const entries: Record<string, string | number | boolean> = {};
