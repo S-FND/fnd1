@@ -385,7 +385,7 @@ export const UploadKPITemplateDialog = ({
                 disabled={parsedEntries.length === 0}
               >
                 <Upload className="w-4 h-4 mr-2" />
-                Upload {parsedEntries.length} Entries 2nd
+                Upload {parsedEntries.length} Entries
               </Button>
             </>
           )}
