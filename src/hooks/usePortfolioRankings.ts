@@ -1048,7 +1048,7 @@ export const usePortfolioRankings = (year: number = 2025, quarter: string = 'Q4'
 
         // 3. Build company list from mockCompanies (invested only)
         const companies = mockCompanies
-          .filter(c => c.investmentStatus === 'Invested' && profilesData.find(p => p.company_id == c.id))
+          .filter(c => c.investmentStatus === 'Invested' && !['company-222','company-223','company-224'].includes(c.id) && profilesData.find(p => p.company_id == c.id))
           .map(c => ({
             companyId: c.id,
             industry: profileMap[c.id]?.industry || c.industry || '',
