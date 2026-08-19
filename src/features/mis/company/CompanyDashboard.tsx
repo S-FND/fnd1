@@ -501,7 +501,7 @@ const CompanyDashboard = () => {
 
     setEsgCards([
       {
-        label: 'ESG Composite Score',
+        label: 'ESG Performance Score',
         value: companyData.insights?.esgCompositeScore ?? 0,
         percentile: esgPctile,
         icon: <BarChart3 className="w-4 h-4 text-emerald-600" />,

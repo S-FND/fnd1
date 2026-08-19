@@ -409,6 +409,28 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
     return 'over3';
   };
 
+  // Helper: check if company status is "submitted"
+  const isCompanySubmitted = (item: ESGCapItem): boolean => {
+    return normalize(item.companyStatus ?? item.status) === 'submitted';
+  };
+
+  // Counts for the two new columns (using existing getCSCount for 'over3')
+  const getCompletedOver3Count = (priority: 'High' | 'Medium' | 'Low') => {
+    return csItems.filter(item => {
+      if ((item.priority || 'Medium') !== priority) return false;
+      if (getCSCategory(item) !== 'over3') return false;
+      return isCompanySubmitted(item);
+    }).length;
+  };
+
+  const getNotCompletedOver3Count = (priority: 'High' | 'Medium' | 'Low') => {
+    return csItems.filter(item => {
+      if ((item.priority || 'Medium') !== priority) return false;
+      if (getCSCategory(item) !== 'over3') return false;
+      return !isCompanySubmitted(item);
+    }).length;
+  };
+
   const getCSCount = (
     priority: 'High' | 'Medium' | 'Low',
     type:
@@ -545,7 +567,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                 {/* =========================================================
                     HEADER
                 ========================================================= */}
-                <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.2fr_1.8fr_0.8fr] items-center bg-emerald-50/70 px-3 py-2.5">
+                <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.2fr_0.9fr_0.9fr_0.8fr] items-center bg-emerald-50/70 px-3 py-2.5">
 
                   {/* Priority */}
                   <div className="text-[10px] font-semibold uppercase tracking-wide">
@@ -564,7 +586,10 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
 
                   {/* Not Completed / Completed After Buffer Time */}
                   <div className="text-center text-[10px] font-semibold uppercase tracking-wide">
-                    Not Completed / Completed After Buffer Time
+                    Completed After Buffer Time
+                  </div>
+                  <div className="text-center text-[10px] font-semibold uppercase tracking-wide">
+                    Overdue
                   </div>
 
                   {/* Upcoming */}
@@ -583,7 +608,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                 {/* =========================================================
                     HIGH
                 ========================================================= */}
-                <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.2fr_1.8fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5">
+                <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.2fr_0.9fr_0.9fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5">
 
                   {/* Priority */}
                   <div className="text-xs font-bold text-red-600">
@@ -603,8 +628,11 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                   </div>
 
                   {/* Not Completed / Completed After Buffer Time */}
+                  <div className="text-center text-xs font-bold">
+                    {getCompletedOver3Count("High")}
+                  </div>
                   <div className="text-center text-xs font-bold text-red-600">
-                    {getCSCount("High", "over3")}
+                    {getNotCompletedOver3Count("High")}
                   </div>
 
                   {/* Upcoming */}
@@ -619,7 +647,8 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                       getCSCount("High", "buffer2") +
                       getCSCount("High", "buffer3") +
                       getCSCount("High", "under3") +
-                      getCSCount("High", "over3") +
+                      getNotCompletedOver3Count("High") +
+                      getCompletedOver3Count("High") +
                       getCSCount("High", "upcoming")}
                   </div>
 
@@ -629,7 +658,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                 {/* =========================================================
                     MEDIUM
                 ========================================================= */}
-                <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.2fr_1.8fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5">
+                <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.2fr_0.9fr_0.9fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5">
 
                   {/* Priority */}
                   <div className="text-xs font-bold text-amber-600">
@@ -649,8 +678,11 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                   </div>
 
                   {/* Not Completed / Completed After Buffer Time */}
+                  <div className="text-center text-xs font-bold">
+                    {getCompletedOver3Count("Medium")}
+                  </div>
                   <div className="text-center text-xs font-bold text-red-600">
-                    {getCSCount("Medium", "over3")}
+                    {getNotCompletedOver3Count("Medium")}
                   </div>
 
                   {/* Upcoming */}
@@ -665,17 +697,17 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                       getCSCount("Medium", "buffer2") +
                       getCSCount("Medium", "buffer3") +
                       getCSCount("Medium", "under3") +
-                      getCSCount("Medium", "over3") +
-                      getCSCount("High", "upcoming")}
+                      getNotCompletedOver3Count("Medium") +
+                      getCompletedOver3Count("Medium") +
+                      getCSCount("Medium", "upcoming")}
                   </div>
-
                 </div>
 
 
                 {/* =========================================================
                     LOW
                 ========================================================= */}
-                <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.2fr_1.8fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5">
+                <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.2fr_0.9fr_0.9fr_0.8fr] items-center border-t border-slate-100 px-3 py-2.5">
 
                   {/* Priority */}
                   <div className="text-xs font-bold text-slate-500">
@@ -695,8 +727,11 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                   </div>
 
                   {/* Not Completed / Completed After Buffer Time */}
+                  <div className="text-center text-xs font-bold">
+                    {getCompletedOver3Count("Low")}
+                  </div>
                   <div className="text-center text-xs font-bold text-red-600">
-                    {getCSCount("Low", "over3")}
+                    {getNotCompletedOver3Count("Low")}
                   </div>
 
                   {/* Upcoming */}
@@ -711,8 +746,9 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                       getCSCount("Low", "buffer2") +
                       getCSCount("Low", "buffer3") +
                       getCSCount("Low", "under3") +
-                      getCSCount("Low", "over3") +
-                      getCSCount("High", "upcoming")}
+                      getNotCompletedOver3Count("Low") +
+                      getCompletedOver3Count("Low") +
+                      getCSCount("Low", "upcoming")}
                   </div>
 
                 </div>
@@ -721,7 +757,7 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                 {/* =========================================================
                     TOTAL
                 ========================================================= */}
-                <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.2fr_1.8fr_0.8fr] items-center border-t border-emerald-200 bg-emerald-50 px-3 py-2.5">
+                <div className="grid grid-cols-[0.8fr_1.5fr_1.7fr_1.2fr_0.9fr_0.9fr_0.8fr] items-center border-t border-emerald-200 bg-emerald-50 px-3 py-2.5">
 
                   {/* Priority */}
                   <div className="text-xs font-bold text-emerald-700">
@@ -748,11 +784,18 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                       getCSCount("Low", "buffer3")}
                   </div>
 
-                  {/* Not Completed / Completed After Buffer Time */}
+                  
+                  {/* Completed After Buffer total */}
+                  <div className="text-center text-xs font-bold">
+                    {getCompletedOver3Count("High") +
+                    getCompletedOver3Count("Medium") +
+                    getCompletedOver3Count("Low")}
+                  </div>
+                  {/* Not Completed total */}
                   <div className="text-center text-xs font-bold text-red-600">
-                    {getCSCount("High", "over3") +
-                      getCSCount("Medium", "over3") +
-                      getCSCount("Low", "over3")}
+                    {getNotCompletedOver3Count("High") +
+                    getNotCompletedOver3Count("Medium") +
+                    getNotCompletedOver3Count("Low")}
                   </div>
 
                    {/* Upcoming */}
