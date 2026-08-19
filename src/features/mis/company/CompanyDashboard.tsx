@@ -253,8 +253,9 @@ const CompanyDashboard = () => {
   }, []);
 
   useEffect(() => {
+
     if (companyId && kpiEntries && kpiEntries.length > 0) {
-      let q4CompanyDataStatus = kpiEntries.filter(k => k.year == 2025 && k.quarter == 'Q4' && k.companyId == companyId);
+      let q4CompanyDataStatus = kpiEntries.filter(k => k.year == publishedYear && k.quarter == publishedQuarter && k.companyId == companyId);
       setQ4DataStatus(q4CompanyDataStatus.length > 0 ? true : false)
     }
   }, [companyId, kpiEntries])
