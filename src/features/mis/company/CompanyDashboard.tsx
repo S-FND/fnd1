@@ -952,7 +952,7 @@ trend:companyEntry.trend,
                   ) : (
                     <div className="flex items-end gap-2">
                       <span className={`text-2xl font-bold ${gradeColor}`}>{grade}</span>
-                      <span className="text-xs text-muted-foreground mb-1">grade{card.trend}</span>
+                      <span className="text-xs text-muted-foreground mb-1">grade</span>
                       {card.trend === "up" && (
                         <TrendingUp className="w-4 h-4 text-green-500 mb-1" />
                       )}
