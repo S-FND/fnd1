@@ -648,10 +648,291 @@ export function sumAggregations(items: AggregationMetrics[]): AggregationMetrics
 /** Safe division: returns 0 when denominator is 0 (instead of Infinity or NaN) */
 const safeDiv = (num: number, den: number): number => den === 0 ? 0 : num / den;
 
-export function deriveInsights(agg: AggregationMetrics, industry?: string, hasFashionPackaging?: boolean,brand?:string): InsightMetrics {  
-  // if(industry){
-    //   console.log('agg',JSON.stringify(agg),industry,'hasFashionPackaging :: ',hasFashionPackaging)
-    // }
+// export function deriveInsights(agg: AggregationMetrics, industry?: string, hasFashionPackaging?: boolean,brand?:string): InsightMetrics {  
+//   // if(industry){
+//     //   console.log('agg',JSON.stringify(agg),industry,'hasFashionPackaging :: ',hasFashionPackaging)
+//     // }
+//   const totalEmployees = agg.totalEmployment;
+//   const totalPlastic = agg.primaryPlasticVirgin + agg.primaryPlasticRecycled + agg.secondaryPlasticVirgin + agg.secondaryPlasticRecycled + agg.fashionPlasticPrimaryRecyclable + agg.fashionPlasticPrimaryNonRecyclable + agg.fashionPlasticSecondaryRecyclable + agg.fashionPlasticSecondaryNonRecyclable;
+
+//   // Supply Chain Sustainability Score (legacy, kept for backward compat)
+//   const actualDeiVendorPct = agg.totalVendorCategories > 0 ? (agg.vendorCategoriesWithDEI / agg.totalVendorCategories) * 100 : 0;
+//   const localizationIndex = agg.totalVendorCategories > 0 ? Math.max(0, 100 - agg.avgInternationalVendorPct) : 0;
+//   const supplierCocInPlaceVal = agg.supplierCocInPlace;
+//   const supplierCocTrainingVal = agg.supplierCocTraining;
+//   const supplyChainSustainabilityScore = Math.min(100, (
+//     supplierCocInPlaceVal + supplierCocTrainingVal + actualDeiVendorPct
+//   ) / 3);
+
+//   // Social Score (0-100) — unified score replacing separate Supply Chain + DEI
+//   // Supplier CoC In Place (10%) + Supplier CoC Training (10%) + DEI Vendor % (10%) +
+//   // Gender Ratio (25%) + Women Leadership % (25%) + Pay Parity (20%)
+//   const socialGenderRatio = safeDiv(agg.wcFemale + agg.bcFemale, totalEmployees) * 100;
+//   const socialWomenLeadership = safeDiv(agg.cLevelFemale, agg.cLevelTotal) * 100;
+//   const socialFemaleWages = agg.wcWagesFemale + agg.bcWagesFemale;
+//   const socialFemaleCount = agg.wcFemale + agg.bcFemale;
+//   const socialMaleWages = agg.wcWagesMale + agg.bcWagesMale;
+//   const socialMaleCount = agg.wcMale + agg.bcMale;
+//   const socialPayParity = socialFemaleWages > 0 && socialFemaleCount > 0 && socialMaleWages > 0 && socialMaleCount > 0
+//     ? Math.min(100, ((socialFemaleWages / socialFemaleCount) / (socialMaleWages / socialMaleCount)) * 100)
+//     : 0;
+//   const socialScore = Math.min(100,
+//     Math.min(100, supplierCocInPlaceVal) * 0.10 +
+//     Math.min(100, supplierCocTrainingVal) * 0.10 +
+//     Math.min(100, actualDeiVendorPct) * 0.10 +
+//     Math.min(100, socialGenderRatio) * 0.25 +
+//     Math.min(100, socialWomenLeadership) * 0.25 +
+//     Math.min(100, socialPayParity) * 0.20
+//   );
+
+//   return {
+//     genderDiversityRatio: r2(safeDiv(agg.wcFemale + agg.bcFemale, totalEmployees) * 100),
+//     genderPayParityIndex: (() => {
+//       const totalFemaleWages = agg.wcWagesFemale + agg.bcWagesFemale;
+//       const totalFemaleCount = agg.wcFemale + agg.bcFemale;
+//       const totalMaleWages = agg.wcWagesMale + agg.bcWagesMale;
+//       const totalMaleCount = agg.wcMale + agg.bcMale;
+//       return r2(totalFemaleWages > 0 && totalFemaleCount > 0 && totalMaleWages > 0 && totalMaleCount > 0
+//         ? ((totalFemaleWages / totalFemaleCount) / (totalMaleWages / totalMaleCount))
+//         : 0);
+//     })(),
+//     wcToBcRatio: r2(safeDiv(agg.totalWcEmployees, agg.totalBcEmployees)),
+//     womenInLeadershipPct: r2(safeDiv(agg.cLevelFemale, agg.cLevelTotal) * 100),
+//     womenInBoardPct: r2(safeDiv(agg.boardFemale, agg.boardTotal) * 100),
+//     cxoPayRatio: r2(agg.avgCxoCompensation > 0 && agg.avgEmployeeCompensation > 0
+//       ? agg.avgCxoCompensation / agg.avgEmployeeCompensation : 0),
+//     pwdInclusionRate: r2(agg.pwdPct),
+//     jobsPerCrRevenue: r2(safeDiv(totalEmployees, agg.netRevenue)),
+//     virginPlasticPct: r2(safeDiv(agg.primaryPlasticVirgin + agg.secondaryPlasticVirgin, totalPlastic) * 100),
+//     recycledContentRatio: r2(safeDiv(agg.primaryPlasticRecycled + agg.secondaryPlasticRecycled, totalPlastic) * 100),
+//     plasticIntensityPerCrRevenue: r2(safeDiv(totalPlastic, agg.netRevenue)),
+//     eprComplianceRate: r2(safeDiv(agg.totalPackagingRecycledMT, agg.eprTargetsMT) * 100),
+//     eprComplianceGap: r2(Math.max(0, agg.eprTargetsMT - agg.totalPackagingRecycledMT)),
+//     mtPlasticPerCrRevenue: r2(safeDiv(totalPlastic, agg.netRevenue)),
+//     mtPackagingPer1000Customers: r2(safeDiv(agg.totalPackagingMT, agg.totalCustomersServed) * 1000),
+//     caseResolutionRate: r2(safeDiv(agg.totalIncidents - agg.totalOpenCases, agg.totalIncidents) * 100),
+//     highImpactIncidentRatio: r2(safeDiv(agg.highImpactIncidents, agg.totalIncidents) * 100),
+//     poshCaseIntensity: r2(safeDiv(agg.poshCases, totalEmployees) * 1000),
+//     policyAdoptionRate: r2(safeDiv(agg.policiesInPlace, agg.totalPolicies) * 100),
+//     trainingCoverageRate: r2(safeDiv(agg.policiesWithTraining, agg.totalPolicies) * 100),
+//     waterRecyclingRate: r2(agg.avgWastewaterRecycledPct),
+//     renewableEnergyMix: r2(agg.avgRenewableEnergyPct),
+//     wasteDiversionRate: r2(agg.avgWasteRecycledPct),
+//     circularEconomyIndex: r2(Math.min(100, (() => {
+//       const isFashion = hasFashionPackaging === true;
+//       if (isFashion) {
+//         // //console.log('Computing circular economy index for fashion company:', { agg });
+//         // Fashion & Lifestyle formula:
+//         // Recyclable Materials % (40%) + Recyclable Packaging % (40%) + Fresh Water Consumed % (10%) + Water Recycled % (10%)
+//         const recyclableMaterials = Math.min(100, agg.fashionRecyclablePct);
+//         const recyclablePackaging = Math.min(100, agg.fashionRecyclablePackagingPct);
+//         const freshWater = Math.min(100, agg.avgFreshWaterPct);
+//         const waterRecycled = Math.min(100, agg.avgWastewaterRecycledPct);
+//         // Only compute score if at least one fashion-specific input is non-zero
+//         const hasFashionData = recyclableMaterials > 0 || recyclablePackaging > 0 || freshWater > 0 || waterRecycled > 0;
+//         if (!hasFashionData) return 0;
+//         return (
+//           recyclableMaterials * 0.40 +
+//           recyclablePackaging * 0.40 +
+//           freshWater * 0.10 +
+//           waterRecycled * 0.10
+//         );
+//       }
+//       // Non-Fashion formula
+//       const totalPlasticAgg = agg.primaryPlasticVirgin + agg.primaryPlasticRecycled + agg.secondaryPlasticVirgin + agg.secondaryPlasticRecycled;
+//       // 1. % Reduction in Virgin Plastic (20%)
+//       const virginPlasticReduction = totalPlasticAgg > 0 ? safeDiv(agg.primaryPlasticRecycled + agg.secondaryPlasticRecycled, totalPlasticAgg) * 100 : 0;
+//       // 2. MT plastic per Cr revenue — intensity score (30%), lower=better
+//       const plasticIntensity = agg.netRevenue > 0 ? totalPlasticAgg / agg.netRevenue : 0;
+//       const intensityScore = Math.max(0, 100 * (1 - Math.min(1, plasticIntensity)));
+//       // 3. Total packaging material recycled as % of total packaging (20%)
+//       const materialRecycledPct = safeDiv(agg.totalPackagingRecycledMT, agg.totalPackagingMT) * 100;
+//       // 4. EPR or Voluntary Plastic Neutrality % (10%) — if either one is done they get the score
+//       const eprCompliancePct = safeDiv(agg.totalPackagingRecycledMT, agg.eprTargetsMT) * 100;
+//       const vpnPct = agg.voluntaryPlasticNeutralityPct;
+//       const eprVpn = Math.min(100, Math.max(Math.min(100, eprCompliancePct), Math.min(100, vpnPct)));
+//       // 5. P&S recycled (plastic+paper+glass+metal+plant-based) as % of total packaging (10%)
+//       const allRecycledPct = safeDiv(agg.primaryPlasticRecycled + agg.secondaryPlasticRecycled + agg.primaryNonPlastic + agg.secondaryNonPlastic, agg.totalPackagingMT) * 100;
+//       // 6. Recyclable % (10%)
+//       const recyclablePct = agg.primaryRecyclablePct;
+//       if(brand == 'NewMe'){
+//         console.log('virginPlasticReduction',virginPlasticReduction)
+//         console.log('intensityScore',intensityScore)
+//         console.log('materialRecycledPct',materialRecycledPct)
+//         console.log('eprVpn',eprVpn)
+//         console.log('allRecycledPct',allRecycledPct)
+//         console.log('recyclablePct',recyclablePct)
+//       }
+//       return (
+//         Math.min(100, virginPlasticReduction) * 0.20 +
+//         Math.min(100, intensityScore) * 0.30 +
+//         Math.min(100, materialRecycledPct) * 0.20 +
+//         eprVpn * 0.10 +
+//         Math.min(100, allRecycledPct) * 0.10 +
+//         Math.min(100, recyclablePct) * 0.10
+//       );
+//     })())),
+//     deiCompositeScore: r2(socialScore), // alias — now uses Social Score
+//     socialScore: r2(socialScore),
+//     // ESG Composite Score: E (35%) + S (25%) + G (40%)
+//     // E = Environment Score (100%), S = Social Score (100%), G = Governance Score (100%)
+//     esgCompositeScore: r2((() => {
+//       // E sub-score: reuse the already-computed circularEconomyIndex (which is industry-aware)
+//       const isFashion2 = hasFashionPackaging === true;
+//       let eSub: number;
+//       if (isFashion2) {
+//         const rm = Math.min(100, agg.fashionRecyclablePct);
+//         const rp = Math.min(100, agg.fashionRecyclablePackagingPct);
+//         const fw = Math.min(100, agg.avgFreshWaterPct);
+//         const wr = Math.min(100, agg.avgWastewaterRecycledPct);
+//         const hasFD = rm > 0 || rp > 0 || fw > 0 || wr > 0;
+//         eSub = hasFD ? Math.min(100, rm * 0.40 + rp * 0.40 + fw * 0.10 + wr * 0.10) : 0;
+//       } else {
+//         const totalPlasticAgg2 = agg.primaryPlasticVirgin + agg.primaryPlasticRecycled + agg.secondaryPlasticVirgin + agg.secondaryPlasticRecycled;
+//         const virginPlasticReduction2 = totalPlasticAgg2 > 0 ? safeDiv(agg.primaryPlasticRecycled + agg.secondaryPlasticRecycled, totalPlasticAgg2) * 100 : 0;
+//         const plasticIntensity2 = agg.netRevenue > 0 ? totalPlasticAgg2 / agg.netRevenue : 0;
+//         const intensityScore2 = Math.max(0, 100 * (1 - Math.min(1, plasticIntensity2)));
+//         const materialRecycledPct2 = safeDiv(agg.totalPackagingRecycledMT, agg.totalPackagingMT) * 100;
+//         const eprCompliancePct2 = safeDiv(agg.totalPackagingRecycledMT, agg.eprTargetsMT) * 100;
+//         const vpnPct2 = agg.voluntaryPlasticNeutralityPct;
+//         const eprVpn2 = Math.min(100, Math.max(Math.min(100, eprCompliancePct2), Math.min(100, vpnPct2)));
+//         const allRecycledPct2 = safeDiv(agg.primaryPlasticRecycled + agg.secondaryPlasticRecycled + agg.primaryNonPlastic + agg.secondaryNonPlastic, agg.totalPackagingMT) * 100;
+//         const recyclablePct2 = agg.primaryRecyclablePct;
+//         eSub = Math.min(100,
+//           Math.min(100, virginPlasticReduction2) * 0.20 +
+//           Math.min(100, intensityScore2) * 0.30 +
+//           Math.min(100, materialRecycledPct2) * 0.20 +
+//           eprVpn2 * 0.10 +
+//           Math.min(100, allRecycledPct2) * 0.10 +
+//           Math.min(100, recyclablePct2) * 0.10
+//         );
+//       }
+
+//       // S sub-score: Social Score (100%) — unified supplier + gender metrics
+//       const actualDeiVendorPct2 = agg.totalVendorCategories > 0 ? (agg.vendorCategoriesWithDEI / agg.totalVendorCategories) * 100 : 0;
+//       const supplierCocInPlace2 = agg.supplierCocInPlace;
+//       const supplierCocTraining2 = agg.supplierCocTraining;
+//       const genderRatio2 = safeDiv(agg.wcFemale + agg.bcFemale, totalEmployees) * 100;
+//       const womenLeadership2 = safeDiv(agg.cLevelFemale, agg.cLevelTotal) * 100;
+//       const totalFemaleWages2 = agg.wcWagesFemale + agg.bcWagesFemale;
+//       const totalFemaleCount2 = agg.wcFemale + agg.bcFemale;
+//       const totalMaleWages2 = agg.wcWagesMale + agg.bcWagesMale;
+//       const totalMaleCount2 = agg.wcMale + agg.bcMale;
+//       const payParity2 = totalFemaleWages2 > 0 && totalFemaleCount2 > 0 && totalMaleWages2 > 0 && totalMaleCount2 > 0
+//         ? Math.min(100, ((totalFemaleWages2 / totalFemaleCount2) / (totalMaleWages2 / totalMaleCount2)) * 100)
+//         : 0;
+//       const sSub = Math.min(100,
+//         Math.min(100, supplierCocInPlace2) * 0.10 +
+//         Math.min(100, supplierCocTraining2) * 0.10 +
+//         Math.min(100, actualDeiVendorPct2) * 0.10 +
+//         Math.min(100, genderRatio2) * 0.25 +
+//         Math.min(100, womenLeadership2) * 0.25 +
+//         Math.min(100, payParity2) * 0.20
+//       );
+
+//       // G sub-score: Governance Score (100%)
+//       const policyAdopt = safeDiv(agg.policiesInPlace, agg.totalPolicies) * 100;
+//       const trainingCoverage = safeDiv(agg.policiesWithTraining, agg.totalPolicies) * 100;
+//       const highImpactUnresolvedPct = agg.highImpactIncidents > 0
+//         ? Math.min(100, safeDiv(agg.highImpactIncidents, agg.totalIncidents) * 100)
+//         : 0;
+//       const gSub = Math.min(100, policyAdopt * 0.40 + trainingCoverage * 0.40 + Math.max(0, 100 - highImpactUnresolvedPct) * 0.20);
+
+//       // If E sub-score is 0 because the company has no environmental data,
+//       // redistribute E weight (35%) proportionally across S and G.
+//       // Check: no packaging, no water, no energy, no waste, no env policy data → truly no E data
+//       const totalPlasticCheck = agg.primaryPlasticVirgin + agg.primaryPlasticRecycled + agg.secondaryPlasticVirgin + agg.secondaryPlasticRecycled;
+//       const hasEnvData = totalPlasticCheck > 0 || agg.totalPackagingMT > 0 || agg.eprTargetsMT > 0 ||
+//         agg.voluntaryPlasticNeutralityPct > 0 || agg.envPolicyInPlace > 0 ||
+//         agg.avgWastewaterRecycledPct > 0 || agg.avgWasteRecycledPct > 0 ||
+//         agg.fashionRecyclablePct > 0 || agg.primaryRecyclablePct > 0 ||
+//         agg.fashionRecyclablePackagingPct > 0 || agg.avgFreshWaterPct > 0;
+//       if (eSub === 0 && !hasEnvData) {
+//         // Redistribute: S gets 25/65 ≈ 38.46%, G gets 40/65 ≈ 61.54%
+//         const sWeight = 25 / 65;
+//         const gWeight = 40 / 65;
+//         return Math.min(100, sSub * sWeight + gSub * gWeight);
+//       }
+//       // ESG Composite Score: E (35%) + S (25%) + G (40%)
+//       return Math.min(100, eSub * 0.35 + sSub * 0.25 + gSub * 0.40);
+//     })()),
+//     _hasNoEnvData: (() => {
+//       // Recompute E sub-score check independently
+//       const isFashion3 = hasFashionPackaging === true;
+//       let eSubCheck: number;
+//       if (isFashion3) {
+//         const rm3 = Math.min(100, agg.fashionRecyclablePct);
+//         const rp3 = Math.min(100, agg.fashionRecyclablePackagingPct);
+//         const fw3 = Math.min(100, agg.avgFreshWaterPct);
+//         const wr3 = Math.min(100, agg.avgWastewaterRecycledPct);
+//         eSubCheck = (rm3 > 0 || rp3 > 0 || fw3 > 0 || wr3 > 0) ? 1 : 0;
+//       } else {
+//         const totalPlasticCheck3 = agg.primaryPlasticVirgin + agg.primaryPlasticRecycled + agg.secondaryPlasticVirgin + agg.secondaryPlasticRecycled;
+//         eSubCheck = (totalPlasticCheck3 > 0 || agg.totalPackagingMT > 0 || agg.eprTargetsMT > 0 ||
+//           agg.voluntaryPlasticNeutralityPct > 0 || agg.primaryRecyclablePct > 0) ? 1 : 0;
+//       }
+//       const hasEnvData3 = eSubCheck > 0 || agg.envPolicyInPlace > 0 ||
+//         agg.avgWastewaterRecycledPct > 0 || agg.avgWasteRecycledPct > 0 ||
+//         agg.fashionRecyclablePct > 0 || agg.primaryRecyclablePct > 0 ||
+//         agg.fashionRecyclablePackagingPct > 0 || agg.avgFreshWaterPct > 0;
+//       return !hasEnvData3;
+//     })(),
+//     supplyChainSustainabilityScore: r2(supplyChainSustainabilityScore),
+//     governanceScore: r2((() => {
+//       const policyAdopt = safeDiv(agg.policiesInPlace, agg.totalPolicies) * 100;
+//       const trainingCoverage = safeDiv(agg.policiesWithTraining, agg.totalPolicies) * 100;
+//       const highImpactUnresolvedPct = agg.highImpactIncidents > 0
+//         ? Math.min(100, safeDiv(agg.highImpactIncidents, agg.totalIncidents) * 100)
+//         : 0;
+//       return Math.min(100, policyAdopt * 0.40 + trainingCoverage * 0.40 + Math.max(0, 100 - highImpactUnresolvedPct) * 0.20);
+//     })()),
+
+//     // ── New module-specific insight metrics ──
+//     msmeSupplierDependencyRatio: r2(agg.msmeSupplierPct),
+//     supplyChainLocalizationIndex: r2(agg.totalVendorCategories > 0 ? Math.max(0, 100 - agg.avgInternationalVendorPct) : 0),
+//     deiCompliantVendorPct: r2(agg.totalVendorCategories > 0 ? (agg.vendorCategoriesWithDEI / agg.totalVendorCategories) * 100 : 0),
+//     smallVsLargeVendorMix: r2(agg.largeScaleVendors > 0 ? agg.smallScaleVendors / agg.largeScaleVendors : (agg.smallScaleVendors > 0 ? agg.smallScaleVendors : 0)),
+
+//     // Primary & Secondary Packaging
+//     virginPlasticVsNonPlasticPrimary: r2(agg.primaryTotalMT > 0 ? (agg.primaryPlasticVirgin / agg.primaryTotalMT) * 100 : 0),
+//     virginPlasticVsNonPlasticSecondary: r2(agg.secondaryTotalMT > 0 ? (agg.secondaryPlasticVirgin / agg.secondaryTotalMT) * 100 : 0),
+//     recyclableVsNonRecyclablePrimary: r2(agg.primaryRecyclablePct),
+//     voluntaryPlasticNeutralityRate: r2(agg.voluntaryPlasticNeutralityPct),
+
+//     // Fashion Materials & Packaging
+//     syntheticVsNaturalFiberRatio: r2((agg.fashionSyntheticMT + agg.fashionNaturalMT) > 0 ? (agg.fashionSyntheticMT / (agg.fashionSyntheticMT + agg.fashionNaturalMT)) * 100 : 0),
+//     textileWasteRateMfg: r2(agg.fashionTotalMaterials > 0 ? (agg.fashionTextileWasteMfgMT / agg.fashionTotalMaterials) * 100 : 0),
+//     postMfgWasteRate: r2(agg.fashionTotalMaterials > 0 ? (agg.fashionPostMfgWasteMT / agg.fashionTotalMaterials) * 100 : 0),
+//     monoMaterialRecyclablePct: r2(agg.fashionRecyclablePct),
+//     packagingPlasticIntensityFashion: r2(agg.fashionTotalMaterials > 0 ? (agg.fashionPkgPlasticTotalMT / agg.fashionTotalMaterials) * 100 : 0),
+//     recycledPlasticAdoptionFashion: r2(agg.fashionPkgPlasticTotalMT > 0 ? (agg.fashionPkgRecycledPlasticMT / agg.fashionPkgPlasticTotalMT) * 100 : 0),
+//     paperToPlasticRatioFashion: r2(agg.fashionPkgPlasticTotalMT > 0 ? agg.fashionPkgPaperMT / agg.fashionPkgPlasticTotalMT : 0),
+
+//     // Incidents & Grievances
+//     totalIncidentCount: r2(agg.totalIncidents),
+
+//     // Healthcare
+//     healthcareAccessScale: r2(agg.healthcareConsultations + agg.healthcareProductsOffered),
+
+//     // Water / Energy / Waste
+//     totalWaterConsumption: r2(agg.totalWaterConsumed),
+//     totalEnergyConsumption: r2(agg.totalEnergyConsumed),
+//     totalWasteGeneratedInsight: r2(agg.totalWasteGenerated),
+
+//     // CSR — csrSpendAmount is in ₹, revenue is in INR Cr (1 Cr = 1e7)
+//     // Percentage = (CSR Amount (₹) / (Revenue (INR Cr) × 1e7)) × 100
+//     csrSpendRatio: Math.round((agg.netRevenue > 0 ? (agg.csrSpendAmount / (agg.netRevenue * 1e7)) * 100 : 0) * 10000) / 10000,
+
+//     // Plastic Reduction (cross-quarter, computed per-company in FeatureAnalyticsView)
+//     plasticReductionPct: 0,
+
+//     // Fashion EPR Compliance Gap = EPR Target - Actual Compliance %
+//     eprComplianceGapFashion: 0, // computed per-company in FeatureAnalyticsView
+//   };
+// }
+
+
+export function deriveInsights(agg: AggregationMetrics, industry?: string, hasFashionPackaging?: boolean, brand?: string): InsightMetrics {
   const totalEmployees = agg.totalEmployment;
   const totalPlastic = agg.primaryPlasticVirgin + agg.primaryPlasticRecycled + agg.secondaryPlasticVirgin + agg.secondaryPlasticRecycled + agg.fashionPlasticPrimaryRecyclable + agg.fashionPlasticPrimaryNonRecyclable + agg.fashionPlasticSecondaryRecyclable + agg.fashionPlasticSecondaryNonRecyclable;
 
@@ -676,6 +957,9 @@ export function deriveInsights(agg: AggregationMetrics, industry?: string, hasFa
   const socialPayParity = socialFemaleWages > 0 && socialFemaleCount > 0 && socialMaleWages > 0 && socialMaleCount > 0
     ? Math.min(100, ((socialFemaleWages / socialFemaleCount) / (socialMaleWages / socialMaleCount)) * 100)
     : 0;
+  if (brand == 'UnderNeat') {
+    console.log('comapre :: supplierCocInPlaceVal :: ',supplierCocInPlaceVal)
+  }
   const socialScore = Math.min(100,
     Math.min(100, supplierCocInPlaceVal) * 0.10 +
     Math.min(100, supplierCocTrainingVal) * 0.10 +
@@ -721,7 +1005,7 @@ export function deriveInsights(agg: AggregationMetrics, industry?: string, hasFa
     circularEconomyIndex: r2(Math.min(100, (() => {
       const isFashion = hasFashionPackaging === true;
       if (isFashion) {
-        // //console.log('Computing circular economy index for fashion company:', { agg });
+        // console.log('Computing circular economy index for fashion company:', { agg });
         // Fashion & Lifestyle formula:
         // Recyclable Materials % (40%) + Recyclable Packaging % (40%) + Fresh Water Consumed % (10%) + Water Recycled % (10%)
         const recyclableMaterials = Math.min(100, agg.fashionRecyclablePct);
@@ -743,8 +1027,20 @@ export function deriveInsights(agg: AggregationMetrics, industry?: string, hasFa
       // 1. % Reduction in Virgin Plastic (20%)
       const virginPlasticReduction = totalPlasticAgg > 0 ? safeDiv(agg.primaryPlasticRecycled + agg.secondaryPlasticRecycled, totalPlasticAgg) * 100 : 0;
       // 2. MT plastic per Cr revenue — intensity score (30%), lower=better
-      const plasticIntensity = agg.netRevenue > 0 ? totalPlasticAgg / agg.netRevenue : 0;
-      const intensityScore = Math.max(0, 100 * (1 - Math.min(1, plasticIntensity)));
+      // const plasticIntensity = agg.netRevenue > 0 ? totalPlasticAgg / agg.netRevenue : 0;
+      // const intensityScore = Math.max(0, 100 * (1 - Math.min(1, plasticIntensity)));
+      const hasActualPackagingData = agg.totalPackagingMT > 0 || totalPlasticAgg > 0 || agg.primaryTotalMT > 0 || agg.secondaryTotalMT > 0;
+      let intensityScore = 0;
+      if (agg.netRevenue > 0 && totalPlasticAgg > 0) {
+        const intensity = totalPlasticAgg / agg.netRevenue;
+        intensityScore = Math.max(0, 100 * (1 - Math.min(1, intensity)));
+      } else if (agg.netRevenue > 0 && totalPlasticAgg === 0 && hasActualPackagingData) {
+        // Has revenue, zero plastic, AND they actually reported packaging data → perfect score
+        intensityScore = 100;
+      } else {
+        // Missing packaging data OR no revenue → score 0
+        intensityScore = 0;
+      }
       // 3. Total packaging material recycled as % of total packaging (20%)
       const materialRecycledPct = safeDiv(agg.totalPackagingRecycledMT, agg.totalPackagingMT) * 100;
       // 4. EPR or Voluntary Plastic Neutrality % (10%) — if either one is done they get the score
@@ -755,14 +1051,6 @@ export function deriveInsights(agg: AggregationMetrics, industry?: string, hasFa
       const allRecycledPct = safeDiv(agg.primaryPlasticRecycled + agg.secondaryPlasticRecycled + agg.primaryNonPlastic + agg.secondaryNonPlastic, agg.totalPackagingMT) * 100;
       // 6. Recyclable % (10%)
       const recyclablePct = agg.primaryRecyclablePct;
-      if(brand == 'NewMe'){
-        console.log('virginPlasticReduction',virginPlasticReduction)
-        console.log('intensityScore',intensityScore)
-        console.log('materialRecycledPct',materialRecycledPct)
-        console.log('eprVpn',eprVpn)
-        console.log('allRecycledPct',allRecycledPct)
-        console.log('recyclablePct',recyclablePct)
-      }
       return (
         Math.min(100, virginPlasticReduction) * 0.20 +
         Math.min(100, intensityScore) * 0.30 +
@@ -790,8 +1078,18 @@ export function deriveInsights(agg: AggregationMetrics, industry?: string, hasFa
       } else {
         const totalPlasticAgg2 = agg.primaryPlasticVirgin + agg.primaryPlasticRecycled + agg.secondaryPlasticVirgin + agg.secondaryPlasticRecycled;
         const virginPlasticReduction2 = totalPlasticAgg2 > 0 ? safeDiv(agg.primaryPlasticRecycled + agg.secondaryPlasticRecycled, totalPlasticAgg2) * 100 : 0;
-        const plasticIntensity2 = agg.netRevenue > 0 ? totalPlasticAgg2 / agg.netRevenue : 0;
-        const intensityScore2 = Math.max(0, 100 * (1 - Math.min(1, plasticIntensity2)));
+        // const plasticIntensity2 = agg.netRevenue > 0 ? totalPlasticAgg2 / agg.netRevenue : 0;
+        // const intensityScore2 = Math.max(0, 100 * (1 - Math.min(1, plasticIntensity2)));
+        const hasActualPackagingData2 = agg.totalPackagingMT > 0 || totalPlasticAgg2 > 0 || agg.primaryTotalMT > 0 || agg.secondaryTotalMT > 0;
+        let intensityScore2 = 0;
+        if (agg.netRevenue > 0 && totalPlasticAgg2 > 0) {
+          const intensity = totalPlasticAgg2 / agg.netRevenue;
+          intensityScore2 = Math.max(0, 100 * (1 - Math.min(1, intensity)));
+        } else if (agg.netRevenue > 0 && totalPlasticAgg2 === 0 && hasActualPackagingData2) {
+          intensityScore2 = 100;
+        } else {
+          intensityScore2 = 0;
+        }
         const materialRecycledPct2 = safeDiv(agg.totalPackagingRecycledMT, agg.totalPackagingMT) * 100;
         const eprCompliancePct2 = safeDiv(agg.totalPackagingRecycledMT, agg.eprTargetsMT) * 100;
         const vpnPct2 = agg.voluntaryPlasticNeutralityPct;
@@ -1137,7 +1435,7 @@ export const useAnalyticsDashboardDataCompare = (filters: AnalyticsFilters, kpiE
           const aggregation = buildAggregation(kpis);
           const hasFashionPkg = fashionPkgCompanyIds.has(company.id);
           console.log(`Company ${company.name} (${company.id}) - `);
-          if(company.brand == 'NewMe'){
+          if(company.brand == 'UnderNeat'){
             console.log('aggregation :: ',aggregation)
           }
           const insights = deriveInsights(aggregation, company.industry, hasFashionPkg,company.brand);
@@ -1281,7 +1579,7 @@ export const useAnalyticsDashboardDataCompare = (filters: AnalyticsFilters, kpiE
             
             const aggregation = buildAggregation(combinedKpis);
             const hasFashionPkg = fashionPkgCompanyIds.has(company.id);
-            if(company.brand == 'NewMe'){
+            if(company.brand == 'UnderNeat'){
               console.log('quarterlyCombinedRawData :: aggregation',aggregation)
             }
             const insights = deriveInsights(aggregation, company.industry, hasFashionPkg,company.brand);
@@ -1495,7 +1793,7 @@ export const useAnalyticsDashboardDataCompare = (filters: AnalyticsFilters, kpiE
               console.log('company :: ',company.brand)
               const kpis = allCurrentByCompany[company.id] || {};
               const aggregation = buildAggregation(kpis);
-              if(company.brand == 'NewMe'){
+              if(company.brand == 'UnderNeat'){
                 console.log('aggregation',aggregation)
               }
               const insights = deriveInsights(aggregation, company.industry, fashionPkgCompanyIds.has(company.id),company.brand);
