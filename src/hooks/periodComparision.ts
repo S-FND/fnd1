@@ -84,6 +84,12 @@ function buildMetricCard(
   poolB: { brand: string; score: number }[],
   filteredBrands?: string[]
 ): MetricCardResult {
+
+  if(label == 'Environment Score'){
+    console.log('buildMetricCard ::poolA :: ',poolA)
+    console.log('buildMetricCard :: poolB :: ',poolB)
+    console.log('buildMetricCard :: filteredBrands :: ',filteredBrands)
+  }
   const filterFn = (c: { brand: string }) =>
     !filteredBrands || filteredBrands.length === 0 || filteredBrands.includes(c.brand);
 
@@ -151,6 +157,9 @@ export function useComparePeriods(
   const companyRawDataA = analyticsA?.quarterlyCombinedRawData || analyticsA?.companyRawData || [];
   const companyRawDataB = analyticsB?.quarterlyCombinedRawData || analyticsB?.companyRawData || [];
 
+  console.log('companyRawDataA :: ',companyRawDataA)
+  console.log('companyRawDataB :: ',companyRawDataB)
+
   const isLoading = rankingsALoading || rankingsBLoading || analyticsALoading || analyticsBLoading;
 
   const result = useMemo<Pick<UseComparePeriodsResult, 'rankingCards' | 'esgCards'>>(() => {
@@ -191,7 +200,8 @@ export function useComparePeriods(
     const submittingB = companyRawDataB.filter(c => Object.keys(c.kpis).length > 0);
     const envA = submittingA.filter(c => c.hasEnvironmentFeature);
     const envB = submittingB.filter(c => c.hasEnvironmentFeature);
-
+    console.log('envA',envA)
+    console.log('envB',envB)
     const toPool = (pool: CompanyRawMetrics[], metric: keyof InsightMetrics) =>
       pool
         .filter(c => c.insights[metric] !== undefined && !isNaN(c.insights[metric] as number))

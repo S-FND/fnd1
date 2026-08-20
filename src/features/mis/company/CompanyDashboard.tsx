@@ -55,6 +55,7 @@ interface ProgressCard {
   icon: React.ReactNode;
   color: string;
   n: number;
+  category?:string;
 }
 
 interface EsgCard {
@@ -84,6 +85,7 @@ interface ProgressCard {
   color: string;
   n: number;
   trend?:string;
+  category?:string;
 }
 
 interface EsgCard {
@@ -487,7 +489,7 @@ const CompanyDashboard = () => {
     const envEligible = submitting.filter((c: any) => c.hasEnvironmentFeature);
     const companyHasEnvFeature = companyData?.hasEnvironmentFeature !== false;
     const companyBrand = companyData.brand || companyName || '';
-
+    console.log('envEligible :: ',envEligible)
     // debug — remove once confirmed working
     // console.log('[ESGCards] companyBrand:', companyBrand);
     // console.log('[ESGCards] esgPctileMap keys:', [...assignPercentiles(submitting, 'esgCompositeScore').keys()]);
@@ -638,14 +640,14 @@ const CompanyDashboard = () => {
 
   const { rankingCards, esgCards: esgCardCompare, isLoading: compareLoading } = useComparePeriods(
     {
-      "period": "annual",
+      "period": "quarterly",
       "quarter": "Q4",
       "year": 2025,
       "cumulative": false,
       "periodType": "quarterly"
     },
     {
-      "period": "annual",
+      "period": "quarterly",
       "quarter": "Q1",
       "year": 2026,
       "cumulative": false,
@@ -671,7 +673,7 @@ const RANKING_KEY_BY_LABEL: Record<string, string> = {
 
 // Maps esgCards label -> esgCardCompare key
 const ESG_KEY_BY_LABEL: Record<string, string> = {
-  'ESG Composite Score': 'esgCompositeScore',
+  'ESG Performance Score': 'esgCompositeScore',
   'Environment Score': 'circularEconomyIndex',
   'Social Score': 'socialScore',
   'Governance Score': 'governanceScore',
@@ -867,7 +869,7 @@ useEffect(() => {
                           {card.icon}
                         </div>
                         <div className="flex items-end gap-2">
-                          <span className={`text-2xl font-bold ${gradeColor}`}>{grade}</span>
+                          <span className={`text-2xl font-bold ${gradeColor}`}>{card.category}</span>
                           <span className="text-xs text-muted-foreground mb-1">grade</span>
                           {card.trend === "up" && (
                             <TrendingUp className="w-4 h-4 text-green-500 mb-1" />
