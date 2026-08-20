@@ -68,6 +68,7 @@ interface EsgCard {
   n: number;
   isEnvNA?: boolean;
   prevPercentile?:number;
+  category?:string;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -100,6 +101,7 @@ interface EsgCard {
   isEnvNA?: boolean;
   trend?:string;
   prevPercentile?:number;
+  category?:string;
 }
 
 interface CompanyScore {
@@ -951,7 +953,7 @@ trend:companyEntry.trend,
                     </div>
                   ) : (
                     <div className="flex items-end gap-2">
-                      <span className={`text-2xl font-bold ${gradeColor}`}>{grade}</span>
+                      <span className={`text-2xl font-bold ${gradeColor}`}>{card.category}</span>
                       <span className="text-xs text-muted-foreground mb-1">grade</span>
                       {card.trend === "up" && (
                         <TrendingUp className="w-4 h-4 text-green-500 mb-1" />
