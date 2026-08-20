@@ -67,6 +67,7 @@ interface EsgCard {
   clickType: 'composite' | 'environment' | 'social' | 'governance';
   n: number;
   isEnvNA?: boolean;
+  prevPercentile?:number;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -98,6 +99,7 @@ interface EsgCard {
   n: number;
   isEnvNA?: boolean;
   trend?:string;
+  prevPercentile?:number;
 }
 
 interface CompanyScore {
@@ -718,9 +720,22 @@ useEffect(() => {
 
       if (!companyEntry) return card;
 
+      const { grade, color: gradeColor } = getGrade(card.percentile);
+            let gradeOrder = ['AA', 'A', 'BB', 'B', 'C'];
+            const { grade: prevGrade, color: prevGradeColor } = getGrade(card.prevPercentile);
+            const currentGradeIndex = gradeOrder.indexOf(grade);
+            const previousGradeIndex = gradeOrder.indexOf(prevGrade);
+
       return {
         ...card,
-        trend: companyEntry.trend,
+//         trend: esgKey == 'esgCompositeScore'?(
+// currentGradeIndex > previousGradeIndex
+//           ? 'up'
+//           : currentGradeIndex < previousGradeIndex
+//           ? 'down'
+//           : 'stable'
+//         ) : companyEntry.trend,
+trend:companyEntry.trend,
         category: companyEntry.categoryB,
         prevCategory: companyEntry.categoryA,
         prevValue: companyEntry.scoreA,
@@ -898,7 +913,7 @@ useEffect(() => {
           : esgCards.map((card, index) => {
             const { grade, color: gradeColor } = getGrade(card.percentile);
             let gradeOrder = ['AA', 'A', 'BB', 'B', 'C'];
-            const { grade: prevGrade, color: prevGradeColor } = getGrade(prevEsgCards[index]?.percentile);
+            const { grade: prevGrade, color: prevGradeColor } = getGrade(card.prevPercentile);
             const currentGradeIndex = gradeOrder.indexOf(grade);
             const previousGradeIndex = gradeOrder.indexOf(prevGrade);
 
@@ -937,7 +952,7 @@ useEffect(() => {
                   ) : (
                     <div className="flex items-end gap-2">
                       <span className={`text-2xl font-bold ${gradeColor}`}>{grade}</span>
-                      <span className="text-xs text-muted-foreground mb-1">grade</span>
+                      <span className="text-xs text-muted-foreground mb-1">grade{card.trend}</span>
                       {card.trend === "up" && (
                         <TrendingUp className="w-4 h-4 text-green-500 mb-1" />
                       )}
