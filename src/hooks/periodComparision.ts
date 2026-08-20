@@ -85,7 +85,7 @@ function buildMetricCard(
   filteredBrands?: string[]
 ): MetricCardResult {
 
-  if(label == 'Environment Score'){
+  if(label == 'Social Score'){
     console.log('buildMetricCard ::poolA :: ',poolA)
     console.log('buildMetricCard :: poolB :: ',poolB)
     console.log('buildMetricCard :: filteredBrands :: ',filteredBrands)
