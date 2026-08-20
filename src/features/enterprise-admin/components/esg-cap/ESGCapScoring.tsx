@@ -426,7 +426,13 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
   const getNotCompletedOver3Count = (priority: 'High' | 'Medium' | 'Low') => {
     return csItems.filter(item => {
       if ((item.priority || 'Medium') !== priority) return false;
-      if (getCSCategory(item) !== 'over3') return false;
+      const category = getCSCategory(item);
+      // const companyStatus = normalize(item.companyStatus ?? item.status);
+      // if (companyStatus === 'overdue' || companyStatus === 'Partly Submitted') {
+      //   return true;
+      // }
+      // if (getCSCategory(item) !== 'over3') return false;
+      if (category !== 'under3' && category !== 'over3') return false;
       return !isCompanySubmitted(item);
     }).length;
   };
@@ -646,7 +652,6 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                       getCSCount("High", "buffer1") +
                       getCSCount("High", "buffer2") +
                       getCSCount("High", "buffer3") +
-                      getCSCount("High", "under3") +
                       getNotCompletedOver3Count("High") +
                       getCompletedOver3Count("High") +
                       getCSCount("High", "upcoming")}
@@ -696,7 +701,6 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                       getCSCount("Medium", "buffer1") +
                       getCSCount("Medium", "buffer2") +
                       getCSCount("Medium", "buffer3") +
-                      getCSCount("Medium", "under3") +
                       getNotCompletedOver3Count("Medium") +
                       getCompletedOver3Count("Medium") +
                       getCSCount("Medium", "upcoming")}
@@ -745,7 +749,6 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
                       getCSCount("Low", "buffer1") +
                       getCSCount("Low", "buffer2") +
                       getCSCount("Low", "buffer3") +
-                      getCSCount("Low", "under3") +
                       getNotCompletedOver3Count("Low") +
                       getCompletedOver3Count("Low") +
                       getCSCount("Low", "upcoming")}
@@ -807,29 +810,29 @@ export const ESGCapScoring: React.FC<ESGCapScoringProps> = ({ items, onFilterCha
 
                   {/* Total */}
                   <div className="flex justify-center">
-                    <span className="rounded-full bg-emerald-200 px-3 py-1 text-xs font-bold text-emerald-800">
-                      {getCSCount("High", "ontime") +
-                        getCSCount("High", "buffer1") +
-                        getCSCount("High", "buffer2") +
-                        getCSCount("High", "buffer3") +
-                        getCSCount("High", "under3") +
-                        getCSCount("High", "over3") +
-                        getCSCount("High", "upcoming") +
-                        getCSCount("Medium", "ontime") +
-                        getCSCount("Medium", "buffer1") +
-                        getCSCount("Medium", "buffer2") +
-                        getCSCount("Medium", "buffer3") +
-                        getCSCount("Medium", "under3") +
-                        getCSCount("Medium", "over3") +
-                        getCSCount("Medium", "upcoming") +
-                        getCSCount("Low", "ontime") +
-                        getCSCount("Low", "buffer1") +
-                        getCSCount("Low", "buffer2") +
-                        getCSCount("Low", "buffer3") +
-                        getCSCount("Low", "under3") +
-                        getCSCount("Low", "over3") +
-                        getCSCount("Low", "upcoming")}
-                    </span>
+                  <span className="rounded-full bg-emerald-200 px-3 py-1 text-xs font-bold text-emerald-800">
+                    {getCSCount("High", "ontime") +
+                    getCSCount("High", "buffer1") +
+                    getCSCount("High", "buffer2") +
+                    getCSCount("High", "buffer3") +
+                    getCompletedOver3Count("High") +     // ✅ Completed After Buffer
+                    getNotCompletedOver3Count("High") +  // ✅ Overdue (under3 + over3 not submitted)
+                    getCSCount("High", "upcoming") +
+                    getCSCount("Medium", "ontime") +
+                    getCSCount("Medium", "buffer1") +
+                    getCSCount("Medium", "buffer2") +
+                    getCSCount("Medium", "buffer3") +
+                    getCompletedOver3Count("Medium") +
+                    getNotCompletedOver3Count("Medium") +
+                    getCSCount("Medium", "upcoming") +
+                    getCSCount("Low", "ontime") +
+                    getCSCount("Low", "buffer1") +
+                    getCSCount("Low", "buffer2") +
+                    getCSCount("Low", "buffer3") +
+                    getCompletedOver3Count("Low") +
+                    getNotCompletedOver3Count("Low") +
+                    getCSCount("Low", "upcoming")}
+                  </span>
                   </div>
 
                 </div>
